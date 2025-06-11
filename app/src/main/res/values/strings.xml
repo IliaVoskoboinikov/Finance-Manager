@@ -1,3 +1,27 @@
 <resources>
     <string name="app_name">Finance Manager</string>
+
+    <string name="expanses_today">Расходы сегодня</string>
+    <string name="income_today">Доходы сегодня</string>
+    <string name="my_account">Мой счет</string>
+    <string name="my_articles">Мои статьи</string>
+
+
+
+    <string name="expanses">Расходы</string>
+    <string name="income">Доходы</string>
+    <string name="account">Счет</string>
+    <string name="articles">Статьи</string>
+    <string name="settings">Настройки</string>
+
+    <string name="light_dark_auto">Светлая темная авто</string>
+    <string name="primary_color">Основной цвет</string>
+    <string name="sounds">Звуки</string>
+    <string name="haptics">Хаптики</string>
+    <string name="passcode">Код пароль</string>
+    <string name="synchronization">Cинхронизация</string>
+    <string name="language">Язык</string>
+    <string name="program_notes">О программе</string>
+    <string name="all">Всего</string>
+
 </resources>
