@@ -23,5 +23,6 @@
     <string name="language">Язык</string>
     <string name="program_notes">О программе</string>
     <string name="all">Всего</string>
+    <string name="find_article">Найти статью</string>
 
 </resources>
