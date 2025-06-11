@@ -22,7 +22,7 @@ import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.uiKit.FMDriver
 import soft.divan.financemanager.presenter.uiKit.ListItem
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
-import soft.divan.financemanager.ui.icons.Triangle
+import soft.divan.financemanager.presenter.ui.icons.Triangle
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
@@ -109,7 +109,7 @@ fun RenderSettingsListItem(model: SettingsListItemModel) {
     when (model) {
         is SettingsListItemModel.WithSwitch -> {
             ListItem(
-                modifier = Modifier.height(55.dp),
+                modifier = Modifier.height(56.dp),
                 content = { ContentTextListItem (stringResource( model.title))  },
                 trail = {
                     Switch(

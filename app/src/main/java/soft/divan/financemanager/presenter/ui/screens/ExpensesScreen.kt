@@ -3,9 +3,11 @@ package soft.divan.financemanager.presenter.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 
 import androidx.compose.material.icons.Icons
@@ -32,7 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
 import soft.divan.financemanager.presenter.uiKit.SubContentTextListItem
-import soft.divan.financemanager.ui.icons.Arrow
+import soft.divan.financemanager.presenter.ui.icons.Arrow
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
@@ -149,7 +151,7 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
         is ExpensesListItemModel.All -> {
 
             ListItem(
-                modifier = Modifier.height(69.dp),
+                modifier = Modifier.height(70.dp),
                 content = { ContentTextListItem(stringResource(model.content)) },
                 trail = { ContentTextListItem(model.trail) },
                 containerColor = colorScheme.secondaryContainer
@@ -158,7 +160,7 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
 
         is ExpensesListItemModel.Item -> {
             ListItem(
-                modifier = Modifier.height(69.dp),
+                modifier = Modifier.height(70.dp),
                 lead = {
                     Box(
                         modifier = Modifier
@@ -177,6 +179,7 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
                 trail = {
 
                     ContentTextListItem(model.prise)
+                    Spacer(modifier = Modifier.width(16.dp))
                     Icon(
                         imageVector = Icons.Filled.Arrow,
                         contentDescription = "arrow",
@@ -190,7 +193,7 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
 
         is ExpensesListItemModel.ItemSubContent -> {
             ListItem(
-                modifier = Modifier.height(69.dp),
+                modifier = Modifier.height(70.dp),
                 lead = {
                     Box(
                         modifier = Modifier
@@ -214,6 +217,7 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
                 trail = {
 
                     ContentTextListItem(model.prise)
+                    Spacer(modifier = Modifier.width(16.dp))
                     Icon(
                         imageVector = Icons.Filled.Arrow,
                         contentDescription = "arrow",
