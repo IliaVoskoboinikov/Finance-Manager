@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
@@ -49,35 +50,46 @@ fun ArticlesScreenPreview() {
 }
 
 @Composable
-fun ArticlesScreen(modifier: Modifier = Modifier, navController: NavController) {
+fun ArticlesScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController
+) {
+    var query by remember { mutableStateOf("") }
+
+    val filteredItems = items.filter {
+        it.content.contains(query, ignoreCase = true)
+    }
+
     Scaffold(
-        modifier = modifier,
+        modifier = modifier
+    ) { innerPadding ->
 
-
-        ) { innerPadding ->
-
-
-        var query by remember { mutableStateOf("") }
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            SearchBar(
-                query = query,
-                onQueryChange = { query = it },
-                onSearchClick = {}
-            )
-            FMDriver()
-            LazyColumn() {
-                items(items) { item ->
-                    RenderArticlesListItem(item)
-                    FMDriver()
-                }
+
+            item {
+                SearchBar(
+                    query = query,
+                    onQueryChange = { query = it },
+                    onSearchClick = {}
+                )
+            }
+
+            item {
+                FMDriver()
+            }
+
+            items(/*filteredItems*/ items) { item ->
+                RenderArticlesListItem(item)
+                FMDriver()
             }
         }
     }
 }
+
 
 private val items = listOf(
 
@@ -192,22 +204,30 @@ fun SearchBar(
             TextField(
                 value = query,
                 onValueChange = onQueryChange,
-                placeholder = { ContentTextListItem(stringResource(R.string.find_article)) },
+                placeholder = {
+                    ContentTextListItem(
+                        text = stringResource(R.string.find_article),
+                        color = colorScheme.onSurfaceVariant
+                    )
+                },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
                 colors = TextFieldDefaults.textFieldColors(
                     containerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledSupportingTextColor = Color.Transparent,
                 ),
             )
 
-            Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = "Search",
-                tint = Color.Black,
-                modifier = Modifier.size(48.dp)
-            )
+            IconButton(onClick = onSearchClick) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = "Search",
+                    tint = Color.Black,
+                    modifier = Modifier.size(48.dp)
+                )
+            }
 
         }
     }
