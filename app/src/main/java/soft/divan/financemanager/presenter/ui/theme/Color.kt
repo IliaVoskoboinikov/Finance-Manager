@@ -11,6 +11,8 @@ val MintBackground = Color(0xFFD4FAE6)
 
 val Black = Color(0xFF000000)
 
+val  CharcoalPurple = Color(0xFF1D1B20)
+
 val White = Color(0xFFFFFFFF)
 
 val Graphite = Color(0xFF49454F)
