@@ -55,7 +55,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val currentDestination by navController.currentBackStackEntryAsState()
     val currentScreen = Screen.fromRoute(currentDestination?.destination?.route)
-
+    val showBars = currentDestination?.destination?.route != SplashScreen.route
 
     val title = when (currentDestination?.destination?.route) {
         Screen.Expanses.route -> TopBar.Expanses
@@ -68,16 +68,22 @@ fun MainScreen(modifier: Modifier = Modifier) {
             TopBar.Expanses
         }
     }
+
+
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopBar(topBar = title)
+            if (showBars) {
+                TopBar(topBar = title)
+            }
         },
         bottomBar = {
-            BottomNavigationBar(
-                navController = navController,
-                currentRoute = currentDestination?.destination?.route
-            )
+            if (showBars) {
+                BottomNavigationBar(
+                    navController = navController,
+                    currentRoute = currentDestination?.destination?.route
+                )
+            }
         }
     ) { paddingValues ->
         Box(
@@ -90,6 +96,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
             NavGraph(navController = navController)
         }
     }
+
 }
 
 
@@ -137,7 +144,6 @@ sealed class Screen(
 }
 
 
-
 sealed class TopBar(
     val title: Int,
     val navigationIcon: ImageVector? = null,
@@ -156,13 +162,14 @@ sealed class TopBar(
 fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Expanses.route,
+        startDestination = SplashScreen.route,
         modifier = modifier,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None }
     ) {
+        composable(SplashScreen.route) { SplashScreen(navController) }
         composable(Screen.Expanses.route) { ExpensesScreen(modifier, navController) }
         composable(Screen.Income.route) { IncomeScreen(modifier, navController) }
         composable(Screen.Account.route) { AccountScreen(modifier, navController) }
