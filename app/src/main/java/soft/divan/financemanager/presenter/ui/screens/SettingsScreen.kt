@@ -2,7 +2,6 @@ package soft.divan.financemanager.presenter.ui.screens
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -18,11 +17,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
+import soft.divan.financemanager.presenter.ui.icons.Triangle
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
+import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
 import soft.divan.financemanager.presenter.uiKit.FMDriver
 import soft.divan.financemanager.presenter.uiKit.ListItem
-import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
-import soft.divan.financemanager.presenter.ui.icons.Triangle
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)

@@ -17,8 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.ui.icons.Arrow
+import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
@@ -37,7 +37,7 @@ fun ListItemPreview() {
 
             }
 
-            )
+        )
     }
 }
 
