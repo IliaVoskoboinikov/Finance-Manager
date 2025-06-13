@@ -37,11 +37,9 @@ fun SettingsScreenPreview() {
 fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) {
     Scaffold(
         modifier = modifier,
-
-        ) { innerPadding ->
-
+    ) { innerPadding ->
         LazyColumn(modifier = Modifier.padding(innerPadding)) {
-            items(items) { item ->
+            items(settingsItems) { item ->
                 RenderSettingsListItem(item)
                 FMDriver()
             }
@@ -49,9 +47,9 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
     }
 }
 
-private val items = listOf(
+private val settingsItems = listOf(
     SettingsListItemModel.WithSwitch(
-        title = R.string.light_dark_auto,
+        title = R.string.dark_theme,
         isChecked = false,
         onToggle = { isChecked -> /* handle */ }
     ),
@@ -66,23 +64,19 @@ private val items = listOf(
     SettingsListItemModel.WithArrow(
         title = R.string.haptics,
         onClick = { /* handle */ }
-    )
-    ,
+    ),
     SettingsListItemModel.WithArrow(
         title = R.string.passcode,
         onClick = { /* handle */ }
-    )
-    ,
+    ),
     SettingsListItemModel.WithArrow(
         title = R.string.synchronization,
         onClick = { /* handle */ }
-    )
-    ,
+    ),
     SettingsListItemModel.WithArrow(
         title = R.string.language,
         onClick = { /* handle */ }
-    )
-    ,
+    ),
     SettingsListItemModel.WithArrow(
         title = R.string.program_notes,
         onClick = { /* handle */ }
@@ -110,21 +104,20 @@ fun RenderSettingsListItem(model: SettingsListItemModel) {
         is SettingsListItemModel.WithSwitch -> {
             ListItem(
                 modifier = Modifier.height(56.dp),
-                content = { ContentTextListItem (stringResource( model.title))  },
+                content = { ContentTextListItem(stringResource(model.title)) },
                 trail = {
                     Switch(
                         checked = model.isChecked,
                         onCheckedChange = model.onToggle
                     )
                 },
-
-                )
+            )
         }
 
         is SettingsListItemModel.WithArrow -> {
             ListItem(
                 modifier = Modifier.height(55.dp),
-                content = { ContentTextListItem (stringResource( model.title))  },
+                content = { ContentTextListItem(stringResource(model.title)) },
                 trail = {
                     Icon(
                         imageVector = Icons.Filled.Triangle,
@@ -133,10 +126,8 @@ fun RenderSettingsListItem(model: SettingsListItemModel) {
 
                     )
                 },
-
-                )
+            )
         }
-
     }
 }
 

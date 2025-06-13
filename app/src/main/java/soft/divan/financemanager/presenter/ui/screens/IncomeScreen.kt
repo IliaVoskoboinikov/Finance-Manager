@@ -14,11 +14,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,6 +30,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
@@ -34,6 +38,9 @@ import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.icons.Clock
 import soft.divan.financemanager.presenter.ui.icons.Diagram
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
+import soft.divan.financemanager.presenter.ui.viewmodel.IncomeListItemModel
+import soft.divan.financemanager.presenter.ui.viewmodel.IncomeUiState
+import soft.divan.financemanager.presenter.ui.viewmodel.IncomeViewModel
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
 import soft.divan.financemanager.presenter.uiKit.FMDriver
 import soft.divan.financemanager.presenter.uiKit.FloatingButton
@@ -49,9 +56,14 @@ fun IncomeScreenPreview() {
     }
 }
 
-
 @Composable
-fun IncomeScreen(modifier: Modifier = Modifier, navController: NavController) {
+fun IncomeScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    viewModel: IncomeViewModel = viewModel()
+) {
+    val state by viewModel.uiState.collectAsState()
+
     Scaffold(
         modifier = modifier,
         floatingActionButton = {
@@ -59,47 +71,23 @@ fun IncomeScreen(modifier: Modifier = Modifier, navController: NavController) {
         }
     ) { innerPadding ->
 
-        Column(modifier = Modifier.padding(innerPadding)) {
-            LazyColumn {
-                items(items) { item ->
-                    RenderIncomeListItem(item)
-                    FMDriver()
+        when (state) {
+            is IncomeUiState.Loading -> {}
+
+            is IncomeUiState.Error -> {}
+
+            is IncomeUiState.Success -> {
+                val items = (state as IncomeUiState.Success).items
+                LazyColumn(modifier = Modifier.padding(innerPadding)) {
+                    items(items) { item ->
+                        RenderIncomeListItem(item)
+                        FMDriver()
+                    }
                 }
             }
+
         }
     }
-}
-
-private val items = listOf(
-    IncomeListItemModel.Balance(
-        content = R.string.all,
-        trail = "600 000 ₽",
-
-    ),
-    IncomeListItemModel.Salary(
-        content = "Зарплата",
-        prise = "500 000₽",
-        onClick = {}
-    ),
-
-    IncomeListItemModel.Salary(
-        content = "Подработка",
-        prise = "100 000₽",
-        onClick = {}
-    ),
-    )
-
-sealed class IncomeListItemModel {
-    data class Balance(
-        val content: Int,
-        val trail: String,
-    ) : IncomeListItemModel()
-
-    data class Salary(
-        val content: String,
-        val prise: String,
-        val onClick: () -> Unit
-    ) : IncomeListItemModel()
 }
 
 
@@ -118,7 +106,7 @@ fun RenderIncomeListItem(model: IncomeListItemModel) {
 
         is IncomeListItemModel.Salary -> {
             ListItem(
-                modifier = Modifier.height(56.dp),
+                modifier = Modifier.height(70.dp),
                 content = { ContentTextListItem(model.content) },
                 trail = {
                     ContentTextListItem(model.prise)
@@ -127,7 +115,6 @@ fun RenderIncomeListItem(model: IncomeListItemModel) {
                         imageVector = Icons.Filled.Arrow,
                         contentDescription = "arrow",
                         tint = colorScheme.onSurfaceVariant
-
                     )
                 },
             )

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -19,7 +18,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import soft.divan.financemanager.R
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.uiKit.FMDriver
 import soft.divan.financemanager.presenter.uiKit.FloatingButton
@@ -28,13 +26,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
 import soft.divan.financemanager.presenter.uiKit.SubContentTextListItem
 import soft.divan.financemanager.presenter.ui.icons.Arrow
+import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesListItemModel
+import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesUiState
+import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesViewModel
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
@@ -45,7 +49,12 @@ fun InfoScreenPreview() {
 }
 
 @Composable
-fun ExpensesScreen(modifier: Modifier = Modifier, navController: NavController) {
+fun ExpensesScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    viewModel: ExpensesViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         modifier = modifier,
@@ -53,95 +62,21 @@ fun ExpensesScreen(modifier: Modifier = Modifier, navController: NavController) 
             FloatingButton(onClick = {})
         }
     ) { innerPadding ->
+        when (uiState) {
+            is ExpensesUiState.Loading -> {}
+            is ExpensesUiState.Error -> {}
 
-        LazyColumn(modifier = Modifier.padding(innerPadding)) {
-            items(items) { item ->
-                RenderExpensesListItem(item)
-                FMDriver()
+            is ExpensesUiState.Success -> {
+                val items = (uiState as ExpensesUiState.Success).items
+                LazyColumn(modifier = Modifier.padding(innerPadding)) {
+                    items(items) { item ->
+                        RenderExpensesListItem(item)
+                        FMDriver()
+                    }
+                }
             }
         }
     }
-}
-
-private val items = listOf(
-    ExpensesListItemModel.All(
-        content = R.string.all,
-        trail = "436 558 ₽"
-    ),
-    ExpensesListItemModel.Item(
-        emoji = "\uD83C\uDFE1",
-        content = "Аренда квартиры",
-        prise = "100 000 ₽",
-        onClick = {}
-    ),
-    ExpensesListItemModel.Item(
-        emoji = "\uD83D\uDC57",
-        content = "Одежда",
-        prise = "100 000 ₽",
-        onClick = {}
-    ),
-    ExpensesListItemModel.ItemSubContent(
-        emoji = "\uD83D\uDC36",
-        content = "На собачку",
-        subContent = "Джек",
-        prise = "100 000 ₽",
-        onClick = {}
-    ),
-    ExpensesListItemModel.ItemSubContent(
-        emoji = "\uD83D\uDC36",
-        content = "На собачку",
-        subContent = "Энни",
-        prise = "100 000 ₽",
-        onClick = {}
-    ),
-    ExpensesListItemModel.Item(
-        emoji = "pk",
-        content = "Ремонт квартиры",
-        prise = "100 000 ₽",
-        onClick = {}
-    ),
-    ExpensesListItemModel.Item(
-        emoji = "\uD83C\uDF6D",
-        content = "Продукты",
-        prise = "100 000 ₽",
-        onClick = {}
-    ),
-    ExpensesListItemModel.Item(
-        emoji = "\uD83C\uDFCB\uFE0F",
-        content = "Спортзал",
-        prise = "100 000 ₽",
-        onClick = {}
-    ),
-    ExpensesListItemModel.Item(
-        emoji = "\uD83D\uDC8A",
-        content = "Медицина",
-        prise = "100 000 ₽",
-        onClick = {}
-    )
-
-
-)
-
-sealed class ExpensesListItemModel {
-    data class All(
-        val content: Int,
-        val trail: String
-    ) : ExpensesListItemModel()
-
-    data class Item(
-        val emoji: String,
-        val content: String,
-        val prise: String,
-        val onClick: () -> Unit
-    ) : ExpensesListItemModel()
-
-    data class ItemSubContent(
-        val emoji: String,
-        val content: String,
-        val subContent: String,
-        val prise: String,
-        val onClick: () -> Unit
-    ) : ExpensesListItemModel()
 }
 
 
@@ -149,9 +84,8 @@ sealed class ExpensesListItemModel {
 fun RenderExpensesListItem(model: ExpensesListItemModel) {
     when (model) {
         is ExpensesListItemModel.All -> {
-
             ListItem(
-                modifier = Modifier.height(70.dp),
+                modifier = Modifier.height(56.dp),
                 content = { ContentTextListItem(stringResource(model.content)) },
                 trail = { ContentTextListItem(model.trail) },
                 containerColor = colorScheme.secondaryContainer
@@ -168,8 +102,7 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
                             .clip(CircleShape)
                             .background(colorScheme.secondaryContainer),
                         contentAlignment = Alignment.Center
-                    )
-                    {
+                    ) {
                         Text(text = model.emoji, textAlign = TextAlign.Center)
 
                     }
@@ -201,15 +134,13 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
                             .clip(CircleShape)
                             .background(colorScheme.secondaryContainer),
                         contentAlignment = Alignment.Center
-                    )
-                    {
+                    ) {
                         Text(text = model.emoji, textAlign = TextAlign.Center)
-
                     }
 
                 },
                 content = {
-                    Column() {
+                    Column {
                         ContentTextListItem(model.content)
                         SubContentTextListItem(model.subContent)
                     }

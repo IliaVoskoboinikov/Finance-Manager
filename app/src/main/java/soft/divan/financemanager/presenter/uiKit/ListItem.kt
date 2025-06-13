@@ -48,7 +48,7 @@ fun ListItem(
     content: @Composable () -> Unit,
     trail: (@Composable () -> Unit)? = null,
     containerColor: Color = Color(0x00F9F0FF),
-    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
 ) {
 
     Surface(

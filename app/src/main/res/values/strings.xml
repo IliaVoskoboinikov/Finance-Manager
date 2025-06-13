@@ -14,7 +14,7 @@
     <string name="articles">Статьи</string>
     <string name="settings">Настройки</string>
 
-    <string name="light_dark_auto">Светлая темная авто</string>
+    <string name="dark_theme">Тёмная тема</string>
     <string name="primary_color">Основной цвет</string>
     <string name="sounds">Звуки</string>
     <string name="haptics">Хаптики</string>
