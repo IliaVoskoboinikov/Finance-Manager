@@ -1,4 +1,4 @@
-package soft.divan.financemanager.ui.theme
+package soft.divan.financemanager.presenter.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

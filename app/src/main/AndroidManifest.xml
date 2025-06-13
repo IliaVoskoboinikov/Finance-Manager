@@ -13,8 +13,9 @@
         android:theme="@style/Theme.FinanceManager"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".presenter.MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:label="@string/app_name"
             android:theme="@style/Theme.FinanceManager">
             <intent-filter>
