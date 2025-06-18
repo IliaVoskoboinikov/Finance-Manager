@@ -1,35 +1,21 @@
 package soft.divan.financemanager.presenter.ui.screens
 
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
+import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
+import soft.divan.financemanager.presenter.navigation.NavGraph
 import soft.divan.financemanager.presenter.ui.icons.Calculator
 import soft.divan.financemanager.presenter.ui.icons.Chart90
 import soft.divan.financemanager.presenter.ui.icons.Clock
@@ -157,70 +143,4 @@ sealed class TopBar(
     data object Settings : TopBar(R.string.settings, null, {}, null, {})
 }
 
-@Composable
-fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
-    NavHost(
-        navController = navController,
-        startDestination = SplashScreen.route,
-        modifier = modifier,
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
-        popExitTransition = { ExitTransition.None }
-    ) {
-        composable(SplashScreen.route) { SplashScreen(navController) }
-        composable(Screen.Expanses.route) { ExpensesScreen(modifier, navController) }
-        composable(Screen.Income.route) { IncomeScreen(modifier, navController) }
-        composable(Screen.Account.route) { AccountScreen(modifier, navController) }
-        composable(Screen.Articles.route) { ArticlesScreen(modifier, navController) }
-        composable(Screen.Settings.route) { SettingsScreen(modifier, navController) }
-    }
-}
 
-@Composable
-fun BottomNavigationBar(
-    navController: NavHostController,
-    currentRoute: String?
-) {
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-        Screen.items.forEach { screen ->
-            FMNavigationBarItem(currentRoute, screen, navController)
-        }
-    }
-}
-
-@Composable
-private fun RowScope.FMNavigationBarItem(
-    currentRoute: String?,
-    screen: Screen,
-    navController: NavHostController
-) {
-    NavigationBarItem(
-        selected = currentRoute == screen.route,
-        onClick = {
-            if (currentRoute != screen.route) {
-                navController.navigate(screen.route) {
-                    popUpTo(navController.graph.startDestinationId) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            }
-        },
-        icon = {
-            Icon(
-                screen.icon,
-                contentDescription = stringResource(screen.title),
-                modifier = Modifier.size(32.dp)
-            )
-        },
-        label = {
-            Text(
-                text = stringResource(screen.title),
-                fontWeight = if (currentRoute == screen.route) FontWeight.Bold else FontWeight.Normal,
-                fontSize = 12.sp,
-            )
-        },
-    )
-}
