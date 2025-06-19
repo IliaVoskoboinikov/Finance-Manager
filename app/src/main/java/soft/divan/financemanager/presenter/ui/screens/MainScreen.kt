@@ -43,14 +43,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
     val showBars = currentDestination?.destination?.route != SplashScreen.route
 
     val title = when (currentDestination?.destination?.route) {
-        Screen.Expanses.route -> TopBar.Expanses
-        Screen.Income.route -> TopBar.Income
-        Screen.Account.route -> TopBar.Account
-        Screen.Articles.route -> TopBar.Articles
-        Screen.Settings.route -> TopBar.Settings
+        Screen.ExpansesScreen.route -> TopBar.ExpansesTopBar
+        Screen.IncomeScreen.route -> TopBar.IncomeTopBar
+        Screen.AccountScreen.route -> TopBar.AccountTopBar
+        Screen.ArticlesScreen.route -> TopBar.ArticlesTopBar
+        Screen.SettingsScreen.route -> TopBar.SettingsTopBar
 
         else -> {
-            TopBar.Expanses
+            TopBar.ExpansesTopBar
         }
     }
 
@@ -90,40 +90,40 @@ sealed class Screen(
     val title: Int,
     val icon: ImageVector,
 ) {
-    data object Expanses : Screen(
+    data object ExpansesScreen : Screen(
         "expanses",
         R.string.expanses,
         Icons.Filled.Downtrend,
     )
 
-    data object Income : Screen(
+    data object IncomeScreen : Screen(
         "income",
         R.string.income,
         Icons.Filled.Uptrend,
     )
 
-    data object Account : Screen(
+    data object AccountScreen : Screen(
         "account",
         R.string.account,
         Icons.Filled.Calculator,
     )
 
-    data object Articles : Screen(
+    data object ArticlesScreen : Screen(
         "articles",
         R.string.articles,
         Icons.Filled.Chart90,
     )
 
-    data object Settings : Screen(
+    data object SettingsScreen : Screen(
         "settings",
         R.string.settings,
         Icons.Filled.Settings,
     )
 
     companion object {
-        val items = listOf(Expanses, Income, Account, Articles, Settings)
+        val items = listOf(ExpansesScreen, IncomeScreen, AccountScreen, ArticlesScreen, SettingsScreen)
         fun fromRoute(route: String?): Screen {
-            return items.find { it.route == route } ?: Expanses
+            return items.find { it.route == route } ?: ExpansesScreen
         }
     }
 }
@@ -136,11 +136,11 @@ sealed class TopBar(
     val actionIcon: ImageVector? = null,
     val actionIconClick: () -> Unit = {},
 ) {
-    data object Expanses : TopBar(R.string.expanses_today, null, {}, Icons.Filled.Clock, {})
-    data object Income : TopBar(R.string.income_today, null, {}, Icons.Filled.Clock, {})
-    data object Account : TopBar(R.string.my_account, null, {}, Icons.Filled.Pencil, {})
-    data object Articles : TopBar(R.string.my_articles, null, {}, null, {})
-    data object Settings : TopBar(R.string.settings, null, {}, null, {})
+    data object ExpansesTopBar : TopBar(R.string.expanses_today, null, {}, Icons.Filled.Clock, {})
+    data object IncomeTopBar : TopBar(R.string.income_today, null, {}, Icons.Filled.Clock, {})
+    data object AccountTopBar : TopBar(R.string.my_account, null, {}, Icons.Filled.Pencil, {})
+    data object ArticlesTopBar : TopBar(R.string.my_articles, null, {}, null, {})
+    data object SettingsTopBar : TopBar(R.string.settings, null, {}, null, {})
 }
 
 

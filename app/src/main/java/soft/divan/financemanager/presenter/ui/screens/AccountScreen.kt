@@ -16,10 +16,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,26 +29,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import soft.divan.financemanager.presenter.ui.icons.Arrow
+import soft.divan.financemanager.presenter.ui.icons.Diagram
+import soft.divan.financemanager.presenter.ui.model.AccountItem
+import soft.divan.financemanager.presenter.ui.model.AccountUiState
+import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
+import soft.divan.financemanager.presenter.ui.viewmodel.AccountViewModel
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
+import soft.divan.financemanager.presenter.uiKit.ErrorSnackbar
 import soft.divan.financemanager.presenter.uiKit.FMDriver
 import soft.divan.financemanager.presenter.uiKit.FloatingButton
 import soft.divan.financemanager.presenter.uiKit.ListItem
-import soft.divan.financemanager.presenter.ui.icons.Arrow
-import soft.divan.financemanager.presenter.ui.icons.Diagram
-import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
-import soft.divan.financemanager.presenter.ui.viewmodel.AccountItem
-import soft.divan.financemanager.presenter.ui.viewmodel.AccountUiState
-import soft.divan.financemanager.presenter.ui.viewmodel.AccountViewModel
+import soft.divan.financemanager.presenter.uiKit.LoadingProgressBar
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AccountScreenPreview() {
+    val mockAccount = AccountUiState.Success(
+        listOf(
+            AccountItem.Balance("💰", "Все счета", "-670 000 ₽"),
+            AccountItem.Currency("Валюта", "₽")
+        )
+    )
     FinanceManagerTheme {
-        AccountScreen(navController = rememberNavController())
+        AccountContent(uiState = AccountUiState.Loading)
     }
 }
 
@@ -54,25 +64,37 @@ fun AccountScreenPreview() {
 fun AccountScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    viewModel: AccountViewModel = viewModel()
+    viewModel: AccountViewModel = hiltViewModel()
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    AccountContent(modifier = modifier, uiState = uiState)
+}
 
+@Composable
+fun AccountContent(
+    modifier: Modifier = Modifier,
+    uiState: AccountUiState,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+) {
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = { FloatingButton(onClick = {}) }
     ) { innerPadding ->
-        when (state) {
+        when (uiState) {
             is AccountUiState.Loading -> {
-
+                LoadingProgressBar()
             }
 
             is AccountUiState.Error -> {
-
+                ErrorSnackbar(
+                    snackbarHostState = snackbarHostState,
+                    message = uiState.message,
+                )
             }
 
             is AccountUiState.Success -> {
-                val items = (state as AccountUiState.Success).items
+                val items = uiState.items
 
                 Column(modifier = Modifier.padding(innerPadding)) {
                     LazyColumn {
@@ -99,7 +121,6 @@ fun AccountScreen(
         }
     }
 }
-
 
 @Composable
 fun RenderAccountListItem(item: AccountItem) {

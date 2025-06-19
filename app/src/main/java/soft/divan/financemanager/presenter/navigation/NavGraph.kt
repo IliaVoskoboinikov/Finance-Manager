@@ -28,10 +28,10 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         popExitTransition = { ExitTransition.None }
     ) {
         composable(SplashScreen.route) { SplashScreen(navController) }
-        composable(Screen.Expanses.route) { ExpensesScreen(modifier, navController) }
-        composable(Screen.Income.route) { IncomeScreen(modifier, navController) }
-        composable(Screen.Account.route) { AccountScreen(modifier, navController) }
-        composable(Screen.Articles.route) { ArticlesScreen(modifier, navController) }
-        composable(Screen.Settings.route) { SettingsScreen(modifier, navController) }
+        composable(Screen.ExpansesScreen.route) { ExpensesScreen(modifier, navController) }
+        composable(Screen.IncomeScreen.route) { IncomeScreen(modifier, navController) }
+        composable(Screen.AccountScreen.route) { AccountScreen(modifier, navController) }
+        composable(Screen.ArticlesScreen.route) { ArticlesScreen(modifier, navController) }
+        composable(Screen.SettingsScreen.route) { SettingsScreen(modifier, navController) }
     }
 }

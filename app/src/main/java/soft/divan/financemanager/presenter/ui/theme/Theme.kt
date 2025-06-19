@@ -16,6 +16,7 @@ private val DarkColorScheme = darkColorScheme(
 
 private val LightColorScheme = lightColorScheme(
 
+    primary = NeonMint,
     background = RoseWhite,
     primaryContainer = NeonMint,
     onPrimaryContainer = White,
@@ -24,7 +25,7 @@ private val LightColorScheme = lightColorScheme(
     onSecondaryContainer = NeonMint,
     secondaryContainer = MintBackground,
     onSurfaceVariant = Graphite,
-    onSurface = CharcoalPurple
+    onSurface = CharcoalPurple,
 
 
 
