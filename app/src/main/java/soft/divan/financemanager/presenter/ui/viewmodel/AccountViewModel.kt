@@ -12,7 +12,6 @@ import kotlinx.coroutines.launch
 import soft.divan.financemanager.domain.usecase.account.GetAccountsUseCase
 import soft.divan.financemanager.domain.utils.Rezult
 import soft.divan.financemanager.presenter.mapper.AccountUiStateMapper
-import soft.divan.financemanager.presenter.ui.model.AccountItem
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import javax.inject.Inject
 
@@ -25,11 +24,6 @@ class AccountViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState: StateFlow<AccountUiState> = _uiState.asStateFlow()
-
-    private val mockAccount = listOf(
-        AccountItem.Balance("💰", "Все счета", "-670 000 ₽"),
-        AccountItem.Currency("Валюта", "₽")
-    )
 
     init {
         loadAccount()
