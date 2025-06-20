@@ -37,7 +37,7 @@ import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
 import soft.divan.financemanager.presenter.ui.icons.Search
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
-import soft.divan.financemanager.presenter.ui.viewmodel.Article
+import soft.divan.financemanager.presenter.ui.viewmodel.ArticleUi
 import soft.divan.financemanager.presenter.ui.viewmodel.ArticlesUiState
 import soft.divan.financemanager.presenter.ui.viewmodel.ArticlesViewModel
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
@@ -88,7 +88,7 @@ fun ArticlesScreen(
                 }
 
                 is ArticlesUiState.Success -> {
-                    val articles = (uiState as ArticlesUiState.Success).articles
+                    val articles = (uiState as ArticlesUiState.Success).articleUis
                     items(articles) { article ->
                         RenderArticleListItem(article)
                         FMDriver()
@@ -104,13 +104,13 @@ fun ArticlesScreen(
 }
 
 @Composable
-fun RenderArticleListItem(article: Article) {
+fun RenderArticleListItem(articleUi: ArticleUi) {
     ListItem(
         modifier = Modifier.height(70.dp),
         lead = {
-            EmojiCircle(emoji = article.emoji)
+            EmojiCircle(emoji = articleUi.emoji)
         },
-        content = { ContentTextListItem(article.title) }
+        content = { ContentTextListItem(articleUi.title) }
     )
 }
 
