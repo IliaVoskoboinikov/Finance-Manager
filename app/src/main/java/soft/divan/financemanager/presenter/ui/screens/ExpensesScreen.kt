@@ -23,7 +23,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
-import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesListItemModel
+import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesListItemUiModel
 import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesUiState
 import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesViewModel
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
@@ -74,9 +74,9 @@ fun ExpensesScreen(
 
 
 @Composable
-fun RenderExpensesListItem(model: ExpensesListItemModel) {
+fun RenderExpensesListItem(model: ExpensesListItemUiModel) {
     when (model) {
-        is ExpensesListItemModel.All -> {
+        is ExpensesListItemUiModel.All -> {
             ListItem(
                 modifier = Modifier.height(56.dp),
                 content = { ContentTextListItem(stringResource(model.content)) },
@@ -85,7 +85,7 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
             )
         }
 
-        is ExpensesListItemModel.Item -> {
+        is ExpensesListItemUiModel.ItemUi -> {
             ListItem(
                 modifier = Modifier.height(70.dp),
                 lead = {
@@ -108,7 +108,7 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
                 )
         }
 
-        is ExpensesListItemModel.ItemSubContent -> {
+        is ExpensesListItemUiModel.ItemUiSubContent -> {
             ListItem(
                 modifier = Modifier.height(70.dp),
                 lead = {
