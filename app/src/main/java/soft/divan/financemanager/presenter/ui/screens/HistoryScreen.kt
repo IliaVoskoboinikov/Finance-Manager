@@ -1,5 +1,6 @@
 package soft.divan.financemanager.presenter.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -15,7 +16,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,17 +35,39 @@ import soft.divan.financemanager.presenter.ui.viewmodel.HistoryViewModel
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
 import soft.divan.financemanager.presenter.uiKit.EmojiCircle
 import soft.divan.financemanager.presenter.uiKit.ErrorSnackbar
+import soft.divan.financemanager.presenter.uiKit.FMDatePickerDialog
 import soft.divan.financemanager.presenter.uiKit.FMDriver
 import soft.divan.financemanager.presenter.uiKit.ListItem
 import soft.divan.financemanager.presenter.uiKit.LoadingProgressBar
 import soft.divan.financemanager.presenter.uiKit.SubContentTextListItem
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun HistoryScreenPreview() {
+
+    val today = remember { LocalDate.now() }
+    val firstDayOfMonth = remember { today.withDayOfMonth(1) }
+
+    var startDate by remember { mutableStateOf(firstDayOfMonth) }
+    var endDate by remember { mutableStateOf(today) }
+
+    val showStartDatePicker = remember { mutableStateOf(false) }
+    val showEndDatePicker = remember { mutableStateOf(false) }
     FinanceManagerTheme {
-        HistoryContent(uiState = provideMockHistoryUiState())
+
+
+        HistoryContent(
+            uiState = provideMockHistoryUiState(),
+            startDate = startDate,
+            endDate = endDate,
+            onStartDateClick = { showStartDatePicker.value = true },
+            onEndDateClick = { showEndDatePicker.value = true }
+        )
     }
 }
 
@@ -58,16 +83,62 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HistoryContent(modifier = modifier, uiState = uiState)
+
+    val today = remember { LocalDate.now() }
+    val firstDayOfMonth = remember { today.withDayOfMonth(1) }
+
+    var startDate by remember { mutableStateOf(firstDayOfMonth) }
+    var endDate by remember { mutableStateOf(today) }
+
+    val showStartDatePicker = remember { mutableStateOf(false) }
+    val showEndDatePicker = remember { mutableStateOf(false) }
+
+    HistoryContent(
+        modifier = modifier,
+        uiState = uiState,
+        startDate = startDate,
+        endDate = endDate,
+        onStartDateClick = { showStartDatePicker.value = true },
+        onEndDateClick = { showEndDatePicker.value = true }
+    )
+
+    if (showStartDatePicker.value) {
+        FMDatePickerDialog(
+            initialDate = startDate,
+            onDateSelected = {
+                startDate = it
+                showStartDatePicker.value = false
+                // viewModel.loadHistory(startDate, endDate)
+            },
+            onDismissRequest = { showStartDatePicker.value = false }
+        )
+    }
+
+    if (showEndDatePicker.value) {
+        FMDatePickerDialog(
+            initialDate = endDate,
+            onDateSelected = {
+                endDate = it
+                showEndDatePicker.value = false
+                // viewModel.loadHistory(startDate, endDate)
+            },
+            onDismissRequest = { showEndDatePicker.value = false }
+        )
+    }
 }
 
 @Composable
 fun HistoryContent(
     modifier: Modifier = Modifier,
     uiState: HistoryUiState,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    onStartDateClick: () -> Unit,
+    onEndDateClick: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
 
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd.MM.yyyy") }
 
     Scaffold(
         modifier = modifier,
@@ -86,10 +157,32 @@ fun HistoryContent(
             }
 
             is HistoryUiState.Success -> {
-                val items = uiState.items
+                val sortedItems = uiState.items.sortedByDescending { it.getDateTime() }
                 Column(modifier = Modifier.padding(innerPadding)) {
+                    ListItem(
+                        modifier = Modifier.height(56.dp).clickable(onClick = onStartDateClick),
+                        content = { ContentTextListItem(stringResource(R.string.start)) },
+                        trail = { ContentTextListItem(startDate.format(dateFormatter)) },
+                        containerColor = colorScheme.secondaryContainer
+                    )
+                    FMDriver()
+                    ListItem(
+                        modifier = Modifier.height(56.dp).clickable(onClick = onEndDateClick),
+                        content = { ContentTextListItem(stringResource(R.string.end)) },
+                        trail = { ContentTextListItem(endDate.format(dateFormatter)) },
+                        containerColor = colorScheme.secondaryContainer
+                    )
+                    FMDriver()
+                    ListItem(
+                        modifier = Modifier.height(56.dp),
+                        content = { ContentTextListItem(stringResource(R.string.all)) },
+                        trail = { val sum = sortedItems.sumOf { (it as? HistoryUiItemList.Item)?.price?.filter { c -> c.isDigit() }?.toIntOrNull() ?: 0 }
+                            ContentTextListItem("$sum ₽") },
+                        containerColor = colorScheme.secondaryContainer
+                    )
+                    FMDriver()
                     LazyColumn {
-                        items(items) { item ->
+                        items(sortedItems) { item ->
                             RenderHistoryListItem(item)
                             FMDriver()
                         }
@@ -103,15 +196,6 @@ fun HistoryContent(
 @Composable
 fun RenderHistoryListItem(item: HistoryUiItemList) {
     when (item) {
-        is HistoryUiItemList.DateAndBalance -> {
-            ListItem(
-                modifier = Modifier.height(56.dp),
-                content = { ContentTextListItem(stringResource(item.content)) },
-                trail = { ContentTextListItem(item.trail) },
-                containerColor = colorScheme.secondaryContainer
-            )
-        }
-
         is HistoryUiItemList.Item -> {
             ListItem(
                 modifier = Modifier.height(70.dp),
@@ -147,9 +231,6 @@ fun RenderHistoryListItem(item: HistoryUiItemList) {
 fun provideMockHistoryUiState(): HistoryUiState.Success {
     return HistoryUiState.Success(
         listOf(
-            HistoryUiItemList.DateAndBalance(content = R.string.all, trail = "Февраль 2025"),
-            HistoryUiItemList.DateAndBalance(content = R.string.start, trail = "Февраль 2025"),
-            HistoryUiItemList.DateAndBalance(content = R.string.end, trail = "125 868 ₽"),
             HistoryUiItemList.Item(
                 emoji = "pk",
                 content = "Ремонт квартиры",
@@ -192,4 +273,18 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             ),
         )
     )
+}
+fun HistoryUiItemList.getDateTime(): LocalDateTime {
+    return when (this) {
+        is HistoryUiItemList.Item -> {
+            // Пример парсинга времени "22:01", используем текущую дату
+            try {
+                val formatter = DateTimeFormatter.ofPattern("HH:mm")
+                val time = LocalTime.parse(this.time, formatter)
+                LocalDateTime.of(LocalDate.now(), time)
+            } catch (e: Exception) {
+                LocalDateTime.MIN
+            }
+        }
+    }
 }
