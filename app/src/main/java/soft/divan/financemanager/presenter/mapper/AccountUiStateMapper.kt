@@ -2,7 +2,7 @@ package soft.divan.financemanager.presenter.mapper
 
 import jakarta.inject.Inject
 import soft.divan.financemanager.domain.model.Account
-import soft.divan.financemanager.presenter.ui.model.AccountItem
+import soft.divan.financemanager.presenter.ui.model.AccountUiItem
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import java.math.BigDecimal
 
@@ -19,12 +19,12 @@ class AccountUiStateMapper @Inject constructor() {
         val currency = accounts.first().currency // Предполагаем, что все в одной валюте
 
         val items = listOf(
-            AccountItem.Balance(
+            AccountUiItem.Balance(
                 emoji = "💰",
                 label = "Все счета",
                 amount = formatAmount(totalBalance, currency)
             ),
-            AccountItem.Currency(
+            AccountUiItem.Currency(
                 label = "Валюта",
                 symbol = currencySymbol(currency)
             )
