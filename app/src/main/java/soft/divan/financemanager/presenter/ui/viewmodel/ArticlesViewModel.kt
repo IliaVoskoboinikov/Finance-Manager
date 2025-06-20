@@ -9,14 +9,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class Article(
+data class ArticleUi(
     val emoji: String,
     val title: String
 )
 
 sealed interface ArticlesUiState {
     data object Loading : ArticlesUiState
-    data class Success(val articles: List<Article>) : ArticlesUiState
+    data class Success(val articleUis: List<ArticleUi>) : ArticlesUiState
     data class Error(val message: String) : ArticlesUiState
 }
 
@@ -25,15 +25,15 @@ class ArticlesViewModel(private val dispatcher: CoroutineDispatcher = Dispatcher
     private val _uiState = MutableStateFlow<ArticlesUiState>(ArticlesUiState.Loading)
     val uiState: StateFlow<ArticlesUiState> = _uiState.asStateFlow()
 
-    private val mockArticles = listOf(
-        Article(emoji = "\uD83C\uDFE1", title = "Аренда квартиры"),
-        Article(emoji = "\uD83D\uDC57", title = "Одежда"),
-        Article(emoji = "\uD83D\uDC36", title = "На собачку"),
-        Article(emoji = "\uD83D\uDC36", title = "На собачку"),
-        Article(emoji = "pk", title = "Ремонт квартиры"),
-        Article(emoji = "\uD83C\uDF6D", title = "Продукты"),
-        Article(emoji = "\uD83C\uDFCB\uFE0F", title = "Спортзал"),
-        Article(emoji = "\uD83D\uDC8A", title = "Медицина")
+    private val mockArticleUis = listOf(
+        ArticleUi(emoji = "\uD83C\uDFE1", title = "Аренда квартиры"),
+        ArticleUi(emoji = "\uD83D\uDC57", title = "Одежда"),
+        ArticleUi(emoji = "\uD83D\uDC36", title = "На собачку"),
+        ArticleUi(emoji = "\uD83D\uDC36", title = "На собачку"),
+        ArticleUi(emoji = "pk", title = "Ремонт квартиры"),
+        ArticleUi(emoji = "\uD83C\uDF6D", title = "Продукты"),
+        ArticleUi(emoji = "\uD83C\uDFCB\uFE0F", title = "Спортзал"),
+        ArticleUi(emoji = "\uD83D\uDC8A", title = "Медицина")
     )
 
     init {
@@ -42,13 +42,13 @@ class ArticlesViewModel(private val dispatcher: CoroutineDispatcher = Dispatcher
 
     private fun loadArticles() {
         viewModelScope.launch(dispatcher) {
-            _uiState.value = ArticlesUiState.Success(mockArticles)
+            _uiState.value = ArticlesUiState.Success(mockArticleUis)
         }
     }
 
     fun search(query: String) {
         viewModelScope.launch(dispatcher) {
-            val filtered = mockArticles.filter {
+            val filtered = mockArticleUis.filter {
                 it.title.contains(query, ignoreCase = true)
             }
             _uiState.value = ArticlesUiState.Success(filtered)

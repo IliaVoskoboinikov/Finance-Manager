@@ -11,23 +11,23 @@ import kotlinx.coroutines.launch
 import soft.divan.financemanager.R
 
 
-sealed class IncomeListItemModel {
+sealed class IncomeListItemUiModel {
     data class Balance(
         val content: Int,
         val trail: String,
-    ) : IncomeListItemModel()
+    ) : IncomeListItemUiModel()
 
     data class Salary(
         val content: String,
         val prise: String,
         val onClick: () -> Unit
-    ) : IncomeListItemModel()
+    ) : IncomeListItemUiModel()
 }
 
 
 sealed class IncomeUiState {
     data object Loading : IncomeUiState()
-    data class Success(val items: List<IncomeListItemModel>) : IncomeUiState()
+    data class Success(val items: List<IncomeListItemUiModel>) : IncomeUiState()
     data class Error(val message: String) : IncomeUiState()
 }
 
@@ -41,16 +41,16 @@ class IncomeViewModel(private val dispatcher: CoroutineDispatcher = Dispatchers.
     }
 
     private val mockIncome = listOf(
-        IncomeListItemModel.Balance(
+        IncomeListItemUiModel.Balance(
             content = R.string.all,
             trail = "600 000 ₽",
         ),
-        IncomeListItemModel.Salary(
+        IncomeListItemUiModel.Salary(
             content = "Зарплата",
             prise = "500 000₽",
             onClick = {}
         ),
-        IncomeListItemModel.Salary(
+        IncomeListItemUiModel.Salary(
             content = "Подработка",
             prise = "100 000₽",
             onClick = {}
