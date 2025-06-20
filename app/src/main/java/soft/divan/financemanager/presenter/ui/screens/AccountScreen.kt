@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
@@ -35,7 +33,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.icons.Diagram
-import soft.divan.financemanager.presenter.ui.model.AccountUiItem
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.ui.viewmodel.AccountViewModel
@@ -50,12 +47,6 @@ import soft.divan.financemanager.presenter.uiKit.LoadingProgressBar
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AccountScreenPreview() {
-    val mockAccount = AccountUiState.Success(
-        listOf(
-            AccountUiItem.Balance("💰", "Все счета", "-670 000 ₽"),
-            AccountUiItem.Currency("Валюта", "₽")
-        )
-    )
     FinanceManagerTheme {
         AccountContent(uiState = AccountUiState.Loading, navController = rememberNavController())
     }
@@ -81,7 +72,7 @@ fun AccountContent(
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        floatingActionButton = { FloatingButton(onClick = {    navController.navigate(AddAccountScreen.route)}) }
+        floatingActionButton = { FloatingButton(onClick = { navController.navigate(AddAccountScreen.route) }) }
     ) { innerPadding ->
         when (uiState) {
             is AccountUiState.Loading -> {
@@ -96,17 +87,53 @@ fun AccountContent(
             }
 
             is AccountUiState.Success -> {
-                val items = uiState.items
 
                 Column(modifier = Modifier.padding(innerPadding)) {
-                    LazyColumn {
-                        items(items) { item ->
-                            RenderAccountListItem(item)
-                            if (item != items.last()) {
-                                FMDriver()
+
+                    ListItem(
+                        modifier = Modifier.height(56.dp),
+                        lead = {
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "\uD83D\uDCB0", textAlign = TextAlign.Center)
                             }
-                        }
-                    }
+                        },
+                        content = { ContentTextListItem(uiState.account.name) },
+                        trail = {
+                            ContentTextListItem(uiState.account.balance.toPlainString())
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Icon(
+                                imageVector = Icons.Filled.Arrow,
+                                contentDescription = "arrow",
+                                tint = colorScheme.onSurfaceVariant
+                            )
+                        },
+                        containerColor = colorScheme.secondaryContainer
+                    )
+
+                    FMDriver()
+
+
+                    ListItem(
+                        modifier = Modifier.height(56.dp),
+                        content = { ContentTextListItem("Валюта") },
+                        trail = {
+                            ContentTextListItem(uiState.account.currency)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Icon(
+                                imageVector = Icons.Filled.Arrow,
+                                contentDescription = "arrow",
+                                tint = colorScheme.onSurfaceVariant
+                            )
+                        },
+                        containerColor = colorScheme.secondaryContainer
+                    )
+
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -120,56 +147,6 @@ fun AccountContent(
 
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun RenderAccountListItem(item: AccountUiItem) {
-    when (item) {
-        is AccountUiItem.Balance -> {
-            ListItem(
-                modifier = Modifier.height(56.dp),
-                lead = {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = item.emoji, textAlign = TextAlign.Center)
-                    }
-                },
-                content = { ContentTextListItem(item.label) },
-                trail = {
-                    ContentTextListItem(item.amount)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Icon(
-                        imageVector = Icons.Filled.Arrow,
-                        contentDescription = "arrow",
-                        tint = colorScheme.onSurfaceVariant
-                    )
-                },
-                containerColor = colorScheme.secondaryContainer
-            )
-        }
-
-        is AccountUiItem.Currency -> {
-            ListItem(
-                modifier = Modifier.height(56.dp),
-                content = { ContentTextListItem(item.label) },
-                trail = {
-                    ContentTextListItem(item.symbol)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Icon(
-                        imageVector = Icons.Filled.Arrow,
-                        contentDescription = "arrow",
-                        tint = colorScheme.onSurfaceVariant
-                    )
-                },
-                containerColor = colorScheme.secondaryContainer
-            )
         }
     }
 }
