@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.icons.Diagram
 import soft.divan.financemanager.presenter.ui.model.AccountUiItem
@@ -56,7 +57,7 @@ fun AccountScreenPreview() {
         )
     )
     FinanceManagerTheme {
-        AccountContent(uiState = AccountUiState.Loading)
+        AccountContent(uiState = AccountUiState.Loading, navController = rememberNavController())
     }
 }
 
@@ -67,19 +68,20 @@ fun AccountScreen(
     viewModel: AccountViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    AccountContent(modifier = modifier, uiState = uiState)
+    AccountContent(modifier = modifier, uiState = uiState, navController = navController)
 }
 
 @Composable
 fun AccountContent(
     modifier: Modifier = Modifier,
     uiState: AccountUiState,
+    navController: NavController,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        floatingActionButton = { FloatingButton(onClick = {}) }
+        floatingActionButton = { FloatingButton(onClick = {    navController.navigate(AddAccountScreen.route)}) }
     ) { innerPadding ->
         when (uiState) {
             is AccountUiState.Loading -> {

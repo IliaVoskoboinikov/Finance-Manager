@@ -8,6 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import soft.divan.financemanager.presenter.ui.screens.AccountScreen
+import soft.divan.financemanager.presenter.ui.screens.AddAccountScreen
 import soft.divan.financemanager.presenter.ui.screens.ArticlesScreen
 import soft.divan.financemanager.presenter.ui.screens.ExpensesScreen
 import soft.divan.financemanager.presenter.ui.screens.HistoryScreen
@@ -34,5 +35,6 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(ScreenBottom.ArticlesScreenBottom.route) { ArticlesScreen(modifier, navController) }
         composable(ScreenBottom.SettingsScreenBottom.route) { SettingsScreen(modifier, navController) }
         composable(HistoryScreen.route) { HistoryScreen(modifier, navController) }
+        composable(AddAccountScreen.route) { AddAccountScreen(modifier, navController) }
     }
 }

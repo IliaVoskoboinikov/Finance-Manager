@@ -44,6 +44,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
         ScreenBottom.ArticlesScreenBottom.route -> TopBarModel.ArticlesTopBar
         ScreenBottom.SettingsScreenBottom.route -> TopBarModel.SettingsTopBar
         HistoryScreen.route -> TopBarModel.HistoryTopBar
+        AddAccountScreen.route -> TopBarModel.AddAccountTopBar {}
         else -> {
             TopBarModel.ExpansesTopBar
         }
