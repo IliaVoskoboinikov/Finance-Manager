@@ -12,6 +12,7 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import kotlinx.coroutines.delay
 import soft.divan.financemanager.R
+import soft.divan.financemanager.presenter.navigation.ScreenBottom
 
 
 object SplashScreen {
@@ -25,7 +26,7 @@ fun SplashScreen(
     SplashContent()
     LaunchedEffect(true) {
         delay(1000)
-        navHostController.navigate(Screen.ExpansesScreen.route) {
+        navHostController.navigate(ScreenBottom.ExpansesScreenBottom.route) {
             popUpTo(SplashScreen.route) { inclusive = true }
         }
     }

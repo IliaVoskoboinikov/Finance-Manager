@@ -34,7 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.icons.Diagram
-import soft.divan.financemanager.presenter.ui.model.AccountItem
+import soft.divan.financemanager.presenter.ui.model.AccountUiItem
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.ui.viewmodel.AccountViewModel
@@ -51,8 +51,8 @@ import soft.divan.financemanager.presenter.uiKit.LoadingProgressBar
 fun AccountScreenPreview() {
     val mockAccount = AccountUiState.Success(
         listOf(
-            AccountItem.Balance("💰", "Все счета", "-670 000 ₽"),
-            AccountItem.Currency("Валюта", "₽")
+            AccountUiItem.Balance("💰", "Все счета", "-670 000 ₽"),
+            AccountUiItem.Currency("Валюта", "₽")
         )
     )
     FinanceManagerTheme {
@@ -123,9 +123,9 @@ fun AccountContent(
 }
 
 @Composable
-fun RenderAccountListItem(item: AccountItem) {
+fun RenderAccountListItem(item: AccountUiItem) {
     when (item) {
-        is AccountItem.Balance -> {
+        is AccountUiItem.Balance -> {
             ListItem(
                 modifier = Modifier.height(56.dp),
                 lead = {
@@ -153,7 +153,7 @@ fun RenderAccountListItem(item: AccountItem) {
             )
         }
 
-        is AccountItem.Currency -> {
+        is AccountUiItem.Currency -> {
             ListItem(
                 modifier = Modifier.height(56.dp),
                 content = { ContentTextListItem(item.label) },

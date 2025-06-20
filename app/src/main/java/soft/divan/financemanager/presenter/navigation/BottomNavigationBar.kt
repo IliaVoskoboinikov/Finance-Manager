@@ -4,7 +4,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import soft.divan.financemanager.presenter.ui.screens.Screen
 
 
 @Composable
@@ -13,7 +12,7 @@ fun BottomNavigationBar(
     currentRoute: String?
 ) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-        Screen.items.forEach { screen ->
+        ScreenBottom.items.forEach { screen ->
             FMNavigationBarItem(currentRoute, screen, navController)
         }
     }

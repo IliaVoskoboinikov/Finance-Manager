@@ -12,12 +12,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import soft.divan.financemanager.presenter.ui.screens.TopBar
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import soft.divan.financemanager.presenter.ui.model.TopBarModel
+import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
+
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+fun TopBarPreview() {
+    FinanceManagerTheme {
+        TopBar(topBar = TopBarModel.HistoryTopBar, navController = rememberNavController())
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    topBar: TopBar,
+    topBar: TopBarModel,
+    navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
@@ -38,15 +52,15 @@ fun TopBar(
         },
         actions = {
             if (topBar.actionIcon != null) {
-                IconButton(onClick = { topBar.actionIconClick() }) {
+                IconButton(onClick = { topBar.actionIconClick(navController) }) {
                     Icon(topBar.actionIcon, contentDescription = "Add")
                 }
             }
         },
         navigationIcon = {
             if (topBar.navigationIcon != null) {
-                IconButton(onClick = { topBar.navigationIconClick() }) {
-                    Icon(topBar.navigationIcon, contentDescription = "navigation")
+                IconButton(onClick = { topBar.navigationIconClick(navController) }) {
+                    Icon(topBar.navigationIcon, contentDescription = "Back")
                 }
             }
         }
