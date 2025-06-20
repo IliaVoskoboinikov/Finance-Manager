@@ -1,9 +1,9 @@
 package soft.divan.financemanager.data.network.interceptor
 
 
-import jakarta.inject.Inject
 import okhttp3.logging.HttpLoggingInterceptor
 import soft.divan.financemanager.BuildConfig
+import javax.inject.Inject
 
 
 class LoggingInterceptor @Inject constructor() {

@@ -4,8 +4,12 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 import soft.divan.financemanager.data.network.dto.AccountDto
+import soft.divan.financemanager.data.network.dto.AccountWithStatsDto
 import soft.divan.financemanager.data.network.dto.CreateAccountRequestDto
+import soft.divan.financemanager.data.network.dto.UpdateAccountRequestDto
 
 interface AccountApiService {
 
@@ -16,4 +20,11 @@ interface AccountApiService {
     suspend fun createAccount(
         @Body createAccountRequestDto: CreateAccountRequestDto
     ): Response<AccountDto>
+
+    @PUT("v1/accounts/{id}")
+    suspend fun updateAccount(
+        @Path("id") accountId: Int,
+        @Body request: UpdateAccountRequestDto
+    ): Response<AccountWithStatsDto>
+
 }
