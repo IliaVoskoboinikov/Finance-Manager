@@ -108,7 +108,7 @@ class ExpensesViewModel(private val dispatcher: CoroutineDispatcher = Dispatcher
 
     private fun loadExpenses() {
         viewModelScope.launch(dispatcher) {
-            _uiState.value = ExpensesUiState.Success(mockExpenses)
+            _uiState.value = ExpensesUiState.Success(listOf())
         }
     }
 }
