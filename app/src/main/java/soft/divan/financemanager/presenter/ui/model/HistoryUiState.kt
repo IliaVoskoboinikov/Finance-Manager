@@ -7,12 +7,6 @@ sealed class HistoryUiState {
 }
 
 sealed class HistoryUiItemList {
-
-    data class DateAndBalance(
-        val content: Int,
-        val trail: String,
-    ) : HistoryUiItemList()
-
     data class Item(
         val emoji: String,
         val content: String,
