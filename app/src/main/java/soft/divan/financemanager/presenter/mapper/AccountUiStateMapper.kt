@@ -1,22 +1,19 @@
 package soft.divan.financemanager.presenter.mapper
 
-import jakarta.inject.Inject
 import soft.divan.financemanager.domain.model.Account
 import soft.divan.financemanager.presenter.ui.model.AccountUiItem
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import java.math.BigDecimal
+import javax.inject.Inject
 
 
 class AccountUiStateMapper @Inject constructor() {
 
-    fun mapToUiState(accounts: List<Account>): AccountUiState {
-        if (accounts.isEmpty()) {
-            return AccountUiState.Success(emptyList())
-        }
+    fun mapToUiState(account: Account): AccountUiState {
 
         // Суммируем баланс
-        val totalBalance = accounts.map { it.balance }.reduce { acc, next -> acc + next }
-        val currency = accounts.first().currency // Предполагаем, что все в одной валюте
+        val totalBalance = account.balance
+        val currency = account.currency
 
         val items = listOf(
             AccountUiItem.Balance(
@@ -30,7 +27,7 @@ class AccountUiStateMapper @Inject constructor() {
             )
         )
 
-        return AccountUiState.Success(items)
+        return AccountUiState.Loading
     }
 
     private fun formatAmount(amount: BigDecimal, currency: String): String {

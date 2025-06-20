@@ -1,14 +1,16 @@
 package soft.divan.financemanager.data.repository
 
-import jakarta.inject.Inject
 import soft.divan.financemanager.data.network.dto.CreateAccountRequestDto
 import soft.divan.financemanager.data.network.mapper.AccountDataMapper
 import soft.divan.financemanager.data.network.mapper.AccountDomainMapper
+import soft.divan.financemanager.data.network.mapper.toAccountBriefDomain
 import soft.divan.financemanager.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.domain.model.Account
+import soft.divan.financemanager.domain.model.AccountBrief
 import soft.divan.financemanager.domain.model.CreateAccountRequest
 import soft.divan.financemanager.domain.repository.AccountRepository
 import soft.divan.financemanager.domain.utils.Rezult
+import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
@@ -46,8 +48,14 @@ class AccountRepositoryImpl @Inject constructor(
                 val account = accountDomainMapper.toDomain(accountEntity)
                 return Rezult.Success(account)
             }
+
         }
     }
 
-
+    override suspend fun updateAccount(accountBrief: AccountBrief): Rezult<AccountBrief> {
+        return when (val result = accountRemoteDataSource.updateAccount(accountBrief)) {
+            is Rezult.Success -> Rezult.Success(result.data.toAccountBriefDomain())
+            is Rezult.Error -> Rezult.Error(result.exception)
+        }
+    }
 }

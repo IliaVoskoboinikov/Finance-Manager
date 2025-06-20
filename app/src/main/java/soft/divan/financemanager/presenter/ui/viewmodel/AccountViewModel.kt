@@ -37,7 +37,7 @@ class AccountViewModel @Inject constructor(
                 }
 
                 is Rezult.Success -> {
-                    _uiState.update { uiStateMapper.mapToUiState(result.data) }
+                    _uiState.update { AccountUiState.Success(result.data.first())}
                 }
             }
         }

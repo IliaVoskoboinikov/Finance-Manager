@@ -1,9 +1,11 @@
 package soft.divan.financemanager.presenter.ui.model
 
+import soft.divan.financemanager.domain.model.Account
+
 
 sealed class AccountUiState {
     data object Loading : AccountUiState()
-    data class Success(val items: List<AccountUiItem>) : AccountUiState()
+    data class Success(val account: Account) : AccountUiState()
     data class Error(val message: String) : AccountUiState()
 }
 

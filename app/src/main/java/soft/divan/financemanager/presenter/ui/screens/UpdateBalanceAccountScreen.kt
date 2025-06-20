@@ -16,9 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -29,16 +27,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import soft.divan.financemanager.presenter.ui.model.UpdateBalanceAccountUiState
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
+import soft.divan.financemanager.presenter.ui.viewmodel.UpdateBalanceAccountViewModel
 import soft.divan.financemanager.presenter.uiKit.FMDriver
 import soft.divan.financemanager.presenter.uiKit.ListItem
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun AddAccountScreenPreview() {
+fun UpdateBalanceAccountScreenPreview() {
     FinanceManagerTheme {
-        AddAccountContent()
+       /* UpdateBalanceContent()*/
     }
 }
 
@@ -47,27 +49,45 @@ object AddAccountScreen {
     const val route = "add_account"
 }
 
+//update balance account
 @Composable
-fun AddAccountScreen(
+fun UpdateBalanceAccountScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
+    viewModel: UpdateBalanceAccountViewModel = hiltViewModel(),
 ) {
-    AddAccountContent(modifier = modifier,)
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle(null)
+    val balance by viewModel.balance.collectAsStateWithLifecycle()
+    UpdateBalanceContent(modifier = modifier,  balance = balance,        onBalanceChanged = viewModel::onBalanceChanged
+    )
+
+    when (uiState) {
+        is UpdateBalanceAccountUiState.Error -> {}
+        is UpdateBalanceAccountUiState.Loading -> {}
+        is UpdateBalanceAccountUiState.Success -> {
+            navController.popBackStack()
+        }
+
+        null -> {}
+    }
 }
 
 @Composable
-fun AddAccountContent(
+fun UpdateBalanceContent(
     modifier: Modifier = Modifier,
+    balance: String,
+    onBalanceChanged: (String) -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
-    var balance by remember { mutableStateOf("") }
-        Column() {
-            BalanceInputListItem(
-                value = balance,
-                onValueChange = { balance = it }
-            )
-            FMDriver()
-        }
+
+    Column() {
+        BalanceInputListItem(
+            value = balance,
+            onValueChange = onBalanceChanged
+        )
+        FMDriver()
+    }
+
 }
 
 
