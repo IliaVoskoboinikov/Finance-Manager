@@ -4,12 +4,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import soft.divan.financemanager.R
-import soft.divan.financemanager.presenter.navigation.ScreenBottom
 import soft.divan.financemanager.presenter.ui.icons.ArrowBack
 import soft.divan.financemanager.presenter.ui.icons.Clock
 import soft.divan.financemanager.presenter.ui.icons.Pencil
 import soft.divan.financemanager.presenter.ui.icons.TabletWatch
 import soft.divan.financemanager.presenter.ui.screens.HistoryScreen
+import soft.divan.financemanager.ui.icons.ArrowConfirm
+import soft.divan.financemanager.ui.icons.Cross
 
 sealed class TopBarModel(
     val title: Int,
@@ -30,7 +31,7 @@ sealed class TopBarModel(
         title = R.string.income_today,
         actionIcon = Icons.Filled.Clock,
         actionIconClick = { navController ->
-            navController.navigate(HistoryScreen.route)
+
         }
     )
 
@@ -38,7 +39,7 @@ sealed class TopBarModel(
         title = R.string.my_account,
         actionIcon = Icons.Filled.Pencil,
         actionIconClick = { navController ->
-            navController.navigate(ScreenBottom.SettingsScreenBottom.route)
+
         }
     )
 
@@ -60,5 +61,16 @@ sealed class TopBarModel(
         actionIconClick = { navController ->
 
         }
+    )
+
+    data class AddAccountTopBar( val onConfirmClick: () -> Unit) : TopBarModel(
+        title = R.string.my_account,
+        navigationIcon = Icons.Filled.Cross,
+        navigationIconClick = { navController ->
+            navController.popBackStack()
+        },
+
+        actionIcon = Icons.Filled.ArrowConfirm,
+        actionIconClick = { onConfirmClick() },
     )
 }
