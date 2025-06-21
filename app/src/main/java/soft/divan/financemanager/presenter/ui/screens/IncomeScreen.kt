@@ -22,7 +22,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
-import soft.divan.financemanager.presenter.ui.viewmodel.IncomeListItemModel
+import soft.divan.financemanager.presenter.ui.viewmodel.IncomeListItemUiModel
 import soft.divan.financemanager.presenter.ui.viewmodel.IncomeUiState
 import soft.divan.financemanager.presenter.ui.viewmodel.IncomeViewModel
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
@@ -75,9 +75,9 @@ fun IncomeScreen(
 
 
 @Composable
-fun RenderIncomeListItem(model: IncomeListItemModel) {
+fun RenderIncomeListItem(model: IncomeListItemUiModel) {
     when (model) {
-        is IncomeListItemModel.Balance -> {
+        is IncomeListItemUiModel.Balance -> {
             ListItem(
                 modifier = Modifier.height(56.dp),
 
@@ -87,7 +87,7 @@ fun RenderIncomeListItem(model: IncomeListItemModel) {
             )
         }
 
-        is IncomeListItemModel.Salary -> {
+        is IncomeListItemUiModel.Salary -> {
             ListItem(
                 modifier = Modifier.height(70.dp),
                 content = { ContentTextListItem(model.content) },

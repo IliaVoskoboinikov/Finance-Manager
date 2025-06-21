@@ -12,19 +12,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import soft.divan.financemanager.presenter.ui.screens.Screen
 
 @Composable
 fun RowScope.FMNavigationBarItem(
     currentRoute: String?,
-    screen: Screen,
+    screenBottom: ScreenBottom,
     navController: NavHostController
 ) {
     NavigationBarItem(
-        selected = currentRoute == screen.route,
+        selected = currentRoute == screenBottom.route,
         onClick = {
-            if (currentRoute != screen.route) {
-                navController.navigate(screen.route) {
+            if (currentRoute != screenBottom.route) {
+                navController.navigate(screenBottom.route) {
                     popUpTo(navController.graph.startDestinationId) {
                         saveState = true
                     }
@@ -35,15 +34,15 @@ fun RowScope.FMNavigationBarItem(
         },
         icon = {
             Icon(
-                screen.icon,
-                contentDescription = stringResource(screen.title),
+                screenBottom.icon,
+                contentDescription = stringResource(screenBottom.title),
                 modifier = Modifier.size(32.dp)
             )
         },
         label = {
             Text(
-                text = stringResource(screen.title),
-                fontWeight = if (currentRoute == screen.route) FontWeight.Bold else FontWeight.Normal,
+                text = stringResource(screenBottom.title),
+                fontWeight = if (currentRoute == screenBottom.route) FontWeight.Bold else FontWeight.Normal,
                 fontSize = 12.sp,
             )
         },

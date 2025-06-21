@@ -1,44 +1,37 @@
 package soft.divan.financemanager.presenter.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
+import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesListItemUiModel
+import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesUiState
+import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesViewModel
+import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
+import soft.divan.financemanager.presenter.uiKit.EmojiCircle
 import soft.divan.financemanager.presenter.uiKit.FMDriver
 import soft.divan.financemanager.presenter.uiKit.FloatingButton
 import soft.divan.financemanager.presenter.uiKit.ListItem
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
 import soft.divan.financemanager.presenter.uiKit.SubContentTextListItem
-import soft.divan.financemanager.presenter.ui.icons.Arrow
-import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesListItemModel
-import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesUiState
-import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesViewModel
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
@@ -81,9 +74,9 @@ fun ExpensesScreen(
 
 
 @Composable
-fun RenderExpensesListItem(model: ExpensesListItemModel) {
+fun RenderExpensesListItem(model: ExpensesListItemUiModel) {
     when (model) {
-        is ExpensesListItemModel.All -> {
+        is ExpensesListItemUiModel.All -> {
             ListItem(
                 modifier = Modifier.height(56.dp),
                 content = { ContentTextListItem(stringResource(model.content)) },
@@ -92,20 +85,11 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
             )
         }
 
-        is ExpensesListItemModel.Item -> {
+        is ExpensesListItemUiModel.ItemUi -> {
             ListItem(
                 modifier = Modifier.height(70.dp),
                 lead = {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(colorScheme.secondaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = model.emoji, textAlign = TextAlign.Center)
-
-                    }
+                    EmojiCircle(emoji = model.emoji)
 
                 },
                 content = { ContentTextListItem(model.content) },
@@ -124,19 +108,11 @@ fun RenderExpensesListItem(model: ExpensesListItemModel) {
                 )
         }
 
-        is ExpensesListItemModel.ItemSubContent -> {
+        is ExpensesListItemUiModel.ItemUiSubContent -> {
             ListItem(
                 modifier = Modifier.height(70.dp),
                 lead = {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(colorScheme.secondaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = model.emoji, textAlign = TextAlign.Center)
-                    }
+                    EmojiCircle(emoji = model.emoji)
 
                 },
                 content = {

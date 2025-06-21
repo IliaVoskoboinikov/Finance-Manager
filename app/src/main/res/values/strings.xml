@@ -25,4 +25,8 @@
     <string name="all">Всего</string>
     <string name="find_article">Найти статью</string>
 
+    <string name="my_history">Моя История</string>
+    <string name="start">Начало</string>
+    <string name="end">Конец</string>
+
 </resources>
