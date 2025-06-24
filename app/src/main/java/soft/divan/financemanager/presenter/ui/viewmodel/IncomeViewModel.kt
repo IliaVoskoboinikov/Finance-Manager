@@ -2,6 +2,7 @@ package soft.divan.financemanager.presenter.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.R
+import javax.inject.Inject
 
 
 sealed class IncomeListItemUiModel {
@@ -31,7 +33,8 @@ sealed class IncomeUiState {
     data class Error(val message: String) : IncomeUiState()
 }
 
-class IncomeViewModel(private val dispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel() {
+@HiltViewModel
+class IncomeViewModel @Inject constructor( ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<IncomeUiState>(IncomeUiState.Loading)
     val uiState: StateFlow<IncomeUiState> = _uiState.asStateFlow()
@@ -58,7 +61,7 @@ class IncomeViewModel(private val dispatcher: CoroutineDispatcher = Dispatchers.
     )
 
     private fun loadIncomeItems() {
-        viewModelScope.launch(dispatcher) {
+        viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = IncomeUiState.Success(mockIncome)
         }
     }

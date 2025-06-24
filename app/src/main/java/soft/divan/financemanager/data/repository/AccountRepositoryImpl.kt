@@ -32,7 +32,7 @@ class AccountRepositoryImpl @Inject constructor(
         val accounts = accountsEntity.map { it.toDomain() }
         emit(accounts)
 
-    }.flowOn(Dispatchers.IO)
+    }
 
     override fun createAccount(createAccountRequest: CreateAccountRequest): Flow<Account> = flow {
         val requestDto = CreateAccountRequestDto(

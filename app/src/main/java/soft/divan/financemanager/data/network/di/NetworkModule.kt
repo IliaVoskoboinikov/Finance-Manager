@@ -68,9 +68,4 @@ object NetworkModule {
     fun provideAccountApi(retrofit: Retrofit): AccountApiService =
         retrofit.create(AccountApiService::class.java)
 
-    @Provides
-    fun provideCoroutineDispatcher(): CoroutineDispatcher {
-        return Dispatchers.IO
-    }
-
 }

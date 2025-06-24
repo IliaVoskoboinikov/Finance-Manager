@@ -90,5 +90,6 @@ dependencies {
     implementation(libs.moshi.adapters)
     implementation(libs.moshi.kotlin)
     implementation(libs.converter.gson)
+    implementation("androidx.tracing:tracing-ktx:1.3.0")
 
 }

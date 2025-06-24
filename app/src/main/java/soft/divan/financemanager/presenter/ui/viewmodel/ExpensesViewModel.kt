@@ -2,6 +2,7 @@ package soft.divan.financemanager.presenter.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.R
+import javax.inject.Inject
 
 
 sealed class ExpensesListItemUiModel {
@@ -39,8 +41,8 @@ sealed class ExpensesUiState {
     data class Error(val message: String) : ExpensesUiState()
 }
 
-
-class ExpensesViewModel(private val dispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel() {
+@HiltViewModel
+class ExpensesViewModel @Inject constructor(): ViewModel() {
 
     private val _uiState = MutableStateFlow<ExpensesUiState>(ExpensesUiState.Loading)
     val uiState: StateFlow<ExpensesUiState> = _uiState.asStateFlow()
@@ -107,7 +109,7 @@ class ExpensesViewModel(private val dispatcher: CoroutineDispatcher = Dispatcher
     )
 
     private fun loadExpenses() {
-        viewModelScope.launch(dispatcher) {
+        viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = ExpensesUiState.Success(listOf())
         }
     }
