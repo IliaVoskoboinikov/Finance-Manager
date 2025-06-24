@@ -2,7 +2,6 @@ package soft.divan.financemanager.presenter.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -14,11 +13,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import soft.divan.financemanager.domain.usecase.account.GetAccountsUseCase
-import soft.divan.financemanager.domain.utils.Rezult
 import soft.divan.financemanager.presenter.mapper.AccountUiStateMapper
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import javax.inject.Inject

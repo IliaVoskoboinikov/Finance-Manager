@@ -15,7 +15,6 @@ import soft.divan.financemanager.domain.model.Account
 import soft.divan.financemanager.domain.model.AccountBrief
 import soft.divan.financemanager.domain.model.CreateAccountRequest
 import soft.divan.financemanager.domain.repository.AccountRepository
-import soft.divan.financemanager.domain.utils.Rezult
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,40 +25,36 @@ class AccountRepositoryImpl @Inject constructor(
     private val accountDomainMapper: AccountDomainMapper,
 ) : AccountRepository {
 
-    override fun getAccounts(): Flow<List<Account>> =  flow {
+    override fun getAccounts(): Flow<List<Account>> = flow {
         val response = accountRemoteDataSource.getAccounts()
-        if (response.isSuccessful) {
-            val accountDto = response.body().orEmpty()
-            val accountsEntity = accountDto.map { it.toEntity() }
-            val accounts = accountsEntity.map {  it.toDomain() }
-            emit(accounts)
-        } else {
-            throw Exception("Failed to fetch accounts: ${response.code()} ${response.message()}")
-        }
+        val accountDto = response.body().orEmpty()
+        val accountsEntity = accountDto.map { it.toEntity() }
+        val accounts = accountsEntity.map { it.toDomain() }
+        emit(accounts)
+
     }.flowOn(Dispatchers.IO)
 
-
-    override suspend fun createAccount(createAccountRequest: CreateAccountRequest): Rezult<Account> {
+    override fun createAccount(createAccountRequest: CreateAccountRequest): Flow<Account> = flow {
         val requestDto = CreateAccountRequestDto(
             name = createAccountRequest.name,
             balance = createAccountRequest.balance.toPlainString(),
             currency = createAccountRequest.currency
         )
-        when (val result = accountRemoteDataSource.createAccount(requestDto)) {
-            is Rezult.Error -> return Rezult.Error(result.exception)
-            is Rezult.Success -> {
-                val accountEntity = accountDataMapper.toEntity(result.data)
-                val account = accountDomainMapper.toDomain(accountEntity)
-                return Rezult.Success(account)
-            }
+        val response = accountRemoteDataSource.createAccount(requestDto)
+        val accountDto = response.body()!!
+        val accountsEntity = accountDto.toEntity()
+        val accounts = accountsEntity.toDomain()
+        emit(accounts)
 
-        }
+
     }
 
-    override suspend fun updateAccount(accountBrief: AccountBrief): Rezult<AccountBrief> {
-        return when (val result = accountRemoteDataSource.updateAccount(accountBrief)) {
-            is Rezult.Success -> Rezult.Success(result.data.toAccountBriefDomain())
-            is Rezult.Error -> Rezult.Error(result.exception)
-        }
+    override  fun updateAccount(accountBrief: AccountBrief): Flow<AccountBrief> = flow {
+        val response = accountRemoteDataSource.updateAccount(accountBrief)
+        val accountWithStatsDto = response.body()!!
+        val accountBrief = accountWithStatsDto.toAccountBriefDomain()
+        emit(accountBrief)
     }
+
 }
+
