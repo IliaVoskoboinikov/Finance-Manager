@@ -2,11 +2,19 @@ package soft.divan.financemanager.presenter.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.domain.usecase.account.GetAccountsUseCase
@@ -30,17 +38,18 @@ class AccountViewModel @Inject constructor(
     }
 
     private fun loadAccount() {
-        viewModelScope.launch(dispatcher) {
-            when (val result = getAccountsUseCase()) {
-                is Rezult.Error -> {
-                    _uiState.update { AccountUiState.Error(result.exception.message.toString()) }
-                }
-
-                is Rezult.Success -> {
-                    _uiState.update { AccountUiState.Success(result.data.first())}
-                }
+        getAccountsUseCase.invoke()
+            .onStart {
+                _uiState.update { AccountUiState.Loading }
             }
-        }
+            .onEach { data ->
+                _uiState.update { AccountUiState.Success(data.first()) }
+            }
+            .catch { exception ->
+                _uiState.update { AccountUiState.Error(exception.message.toString()) }
+            }
+            .flowOn(Dispatchers.IO)
+            .launchIn(viewModelScope)
     }
 
 
