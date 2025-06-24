@@ -28,5 +28,6 @@
     <string name="my_history">Моя История</string>
     <string name="start">Начало</string>
     <string name="end">Конец</string>
+    <string name="not_connected">⚠️ Отсутствует подключение к интернету</string>
 
 </resources>
