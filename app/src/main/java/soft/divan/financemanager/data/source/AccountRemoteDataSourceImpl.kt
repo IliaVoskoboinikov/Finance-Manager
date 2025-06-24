@@ -1,5 +1,6 @@
 package soft.divan.financemanager.data.source
 
+import retrofit2.Response
 import soft.divan.financemanager.data.network.api.AccountApiService
 import soft.divan.financemanager.data.network.dto.AccountDto
 import soft.divan.financemanager.data.network.dto.AccountWithStatsDto
@@ -13,8 +14,8 @@ import javax.inject.Inject
 class AccountRemoteDataSourceImpl @Inject constructor(
     private val accountApiService: AccountApiService,
 ) : AccountRemoteDataSource {
-    override suspend fun getAccounts(): Rezult<List<AccountDto>> {
-        return safeHttpResult { accountApiService.getAccounts() }
+    override suspend fun getAccounts(): Response<List<AccountDto>> {
+        return  accountApiService.getAccounts()
     }
 
     override suspend fun createAccount(createAccountRequestDto: CreateAccountRequestDto): Rezult<AccountDto> {
