@@ -26,7 +26,6 @@ import javax.inject.Inject
 @HiltViewModel
 class UpdateBalanceAccountViewModel @Inject constructor(
     private val updateAccountUseCase: UpdateAccountUseCase,
-    private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
     private val _uiState = MutableSharedFlow<UpdateBalanceAccountUiState>(
         extraBufferCapacity = 1,

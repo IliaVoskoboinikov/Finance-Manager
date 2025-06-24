@@ -2,12 +2,14 @@ package soft.divan.financemanager.presenter.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.CoroutineDispatcher
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+
 
 data class ArticleUi(
     val emoji: String,
@@ -20,7 +22,8 @@ sealed interface ArticlesUiState {
     data class Error(val message: String) : ArticlesUiState
 }
 
-class ArticlesViewModel(private val dispatcher: CoroutineDispatcher = Dispatchers.IO) : ViewModel() {
+@HiltViewModel
+class ArticlesViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow<ArticlesUiState>(ArticlesUiState.Loading)
     val uiState: StateFlow<ArticlesUiState> = _uiState.asStateFlow()
@@ -41,13 +44,13 @@ class ArticlesViewModel(private val dispatcher: CoroutineDispatcher = Dispatcher
     }
 
     private fun loadArticles() {
-        viewModelScope.launch(dispatcher) {
+        viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = ArticlesUiState.Success(mockArticleUis)
         }
     }
 
     fun search(query: String) {
-        viewModelScope.launch(dispatcher) {
+        viewModelScope.launch(Dispatchers.IO) {
             val filtered = mockArticleUis.filter {
                 it.title.contains(query, ignoreCase = true)
             }

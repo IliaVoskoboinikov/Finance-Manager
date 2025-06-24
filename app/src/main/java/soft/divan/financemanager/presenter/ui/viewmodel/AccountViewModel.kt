@@ -20,11 +20,11 @@ import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import javax.inject.Inject
 
 
+
 @HiltViewModel
 class AccountViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
     private val uiStateMapper: AccountUiStateMapper,
-    private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState: StateFlow<AccountUiState> = _uiState.asStateFlow()
