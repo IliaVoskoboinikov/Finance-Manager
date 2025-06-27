@@ -8,7 +8,8 @@ import soft.divan.financemanager.presenter.ui.icons.ArrowBack
 import soft.divan.financemanager.presenter.ui.icons.Clock
 import soft.divan.financemanager.presenter.ui.icons.Pencil
 import soft.divan.financemanager.presenter.ui.icons.TabletWatch
-import soft.divan.financemanager.presenter.ui.screens.HistoryScreen
+import soft.divan.financemanager.presenter.ui.screens.HistoryExpensesScreen
+import soft.divan.financemanager.presenter.ui.screens.HistoryIncomeScreen
 import soft.divan.financemanager.ui.icons.ArrowConfirm
 import soft.divan.financemanager.ui.icons.Cross
 
@@ -23,7 +24,7 @@ sealed class TopBarModel(
         title = R.string.expanses_today,
         actionIcon = Icons.Filled.Clock,
         actionIconClick = { navController ->
-            navController.navigate(HistoryScreen.route)
+            navController.navigate(HistoryExpensesScreen.route)
         }
     )
 
@@ -31,7 +32,7 @@ sealed class TopBarModel(
         title = R.string.income_today,
         actionIcon = Icons.Filled.Clock,
         actionIconClick = { navController ->
-
+            navController.navigate(HistoryIncomeScreen.route)
         }
     )
 

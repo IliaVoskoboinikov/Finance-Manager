@@ -10,11 +10,17 @@ import soft.divan.financemanager.data.network.dto.AccountDto
 import soft.divan.financemanager.data.network.dto.AccountWithStatsDto
 import soft.divan.financemanager.data.network.dto.CreateAccountRequestDto
 import soft.divan.financemanager.data.network.dto.UpdateAccountRequestDto
+import soft.divan.financemanager.domain.model.AccountHistoryResponse
 
 interface AccountApiService {
 
     @GET("v1/accounts")
     suspend fun getAccounts(): Response<List<AccountDto>>
+
+    @GET("v1/accounts/{id}")
+    suspend fun getAccountById(
+        @Path("id") id: Int
+    ): Response<AccountWithStatsDto>
 
     @POST("v1/accounts")
     suspend fun createAccount(

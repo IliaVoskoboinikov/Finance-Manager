@@ -11,7 +11,8 @@ import soft.divan.financemanager.presenter.ui.screens.AccountScreen
 import soft.divan.financemanager.presenter.ui.screens.AddAccountScreen
 import soft.divan.financemanager.presenter.ui.screens.ArticlesScreen
 import soft.divan.financemanager.presenter.ui.screens.ExpensesScreen
-import soft.divan.financemanager.presenter.ui.screens.HistoryScreen
+import soft.divan.financemanager.presenter.ui.screens.HistoryExpensesScreen
+import soft.divan.financemanager.presenter.ui.screens.HistoryIncomeScreen
 import soft.divan.financemanager.presenter.ui.screens.IncomeScreen
 import soft.divan.financemanager.presenter.ui.screens.SettingsScreen
 import soft.divan.financemanager.presenter.ui.screens.SplashScreen
@@ -35,7 +36,8 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         composable(ScreenBottom.AccountScreenBottom.route) { AccountScreen(modifier, navController) }
         composable(ScreenBottom.ArticlesScreenBottom.route) { ArticlesScreen(modifier, navController) }
         composable(ScreenBottom.SettingsScreenBottom.route) { SettingsScreen(modifier, navController) }
-        composable(HistoryScreen.route) { HistoryScreen(modifier, navController) }
+        composable(HistoryExpensesScreen.route) { HistoryExpensesScreen(modifier, navController) }
+        composable(HistoryIncomeScreen.route) { HistoryIncomeScreen(modifier, navController) }
         composable(AddAccountScreen.route) { UpdateBalanceAccountScreen(modifier, navController) }
     }
 }

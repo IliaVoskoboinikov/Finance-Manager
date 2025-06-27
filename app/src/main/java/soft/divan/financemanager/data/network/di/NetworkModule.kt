@@ -16,6 +16,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import soft.divan.financemanager.BuildConfig
 import soft.divan.financemanager.data.network.api.AccountApiService
+import soft.divan.financemanager.data.network.api.TransactionApiService
 import soft.divan.financemanager.data.network.interceptor.AuthInterceptor
 import soft.divan.financemanager.data.network.interceptor.LoggingInterceptor
 import soft.divan.financemanager.data.network.interceptor.NetworkConnectionInterceptor
@@ -67,5 +68,9 @@ object NetworkModule {
     @Provides
     fun provideAccountApi(retrofit: Retrofit): AccountApiService =
         retrofit.create(AccountApiService::class.java)
+
+    @Provides
+    fun provideTransactionApi(retrofit: Retrofit): TransactionApiService =
+        retrofit.create(TransactionApiService::class.java)
 
 }

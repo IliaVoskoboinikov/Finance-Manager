@@ -66,7 +66,8 @@ fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltVie
         ScreenBottom.AccountScreenBottom.route -> TopBarModel.AccountTopBar
         ScreenBottom.ArticlesScreenBottom.route -> TopBarModel.ArticlesTopBar
         ScreenBottom.SettingsScreenBottom.route -> TopBarModel.SettingsTopBar
-        HistoryScreen.route -> TopBarModel.HistoryTopBar
+        HistoryExpensesScreen.route -> TopBarModel.HistoryTopBar
+        HistoryIncomeScreen.route -> TopBarModel.HistoryTopBar
         AddAccountScreen.route -> TopBarModel.AddAccountTopBar {
 
 
