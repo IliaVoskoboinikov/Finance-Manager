@@ -1,7 +1,6 @@
 package soft.divan.financemanager.data.source
 
 import retrofit2.Response
-import soft.divan.financemanager.data.network.api.AccountApiService
 import soft.divan.financemanager.data.network.api.TransactionApiService
 import soft.divan.financemanager.data.network.dto.TransactionDto
 import javax.inject.Inject

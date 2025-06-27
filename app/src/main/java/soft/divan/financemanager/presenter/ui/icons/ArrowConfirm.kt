@@ -1,4 +1,4 @@
-package soft.divan.financemanager.ui.icons
+package soft.divan.financemanager.presenter.ui.icons
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.Color
