@@ -3,7 +3,6 @@ package soft.divan.financemanager.presenter.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -35,7 +34,7 @@ class UpdateBalanceAccountViewModel @Inject constructor(
     private val _balance = MutableStateFlow("10")
     val balance: StateFlow<String> = _balance.asStateFlow()
 
-    public fun updateBalance(accountBrief: AccountBrief) {
+    fun updateBalance(accountBrief: AccountBrief) {
         updateAccountUseCase(accountBrief.copy(balance = balance.value.toBigDecimal()))
             .onStart {
                 _uiState.tryEmit(UpdateBalanceAccountUiState.Loading)

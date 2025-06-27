@@ -14,7 +14,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -25,7 +24,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
-import soft.divan.financemanager.domain.model.AccountBrief
 import soft.divan.financemanager.presenter.MainViewModel
 import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
 import soft.divan.financemanager.presenter.navigation.NavGraph
@@ -58,7 +56,7 @@ fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltVie
     val bottomRoutes = ScreenBottom.items.map { it.route }
     val updateBalanceAccountViewModel: UpdateBalanceAccountViewModel = hiltViewModel()
     val accountViewModel: AccountViewModel = hiltViewModel()
-    val state by accountViewModel.uiState.collectAsState()
+    val state by accountViewModel.uiState.collectAsStateWithLifecycle()
 
     val title = when (currentDestination?.destination?.route) {
         ScreenBottom.ExpansesScreenBottom.route -> TopBarModel.ExpansesTopBar
@@ -69,17 +67,8 @@ fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltVie
         HistoryExpensesScreen.route -> TopBarModel.HistoryTopBar
         HistoryIncomeScreen.route -> TopBarModel.HistoryTopBar
         AddAccountScreen.route -> TopBarModel.AddAccountTopBar {
-
-
             if (state is AccountUiState.Success) {
-                updateBalanceAccountViewModel.updateBalance(
-                    AccountBrief(
-                        id = (state as AccountUiState.Success).account.id,
-                        name = (state as AccountUiState.Success).account.name,
-                        balance = (state as AccountUiState.Success).account.balance,
-                        currency = (state as AccountUiState.Success).account.currency
-                    )
-                )
+                // будет реализация по заданию в 4 дз
                 navController.popBackStack()
             }
         }

@@ -13,7 +13,7 @@ class AccountRemoteDataSourceImpl @Inject constructor(
     private val accountApiService: AccountApiService,
 ) : AccountRemoteDataSource {
     override suspend fun getAccounts(): Response<List<AccountDto>> {
-        return  accountApiService.getAccounts()
+        return accountApiService.getAccounts()
     }
 
     override suspend fun createAccount(createAccountRequestDto: CreateAccountRequestDto): Response<AccountDto> {
@@ -28,6 +28,6 @@ class AccountRemoteDataSourceImpl @Inject constructor(
         )
 
         val accountId = accountBrief.id
-        return  accountApiService.updateAccount(accountId, requestDto)
+        return accountApiService.updateAccount(accountId, requestDto)
     }
 }

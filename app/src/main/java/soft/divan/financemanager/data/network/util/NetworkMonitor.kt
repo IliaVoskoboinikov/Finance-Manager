@@ -1,11 +1,8 @@
-
 package soft.divan.financemanager.data.network.util
 
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Utility for reporting app connectivity status
- */
+/** Утилита для отчетности статус подключения приложений */
 interface NetworkMonitor {
     val isOnline: Flow<Boolean>
 }

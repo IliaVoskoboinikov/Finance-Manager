@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,7 +28,13 @@ sealed interface ArticlesUiState {
 class ArticlesViewModel @Inject constructor() : ViewModel() {
 
     private val _uiState = MutableStateFlow<ArticlesUiState>(ArticlesUiState.Loading)
-    val uiState: StateFlow<ArticlesUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ArticlesUiState> = _uiState
+        .onStart { loadArticles() }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            ArticlesUiState.Loading
+        )
 
     private val mockArticleUis = listOf(
         ArticleUi(emoji = "\uD83C\uDFE1", title = "Аренда квартиры"),
@@ -39,9 +47,6 @@ class ArticlesViewModel @Inject constructor() : ViewModel() {
         ArticleUi(emoji = "\uD83D\uDC8A", title = "Медицина")
     )
 
-    init {
-        loadArticles()
-    }
 
     private fun loadArticles() {
         viewModelScope.launch(Dispatchers.IO) {

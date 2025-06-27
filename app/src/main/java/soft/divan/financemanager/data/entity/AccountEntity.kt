@@ -1,4 +1,4 @@
-package soft.divan.financemanager.data.network.entity
+package soft.divan.financemanager.data.entity
 
 data class AccountEntity(
     val id: Int,

@@ -29,7 +29,8 @@ fun FMDatePickerDialog(
         confirmButton = {
             TextButton(onClick = {
                 pickerState.selectedDateMillis?.let {
-                    val selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                    val selectedDate =
+                        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                     onDateSelected(selectedDate)
                 }
             }) {
@@ -41,7 +42,8 @@ fun FMDatePickerDialog(
                 Text("Отмена")
             }
         },
-        colors = DatePickerDefaults.colors().copy(containerColor = MaterialTheme.colorScheme.secondaryContainer, )
+        colors = DatePickerDefaults.colors()
+            .copy(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         DatePicker(state = pickerState, title = null, headline = null, showModeToggle = false)
     }

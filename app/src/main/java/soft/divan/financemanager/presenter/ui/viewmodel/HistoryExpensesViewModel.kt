@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.domain.usecase.transaction.GetExpensesByPeriodUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetSumTransactionsUseCase
 import soft.divan.financemanager.domain.util.DateHelper
+import soft.divan.financemanager.presenter.mapper.formatAmount
+import soft.divan.financemanager.presenter.mapper.toUi
 import soft.divan.financemanager.presenter.ui.model.HistoryUiState
 import java.time.LocalDate
 import javax.inject.Inject
@@ -40,11 +42,12 @@ class HistoryExpensesViewModel @Inject constructor(
                 _uiState.update { HistoryUiState.Loading }
             }
             .onEach { data ->
+                val uiTransactions = data.map { it.toUi() }
+                val sumTransactions = getSumTransactionsUseCase.invoke(data)
                 _uiState.update {
-                    val sumTransactions = getSumTransactionsUseCase.invoke(data)
                     HistoryUiState.Success(
-                        transactions = data,
-                        sumTransaction = sumTransactions.toPlainString()
+                        transactions = uiTransactions,
+                        sumTransaction = formatAmount(sumTransactions)
                     )
                 }
             }

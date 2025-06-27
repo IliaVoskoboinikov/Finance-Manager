@@ -5,16 +5,19 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.domain.usecase.transaction.GetSumTransactionsUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetTodayExpensesUseCase
+import soft.divan.financemanager.presenter.mapper.formatAmount
+import soft.divan.financemanager.presenter.mapper.toUi
 import soft.divan.financemanager.presenter.ui.model.ExpensesUiState
 import javax.inject.Inject
 
@@ -26,11 +29,14 @@ class ExpensesViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ExpensesUiState>(ExpensesUiState.Loading)
-    val uiState: StateFlow<ExpensesUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<ExpensesUiState> = _uiState
+        .onStart { loadTodayExpenses() }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            ExpensesUiState.Loading
+        )
 
-    init {
-        loadTodayExpenses()
-    }
 
     private fun loadTodayExpenses() {
         getTodayExpensesUseCase.invoke()
@@ -38,9 +44,14 @@ class ExpensesViewModel @Inject constructor(
                 _uiState.update { ExpensesUiState.Loading }
             }
             .onEach { data ->
+                val uiTransactions = data.map { it.toUi() }
+                val sumTransactions = getSumTransactionsUseCase.invoke(data)
                 _uiState.update {
-                    val sumTransactions = getSumTransactionsUseCase.invoke(data)
-                    ExpensesUiState.Success(transactions = data, sumTransaction = sumTransactions.toPlainString()) }
+                    ExpensesUiState.Success(
+                        transactions = uiTransactions,
+                        sumTransaction = formatAmount(sumTransactions)
+                    )
+                }
             }
             .catch { exception ->
                 _uiState.update { ExpensesUiState.Error(exception.message.toString()) }

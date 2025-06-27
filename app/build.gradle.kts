@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.detekt)
 }
 
 val apiToken: String = project.rootProject
@@ -83,13 +84,12 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
-    // Retrofit
     implementation(libs.retrofit)
     implementation(libs.converter.moshi)
     implementation(libs.logging.interceptor)
     implementation(libs.moshi.adapters)
     implementation(libs.moshi.kotlin)
     implementation(libs.converter.gson)
-    implementation("androidx.tracing:tracing-ktx:1.3.0")
+    implementation(libs.androidx.tracing.ktx)
 
 }

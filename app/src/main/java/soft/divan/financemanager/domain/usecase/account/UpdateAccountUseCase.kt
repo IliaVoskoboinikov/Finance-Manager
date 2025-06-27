@@ -4,5 +4,5 @@ import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.domain.model.AccountBrief
 
 interface UpdateAccountUseCase {
-     operator fun invoke(accountBrief: AccountBrief): Flow<AccountBrief>
+    operator fun invoke(accountBrief: AccountBrief): Flow<AccountBrief>
 }

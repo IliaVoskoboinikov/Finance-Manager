@@ -5,13 +5,14 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.domain.usecase.transaction.GetSumTransactionsUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetTodayIncomeUseCase
@@ -25,11 +26,14 @@ class IncomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<IncomeUiState>(IncomeUiState.Loading)
-    val uiState: StateFlow<IncomeUiState> = _uiState.asStateFlow()
+    val uiState: StateFlow<IncomeUiState> = _uiState
+        .onStart { loadTodayIncome() }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            IncomeUiState.Loading
+        )
 
-    init {
-        loadTodayIncome()
-    }
 
     private fun loadTodayIncome() {
         getTodayIncomeUseCase()
