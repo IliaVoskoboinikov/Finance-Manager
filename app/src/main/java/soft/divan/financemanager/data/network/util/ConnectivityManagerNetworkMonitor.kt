@@ -1,4 +1,4 @@
-package soft.divan.financemanager.data.util
+package soft.divan.financemanager.data.network.util
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -11,16 +11,13 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import androidx.core.content.getSystemService
 import androidx.tracing.trace
-
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
-
 import javax.inject.Inject
 
 class ConnectivityManagerNetworkMonitor @Inject constructor(

@@ -7,7 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import soft.divan.financemanager.data.util.NetworkMonitor
+import soft.divan.financemanager.data.network.util.NetworkMonitor
 import javax.inject.Inject
 
 @HiltViewModel
