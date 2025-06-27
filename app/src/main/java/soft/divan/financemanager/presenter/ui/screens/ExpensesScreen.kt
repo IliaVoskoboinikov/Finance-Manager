@@ -14,7 +14,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -22,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
@@ -54,7 +54,7 @@ fun ExpensesScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
@@ -64,12 +64,16 @@ fun ExpensesScreen(
         }
     ) { innerPadding ->
         when (uiState) {
-            is ExpensesUiState.Loading -> {                LoadingProgressBar()
+            is ExpensesUiState.Loading -> {
+                LoadingProgressBar()
             }
-            is ExpensesUiState.Error -> { ErrorSnackbar(
-                snackbarHostState = snackbarHostState,
-                message = (uiState as ExpensesUiState.Error).message,
-            )
+
+            is ExpensesUiState.Error -> {
+
+                ErrorSnackbar(
+                    snackbarHostState = snackbarHostState,
+                    message = (uiState as ExpensesUiState.Error).message,
+                )
             }
 
             is ExpensesUiState.Success -> {
@@ -78,7 +82,8 @@ fun ExpensesScreen(
                     ListItem(
                         modifier = Modifier.height(56.dp),
                         content = { ContentTextListItem(stringResource(R.string.all)) },
-                        trail = { ContentTextListItem(state.sumTransaction + " ₽")  },
+
+                        trail = { ContentTextListItem(state.sumTransaction) },
                         containerColor = colorScheme.secondaryContainer
                     )
                     FMDriver()
@@ -102,7 +107,7 @@ fun ExpensesScreen(
                                 },
                                 trail = {
 
-                                    ContentTextListItem(item.amount.toPlainString())
+                                    ContentTextListItem(item.amountFormatted)
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Icon(
                                         imageVector = Icons.Filled.Arrow,

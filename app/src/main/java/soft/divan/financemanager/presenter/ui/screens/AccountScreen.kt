@@ -105,7 +105,7 @@ fun AccountContent(
                         },
                         content = { ContentTextListItem(uiState.account.name) },
                         trail = {
-                            ContentTextListItem(uiState.account.balance.toPlainString())
+                            ContentTextListItem(uiState.account.balance)
                             Spacer(modifier = Modifier.width(16.dp))
                             Icon(
                                 imageVector = Icons.Filled.Arrow,

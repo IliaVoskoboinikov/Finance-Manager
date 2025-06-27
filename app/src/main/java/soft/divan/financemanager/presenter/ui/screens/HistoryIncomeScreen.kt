@@ -11,6 +11,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import soft.divan.financemanager.presenter.ui.screens.common.HistoryContent
+import soft.divan.financemanager.presenter.ui.screens.common.provideMockHistoryUiState
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.ui.viewmodel.HistoryIncomeViewModel
 import soft.divan.financemanager.presenter.uiKit.FMDatePickerDialog
@@ -30,7 +32,7 @@ fun HistoryIncomeScreenPreview() {
 
     FinanceManagerTheme {
         HistoryContent(
-            uiState = provideMockHistoryExpensesUiState(),
+            uiState = provideMockHistoryUiState(),
             startDate = startDate,
             endDate = endDate,
             onStartDateClick = { showStartDatePicker.value = true },
