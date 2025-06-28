@@ -11,6 +11,24 @@ import soft.divan.financemanager.domain.util.DateHelper
 import java.time.LocalDate
 import javax.inject.Inject
 
+/**
+ * Use case для получения списка доходов за заданный период.
+ *
+ * Инкапсулирует логику получения транзакций по первому аккаунту пользователя
+ * за указанный период, фильтрации только доходных транзакций,
+ * и сортировки их по дате в порядке убывания (от новых к старым).
+ *
+ * Для получения данных последовательно вызываются методы:
+ * - получение списка аккаунтов из [AccountRepository]
+ * - получение транзакций за период из [TransactionRepository]
+ *
+ * @property accountRepository репозиторий для доступа к аккаунтам пользователя
+ * @property transactionRepository репозиторий для доступа к транзакциям
+ *
+ * @see AccountRepository
+ * @see TransactionRepository
+ * @see Transaction
+ */
 class GetIncomeByPeriodUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository

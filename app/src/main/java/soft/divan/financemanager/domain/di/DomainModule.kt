@@ -1,7 +1,7 @@
 package soft.divan.financemanager.domain.di
 
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.domain.usecase.account.GetAccountsUseCase
@@ -21,57 +21,40 @@ import soft.divan.financemanager.domain.usecase.transaction.impl.GetTodayIncomeU
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DomainModule {
+abstract class DomainModule {
 
-
-    @Provides
-    fun provideGetAccountsUseCaseImpl(
+    @Binds
+    abstract fun bindGetAccountsUseCase(
         impl: GetAccountsUseCaseImpl
-    ): GetAccountsUseCase {
-        return impl
-    }
+    ): GetAccountsUseCase
 
-    @Provides
-    fun provideUpdateAccountsUseCaseImpl(
+    @Binds
+    abstract fun bindUpdateAccountUseCase(
         impl: UpdateAccountUseCaseImpl
-    ): UpdateAccountUseCase {
-        return impl
-    }
+    ): UpdateAccountUseCase
 
-    @Provides
-    fun provideGetTodayExpensesUseCaseImpl(
+    @Binds
+    abstract fun bindGetTodayExpensesUseCase(
         impl: GetTodayExpensesUseCaseImpl
-    ): GetTodayExpensesUseCase {
-        return impl
-    }
+    ): GetTodayExpensesUseCase
 
-    @Provides
-    fun provideGetSumTransactionsUseCaseImpl(
+    @Binds
+    abstract fun bindGetSumTransactionsUseCase(
         impl: GetSumTransactionsUseCaseImpl
-    ): GetSumTransactionsUseCase {
-        return impl
-    }
+    ): GetSumTransactionsUseCase
 
-    @Provides
-    fun provideGetExpensesByPeriodUseCaseImpl(
+    @Binds
+    abstract fun bindGetExpensesByPeriodUseCase(
         impl: GetExpensesByPeriodUseCaseImpl
-    ): GetExpensesByPeriodUseCase {
-        return impl
-    }
+    ): GetExpensesByPeriodUseCase
 
-    @Provides
-    fun provideGetIncomeByPeriodUseCaseImpl(
+    @Binds
+    abstract fun bindGetIncomeByPeriodUseCase(
         impl: GetIncomeByPeriodUseCaseImpl
-    ): GetIncomeByPeriodUseCase {
-        return impl
-    }
+    ): GetIncomeByPeriodUseCase
 
-    @Provides
-    fun provideGetTodayIncomeUseCaseImpl(
+    @Binds
+    abstract fun bindGetTodayIncomeUseCase(
         impl: GetTodayIncomeUseCaseImpl
-    ): GetTodayIncomeUseCase {
-        return impl
-    }
-
-
+    ): GetTodayIncomeUseCase
 }
