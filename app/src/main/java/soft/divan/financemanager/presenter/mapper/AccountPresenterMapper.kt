@@ -7,7 +7,7 @@ fun Account.toUiModel(): AccountUiModel {
     val currencySymbol = CurrencySymbol.fromCode(currency)
     return AccountUiModel(
         id = this.id,
-        name= this.name,
+        name = this.name,
         balance = "${balance.toPlainString()} $currencySymbol",
         currency = currencySymbol
     )

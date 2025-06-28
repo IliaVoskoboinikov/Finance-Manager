@@ -1,5 +1,6 @@
-package soft.divan.financemanager.presenter.ui.screens
+package soft.divan.financemanager.presenter.ui.screens.common
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -14,83 +15,82 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
+import soft.divan.financemanager.domain.util.DateHelper
 import soft.divan.financemanager.presenter.ui.icons.Arrow
-import soft.divan.financemanager.presenter.ui.model.ExpensesUiState
-import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
-import soft.divan.financemanager.presenter.ui.viewmodel.ExpensesViewModel
+import soft.divan.financemanager.presenter.ui.model.HistoryUiState
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
 import soft.divan.financemanager.presenter.uiKit.EmojiCircle
 import soft.divan.financemanager.presenter.uiKit.ErrorSnackbar
 import soft.divan.financemanager.presenter.uiKit.FMDriver
-import soft.divan.financemanager.presenter.uiKit.FloatingButton
 import soft.divan.financemanager.presenter.uiKit.ListItem
 import soft.divan.financemanager.presenter.uiKit.LoadingProgressBar
 import soft.divan.financemanager.presenter.uiKit.SubContentTextListItem
+import java.time.LocalDate
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-fun ExpensesScreenPreview() {
-    FinanceManagerTheme {
-        ExpensesScreen(navController = rememberNavController())
-    }
-}
 
 @Composable
-fun ExpensesScreen(
+fun HistoryContent(
     modifier: Modifier = Modifier,
-    navController: NavController,
-    viewModel: ExpensesViewModel = hiltViewModel(),
+    uiState: HistoryUiState,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    onStartDateClick: () -> Unit,
+    onEndDateClick: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
-
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        floatingActionButton = {
-            FloatingButton(onClick = {})
-        }
     ) { innerPadding ->
         when (uiState) {
-            is ExpensesUiState.Loading -> {
+            is HistoryUiState.Loading -> {
                 LoadingProgressBar()
             }
 
-            is ExpensesUiState.Error -> {
-
+            is HistoryUiState.Error -> {
                 ErrorSnackbar(
                     snackbarHostState = snackbarHostState,
-                    message = (uiState as ExpensesUiState.Error).message,
+                    message = uiState.message,
                 )
             }
 
-            is ExpensesUiState.Success -> {
-                val state = (uiState as ExpensesUiState.Success)
+            is HistoryUiState.Success -> {
+                val sortedItems = uiState.transactions.sortedByDescending { it.createdAt }
                 Column(modifier = Modifier.padding(innerPadding)) {
                     ListItem(
-                        modifier = Modifier.height(56.dp),
-                        content = { ContentTextListItem(stringResource(R.string.all)) },
-
-                        trail = { ContentTextListItem(state.sumTransaction) },
+                        modifier = Modifier
+                            .height(56.dp)
+                            .clickable(onClick = onStartDateClick),
+                        content = { ContentTextListItem(stringResource(R.string.start)) },
+                        trail = { ContentTextListItem(DateHelper.formatDateForDisplay(startDate)) },
                         containerColor = colorScheme.secondaryContainer
                     )
                     FMDriver()
-
-                    val items = state.transactions
-                    LazyColumn(modifier = Modifier.padding(innerPadding)) {
-                        items(items) { item ->
+                    ListItem(
+                        modifier = Modifier
+                            .height(56.dp)
+                            .clickable(onClick = onEndDateClick),
+                        content = { ContentTextListItem(stringResource(R.string.end)) },
+                        trail = { ContentTextListItem(DateHelper.formatDateForDisplay(endDate)) },
+                        containerColor = colorScheme.secondaryContainer
+                    )
+                    FMDriver()
+                    ListItem(
+                        modifier = Modifier.height(56.dp),
+                        content = { ContentTextListItem(stringResource(R.string.all)) },
+                        trail = { ContentTextListItem(uiState.sumTransaction) },
+                        containerColor = colorScheme.secondaryContainer
+                    )
+                    FMDriver()
+                    LazyColumn {
+                        items(sortedItems) { item ->
                             ListItem(
                                 modifier = Modifier.height(70.dp),
                                 lead = {
@@ -106,18 +106,18 @@ fun ExpensesScreen(
                                     }
                                 },
                                 trail = {
-
-                                    ContentTextListItem(item.amountFormatted)
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        ContentTextListItem(text = item.amountFormatted)
+                                        ContentTextListItem(DateHelper.formatDateTimeForDisplay(item.transactionDate))
+                                    }
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Icon(
                                         imageVector = Icons.Filled.Arrow,
                                         contentDescription = "arrow",
                                         tint = colorScheme.onSurfaceVariant
-
                                     )
                                 },
-
-                                )
+                            )
                             FMDriver()
                         }
                     }

@@ -14,7 +14,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -57,7 +56,7 @@ fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltVie
     val bottomRoutes = ScreenBottom.items.map { it.route }
     val updateBalanceAccountViewModel: UpdateBalanceAccountViewModel = hiltViewModel()
     val accountViewModel: AccountViewModel = hiltViewModel()
-    val state by accountViewModel.uiState.collectAsState()
+    val state by accountViewModel.uiState.collectAsStateWithLifecycle()
 
     val title = when (currentDestination?.destination?.route) {
         ScreenBottom.ExpansesScreenBottom.route -> TopBarModel.ExpansesTopBar

@@ -40,7 +40,7 @@ import soft.divan.financemanager.presenter.uiKit.ListItem
 @Composable
 fun UpdateBalanceAccountScreenPreview() {
     FinanceManagerTheme {
-       /* UpdateBalanceContent()*/
+        /* UpdateBalanceContent()*/
     }
 }
 
@@ -58,7 +58,8 @@ fun UpdateBalanceAccountScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle(null)
     val balance by viewModel.balance.collectAsStateWithLifecycle()
-    UpdateBalanceContent(modifier = modifier,  balance = balance,        onBalanceChanged = viewModel::onBalanceChanged
+    UpdateBalanceContent(
+        modifier = modifier, balance = balance, onBalanceChanged = viewModel::onBalanceChanged
     )
 
     when (uiState) {

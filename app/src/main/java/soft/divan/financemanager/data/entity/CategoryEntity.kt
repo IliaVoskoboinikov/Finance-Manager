@@ -1,8 +1,8 @@
 package soft.divan.financemanager.data.entity
 
-data class CategoryEntity (
+data class CategoryEntity(
     val id: Int,
-    val name: String ,
-    val emoji: String ,
+    val name: String,
+    val emoji: String,
     val isIncome: Boolean,
 )

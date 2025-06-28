@@ -2,7 +2,6 @@ package soft.divan.financemanager.data.network.dto
 
 import com.google.gson.annotations.SerializedName
 
-
 data class AccountDto(
     @SerializedName("id")
     val id: Int,

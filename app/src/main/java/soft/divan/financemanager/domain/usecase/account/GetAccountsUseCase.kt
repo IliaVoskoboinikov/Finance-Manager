@@ -4,5 +4,5 @@ import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.domain.model.Account
 
 interface GetAccountsUseCase {
-     operator fun invoke(): Flow<List<Account>>
+    operator fun invoke(): Flow<List<Account>>
 }

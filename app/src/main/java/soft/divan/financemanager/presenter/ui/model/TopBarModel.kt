@@ -64,7 +64,7 @@ sealed class TopBarModel(
         }
     )
 
-    data class AddAccountTopBar( val onConfirmClick: () -> Unit) : TopBarModel(
+    data class AddAccountTopBar(val onConfirmClick: () -> Unit) : TopBarModel(
         title = R.string.my_account,
         navigationIcon = Icons.Filled.Cross,
         navigationIconClick = { navController ->
