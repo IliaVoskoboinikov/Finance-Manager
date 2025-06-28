@@ -32,22 +32,23 @@ class GetExpensesByPeriodUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
 
-    ): GetExpensesByPeriodUseCase {
-    override operator fun invoke(startDate: LocalDate, endDate: LocalDate): Flow<List<Transaction>> = flow {
-        val accounts = accountRepository.getAccounts()
-        val account = accounts.first().first()
-        val transaction = transactionRepository.getTransactionsByAccountAndPeriod(
-            accountId = account.id,
-            startDate = DateHelper.dateToApiFormat(startDate),
-            endDate = DateHelper.dateToApiFormat(endDate)
-        ).first()
+    ) : GetExpensesByPeriodUseCase {
+    override operator fun invoke(startDate: LocalDate, endDate: LocalDate): Flow<List<Transaction>> =
+        flow {
+            val accounts = accountRepository.getAccounts()
+            val account = accounts.first().first()
+            val transaction = transactionRepository.getTransactionsByAccountAndPeriod(
+                accountId = account.id,
+                startDate = DateHelper.dateToApiFormat(startDate),
+                endDate = DateHelper.dateToApiFormat(endDate)
+            ).first()
 
-        val filteredCategories = transaction.filter {
-            !it.category.isIncome
-        }.sortedBy {
-            it.transactionDate
-        }.reversed()
+            val filteredCategories = transaction.filter {
+                !it.category.isIncome
+            }.sortedBy {
+                it.transactionDate
+            }.reversed()
 
-        emit(filteredCategories)
-    }
+            emit(filteredCategories)
+        }
 }
