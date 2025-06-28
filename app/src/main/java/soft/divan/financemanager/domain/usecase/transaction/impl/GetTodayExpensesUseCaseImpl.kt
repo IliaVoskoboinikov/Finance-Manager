@@ -32,7 +32,7 @@ import javax.inject.Inject
 class GetTodayExpensesUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
-): GetTodayExpensesUseCase {
+) : GetTodayExpensesUseCase {
     override operator fun invoke(): Flow<List<Transaction>> = flow {
 
         val accounts = accountRepository.getAccounts()

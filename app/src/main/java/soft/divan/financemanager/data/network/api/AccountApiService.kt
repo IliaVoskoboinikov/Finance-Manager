@@ -10,7 +10,6 @@ import soft.divan.financemanager.data.network.dto.AccountDto
 import soft.divan.financemanager.data.network.dto.AccountWithStatsDto
 import soft.divan.financemanager.data.network.dto.CreateAccountRequestDto
 import soft.divan.financemanager.data.network.dto.UpdateAccountRequestDto
-import soft.divan.financemanager.domain.model.AccountHistoryResponse
 
 interface AccountApiService {
 

@@ -1,4 +1,3 @@
-
 package soft.divan.financemanager.data.network.util
 
 import kotlinx.coroutines.flow.Flow

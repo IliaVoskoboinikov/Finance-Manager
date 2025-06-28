@@ -30,7 +30,7 @@ import java.util.Locale
  * - `DISPLAY_TIME_PATTERN`: формат отображения времени: `HH:mm`
  */
 
-object DateHelper{
+object DateHelper {
 
     private const val API_DATE_PATTERN = "yyyy-MM-dd"
     private const val API_DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
@@ -38,11 +38,17 @@ object DateHelper{
     private const val DISPLAY_DATETIME_PATTERN = "dd.MM.yyyy HH:mm"
     private const val DISPLAY_TIME_PATTERN = "HH:mm"
 
-    private val apiDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(API_DATE_PATTERN).withLocale(Locale.getDefault())
-    private val apiDateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(API_DATETIME_PATTERN).withLocale(Locale.getDefault()).withZone(ZoneOffset.UTC)
-    private val displayDateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DISPLAY_DATE_PATTERN).withLocale(Locale.getDefault())
-    private val displayDateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DISPLAY_DATETIME_PATTERN).withLocale(Locale.getDefault())
-    private val displayTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(DISPLAY_TIME_PATTERN).withLocale(Locale.getDefault())
+    private val apiDateFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern(API_DATE_PATTERN).withLocale(Locale.getDefault())
+    private val apiDateTimeFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern(API_DATETIME_PATTERN).withLocale(Locale.getDefault())
+            .withZone(ZoneOffset.UTC)
+    private val displayDateFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern(DISPLAY_DATE_PATTERN).withLocale(Locale.getDefault())
+    private val displayDateTimeFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern(DISPLAY_DATETIME_PATTERN).withLocale(Locale.getDefault())
+    private val displayTimeFormatter: DateTimeFormatter =
+        DateTimeFormatter.ofPattern(DISPLAY_TIME_PATTERN).withLocale(Locale.getDefault())
 
     /**
      * Возвращает сегодняшнюю дату в формате, совместимом с API (`yyyy-MM-dd`).

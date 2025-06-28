@@ -1,6 +1,6 @@
 package soft.divan.financemanager.data.entity
 
-data class TransactionEntity (
+data class TransactionEntity(
     val id: Int,
     val account: AccountStateEntity,
     val category: CategoryEntity,

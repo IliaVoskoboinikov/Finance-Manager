@@ -24,7 +24,7 @@ import javax.inject.Singleton
 @Singleton
 class TransactionRepositoryImp @Inject constructor(
     private val transactionRemoteDataSource: TransactionRemoteDataSource
-    ) : TransactionRepository{
+) : TransactionRepository {
 
 
     /**
@@ -50,10 +50,11 @@ class TransactionRepositoryImp @Inject constructor(
         endDate: String?
     ): Flow<List<Transaction>> = flow {
         val response = transactionRemoteDataSource.getTransactionsByAccountAndPeriod(
-            accountId,startDate,endDate
+            accountId, startDate, endDate
         )
         val transactionsByAccountAndPeriodDto = response.body().orEmpty()
-        val transactionsByAccountAndPeriodEntity = transactionsByAccountAndPeriodDto.map { it.toEntity() }
+        val transactionsByAccountAndPeriodEntity =
+            transactionsByAccountAndPeriodDto.map { it.toEntity() }
         val transactionsByAccountAndPeriod = transactionsByAccountAndPeriodEntity.map { it.toDomain() }
         emit(transactionsByAccountAndPeriod)
 

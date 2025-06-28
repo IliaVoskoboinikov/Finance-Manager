@@ -10,7 +10,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
-fun ContentTextListItem(text: String, color: Color = MaterialTheme.colorScheme.onSurface, modifier: Modifier = Modifier) {
+fun ContentTextListItem(
+    text: String,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+    modifier: Modifier = Modifier
+) {
     Text(
         text = text,
         style = MaterialTheme.typography.bodyLarge.copy(

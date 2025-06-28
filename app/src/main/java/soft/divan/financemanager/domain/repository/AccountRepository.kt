@@ -7,9 +7,9 @@ import soft.divan.financemanager.domain.model.CreateAccountRequest
 
 interface AccountRepository {
     fun getAccounts(): Flow<List<Account>>
-     fun createAccount(createAccountRequest: CreateAccountRequest): Flow<Account>
+    fun createAccount(createAccountRequest: CreateAccountRequest): Flow<Account>
 
-     fun updateAccount(accountBrief: AccountBrief): Flow<AccountBrief>
+    fun updateAccount(accountBrief: AccountBrief): Flow<AccountBrief>
 
 
 }

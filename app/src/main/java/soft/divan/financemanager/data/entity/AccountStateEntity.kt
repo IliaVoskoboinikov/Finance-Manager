@@ -1,6 +1,6 @@
 package soft.divan.financemanager.data.entity
 
-data class AccountStateEntity (
+data class AccountStateEntity(
     val id: Int,
     val name: String,
     val balance: String,

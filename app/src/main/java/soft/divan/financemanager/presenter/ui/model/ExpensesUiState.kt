@@ -7,6 +7,7 @@ sealed interface ExpensesUiState {
         val transactions: List<UiTransaction>,
         val sumTransaction: String
     ) : ExpensesUiState
+
     data class Error(val message: String) : ExpensesUiState
 }
 

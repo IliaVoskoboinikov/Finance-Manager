@@ -17,8 +17,8 @@ import javax.inject.Inject
  *
  * @see Transaction
  */
-class GetSumTransactionsUseCaseImpl @Inject constructor(): GetSumTransactionsUseCase {
-     override operator fun invoke(transactions: List<Transaction>): BigDecimal {
+class GetSumTransactionsUseCaseImpl @Inject constructor() : GetSumTransactionsUseCase {
+    override operator fun invoke(transactions: List<Transaction>): BigDecimal {
         return transactions.sumOf { it.amount }
 
     }
