@@ -16,3 +16,4 @@ fun LoadingProgressBar(modifier: Modifier = Modifier) {
             .wrapContentSize(Alignment.Center)
     )
 }
+

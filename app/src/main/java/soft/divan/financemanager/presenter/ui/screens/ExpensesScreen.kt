@@ -64,12 +64,16 @@ fun ExpensesScreen(
         }
     ) { innerPadding ->
         when (uiState) {
-            is ExpensesUiState.Loading -> {                LoadingProgressBar()
+            is ExpensesUiState.Loading -> {
+                LoadingProgressBar()
             }
-            is ExpensesUiState.Error -> { ErrorSnackbar(
-                snackbarHostState = snackbarHostState,
-                message = (uiState as ExpensesUiState.Error).message,
-            )
+
+            is ExpensesUiState.Error -> {
+
+                ErrorSnackbar(
+                    snackbarHostState = snackbarHostState,
+                    message = (uiState as ExpensesUiState.Error).message,
+                )
             }
 
             is ExpensesUiState.Success -> {
@@ -78,7 +82,8 @@ fun ExpensesScreen(
                     ListItem(
                         modifier = Modifier.height(56.dp),
                         content = { ContentTextListItem(stringResource(R.string.all)) },
-                        trail = { ContentTextListItem(state.sumTransaction + " ₽")  },
+
+                        trail = { ContentTextListItem(state.sumTransaction) },
                         containerColor = colorScheme.secondaryContainer
                     )
                     FMDriver()
@@ -102,7 +107,7 @@ fun ExpensesScreen(
                                 },
                                 trail = {
 
-                                    ContentTextListItem(item.amount.toPlainString())
+                                    ContentTextListItem(item.amountFormatted)
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Icon(
                                         imageVector = Icons.Filled.Arrow,
