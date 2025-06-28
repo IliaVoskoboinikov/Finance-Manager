@@ -29,11 +29,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import soft.divan.financemanager.R
-import soft.divan.financemanager.domain.model.Category
-import soft.divan.financemanager.domain.model.Transaction
 import soft.divan.financemanager.domain.util.DateHelper
+import soft.divan.financemanager.presenter.mapper.formatAmount
 import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.model.HistoryUiState
+import soft.divan.financemanager.presenter.ui.model.UiCategory
+import soft.divan.financemanager.presenter.ui.model.UiTransaction
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.ui.viewmodel.HistoryExpensesViewModel
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
@@ -196,7 +197,7 @@ fun HistoryContent(
                     ListItem(
                         modifier = Modifier.height(56.dp),
                         content = { ContentTextListItem(stringResource(R.string.all)) },
-                        trail = { ContentTextListItem("${uiState.sumTransaction} ₽") },
+                        trail = { ContentTextListItem(uiState.sumTransaction )},
                         containerColor = colorScheme.secondaryContainer
                     )
                     FMDriver()
@@ -218,7 +219,7 @@ fun HistoryContent(
                                 },
                                 trail = {
                                     Column (horizontalAlignment = Alignment.End ){
-                                        ContentTextListItem(text = item.amount.toPlainString() + " ₽")
+                                        ContentTextListItem(text = item.amountFormatted)
                                         ContentTextListItem(DateHelper.formatDateTimeForDisplay(item.transactionDate))
                                     }
                                     Spacer(modifier = Modifier.width(16.dp))
@@ -239,34 +240,37 @@ fun HistoryContent(
 }
 
 
-fun provideMockHistoryExpensesUiState(): HistoryUiState.Success {
-    val testCategories = listOf(
-        Category(1, "Зарплата", "💰", isIncome = true),
-        Category(2, "Продукты", "🛒", isIncome = false),
-        Category(3, "Транспорт", "🚌", isIncome = false),
-        Category(4, "Развлечения", "🎮", isIncome = false),
-        Category(5, "Кафе", "☕", isIncome = false),
-        Category(6, "Медицинa", "💊", isIncome = false),
-        Category(7, "Подарки", "🎁", isIncome = false),
-        Category(8, "Образование", "📚", isIncome = false),
-        Category(9, "Аренда", "🏠", isIncome = false),
-        Category(10, "Проценты", "📈", isIncome = true),
+fun  provideMockHistoryExpensesUiState(): HistoryUiState.Success {
+    val testUiCategories = listOf(
+        UiCategory(1, "Зарплата", "💰", isIncome = true),
+        UiCategory(2, "Продукты", "🛒", isIncome = false),
+        UiCategory(3, "Транспорт", "🚌", isIncome = false),
+        UiCategory(4, "Развлечения", "🎮", isIncome = false),
+        UiCategory(5, "Кафе", "☕", isIncome = false),
+        UiCategory(6, "Медицинa", "💊", isIncome = false),
+        UiCategory(7, "Подарки", "🎁", isIncome = false),
+        UiCategory(8, "Образование", "📚", isIncome = false),
+        UiCategory(9, "Аренда", "🏠", isIncome = false),
+        UiCategory(10, "Проценты", "📈", isIncome = true),
     )
+
     val now = LocalDateTime.now()
-    val testTransactions = listOf(
-        Transaction(1, 1, testCategories[0], BigDecimal("120000.00"), now.minusDays(10), "Аванс", now.minusDays(10), now.minusDays(10)),
-        Transaction(2, 1, testCategories[1], BigDecimal("3500.50"), now.minusDays(9), "Покупка в Перекрестке", now.minusDays(9), now.minusDays(9)),
-        Transaction(3, 1, testCategories[2], BigDecimal("120.00"), now.minusDays(8), "Метро", now.minusDays(8), now.minusDays(8)),
-        Transaction(4, 1, testCategories[3], BigDecimal("799.99"), now.minusDays(7), "Steam покупка", now.minusDays(7), now.minusDays(7)),
-        Transaction(5, 1, testCategories[4], BigDecimal("450.00"), now.minusDays(6), "Кофе с другом", now.minusDays(6), now.minusDays(6)),
-        Transaction(6, 1, testCategories[5], BigDecimal("2500.00"), now.minusDays(5), "Аптека", now.minusDays(5), now.minusDays(5)),
-        Transaction(7, 1, testCategories[6], BigDecimal("3000.00"), now.minusDays(4), "Подарок маме", now.minusDays(4), now.minusDays(4)),
-        Transaction(8, 1, testCategories[7], BigDecimal("15000.00"), now.minusDays(3), "Курс Android", now.minusDays(3), now.minusDays(3)),
-        Transaction(9, 1, testCategories[8], BigDecimal("40000.00"), now.minusDays(2), "Квартира", now.minusDays(2), now.minusDays(2)),
-        Transaction(10, 1, testCategories[9], BigDecimal("1200.00"), now.minusDays(1), "Доход по вкладу", now.minusDays(1), now.minusDays(1)),
+
+    val testUiTransactions = listOf(
+        UiTransaction(1, 1, testUiCategories[0], BigDecimal("120000.00"), formatAmount(BigDecimal("120000.00")), now.minusDays(10), "Аванс", now.minusDays(10), now.minusDays(10)),
+        UiTransaction(2, 1, testUiCategories[1], BigDecimal("3500.50"), formatAmount(BigDecimal("3500.50")), now.minusDays(9), "Покупка в Перекрестке", now.minusDays(9), now.minusDays(9)),
+        UiTransaction(3, 1, testUiCategories[2], BigDecimal("120.00"), formatAmount(BigDecimal("120.00")), now.minusDays(8), "Метро", now.minusDays(8), now.minusDays(8)),
+        UiTransaction(4, 1, testUiCategories[3], BigDecimal("799.99"), formatAmount(BigDecimal("799.99")), now.minusDays(7), "Steam покупка", now.minusDays(7), now.minusDays(7)),
+        UiTransaction(5, 1, testUiCategories[4], BigDecimal("450.00"), formatAmount(BigDecimal("450.00")), now.minusDays(6), "Кофе с другом", now.minusDays(6), now.minusDays(6)),
+        UiTransaction(6, 1, testUiCategories[5], BigDecimal("2500.00"), formatAmount(BigDecimal("2500.00")), now.minusDays(5), "Аптека", now.minusDays(5), now.minusDays(5)),
+        UiTransaction(7, 1, testUiCategories[6], BigDecimal("3000.00"), formatAmount(BigDecimal("3000.00")), now.minusDays(4), "Подарок маме", now.minusDays(4), now.minusDays(4)),
+        UiTransaction(8, 1, testUiCategories[7], BigDecimal("15000.00"), formatAmount(BigDecimal("15000.00")), now.minusDays(3), "Курс Android", now.minusDays(3), now.minusDays(3)),
+        UiTransaction(9, 1, testUiCategories[8], BigDecimal("40000.00"), formatAmount(BigDecimal("40000.00")), now.minusDays(2), "Квартира", now.minusDays(2), now.minusDays(2)),
+        UiTransaction(10, 1, testUiCategories[9], BigDecimal("1200.00"), formatAmount(BigDecimal("1200.00")), now.minusDays(1), "Доход по вкладу", now.minusDays(1), now.minusDays(1)),
     )
+
     return HistoryUiState.Success(
-       transactions = testTransactions ,
-        sumTransaction = 5000000.toString()
+        transactions = testUiTransactions,
+        sumTransaction = "5 000 000"
     )
 }

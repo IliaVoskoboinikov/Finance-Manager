@@ -10,11 +10,30 @@ import soft.divan.financemanager.domain.usecase.transaction.GetTodayExpensesUseC
 import soft.divan.financemanager.domain.util.DateHelper
 import javax.inject.Inject
 
+/**
+ * Use case для получения расходов пользователя за текущий день.
+ *
+ * Выполняет выборку всех аккаунтов пользователя, получает первый по списку аккаунт,
+ * затем запрашивает список транзакций за сегодняшний день и фильтрует их по категории:
+ * возвращаются только транзакции, не являющиеся доходами (`!it.category.isIncome`).
+ *
+ * Результат сортируется по дате транзакции в убывающем порядке (от новых к старым).
+ *
+ * Используется для отображения расходов пользователя за текущий день на главном экране,
+ * в отчетах или виджетах.
+ *
+ * Зависимости:
+ * - [AccountRepository] — для получения списка аккаунтов
+ * - [TransactionRepository] — для получения транзакций по дате
+ *
+ * @see Transaction
+ * @see Account
+ */
 class GetTodayExpensesUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
 ): GetTodayExpensesUseCase {
-     override operator fun invoke(): Flow<List<Transaction>> = flow {
+    override operator fun invoke(): Flow<List<Transaction>> = flow {
 
         val accounts = accountRepository.getAccounts()
         val account = accounts.first().first()

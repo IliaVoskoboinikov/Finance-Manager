@@ -83,17 +83,17 @@ private val settingsItems = listOf(
 
 )
 
-sealed class SettingsListItemModel {
+sealed interface SettingsListItemModel {
     data class WithSwitch(
         val title: Int,
         val isChecked: Boolean,
         val onToggle: (Boolean) -> Unit
-    ) : SettingsListItemModel()
+    ) : SettingsListItemModel
 
     data class WithArrow(
         val title: Int,
         val onClick: () -> Unit
-    ) : SettingsListItemModel()
+    ) : SettingsListItemModel
 }
 
 

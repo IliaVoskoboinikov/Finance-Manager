@@ -1,31 +1,15 @@
-package soft.divan.financemanager.data.network.mapper
+package soft.divan.financemanager.data.mapper
 
+import soft.divan.financemanager.data.entity.AccountEntity
+import soft.divan.financemanager.data.entity.AccountStateEntity
 import soft.divan.financemanager.data.network.dto.AccountDto
 import soft.divan.financemanager.data.network.dto.AccountStateDto
 import soft.divan.financemanager.data.network.dto.AccountWithStatsDto
-import soft.divan.financemanager.data.network.entity.AccountEntity
-import soft.divan.financemanager.data.network.entity.AccountStateEntity
 import soft.divan.financemanager.domain.model.Account
 import soft.divan.financemanager.domain.model.AccountBrief
-import soft.divan.financemanager.domain.model.AccountState
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import javax.inject.Inject
-
-class AccountDataMapper @Inject constructor() {
-    fun toEntity(accountDto: AccountDto): AccountEntity {
-        return AccountEntity(
-            id = accountDto.id,
-            userId = accountDto.userId,
-            name = accountDto.name,
-            balance = accountDto.balance,
-            currency = accountDto.currency,
-            createdAt = accountDto.createdAt,
-            updatedAt = accountDto.updatedAt
-        )
-    }
-}
 
 fun AccountDto.toEntity(): AccountEntity = AccountEntity(
     id = this.id,

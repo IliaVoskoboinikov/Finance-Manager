@@ -9,10 +9,25 @@ import soft.divan.financemanager.domain.repository.TransactionRepository
 import soft.divan.financemanager.domain.usecase.transaction.GetExpensesByPeriodUseCase
 import soft.divan.financemanager.domain.util.DateHelper
 import java.time.LocalDate
-
-import java.util.Date
 import javax.inject.Inject
 
+/**
+ * Use case для получения списка расходов за указанный период.
+ *
+ * Этот класс инкапсулирует логику получения транзакций за период времени,
+ * фильтрации только расходов (транзакций с категорией, не являющейся доходом),
+ * сортировки их по дате и обратного упорядочивания.
+ *
+ * Для получения данных сначала извлекается список аккаунтов через [AccountRepository],
+ * затем для первого аккаунта получаются транзакции за заданный период через [TransactionRepository].
+ *
+ * @property accountRepository репозиторий для работы с аккаунтами
+ * @property transactionRepository репозиторий для работы с транзакциями
+ *
+ * @see AccountRepository
+ * @see TransactionRepository
+ * @see Transaction
+ */
 class GetExpensesByPeriodUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,

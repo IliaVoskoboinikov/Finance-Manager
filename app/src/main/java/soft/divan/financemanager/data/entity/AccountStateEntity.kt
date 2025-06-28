@@ -1,6 +1,4 @@
-package soft.divan.financemanager.data.network.entity
-
-import com.google.gson.annotations.SerializedName
+package soft.divan.financemanager.data.entity
 
 data class AccountStateEntity (
     val id: Int,

@@ -1,7 +1,7 @@
 package soft.divan.financemanager.data.di
 
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.data.network.util.ConnectivityManagerNetworkMonitor
@@ -17,42 +17,32 @@ import soft.divan.financemanager.domain.repository.TransactionRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DataModule {
+abstract class DataModule {
 
-    @Provides
-    fun provideAccountRemoteDataSource(
+    @Binds
+    abstract fun bindAccountRemoteDataSource(
         impl: AccountRemoteDataSourceImpl
-    ): AccountRemoteDataSource {
-        return impl
-    }
+    ): AccountRemoteDataSource
 
-    @Provides
-    fun provideAccountRepository(
+    @Binds
+    abstract fun bindAccountRepository(
         impl: AccountRepositoryImpl
-    ): AccountRepository {
-        return impl
-    }
+    ): AccountRepository
 
 
-    @Provides
-    fun provideTransactionRemoteDataSource(
+    @Binds
+    abstract fun bindTransactionRemoteDataSource(
         impl: TransactionRemoteDataSourceImpl
-    ): TransactionRemoteDataSource {
-        return impl
-    }
+    ): TransactionRemoteDataSource
 
-    @Provides
-    fun provideTransactionRepository(
+    @Binds
+    abstract fun bindTransactionRepository(
         impl: TransactionRepositoryImp
-    ): TransactionRepository {
-        return impl
-    }
+    ): TransactionRepository
 
-    @Provides
-     fun bindsNetworkMonitor(
+    @Binds
+    abstract fun bindNetworkMonitor(
         networkMonitor: ConnectivityManagerNetworkMonitor,
-    ): NetworkMonitor {
-         return networkMonitor
-     }
+    ): NetworkMonitor
 
 }
