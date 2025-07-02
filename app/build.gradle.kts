@@ -15,6 +15,13 @@ val apiToken: String = project.rootProject
     .use { Properties().apply { load(it) } }
     .getProperty("api.token") ?: ""
 
+detekt {
+    toolVersion = libs.versions.detekt.get()
+    config.from(file("config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    parallel = true
+}
+
 android {
     namespace = "soft.divan.financemanager"
     compileSdk = 35
