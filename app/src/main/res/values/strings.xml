@@ -29,5 +29,9 @@
     <string name="start">Начало</string>
     <string name="end">Конец</string>
     <string name="not_connected">⚠️ Отсутствует подключение к интернету</string>
+    <string name="try_again">Попробовать еще раз</string>
+    <string name="error_occurred">Произошла ошибка :(</string>
+    <string name="it_seems_nothing_found">Кажется ни чего не нашлось</string>
+
 
 </resources>
