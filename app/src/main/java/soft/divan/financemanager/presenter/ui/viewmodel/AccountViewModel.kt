@@ -14,7 +14,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import soft.divan.financemanager.domain.usecase.account.GetAccountsUseCase
+import soft.divan.financemanager.domain.usecase.account.UpdateAccountUseCase
+import soft.divan.financemanager.presenter.mapper.toDomain
 import soft.divan.financemanager.presenter.mapper.toUiModel
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import javax.inject.Inject
@@ -23,6 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AccountViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
+    private val updateAccountUseCase: UpdateAccountUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState: StateFlow<AccountUiState> = _uiState
@@ -46,6 +50,27 @@ class AccountViewModel @Inject constructor(
             }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
+    }
+
+    fun updateCensure(currency: String) {
+        val currentState = uiState.value
+
+        if (currentState !is AccountUiState.Success) return
+
+        viewModelScope.launch {
+            updateAccountUseCase.invoke(currentState.account.copy(currency = currency).toDomain())
+                .onStart {
+                    _uiState.update { AccountUiState.Loading }
+                }
+                .onEach { data ->
+                    _uiState.update { AccountUiState.Success(data.toUiModel()) }
+                }
+                .catch { exception ->
+                    _uiState.update { AccountUiState.Error(exception.message.toString()) }
+                }
+                .flowOn(Dispatchers.IO)
+                .launchIn(viewModelScope)
+        }
     }
 
 
