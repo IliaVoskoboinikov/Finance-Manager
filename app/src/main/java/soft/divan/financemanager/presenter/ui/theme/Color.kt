@@ -20,3 +20,8 @@ val Graphite = Color(0xFF49454F)
 val LavenderMist = Color(0xFFF3EDF7)
 
 val RoseWhite = Color(0xFFFEF7FF)
+
+val CoralRed = Color(0xFFE46962)
+
+
+val SoftLavender = Color(0xFFF7F2FA)

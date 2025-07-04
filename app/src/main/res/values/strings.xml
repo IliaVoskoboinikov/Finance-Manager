@@ -32,6 +32,11 @@
     <string name="try_again">Попробовать еще раз</string>
     <string name="error_occurred">Произошла ошибка :(</string>
     <string name="it_seems_nothing_found">Кажется ни чего не нашлось</string>
+    <string name="cancellation">Отмена</string>
+    <string name="rub">Российский рубль</string>
+    <string name="usd">Американский доллар</string>
+    <string name="eur">Евро</string>
+    <string name="currency">Валюта</string>
 
 
 </resources>
