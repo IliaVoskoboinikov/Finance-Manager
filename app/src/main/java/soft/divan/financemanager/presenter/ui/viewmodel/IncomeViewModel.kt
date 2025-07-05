@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.domain.usecase.transaction.GetSumTransactionsUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetTodayIncomeUseCase
+import soft.divan.financemanager.presenter.mapper.formatWith
+import soft.divan.financemanager.presenter.mapper.toUi
 import soft.divan.financemanager.presenter.ui.model.IncomeUiState
 import javax.inject.Inject
 
@@ -41,11 +43,11 @@ class IncomeViewModel @Inject constructor(
                 _uiState.update { IncomeUiState.Loading }
             }
             .onEach { transactions ->
-                val sum = getSumTransactionsUseCase(transactions)
+                val sumTransactions = getSumTransactionsUseCase(transactions.first)
                 _uiState.update {
                     IncomeUiState.Success(
-                        transactions = transactions,
-                        sumTransaction = sum.toPlainString()
+                        transactions = transactions.first.map { it.toUi(transactions.second) },
+                        sumTransaction = sumTransactions.formatWith(transactions.second)
                     )
                 }
             }

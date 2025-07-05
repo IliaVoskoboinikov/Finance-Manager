@@ -9,18 +9,18 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
-val apiToken: String = project.rootProject
-    .file("local.properties")
-    .inputStream()
-    .use { Properties().apply { load(it) } }
-    .getProperty("api.token") ?: ""
-
 detekt {
     toolVersion = libs.versions.detekt.get()
     config.from(file("config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
     parallel = true
 }
+
+val apiToken: String = project.rootProject
+    .file("local.properties")
+    .inputStream()
+    .use { Properties().apply { load(it) } }
+    .getProperty("api.token") ?: ""
 
 android {
     namespace = "soft.divan.financemanager"
@@ -98,5 +98,6 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.converter.gson)
     implementation(libs.androidx.tracing.ktx)
-
+    implementation(libs.androidx.datastore.core.android)
+    implementation(libs.androidx.datastore.preferences)
 }

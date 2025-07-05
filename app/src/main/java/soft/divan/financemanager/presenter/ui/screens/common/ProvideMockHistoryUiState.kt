@@ -1,6 +1,7 @@
 package soft.divan.financemanager.presenter.ui.screens.common
 
-import soft.divan.financemanager.presenter.mapper.formatAmount
+import soft.divan.financemanager.domain.model.CurrencyCode
+import soft.divan.financemanager.presenter.mapper.formatWith
 import soft.divan.financemanager.presenter.ui.model.HistoryUiState
 import soft.divan.financemanager.presenter.ui.model.UiCategory
 import soft.divan.financemanager.presenter.ui.model.UiTransaction
@@ -30,7 +31,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[0],
             BigDecimal("120000.00"),
-            formatAmount(BigDecimal("120000.00")),
+            BigDecimal("120000.00").formatWith(CurrencyCode("RUB")),
             now.minusDays(10),
             "Аванс",
             now.minusDays(10),
@@ -41,7 +42,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[1],
             BigDecimal("3500.50"),
-            formatAmount(BigDecimal("3500.50")),
+            BigDecimal("3500.50").formatWith(CurrencyCode("RUB")),
             now.minusDays(9),
             "Покупка в Перекрестке",
             now.minusDays(9),
@@ -52,7 +53,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[2],
             BigDecimal("120.00"),
-            formatAmount(BigDecimal("120.00")),
+            BigDecimal("120.00").formatWith(CurrencyCode("RUB")),
             now.minusDays(8),
             "Метро",
             now.minusDays(8),
@@ -63,7 +64,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[3],
             BigDecimal("799.99"),
-            formatAmount(BigDecimal("799.99")),
+            BigDecimal("799.99").formatWith(CurrencyCode("RUB")),
             now.minusDays(7),
             "Steam покупка",
             now.minusDays(7),
@@ -74,7 +75,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[4],
             BigDecimal("450.00"),
-            formatAmount(BigDecimal("450.00")),
+            BigDecimal("450.00").formatWith(CurrencyCode("RUB")),
             now.minusDays(6),
             "Кофе с другом",
             now.minusDays(6),
@@ -85,7 +86,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[5],
             BigDecimal("2500.00"),
-            formatAmount(BigDecimal("2500.00")),
+            BigDecimal("2500.00").formatWith(CurrencyCode("RUB")),
             now.minusDays(5),
             "Аптека",
             now.minusDays(5),
@@ -96,7 +97,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[6],
             BigDecimal("3000.00"),
-            formatAmount(BigDecimal("3000.00")),
+            BigDecimal("3000.00").formatWith(CurrencyCode("RUB")),
             now.minusDays(4),
             "Подарок маме",
             now.minusDays(4),
@@ -107,7 +108,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[7],
             BigDecimal("15000.00"),
-            formatAmount(BigDecimal("15000.00")),
+            BigDecimal("15000.00").formatWith(CurrencyCode("RUB")),
             now.minusDays(3),
             "Курс Android",
             now.minusDays(3),
@@ -118,7 +119,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[8],
             BigDecimal("40000.00"),
-            formatAmount(BigDecimal("40000.00")),
+            BigDecimal("40000.00").formatWith(CurrencyCode("RUB")),
             now.minusDays(2),
             "Квартира",
             now.minusDays(2),
@@ -129,7 +130,7 @@ fun provideMockHistoryUiState(): HistoryUiState.Success {
             1,
             testUiCategories[9],
             BigDecimal("1200.00"),
-            formatAmount(BigDecimal("1200.00")),
+            BigDecimal("1200.00").formatWith(CurrencyCode("RUB")),
             now.minusDays(1),
             "Доход по вкладу",
             now.minusDays(1),

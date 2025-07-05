@@ -26,7 +26,8 @@ private val LightColorScheme = lightColorScheme(
     secondaryContainer = MintBackground,
     onSurfaceVariant = Graphite,
     onSurface = CharcoalPurple,
-
+    error = CoralRed,
+    surfaceContainerHigh = SoftLavender
 
 
     /* Other default colors to override
