@@ -71,7 +71,7 @@ fun IncomeScreen(
                     ListItem(
                         modifier = Modifier.height(56.dp),
                         content = { ContentTextListItem(stringResource(R.string.all)) },
-                        trail = { ContentTextListItem(state.sumTransaction + " ₽") },
+                        trail = { ContentTextListItem(state.sumTransaction) },
                         containerColor = colorScheme.secondaryContainer
                     )
                     FMDriver()

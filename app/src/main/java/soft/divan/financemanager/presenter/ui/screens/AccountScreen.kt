@@ -43,7 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
-import soft.divan.financemanager.presenter.mapper.CurrencySymbol
+import soft.divan.financemanager.domain.model.CurrencySymbol
 import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.icons.Diagram
 import soft.divan.financemanager.presenter.ui.icons.MdiDollar

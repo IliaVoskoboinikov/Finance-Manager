@@ -15,8 +15,11 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import soft.divan.financemanager.domain.model.CurrencyCode
+import soft.divan.financemanager.domain.model.CurrencySymbol
 import soft.divan.financemanager.domain.usecase.account.GetAccountsUseCase
 import soft.divan.financemanager.domain.usecase.account.UpdateAccountUseCase
+import soft.divan.financemanager.domain.usecase.currency.UpdateCurrencyUseCase
 import soft.divan.financemanager.presenter.mapper.toDomain
 import soft.divan.financemanager.presenter.mapper.toUiModel
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
@@ -27,6 +30,7 @@ import javax.inject.Inject
 class AccountViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,
+    private val updateCurrencyUseCase: UpdateCurrencyUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState: StateFlow<AccountUiState> = _uiState
@@ -70,6 +74,8 @@ class AccountViewModel @Inject constructor(
                 }
                 .flowOn(Dispatchers.IO)
                 .launchIn(viewModelScope)
+
+            updateCurrencyUseCase(CurrencyCode(CurrencySymbol.fromSymbol(currency)))
         }
     }
 
