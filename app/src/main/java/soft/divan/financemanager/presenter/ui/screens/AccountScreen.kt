@@ -2,9 +2,11 @@ package soft.divan.financemanager.presenter.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,14 +16,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -29,6 +36,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -74,7 +83,7 @@ fun AccountScreenPreview() {
                     balance = "1000000$",
                     currency = "$",
                 )
-            ), updateCurrency = {}, navController = rememberNavController()
+            ), updateCurrency = {}, updateName = {}, navController = rememberNavController()
         )
     }
 }
@@ -99,7 +108,8 @@ fun AccountScreen(
     AccountContent(
         modifier = modifier,
         uiState = uiState,
-        updateCurrency = viewModel::updateCensure,
+        updateCurrency = viewModel::updateCurrency,
+        updateName = viewModel::updateName,
         navController = navController,
     )
 }
@@ -110,6 +120,7 @@ fun AccountContent(
     modifier: Modifier = Modifier,
     uiState: AccountUiState,
     updateCurrency: (String) -> Unit,
+    updateName: (String) -> Unit,
     navController: NavController,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
@@ -131,7 +142,7 @@ fun AccountContent(
             }
 
             is AccountUiState.Success -> {
-                UiStateSuccessContent(innerPadding, uiState, updateCurrency)
+                UiStateSuccessContent(innerPadding, uiState, updateCurrency, updateName)
             }
         }
     }
@@ -143,25 +154,32 @@ private fun UiStateSuccessContent(
     innerPadding: PaddingValues,
     uiState: AccountUiState.Success,
 
-    updateCurrency: (String) -> Unit
+    updateCurrency: (String) -> Unit,
+    updateName: (String) -> Unit
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val isSheetOpen = remember { mutableStateOf(false) }
+    val currencySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val isCurrencySheetOpen = remember { mutableStateOf(false) }
+    val updateNameShowDialog = remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.padding(innerPadding)) {
-        AccountBalance(uiState)
+        AccountBalance(uiState, updateNameShowDialog)
         FMDriver()
-        AccountCurrency(isSheetOpen, uiState)
+        AccountCurrency(isCurrencySheetOpen, uiState)
         Spacer(modifier = Modifier.height(16.dp))
         Diagram()
-        ChoiceCurrency(isSheetOpen, sheetState, updateCurrency)
+        ChoiceCurrency(isCurrencySheetOpen, currencySheetState, updateCurrency)
+        UpdateName(updateNameShowDialog, updateName)
     }
 }
 
 @Composable
-private fun AccountBalance(uiState: AccountUiState.Success) {
+private fun AccountBalance(
+    uiState: AccountUiState.Success, showDialog: MutableState<Boolean>,
+) {
     ListItem(
-        modifier = Modifier.height(56.dp),
+        modifier = Modifier
+            .height(56.dp)
+            .clickable { showDialog.value = true },
         lead = {
             Box(
                 modifier = Modifier
@@ -186,6 +204,63 @@ private fun AccountBalance(uiState: AccountUiState.Success) {
         containerColor = colorScheme.secondaryContainer
     )
 }
+
+@Composable
+fun AccountNameDialog(
+    initialText: String = "",
+    onCancel: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var text by remember { mutableStateOf(initialText) }
+
+    Dialog(onDismissRequest = onCancel) {
+        Surface(
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.name_account),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black
+                )
+
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { text = it },
+                    placeholder = { Text(stringResource(R.string.enter_the_name)) },
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+
+                    )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Button(
+                        onClick = onCancel,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text(stringResource(R.string.cancellation))
+                    }
+
+                    Button(
+                        onClick = { onSave(text) },
+                    ) {
+                        Text(stringResource(R.string.save))
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun AccountCurrency(
@@ -298,4 +373,21 @@ fun CurrencyItem(icon: ImageVector, title: Int, symbol: String, onClick: () -> U
         content = { ContentTextListItem(text = stringResource(title) + " $symbol") },
     )
 
+}
+
+
+@Composable
+private fun UpdateName(
+    updateNameShowDialog: MutableState<Boolean>,
+    updateName: (String) -> Unit
+) {
+    if (updateNameShowDialog.value) {
+        AccountNameDialog(
+            onCancel = { updateNameShowDialog.value = false },
+            onSave = { accountName ->
+                updateNameShowDialog.value = false
+                updateName(accountName)
+            }
+        )
+    }
 }

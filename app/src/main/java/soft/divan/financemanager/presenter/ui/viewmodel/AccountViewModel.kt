@@ -56,7 +56,7 @@ class AccountViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    fun updateCensure(currency: String) {
+    fun updateCurrency(currency: String) {
         val currentState = uiState.value
 
         if (currentState !is AccountUiState.Success) return
@@ -77,6 +77,25 @@ class AccountViewModel @Inject constructor(
 
             updateCurrencyUseCase(CurrencyCode(CurrencySymbol.fromSymbol(currency)))
         }
+    }
+
+    fun updateName(name: String) {
+        val currentState = uiState.value
+
+        if (currentState !is AccountUiState.Success) return
+
+        updateAccountUseCase.invoke(currentState.account.copy(name = name).toDomain())
+            .onStart {
+                _uiState.update { AccountUiState.Loading }
+            }
+            .onEach { data ->
+                _uiState.update { AccountUiState.Success(data.toUiModel()) }
+            }
+            .catch { exception ->
+                _uiState.update { AccountUiState.Error(exception.message.toString()) }
+            }
+            .flowOn(Dispatchers.IO)
+            .launchIn(viewModelScope)
     }
 
 
