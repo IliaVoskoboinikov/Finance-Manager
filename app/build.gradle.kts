@@ -6,7 +6,14 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    /**/
+    alias(libs.plugins.detekt)
+}
+
+detekt {
+    toolVersion = libs.versions.detekt.get()
+    config.from(file("config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    parallel = true
 }
 
 val apiToken: String = project.rootProject
@@ -14,8 +21,6 @@ val apiToken: String = project.rootProject
     .inputStream()
     .use { Properties().apply { load(it) } }
     .getProperty("api.token") ?: ""
-
-
 
 android {
     namespace = "soft.divan.financemanager"
