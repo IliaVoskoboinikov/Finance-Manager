@@ -71,7 +71,7 @@ class CategoriesViewModel @Inject constructor(
 
     fun search(query: String) {
         val currentState = uiState.value
-
+        //todo
         if (currentState !is CategoriesUiState.Success) return
 
         val categories = currentState.categories

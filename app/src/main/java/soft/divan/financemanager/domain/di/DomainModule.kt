@@ -12,6 +12,8 @@ import soft.divan.financemanager.domain.usecase.category.GetCategoriesUseCase
 import soft.divan.financemanager.domain.usecase.category.SearchCategoryUseCase
 import soft.divan.financemanager.domain.usecase.category.impl.GetCategoriesUseCaseImpl
 import soft.divan.financemanager.domain.usecase.category.impl.SearchCategoryUseCaseImpl
+import soft.divan.financemanager.domain.usecase.currency.UpdateCurrencyUseCase
+import soft.divan.financemanager.domain.usecase.currency.impl.UpdateCurrencyUseCaseIml
 import soft.divan.financemanager.domain.usecase.transaction.GetExpensesByPeriodUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetIncomeByPeriodUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetSumTransactionsUseCase
@@ -71,5 +73,10 @@ abstract class DomainModule {
     abstract fun bindSearchCategoryUseCase(
         impl: SearchCategoryUseCaseImpl
     ): SearchCategoryUseCase
+
+    @Binds
+    abstract fun bindUpdateCurrencyUseCase(
+        impl: UpdateCurrencyUseCaseIml
+    ): UpdateCurrencyUseCase
 }
 
