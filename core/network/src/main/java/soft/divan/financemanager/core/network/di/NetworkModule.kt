@@ -13,6 +13,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import soft.divan.financemanager.core.network.api.AccountApiService
+import soft.divan.financemanager.core.network.api.CategoryApiService
 import soft.divan.financemanager.core.network.api.TransactionApiService
 import soft.divan.financemanager.core.network.interceptor.AuthInterceptor
 import soft.divan.financemanager.core.network.interceptor.LoggingInterceptor
@@ -72,7 +73,7 @@ object NetworkModule {
         retrofit.create(TransactionApiService::class.java)
 
     @Provides
-    fun provideTCategoryApi(retrofit: Retrofit): CategoryApiService =
+    fun provideCategoryApi(retrofit: Retrofit): CategoryApiService =
         retrofit.create(CategoryApiService::class.java)
 
 }
