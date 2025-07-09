@@ -1,9 +1,9 @@
 package soft.divan.financemanager.presenter.mapper
 
+import soft.divan.core.currency.CurrencyCode
+import soft.divan.core.currency.symbol
 import soft.divan.financemanager.category.presenter.mapper.toUi
-import soft.divan.financemanager.domain.model.CurrencyCode
 import soft.divan.financemanager.domain.model.Transaction
-import soft.divan.financemanager.domain.model.symbol
 import soft.divan.financemanager.presenter.ui.model.UiTransaction
 import java.math.BigDecimal
 

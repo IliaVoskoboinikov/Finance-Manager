@@ -3,14 +3,13 @@ package soft.divan.financemanager.domain.usecase.transaction.impl
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import soft.divan.financemanager.domain.model.CurrencyCode
+import soft.divan.core.currency.CurrencyCode
+import soft.divan.core.currency.repository.CurrencyRepository
+import soft.divan.financemanager.date_formater.DateHelper
 import soft.divan.financemanager.domain.model.Transaction
-import soft.divan.financemanager.domain.repository.AccountRepository
-import soft.divan.financemanager.domain.repository.CurrencyRepository
 import soft.divan.financemanager.domain.repository.TransactionRepository
-
 import soft.divan.financemanager.domain.usecase.transaction.GetTodayIncomeUseCase
-import soft.divan.financemanager.domain.util.DateHelper
+import soft.divan.finansemanager.account.domain.repository.AccountRepository
 import javax.inject.Inject
 
 /**
@@ -24,7 +23,7 @@ import javax.inject.Inject
  * по доходам или в виджете главного экрана.
  *
  * Зависимости:
- * - [AccountRepository] — используется для получения всех аккаунтов
+ * - [soft.divan.finansemanager.account.domain.repository.AccountRepository] — используется для получения всех аккаунтов
  * - [TransactionRepository] — используется для получения транзакций по конкретному аккаунту и периоду
  *
  * @see GetTodayIncomeUseCase

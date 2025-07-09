@@ -65,7 +65,11 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.feature.category)
     implementation(projects.core.string)
+    implementation(projects.core.currency)
+    implementation(projects.core.dateFormater)
+    implementation(projects.core.data)
     implementation(projects.feature.settings)
+    implementation(projects.feature.account)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

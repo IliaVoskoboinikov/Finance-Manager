@@ -1,7 +1,7 @@
 package soft.divan.financemanager.presenter.ui.screens.common
 
+import soft.divan.core.currency.CurrencyCode
 import soft.divan.financemanager.category.presenter.model.UiCategory
-import soft.divan.financemanager.domain.model.CurrencyCode
 import soft.divan.financemanager.presenter.mapper.formatWith
 import soft.divan.financemanager.presenter.ui.model.HistoryUiState
 import soft.divan.financemanager.presenter.ui.model.UiTransaction

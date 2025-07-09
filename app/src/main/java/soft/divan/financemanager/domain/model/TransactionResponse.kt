@@ -1,6 +1,7 @@
 package soft.divan.financemanager.domain.model
 
 import soft.divan.financemanager.category.domain.model.Category
+import soft.divan.finansemanager.account.domain.model.AccountBrief
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
