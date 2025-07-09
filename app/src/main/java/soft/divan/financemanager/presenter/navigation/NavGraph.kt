@@ -8,8 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import soft.divan.financemanager.category.presenter.screen.CategoriesScreen
-import soft.divan.financemanager.presenter.ui.screens.AccountScreen
-import soft.divan.financemanager.presenter.ui.screens.AddAccountScreen
+
 import soft.divan.financemanager.presenter.ui.screens.ExpensesScreen
 import soft.divan.financemanager.presenter.ui.screens.HistoryExpensesScreen
 import soft.divan.financemanager.presenter.ui.screens.HistoryIncomeScreen
@@ -17,6 +16,8 @@ import soft.divan.financemanager.presenter.ui.screens.IncomeScreen
 import soft.divan.financemanager.presenter.ui.screens.SplashScreen
 import soft.divan.financemanager.presenter.ui.screens.UpdateBalanceAccountScreen
 import soft.divan.financemanager.settings.screens.SettingsScreen
+import soft.divan.finansemanager.account.presenter.screens.AccountScreen
+import soft.divan.finansemanager.account.presenter.screens.AddAccountScreen
 
 
 @Composable

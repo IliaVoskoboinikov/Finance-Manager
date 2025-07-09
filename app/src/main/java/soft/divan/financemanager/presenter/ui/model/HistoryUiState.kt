@@ -1,6 +1,7 @@
 package soft.divan.financemanager.presenter.ui.model
 
-import soft.divan.financemanager.domain.util.DateHelper
+import soft.divan.financemanager.date_formater.DateHelper
+
 
 sealed interface HistoryUiState {
     data object Loading : HistoryUiState

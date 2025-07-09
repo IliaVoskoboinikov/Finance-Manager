@@ -46,9 +46,6 @@ fun UpdateBalanceAccountScreenPreview() {
 }
 
 
-object AddAccountScreen {
-    const val route = "add_account"
-}
 
 //update balance account
 @Composable

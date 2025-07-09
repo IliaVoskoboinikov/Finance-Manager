@@ -13,9 +13,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import soft.divan.financemanager.date_formater.DateHelper
 import soft.divan.financemanager.domain.usecase.transaction.GetIncomeByPeriodUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetSumTransactionsUseCase
-import soft.divan.financemanager.domain.util.DateHelper
 import soft.divan.financemanager.presenter.mapper.formatWith
 import soft.divan.financemanager.presenter.mapper.toUi
 import soft.divan.financemanager.presenter.ui.model.HistoryUiState

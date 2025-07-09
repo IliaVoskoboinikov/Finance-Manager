@@ -3,13 +3,13 @@ package soft.divan.financemanager.domain.usecase.transaction.impl
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import soft.divan.financemanager.domain.model.CurrencyCode
+import soft.divan.core.currency.CurrencyCode
+import soft.divan.core.currency.repository.CurrencyRepository
+import soft.divan.financemanager.date_formater.DateHelper
 import soft.divan.financemanager.domain.model.Transaction
-import soft.divan.financemanager.domain.repository.AccountRepository
-import soft.divan.financemanager.domain.repository.CurrencyRepository
 import soft.divan.financemanager.domain.repository.TransactionRepository
 import soft.divan.financemanager.domain.usecase.transaction.GetIncomeByPeriodUseCase
-import soft.divan.financemanager.domain.util.DateHelper
+import soft.divan.finansemanager.account.domain.repository.AccountRepository
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -21,13 +21,13 @@ import javax.inject.Inject
  * и сортировки их по дате в порядке убывания (от новых к старым).
  *
  * Для получения данных последовательно вызываются методы:
- * - получение списка аккаунтов из [AccountRepository]
+ * - получение списка аккаунтов из [soft.divan.finansemanager.account.domain.repository.AccountRepository]
  * - получение транзакций за период из [TransactionRepository]
  *
  * @property accountRepository репозиторий для доступа к аккаунтам пользователя
  * @property transactionRepository репозиторий для доступа к транзакциям
  *
- * @see AccountRepository
+ * @see soft.divan.finansemanager.account.domain.repository.AccountRepository
  * @see TransactionRepository
  * @see Transaction
  */
