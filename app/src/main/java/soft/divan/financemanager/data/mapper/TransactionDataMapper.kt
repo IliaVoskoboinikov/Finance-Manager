@@ -1,5 +1,7 @@
 package soft.divan.financemanager.data.mapper
 
+import soft.divan.financemanager.category.data.mapper.toDomain
+import soft.divan.financemanager.category.data.mapper.toEntity
 import soft.divan.financemanager.core.network.dto.TransactionDto
 import soft.divan.financemanager.data.entity.TransactionEntity
 import soft.divan.financemanager.domain.model.Transaction

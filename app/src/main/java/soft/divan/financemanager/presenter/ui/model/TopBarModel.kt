@@ -3,15 +3,15 @@ package soft.divan.financemanager.presenter.ui.model
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
-import soft.divan.financemanager.R
-import soft.divan.financemanager.presenter.ui.icons.ArrowBack
-import soft.divan.financemanager.presenter.ui.icons.ArrowConfirm
-import soft.divan.financemanager.presenter.ui.icons.Clock
-import soft.divan.financemanager.presenter.ui.icons.Cross
-import soft.divan.financemanager.presenter.ui.icons.Pencil
-import soft.divan.financemanager.presenter.ui.icons.TabletWatch
 import soft.divan.financemanager.presenter.ui.screens.HistoryExpensesScreen
 import soft.divan.financemanager.presenter.ui.screens.HistoryIncomeScreen
+import soft.divan.financemanager.string.R
+import soft.divan.financemanager.uikit.icons.ArrowBack
+import soft.divan.financemanager.uikit.icons.ArrowConfirm
+import soft.divan.financemanager.uikit.icons.Clock
+import soft.divan.financemanager.uikit.icons.Cross
+import soft.divan.financemanager.uikit.icons.Pencil
+import soft.divan.financemanager.uikit.icons.TabletWatch
 
 sealed class TopBarModel(
     val title: Int,

@@ -13,9 +13,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import soft.divan.financemanager.presenter.ui.screens.common.HistoryContent
 import soft.divan.financemanager.presenter.ui.screens.common.provideMockHistoryUiState
-import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.ui.viewmodel.HistoryIncomeViewModel
-import soft.divan.financemanager.presenter.uiKit.FMDatePickerDialog
+import soft.divan.financemanager.uikit.components.FMDatePickerDialog
+import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import java.time.LocalDate
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)

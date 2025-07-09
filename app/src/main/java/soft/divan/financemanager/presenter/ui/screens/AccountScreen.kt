@@ -51,24 +51,25 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import soft.divan.financemanager.R
 import soft.divan.financemanager.domain.model.CurrencySymbol
-import soft.divan.financemanager.presenter.ui.icons.Arrow
-import soft.divan.financemanager.presenter.ui.icons.Diagram
-import soft.divan.financemanager.presenter.ui.icons.MdiDollar
-import soft.divan.financemanager.presenter.ui.icons.MdiEuro
-import soft.divan.financemanager.presenter.ui.icons.MdiRuble
-import soft.divan.financemanager.presenter.ui.icons.RoundCross
 import soft.divan.financemanager.presenter.ui.model.AccountUiModel
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
-import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.ui.viewmodel.AccountViewModel
-import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
-import soft.divan.financemanager.presenter.uiKit.ErrorSnackbar
-import soft.divan.financemanager.presenter.uiKit.FMDriver
-import soft.divan.financemanager.presenter.uiKit.FloatingButton
-import soft.divan.financemanager.presenter.uiKit.ListItem
-import soft.divan.financemanager.presenter.uiKit.LoadingProgressBar
+import soft.divan.financemanager.string.R
+
+import soft.divan.financemanager.uikit.components.ContentTextListItem
+import soft.divan.financemanager.uikit.components.ErrorSnackbar
+import soft.divan.financemanager.uikit.components.FMDriver
+import soft.divan.financemanager.uikit.components.FloatingButton
+import soft.divan.financemanager.uikit.components.ListItem
+import soft.divan.financemanager.uikit.components.LoadingProgressBar
+import soft.divan.financemanager.uikit.icons.Arrow
+import soft.divan.financemanager.uikit.icons.Diagram
+import soft.divan.financemanager.uikit.icons.MdiDollar
+import soft.divan.financemanager.uikit.icons.MdiEuro
+import soft.divan.financemanager.uikit.icons.MdiRuble
+import soft.divan.financemanager.uikit.icons.RoundCross
+import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
@@ -216,7 +217,7 @@ fun AccountNameDialog(
     Dialog(onDismissRequest = onCancel) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh
+            color = colorScheme.surfaceContainerHigh
         ) {
             Column(
                 modifier = Modifier
@@ -245,7 +246,7 @@ fun AccountNameDialog(
                 ) {
                     Button(
                         onClick = onCancel,
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        colors = ButtonDefaults.buttonColors(containerColor = colorScheme.error)
                     ) {
                         Text(stringResource(R.string.cancellation))
                     }

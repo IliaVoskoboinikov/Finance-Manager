@@ -7,9 +7,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import soft.divan.financemanager.category.presenter.screen.CategoriesScreen
 import soft.divan.financemanager.presenter.ui.screens.AccountScreen
 import soft.divan.financemanager.presenter.ui.screens.AddAccountScreen
-import soft.divan.financemanager.presenter.ui.screens.CategoriesScreen
 import soft.divan.financemanager.presenter.ui.screens.ExpensesScreen
 import soft.divan.financemanager.presenter.ui.screens.HistoryExpensesScreen
 import soft.divan.financemanager.presenter.ui.screens.HistoryIncomeScreen

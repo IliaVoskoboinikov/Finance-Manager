@@ -25,3 +25,6 @@ enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
 rootProject.name = "FinanceManager"
 include(":app")
 include(":core:network")
+include(":feature:category")
+include(":core:uikit")
+include(":core:string")

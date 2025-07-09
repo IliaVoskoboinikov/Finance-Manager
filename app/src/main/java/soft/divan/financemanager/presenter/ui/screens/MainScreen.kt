@@ -23,17 +23,17 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import soft.divan.financemanager.R
 import soft.divan.financemanager.presenter.MainViewModel
 import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
 import soft.divan.financemanager.presenter.navigation.NavGraph
 import soft.divan.financemanager.presenter.navigation.ScreenBottom
+import soft.divan.financemanager.presenter.ui.TopBar
 import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import soft.divan.financemanager.presenter.ui.model.TopBarModel
-import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.ui.viewmodel.AccountViewModel
 import soft.divan.financemanager.presenter.ui.viewmodel.UpdateBalanceAccountViewModel
-import soft.divan.financemanager.presenter.uiKit.TopBar
+import soft.divan.financemanager.string.R
+import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
