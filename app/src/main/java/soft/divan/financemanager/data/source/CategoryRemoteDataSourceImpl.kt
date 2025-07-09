@@ -1,8 +1,8 @@
 package soft.divan.financemanager.data.source
 
 import retrofit2.Response
-import soft.divan.financemanager.data.network.api.CategoryApiService
-import soft.divan.financemanager.data.network.dto.CategoryDto
+import soft.divan.financemanager.core.network.api.CategoryApiService
+import soft.divan.financemanager.core.network.dto.CategoryDto
 import javax.inject.Inject
 
 class CategoryRemoteDataSourceImpl @Inject constructor(
