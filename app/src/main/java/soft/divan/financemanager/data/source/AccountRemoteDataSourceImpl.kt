@@ -1,11 +1,12 @@
 package soft.divan.financemanager.data.source
 
 import retrofit2.Response
-import soft.divan.financemanager.data.network.api.AccountApiService
-import soft.divan.financemanager.data.network.dto.AccountDto
-import soft.divan.financemanager.data.network.dto.AccountWithStatsDto
-import soft.divan.financemanager.data.network.dto.CreateAccountRequestDto
-import soft.divan.financemanager.data.network.dto.UpdateAccountRequestDto
+import soft.divan.financemanager.core.network.api.AccountApiService
+import soft.divan.financemanager.core.network.dto.AccountDto
+import soft.divan.financemanager.core.network.dto.AccountWithStatsDto
+import soft.divan.financemanager.core.network.dto.CreateAccountRequestDto
+import soft.divan.financemanager.core.network.dto.UpdateAccountRequestDto
+
 import soft.divan.financemanager.domain.model.AccountBrief
 import javax.inject.Inject
 

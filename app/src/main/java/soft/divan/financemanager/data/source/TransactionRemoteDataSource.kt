@@ -1,7 +1,8 @@
 package soft.divan.financemanager.data.source
 
 import retrofit2.Response
-import soft.divan.financemanager.data.network.dto.TransactionDto
+import soft.divan.financemanager.core.network.dto.TransactionDto
+
 
 interface TransactionRemoteDataSource {
     suspend fun getTransactionsByAccountAndPeriod(
