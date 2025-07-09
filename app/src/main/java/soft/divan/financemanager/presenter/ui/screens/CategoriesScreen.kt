@@ -2,6 +2,7 @@ package soft.divan.financemanager.presenter.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,7 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -28,75 +29,94 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
 import soft.divan.financemanager.presenter.ui.icons.Search
+import soft.divan.financemanager.presenter.ui.model.CategoriesUiState
+import soft.divan.financemanager.presenter.ui.model.UiCategory
 import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
-import soft.divan.financemanager.presenter.ui.viewmodel.ArticleUi
-import soft.divan.financemanager.presenter.ui.viewmodel.ArticlesUiState
-import soft.divan.financemanager.presenter.ui.viewmodel.ArticlesViewModel
+import soft.divan.financemanager.presenter.ui.viewmodel.CategoriesViewModel
 import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
 import soft.divan.financemanager.presenter.uiKit.EmojiCircle
+import soft.divan.financemanager.presenter.uiKit.ErrorContent
 import soft.divan.financemanager.presenter.uiKit.FMDriver
 import soft.divan.financemanager.presenter.uiKit.ListItem
+import soft.divan.financemanager.presenter.uiKit.LoadingProgressBar
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun ArticlesScreenPreview() {
+fun CategoriesScreenPreview() {
     FinanceManagerTheme {
-        ArticlesScreen(navController = rememberNavController())
+        CategoriesScreen(navController = rememberNavController())
     }
 }
 
 @Composable
-fun ArticlesScreen(
+fun CategoriesScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    viewModel: ArticlesViewModel = viewModel()
+    viewModel: CategoriesViewModel = hiltViewModel()
 ) {
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    CategoriesContent(
+        modifier = modifier,
+        uiState = uiState,
+        onSearch = viewModel::search,
+        onRetry = viewModel::retry
+    )
+}
+
+@Composable
+private fun CategoriesContent(
+    modifier: Modifier,
+    uiState: CategoriesUiState,
+    onSearch: (String) -> Unit,
+    onRetry: () -> Unit
+) {
     var query by remember { mutableStateOf("") }
-
-    Scaffold(modifier = modifier) { innerPadding ->
-
-        LazyColumn(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-        ) {
-            item {
-                SearchBar(
-                    query = query,
-                    onQueryChange = {
-                        query = it
-                        viewModel.search(it)
-                    },
-                    onSearchClick = { viewModel.search(query) }
-                )
+    Column(modifier = modifier) {
+        SearchBar(
+            query = query,
+            onQueryChange = {
+                query = it
+                onSearch(it)
+            },
+            onSearchClick = { onSearch(query) }
+        )
+        FMDriver()
+        when (uiState) {
+            is CategoriesUiState.Loading -> {
+                LoadingProgressBar()
             }
 
-            item { FMDriver() }
+            is CategoriesUiState.Error -> {
+                ErrorContent(onRetry = { onRetry() })
+            }
 
-            when (uiState) {
-                is ArticlesUiState.Loading -> {
-
-                }
-
-                is ArticlesUiState.Success -> {
-                    val articles = (uiState as ArticlesUiState.Success).articleUis
-                    items(articles) { article ->
-                        RenderArticleListItem(article)
-                        FMDriver()
+            is CategoriesUiState.Success -> {
+                val categories = uiState.sortedCategories
+                if (categories.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.it_seems_nothing_found),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    )
+                } else {
+                    LazyColumn {
+                        items(categories) {
+                            RenderArticleListItem(it)
+                            FMDriver()
+                        }
                     }
-                }
-
-                is ArticlesUiState.Error -> {
-
                 }
             }
         }
@@ -104,16 +124,15 @@ fun ArticlesScreen(
 }
 
 @Composable
-fun RenderArticleListItem(articleUi: ArticleUi) {
+fun RenderArticleListItem(categoryUiModel: UiCategory) {
     ListItem(
         modifier = Modifier.height(70.dp),
         lead = {
-            EmojiCircle(emoji = articleUi.emoji)
+            EmojiCircle(emoji = categoryUiModel.emoji)
         },
-        content = { ContentTextListItem(articleUi.title) }
+        content = { ContentTextListItem(categoryUiModel.name) }
     )
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

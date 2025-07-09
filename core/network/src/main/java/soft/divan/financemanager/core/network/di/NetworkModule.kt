@@ -71,4 +71,8 @@ object NetworkModule {
     fun provideTransactionApi(retrofit: Retrofit): TransactionApiService =
         retrofit.create(TransactionApiService::class.java)
 
+    @Provides
+    fun provideTCategoryApi(retrofit: Retrofit): CategoryApiService =
+        retrofit.create(CategoryApiService::class.java)
+
 }
