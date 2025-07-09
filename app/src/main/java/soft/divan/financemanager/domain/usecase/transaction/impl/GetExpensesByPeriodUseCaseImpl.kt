@@ -3,13 +3,13 @@ package soft.divan.financemanager.domain.usecase.transaction.impl
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import soft.divan.financemanager.domain.model.CurrencyCode
+import soft.divan.core.currency.CurrencyCode
+import soft.divan.core.currency.repository.CurrencyRepository
+import soft.divan.financemanager.date_formater.DateHelper
 import soft.divan.financemanager.domain.model.Transaction
-import soft.divan.financemanager.domain.repository.AccountRepository
-import soft.divan.financemanager.domain.repository.CurrencyRepository
 import soft.divan.financemanager.domain.repository.TransactionRepository
 import soft.divan.financemanager.domain.usecase.transaction.GetExpensesByPeriodUseCase
-import soft.divan.financemanager.domain.util.DateHelper
+import soft.divan.finansemanager.account.domain.repository.AccountRepository
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -20,13 +20,13 @@ import javax.inject.Inject
  * фильтрации только расходов (транзакций с категорией, не являющейся доходом),
  * сортировки их по дате и обратного упорядочивания.
  *
- * Для получения данных сначала извлекается список аккаунтов через [AccountRepository],
+ * Для получения данных сначала извлекается список аккаунтов через [soft.divan.finansemanager.account.domain.repository.AccountRepository],
  * затем для первого аккаунта получаются транзакции за заданный период через [TransactionRepository].
  *
  * @property accountRepository репозиторий для работы с аккаунтами
  * @property transactionRepository репозиторий для работы с транзакциями
  *
- * @see AccountRepository
+ * @see soft.divan.finansemanager.account.domain.repository.AccountRepository
  * @see TransactionRepository
  * @see Transaction
  */

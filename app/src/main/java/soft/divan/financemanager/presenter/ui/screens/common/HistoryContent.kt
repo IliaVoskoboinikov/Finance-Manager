@@ -20,7 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import soft.divan.financemanager.domain.util.DateHelper
+import soft.divan.financemanager.date_formater.DateHelper
 import soft.divan.financemanager.presenter.ui.model.HistoryUiState
 import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.components.ContentTextListItem

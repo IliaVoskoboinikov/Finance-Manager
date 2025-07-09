@@ -8,12 +8,6 @@ import soft.divan.financemanager.category.domain.usecase.GetCategoriesUseCase
 import soft.divan.financemanager.category.domain.usecase.SearchCategoryUseCase
 import soft.divan.financemanager.category.domain.usecase.impl.GetCategoriesUseCaseImpl
 import soft.divan.financemanager.category.domain.usecase.impl.SearchCategoryUseCaseImpl
-import soft.divan.financemanager.domain.usecase.account.GetAccountsUseCase
-import soft.divan.financemanager.domain.usecase.account.UpdateAccountUseCase
-import soft.divan.financemanager.domain.usecase.account.impl.GetAccountsUseCaseImpl
-import soft.divan.financemanager.domain.usecase.account.impl.UpdateAccountUseCaseImpl
-import soft.divan.financemanager.domain.usecase.currency.UpdateCurrencyUseCase
-import soft.divan.financemanager.domain.usecase.currency.impl.UpdateCurrencyUseCaseIml
 import soft.divan.financemanager.domain.usecase.transaction.GetExpensesByPeriodUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetIncomeByPeriodUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetSumTransactionsUseCase
@@ -24,6 +18,12 @@ import soft.divan.financemanager.domain.usecase.transaction.impl.GetIncomeByPeri
 import soft.divan.financemanager.domain.usecase.transaction.impl.GetSumTransactionsUseCaseImpl
 import soft.divan.financemanager.domain.usecase.transaction.impl.GetTodayExpensesUseCaseImpl
 import soft.divan.financemanager.domain.usecase.transaction.impl.GetTodayIncomeUseCaseImpl
+import soft.divan.finansemanager.account.domain.usecase.GetAccountsUseCase
+import soft.divan.finansemanager.account.domain.usecase.UpdateAccountUseCase
+import soft.divan.finansemanager.account.domain.usecase.UpdateCurrencyUseCase
+import soft.divan.finansemanager.account.domain.usecase.impl.GetAccountsUseCaseImpl
+import soft.divan.finansemanager.account.domain.usecase.impl.UpdateAccountUseCaseImpl
+import soft.divan.finansemanager.account.domain.usecase.impl.UpdateCurrencyUseCaseIml
 
 @Module
 @InstallIn(SingletonComponent::class)

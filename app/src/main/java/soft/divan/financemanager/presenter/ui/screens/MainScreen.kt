@@ -28,12 +28,13 @@ import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
 import soft.divan.financemanager.presenter.navigation.NavGraph
 import soft.divan.financemanager.presenter.navigation.ScreenBottom
 import soft.divan.financemanager.presenter.ui.TopBar
-import soft.divan.financemanager.presenter.ui.model.AccountUiState
 import soft.divan.financemanager.presenter.ui.model.TopBarModel
-import soft.divan.financemanager.presenter.ui.viewmodel.AccountViewModel
 import soft.divan.financemanager.presenter.ui.viewmodel.UpdateBalanceAccountViewModel
 import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
+import soft.divan.finansemanager.account.presenter.model.AccountUiState
+import soft.divan.finansemanager.account.presenter.screens.AddAccountScreen
+import soft.divan.finansemanager.account.presenter.viewmodel.AccountViewModel
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
