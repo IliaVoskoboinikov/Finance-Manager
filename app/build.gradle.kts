@@ -65,7 +65,7 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.feature.category)
     implementation(projects.core.string)
-
+    implementation(projects.feature.settings)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

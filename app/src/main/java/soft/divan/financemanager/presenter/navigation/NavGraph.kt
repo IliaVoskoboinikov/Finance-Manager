@@ -14,9 +14,9 @@ import soft.divan.financemanager.presenter.ui.screens.ExpensesScreen
 import soft.divan.financemanager.presenter.ui.screens.HistoryExpensesScreen
 import soft.divan.financemanager.presenter.ui.screens.HistoryIncomeScreen
 import soft.divan.financemanager.presenter.ui.screens.IncomeScreen
-import soft.divan.financemanager.presenter.ui.screens.SettingsScreen
 import soft.divan.financemanager.presenter.ui.screens.SplashScreen
 import soft.divan.financemanager.presenter.ui.screens.UpdateBalanceAccountScreen
+import soft.divan.financemanager.settings.screens.SettingsScreen
 
 
 @Composable
