@@ -16,7 +16,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.domain.usecase.transaction.GetSumTransactionsUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetTodayExpensesUseCase
-import soft.divan.financemanager.presenter.mapper.formatAmount
+import soft.divan.financemanager.presenter.mapper.formatWith
+
 import soft.divan.financemanager.presenter.mapper.toUi
 import soft.divan.financemanager.presenter.ui.model.ExpensesUiState
 import javax.inject.Inject
@@ -44,12 +45,12 @@ class ExpensesViewModel @Inject constructor(
                 _uiState.update { ExpensesUiState.Loading }
             }
             .onEach { data ->
-                val uiTransactions = data.map { it.toUi() }
-                val sumTransactions = getSumTransactionsUseCase.invoke(data)
+                val uiTransactions = data.first.map { it.toUi(data.second) }
+                val sumTransactions = getSumTransactionsUseCase.invoke(data.first)
                 _uiState.update {
                     ExpensesUiState.Success(
                         transactions = uiTransactions,
-                        sumTransaction = formatAmount(sumTransactions)
+                        sumTransaction = sumTransactions.formatWith(data.second)
                     )
                 }
             }

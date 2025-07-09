@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.domain.usecase.transaction.GetIncomeByPeriodUseCase
 import soft.divan.financemanager.domain.usecase.transaction.GetSumTransactionsUseCase
 import soft.divan.financemanager.domain.util.DateHelper
-import soft.divan.financemanager.presenter.mapper.formatAmount
+import soft.divan.financemanager.presenter.mapper.formatWith
 import soft.divan.financemanager.presenter.mapper.toUi
 import soft.divan.financemanager.presenter.ui.model.HistoryUiState
 import java.time.LocalDate
@@ -37,12 +37,12 @@ class HistoryIncomeViewModel @Inject constructor(
                 _uiState.value = HistoryUiState.Loading
             }
             .onEach { data ->
-                val uiTransactions = data.map { it.toUi() }
-                val sumTransactions = getSumTransactionsUseCase.invoke(data)
+                val uiTransactions = data.first.map { it.toUi(data.second) }
+                val sumTransactions = getSumTransactionsUseCase.invoke(data.first)
                 _uiState.update {
                     HistoryUiState.Success(
                         transactions = uiTransactions,
-                        sumTransaction = formatAmount(sumTransactions)
+                        sumTransaction = sumTransactions.formatWith(data.second)
                     )
                 }
             }
@@ -67,7 +67,7 @@ class HistoryIncomeViewModel @Inject constructor(
         val currentState = _uiState.value
         if (currentState is HistoryUiState.Success) {
             _uiState.value = currentState.copy(
-                endDate = DateHelper.formatDateForDisplay(endDate)!!
+                endDate = DateHelper.formatDateForDisplay(endDate)
             )
         }
     }
