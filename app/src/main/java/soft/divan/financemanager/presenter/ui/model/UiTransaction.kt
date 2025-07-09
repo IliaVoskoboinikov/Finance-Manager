@@ -1,5 +1,6 @@
 package soft.divan.financemanager.presenter.ui.model
 
+import soft.divan.financemanager.category.presenter.model.UiCategory
 import java.math.BigDecimal
 import java.time.LocalDateTime
 

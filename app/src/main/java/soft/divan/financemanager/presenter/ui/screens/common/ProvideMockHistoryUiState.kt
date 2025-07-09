@@ -1,9 +1,9 @@
 package soft.divan.financemanager.presenter.ui.screens.common
 
+import soft.divan.financemanager.category.presenter.model.UiCategory
 import soft.divan.financemanager.domain.model.CurrencyCode
 import soft.divan.financemanager.presenter.mapper.formatWith
 import soft.divan.financemanager.presenter.ui.model.HistoryUiState
-import soft.divan.financemanager.presenter.ui.model.UiCategory
 import soft.divan.financemanager.presenter.ui.model.UiTransaction
 import java.math.BigDecimal
 import java.time.LocalDateTime

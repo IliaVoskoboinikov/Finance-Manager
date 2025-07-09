@@ -16,12 +16,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import soft.divan.financemanager.R
-import soft.divan.financemanager.presenter.ui.icons.Triangle
-import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
-import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
-import soft.divan.financemanager.presenter.uiKit.FMDriver
-import soft.divan.financemanager.presenter.uiKit.ListItem
+import soft.divan.financemanager.string.R
+import soft.divan.financemanager.uikit.components.ContentTextListItem
+import soft.divan.financemanager.uikit.components.FMDriver
+import soft.divan.financemanager.uikit.components.ListItem
+import soft.divan.financemanager.uikit.icons.Triangle
+import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
+
+
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)

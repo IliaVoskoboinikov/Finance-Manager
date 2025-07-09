@@ -10,22 +10,22 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import soft.divan.financemanager.category.data.repository.CategoryRepositoryImpl
+import soft.divan.financemanager.category.data.source.CategoryRemoteDataSource
+import soft.divan.financemanager.category.data.source.CategoryRemoteDataSourceImpl
+import soft.divan.financemanager.category.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.network.util.ConnectivityManagerNetworkMonitor
 import soft.divan.financemanager.core.network.util.NetworkMonitor
 import soft.divan.financemanager.data.repository.AccountRepositoryImpl
-import soft.divan.financemanager.data.repository.CategoryRepositoryImpl
 import soft.divan.financemanager.data.repository.CurrencyRepositoryImpl
 import soft.divan.financemanager.data.repository.TransactionRepositoryImp
 import soft.divan.financemanager.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.data.source.AccountRemoteDataSourceImpl
-import soft.divan.financemanager.data.source.CategoryRemoteDataSource
-import soft.divan.financemanager.data.source.CategoryRemoteDataSourceImpl
 import soft.divan.financemanager.data.source.CurrencyLocalDataSource
 import soft.divan.financemanager.data.source.CurrencyLocalDataSourceImpl
 import soft.divan.financemanager.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.data.source.TransactionRemoteDataSourceImpl
 import soft.divan.financemanager.domain.repository.AccountRepository
-import soft.divan.financemanager.domain.repository.CategoryRepository
 import soft.divan.financemanager.domain.repository.CurrencyRepository
 import soft.divan.financemanager.domain.repository.TransactionRepository
 
