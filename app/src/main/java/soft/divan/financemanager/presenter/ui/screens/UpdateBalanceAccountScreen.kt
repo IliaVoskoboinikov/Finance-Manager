@@ -31,10 +31,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import soft.divan.financemanager.presenter.ui.model.UpdateBalanceAccountUiState
-import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
 import soft.divan.financemanager.presenter.ui.viewmodel.UpdateBalanceAccountViewModel
-import soft.divan.financemanager.presenter.uiKit.FMDriver
-import soft.divan.financemanager.presenter.uiKit.ListItem
+import soft.divan.financemanager.uikit.components.FMDriver
+import soft.divan.financemanager.uikit.components.ListItem
+import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
+
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable

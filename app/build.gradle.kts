@@ -62,6 +62,11 @@ android {
 dependencies {
 
     implementation(projects.core.network)
+    implementation(projects.core.uikit)
+    implementation(projects.feature.category)
+    implementation(projects.core.string)
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -71,8 +76,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.foundation.layout.android)
-    implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -86,12 +89,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.retrofit)
-    implementation(libs.converter.moshi)
-    implementation(libs.logging.interceptor)
-    implementation(libs.moshi.adapters)
-    implementation(libs.moshi.kotlin)
-    implementation(libs.converter.gson)
-    implementation(libs.androidx.tracing.ktx)
+
     implementation(libs.androidx.datastore.core.android)
     implementation(libs.androidx.datastore.preferences)
 }

@@ -1,5 +1,6 @@
 package soft.divan.financemanager.presenter.mapper
 
+import soft.divan.financemanager.category.presenter.mapper.toUi
 import soft.divan.financemanager.domain.model.CurrencyCode
 import soft.divan.financemanager.domain.model.Transaction
 import soft.divan.financemanager.domain.model.symbol

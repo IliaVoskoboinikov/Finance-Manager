@@ -22,18 +22,18 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import soft.divan.financemanager.R
-import soft.divan.financemanager.presenter.ui.icons.Arrow
 import soft.divan.financemanager.presenter.ui.model.IncomeUiState
 import soft.divan.financemanager.presenter.ui.viewmodel.IncomeViewModel
-import soft.divan.financemanager.presenter.uiKit.ContentTextListItem
-import soft.divan.financemanager.presenter.uiKit.EmojiCircle
-import soft.divan.financemanager.presenter.uiKit.ErrorSnackbar
-import soft.divan.financemanager.presenter.uiKit.FMDriver
-import soft.divan.financemanager.presenter.uiKit.FloatingButton
-import soft.divan.financemanager.presenter.uiKit.ListItem
-import soft.divan.financemanager.presenter.uiKit.LoadingProgressBar
-import soft.divan.financemanager.presenter.uiKit.SubContentTextListItem
+import soft.divan.financemanager.string.R
+import soft.divan.financemanager.uikit.components.ContentTextListItem
+import soft.divan.financemanager.uikit.components.EmojiCircle
+import soft.divan.financemanager.uikit.components.ErrorSnackbar
+import soft.divan.financemanager.uikit.components.FMDriver
+import soft.divan.financemanager.uikit.components.FloatingButton
+import soft.divan.financemanager.uikit.components.ListItem
+import soft.divan.financemanager.uikit.components.LoadingProgressBar
+import soft.divan.financemanager.uikit.components.SubContentTextListItem
+import soft.divan.financemanager.uikit.icons.Arrow
 
 
 @Composable
