@@ -92,5 +92,6 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.converter.gson)
     implementation(libs.androidx.tracing.ktx)
-
+    implementation(libs.androidx.datastore.core.android)
+    implementation(libs.androidx.datastore.preferences)
 }
