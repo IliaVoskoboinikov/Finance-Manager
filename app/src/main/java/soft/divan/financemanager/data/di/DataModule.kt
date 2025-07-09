@@ -4,8 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import soft.divan.financemanager.data.network.util.ConnectivityManagerNetworkMonitor
-import soft.divan.financemanager.data.network.util.NetworkMonitor
+import soft.divan.financemanager.core.network.util.ConnectivityManagerNetworkMonitor
+import soft.divan.financemanager.core.network.util.NetworkMonitor
 import soft.divan.financemanager.data.repository.AccountRepositoryImpl
 import soft.divan.financemanager.data.repository.TransactionRepositoryImp
 import soft.divan.financemanager.data.source.AccountRemoteDataSource

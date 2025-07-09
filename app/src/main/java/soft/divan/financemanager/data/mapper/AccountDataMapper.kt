@@ -1,10 +1,10 @@
 package soft.divan.financemanager.data.mapper
 
+import soft.divan.financemanager.core.network.dto.AccountDto
+import soft.divan.financemanager.core.network.dto.AccountStateDto
+import soft.divan.financemanager.core.network.dto.AccountWithStatsDto
 import soft.divan.financemanager.data.entity.AccountEntity
 import soft.divan.financemanager.data.entity.AccountStateEntity
-import soft.divan.financemanager.data.network.dto.AccountDto
-import soft.divan.financemanager.data.network.dto.AccountStateDto
-import soft.divan.financemanager.data.network.dto.AccountWithStatsDto
 import soft.divan.financemanager.domain.model.Account
 import soft.divan.financemanager.domain.model.AccountBrief
 import java.math.BigDecimal

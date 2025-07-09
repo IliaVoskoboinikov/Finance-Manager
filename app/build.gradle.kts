@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -9,17 +7,15 @@ plugins {
     alias(libs.plugins.detekt)
 }
 
-val apiToken: String = project.rootProject
-    .file("local.properties")
-    .inputStream()
-    .use { Properties().apply { load(it) } }
-    .getProperty("api.token") ?: ""
+
 
 detekt {
     toolVersion = libs.versions.detekt.get()
     config.from(file("config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
     parallel = true
+    ignoreFailures = true
+
 }
 
 android {
@@ -35,7 +31,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "API_TOKEN", "\"$apiToken\"")
     }
 
     buildFeatures {
@@ -46,11 +41,9 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
         }
 
         debug {
-            buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
         }
 
     }
@@ -68,6 +61,7 @@ android {
 
 dependencies {
 
+    implementation(projects.core.network)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

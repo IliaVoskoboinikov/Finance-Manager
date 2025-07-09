@@ -2,10 +2,10 @@ package soft.divan.financemanager.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import soft.divan.financemanager.core.network.dto.CreateAccountRequestDto
 import soft.divan.financemanager.data.mapper.toAccountBriefDomain
 import soft.divan.financemanager.data.mapper.toDomain
 import soft.divan.financemanager.data.mapper.toEntity
-import soft.divan.financemanager.data.network.dto.CreateAccountRequestDto
 import soft.divan.financemanager.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.domain.model.Account
 import soft.divan.financemanager.domain.model.AccountBrief
