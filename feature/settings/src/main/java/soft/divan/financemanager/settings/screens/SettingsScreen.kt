@@ -1,4 +1,4 @@
-package soft.divan.financemanager.presenter.ui.screens
+package soft.divan.financemanager.settings.screens
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
