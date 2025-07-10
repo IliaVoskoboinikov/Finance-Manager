@@ -27,6 +27,7 @@ material = "1.12.0"
 datastoreCoreAndroid = "1.1.7"
 runtimeAndroid = "1.8.3"
 jetbrainsKotlinJvm = "2.1.21"
+graph-plugin = "2.9.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -71,4 +72,5 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
+graph = { id = "com.jraska.module.graph.assertion", version.ref = "graph-plugin" }
 
