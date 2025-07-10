@@ -67,9 +67,9 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.feature.category)
     implementation(projects.core.string)
-    implementation(projects.core.domain)
+    implementation(projects.core.currencyDomain)
     implementation(projects.core.dateFormater)
-    implementation(projects.core.data)
+    implementation(projects.core.currencyData)
     implementation(projects.feature.settings)
     implementation(projects.feature.account)
 
