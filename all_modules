@@ -1,0 +1,23 @@
+digraph G {
+":app" -> ":core:network"
+":app" -> ":core:uikit"
+":app" -> ":feature:category" [color=red style=bold]
+":app" -> ":core:string"
+":app" -> ":core:currency"
+":app" -> ":core:date_formater"
+":app" -> ":core:data"
+":app" -> ":feature:settings"
+":app" -> ":feature:account"
+":core:uikit" -> ":core:string" [color=red style=bold]
+":feature:category" -> ":core:string"
+":feature:category" -> ":core:network"
+":feature:category" -> ":core:uikit" [color=red style=bold]
+":core:data" -> ":core:currency"
+":feature:settings" -> ":core:string"
+":feature:settings" -> ":core:uikit"
+":feature:account" -> ":core:string"
+":feature:account" -> ":core:network"
+":feature:account" -> ":core:uikit"
+":feature:account" -> ":core:date_formater"
+":feature:account" -> ":core:currency"
+}

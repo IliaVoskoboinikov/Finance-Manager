@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.graph)
+
 }
 
 
@@ -65,7 +67,7 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.feature.category)
     implementation(projects.core.string)
-    implementation(projects.core.currency)
+    implementation(projects.core.domain)
     implementation(projects.core.dateFormater)
     implementation(projects.core.data)
     implementation(projects.feature.settings)
