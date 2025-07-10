@@ -3,7 +3,7 @@ digraph G {
 ":app" -> ":core:uikit"
 ":app" -> ":feature:category" [color=red style=bold]
 ":app" -> ":core:string"
-":app" -> ":core:currency"
+":app" -> ":core:domain"
 ":app" -> ":core:date_formater"
 ":app" -> ":core:data"
 ":app" -> ":feature:settings"
@@ -12,12 +12,12 @@ digraph G {
 ":feature:category" -> ":core:string"
 ":feature:category" -> ":core:network"
 ":feature:category" -> ":core:uikit" [color=red style=bold]
-":core:data" -> ":core:currency"
+":core:data" -> ":core:domain"
 ":feature:settings" -> ":core:string"
 ":feature:settings" -> ":core:uikit"
 ":feature:account" -> ":core:string"
 ":feature:account" -> ":core:network"
 ":feature:account" -> ":core:uikit"
 ":feature:account" -> ":core:date_formater"
-":feature:account" -> ":core:currency"
+":feature:account" -> ":core:domain"
 }
