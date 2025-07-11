@@ -1,6 +1,6 @@
 package soft.divan.financemanager.feature.income.presenter.model
 
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.model.UiTransaction
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
 
 sealed interface IncomeUiState {
     data object Loading : IncomeUiState

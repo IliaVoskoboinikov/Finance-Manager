@@ -1,6 +1,6 @@
 package soft.divan.financemanager.category.presenter.model
 
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.model.UiCategory
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 
 sealed interface CategoriesUiState {
     data object Loading : CategoriesUiState

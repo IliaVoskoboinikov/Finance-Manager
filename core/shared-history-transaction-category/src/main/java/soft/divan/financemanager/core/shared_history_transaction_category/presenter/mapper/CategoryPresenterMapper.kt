@@ -1,7 +1,7 @@
 package soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper
 
 import soft.divan.financemanager.core.domain.model.Category
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.model.UiCategory
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 
 
 fun Category.toUi(): UiCategory {
