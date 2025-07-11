@@ -25,6 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.feature.expanses.presenter.screen.HistoryExpensesScreen
 import soft.divan.financemanager.feature.income.presenter.screen.HistoryIncomeScreen
+import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.presenter.MainViewModel
 import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
 import soft.divan.financemanager.presenter.navigation.NavGraph
@@ -43,13 +44,19 @@ import soft.divan.finansemanager.account.presenter.viewmodel.AccountViewModel
 @Composable
 fun MainScreenPreview() {
     FinanceManagerTheme {
-        MainScreen()
+/*
+        MainScreen(settingsRoute = SettingsRouter. )
+*/
     }
 }
 
 @SuppressLint("FlowOperatorInvokedInComposition")
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltViewModel()) {
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel = hiltViewModel(),
+    settingsFeatureApi: SettingsFeatureApi
+) {
     val navController = rememberNavController()
     val currentDestination by navController.currentBackStackEntryAsState()
     val currentScreenBottom = ScreenBottom.fromRoute(currentDestination?.destination?.route)
@@ -120,7 +127,7 @@ fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltVie
                 .consumeWindowInsets(paddingValues)
 
         ) {
-            NavGraph(navController = navController)
+            NavGraph(navController = navController, settingsFeatureApi = settingsFeatureApi)
             val notConnectedMessage = stringResource(R.string.not_connected)
             LaunchedEffect(isOffline) {
                 if (isOffline) {
