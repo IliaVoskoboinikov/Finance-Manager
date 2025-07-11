@@ -1,6 +1,6 @@
 package soft.divan.financemanager.feature.expanses.presenter.mapper
 
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.model.UiTransaction
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
 
 sealed interface ExpensesUiState {
     data object Loading : ExpensesUiState

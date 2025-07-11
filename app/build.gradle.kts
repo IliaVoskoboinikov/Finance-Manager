@@ -69,7 +69,9 @@ dependencies {
     implementation(projects.core.string)
     implementation(projects.core.domain)
     implementation(projects.core.data)
-    implementation(projects.feature.settings)
+    implementation(projects.feature.settings.settingsApi)
+    implementation(projects.feature.settings.settingsImpl)
+
     implementation(projects.feature.account)
     implementation(projects.feature.income)
     implementation(projects.feature.expanses)
