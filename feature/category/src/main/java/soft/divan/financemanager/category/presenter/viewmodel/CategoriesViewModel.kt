@@ -14,9 +14,10 @@ import kotlinx.coroutines.launch
 import soft.divan.financemanager.category.domain.resolve
 import soft.divan.financemanager.category.domain.usecase.GetCategoriesUseCase
 import soft.divan.financemanager.category.domain.usecase.SearchCategoryUseCase
-import soft.divan.financemanager.category.presenter.mapper.toDomain
-import soft.divan.financemanager.category.presenter.mapper.toUi
+
 import soft.divan.financemanager.category.presenter.model.CategoriesUiState
+import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toDomain
+import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
 import javax.inject.Inject
 
 @HiltViewModel

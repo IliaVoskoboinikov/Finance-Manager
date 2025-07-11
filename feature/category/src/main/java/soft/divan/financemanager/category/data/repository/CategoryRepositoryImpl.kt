@@ -1,10 +1,10 @@
 package soft.divan.financemanager.category.data.repository
 
-import soft.divan.financemanager.category.data.mapper.toDomain
-import soft.divan.financemanager.category.data.mapper.toEntity
 import soft.divan.financemanager.category.data.source.CategoryRemoteDataSource
-import soft.divan.financemanager.category.domain.model.Category
 import soft.divan.financemanager.category.domain.repository.CategoryRepository
+import soft.divan.financemanager.core.data.mapper.toDomain
+import soft.divan.financemanager.core.data.mapper.toEntity
+import soft.divan.financemanager.core.domain.model.Category
 import javax.inject.Inject
 import javax.inject.Singleton
 

@@ -3,8 +3,8 @@ package soft.divan.financemanager.presenter.ui.model
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
-import soft.divan.financemanager.presenter.ui.screens.HistoryExpensesScreen
-import soft.divan.financemanager.presenter.ui.screens.HistoryIncomeScreen
+import soft.divan.financemanager.feature.expanses.presenter.screen.HistoryExpensesScreen
+import soft.divan.financemanager.feature.income.presenter.screen.HistoryIncomeScreen
 import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.icons.ArrowBack
 import soft.divan.financemanager.uikit.icons.ArrowConfirm
