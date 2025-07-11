@@ -1,7 +1,7 @@
 # График всех модулей
 
 ```shell script
- dot -Tpng all_modules -o all_modules.png
+dot -Tpng all_modules -o all_modules.png
 ```
 
 # Текстовое представление всех модулей

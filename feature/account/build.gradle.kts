@@ -37,9 +37,8 @@ dependencies {
     implementation(projects.core.string)
     implementation(projects.core.network)
     implementation(projects.core.uikit)
-    implementation(projects.core.dateFormater)
-    implementation(projects.core.currencyDomain)
-
+    implementation(projects.core.domain)
+    implementation(projects.core.data)
     implementation(libs.androidx.material3)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.foundation.layout.android)

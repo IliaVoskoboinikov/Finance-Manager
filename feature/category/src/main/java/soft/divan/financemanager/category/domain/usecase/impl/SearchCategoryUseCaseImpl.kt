@@ -1,7 +1,7 @@
 package soft.divan.financemanager.category.domain.usecase.impl
 
-import soft.divan.financemanager.category.domain.model.Category
 import soft.divan.financemanager.category.domain.usecase.SearchCategoryUseCase
+import soft.divan.financemanager.core.domain.model.Category
 import javax.inject.Inject
 
 class SearchCategoryUseCaseImpl @Inject constructor(

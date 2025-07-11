@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import soft.divan.core.currency.CurrencyCode
-import soft.divan.core.currency.CurrencySymbol
+import soft.divan.financemanager.core.domain.model.CurrencyCode
+import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.finansemanager.account.domain.usecase.GetAccountsUseCase
 import soft.divan.finansemanager.account.domain.usecase.UpdateAccountUseCase
 import soft.divan.finansemanager.account.domain.usecase.UpdateCurrencyUseCase

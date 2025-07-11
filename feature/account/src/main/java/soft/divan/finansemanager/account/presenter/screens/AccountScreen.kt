@@ -51,7 +51,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import soft.divan.core.currency.CurrencySymbol
+import soft.divan.financemanager.core.domain.model.CurrencySymbol
 
 import soft.divan.financemanager.string.R
 

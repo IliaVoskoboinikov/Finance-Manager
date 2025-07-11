@@ -2,20 +2,20 @@ package soft.divan.finansemanager.account.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import soft.divan.financemanager.core.data.toAccountBriefDomain
+import soft.divan.financemanager.core.data.toDomain
+import soft.divan.financemanager.core.data.toEntity
+import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.AccountBrief
+import soft.divan.financemanager.core.domain.model.CreateAccountRequest
+import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.network.dto.CreateAccountRequestDto
-import soft.divan.finansemanager.account.data.mapper.toAccountBriefDomain
-import soft.divan.finansemanager.account.data.mapper.toDomain
-import soft.divan.finansemanager.account.data.mapper.toEntity
 import soft.divan.finansemanager.account.data.sourse.AccountRemoteDataSource
-import soft.divan.finansemanager.account.domain.model.Account
-import soft.divan.finansemanager.account.domain.model.AccountBrief
-import soft.divan.finansemanager.account.domain.model.CreateAccountRequest
-import soft.divan.finansemanager.account.domain.repository.AccountRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Реализация интерфейса [soft.divan.finansemanager.account.domain.repository.AccountRepository] для работы с аккаунтами через удаленный источник данных.
+ * Реализация интерфейса [AccountRepository] для работы с аккаунтами через удаленный источник данных.
  *
  * Класс использует [soft.divan.financemanager.data.source.AccountRemoteDataSource] для получения, создания и обновления данных аккаунтов
  * из удаленного API. Все методы возвращают результаты в виде [kotlinx.coroutines.flow.Flow], что позволяет использовать
@@ -23,7 +23,7 @@ import javax.inject.Singleton
  *
  * @property accountRemoteDataSource источник удаленных данных для аккаунтов
  *
- * @see soft.divan.finansemanager.account.domain.repository.AccountRepository
+ * @see AccountRepository
  * @see soft.divan.financemanager.data.source.AccountRemoteDataSource
  */
 @Singleton

@@ -36,8 +36,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.category.presenter.model.CategoriesUiState
-import soft.divan.financemanager.category.presenter.model.UiCategory
 import soft.divan.financemanager.category.presenter.viewmodel.CategoriesViewModel
+import soft.divan.financemanager.feature.expenses_income_shared.presenter.model.UiCategory
 
 
 import soft.divan.financemanager.string.R

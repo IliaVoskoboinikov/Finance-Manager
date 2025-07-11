@@ -16,8 +16,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import soft.divan.financemanager.core.domain.model.AccountBrief
 import soft.divan.financemanager.presenter.ui.model.UpdateBalanceAccountUiState
-import soft.divan.finansemanager.account.domain.model.AccountBrief
 import soft.divan.finansemanager.account.domain.usecase.UpdateAccountUseCase
 import javax.inject.Inject
 
