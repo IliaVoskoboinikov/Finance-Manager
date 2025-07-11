@@ -41,7 +41,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @Composable
 fun UpdateBalanceAccountScreenPreview() {
     FinanceManagerTheme {
-        /* UpdateBalanceContent()*/
+        UpdateBalanceContent(balance = "10000", onBalanceChanged = {})
     }
 }
 

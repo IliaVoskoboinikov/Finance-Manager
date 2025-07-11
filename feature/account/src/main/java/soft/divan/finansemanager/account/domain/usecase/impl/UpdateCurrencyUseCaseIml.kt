@@ -1,7 +1,7 @@
 package soft.divan.finansemanager.account.domain.usecase.impl
 
-import soft.divan.core.currency.CurrencyCode
-import soft.divan.core.currency.repository.CurrencyRepository
+import soft.divan.financemanager.core.domain.model.CurrencyCode
+import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import soft.divan.finansemanager.account.domain.usecase.UpdateCurrencyUseCase
 import javax.inject.Inject
 

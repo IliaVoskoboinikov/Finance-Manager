@@ -10,24 +10,24 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import soft.divan.core.currency.repository.CurrencyRepository
 import soft.divan.financemanager.category.data.repository.CategoryRepositoryImpl
 import soft.divan.financemanager.category.data.source.CategoryRemoteDataSource
 import soft.divan.financemanager.category.data.source.CategoryRemoteDataSourceImpl
 import soft.divan.financemanager.category.domain.repository.CategoryRepository
+import soft.divan.financemanager.core.data.repository.CurrencyRepositoryImpl
+import soft.divan.financemanager.core.data.repository.TransactionRemoteDataSource
+import soft.divan.financemanager.core.data.repository.TransactionRemoteDataSourceImpl
+import soft.divan.financemanager.core.data.repository.TransactionRepositoryImp
+import soft.divan.financemanager.core.data.source.CurrencyLocalDataSource
+import soft.divan.financemanager.core.data.source.CurrencyLocalDataSourceImpl
+import soft.divan.financemanager.core.domain.repository.AccountRepository
+import soft.divan.financemanager.core.domain.repository.CurrencyRepository
+import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.network.util.ConnectivityManagerNetworkMonitor
 import soft.divan.financemanager.core.network.util.NetworkMonitor
-import soft.divan.financemanager.data.repository.CurrencyRepositoryImpl
-import soft.divan.financemanager.data.repository.TransactionRepositoryImp
-import soft.divan.financemanager.data.source.CurrencyLocalDataSource
-import soft.divan.financemanager.data.source.CurrencyLocalDataSourceImpl
-import soft.divan.financemanager.data.source.TransactionRemoteDataSource
-import soft.divan.financemanager.data.source.TransactionRemoteDataSourceImpl
-import soft.divan.financemanager.domain.repository.TransactionRepository
 import soft.divan.finansemanager.account.data.repository.AccountRepositoryImpl
 import soft.divan.finansemanager.account.data.sourse.AccountRemoteDataSource
 import soft.divan.finansemanager.account.data.sourse.AccountRemoteDataSourceImpl
-import soft.divan.finansemanager.account.domain.repository.AccountRepository
 
 @Module
 @InstallIn(SingletonComponent::class)

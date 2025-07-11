@@ -1,8 +1,8 @@
 package soft.divan.finansemanager.account.domain.usecase.impl
 
 import kotlinx.coroutines.flow.Flow
-import soft.divan.finansemanager.account.domain.model.AccountBrief
-import soft.divan.finansemanager.account.domain.repository.AccountRepository
+import soft.divan.financemanager.core.domain.model.AccountBrief
+import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.finansemanager.account.domain.usecase.UpdateAccountUseCase
 import javax.inject.Inject
 
