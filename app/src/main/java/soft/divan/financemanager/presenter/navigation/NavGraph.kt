@@ -7,20 +7,24 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import soft.divan.financemanager.presenter.ui.screens.AccountScreen
-import soft.divan.financemanager.presenter.ui.screens.AddAccountScreen
-import soft.divan.financemanager.presenter.ui.screens.CategoriesScreen
-import soft.divan.financemanager.presenter.ui.screens.ExpensesScreen
-import soft.divan.financemanager.presenter.ui.screens.HistoryExpensesScreen
-import soft.divan.financemanager.presenter.ui.screens.HistoryIncomeScreen
-import soft.divan.financemanager.presenter.ui.screens.IncomeScreen
-import soft.divan.financemanager.presenter.ui.screens.SettingsScreen
+import soft.divan.financemanager.category.presenter.screen.CategoriesScreen
+import soft.divan.financemanager.core.feature_api.register
+import soft.divan.financemanager.feature.expanses.presenter.screen.ExpensesScreen
+import soft.divan.financemanager.feature.expanses.presenter.screen.HistoryExpensesScreen
+import soft.divan.financemanager.feature.income.presenter.screen.HistoryIncomeScreen
+import soft.divan.financemanager.feature.income.presenter.screen.IncomeScreen
+import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.presenter.ui.screens.SplashScreen
 import soft.divan.financemanager.presenter.ui.screens.UpdateBalanceAccountScreen
-
+import soft.divan.finansemanager.account.presenter.screens.AccountScreen
+import soft.divan.finansemanager.account.presenter.screens.AddAccountScreen
 
 @Composable
-fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
+fun NavGraph(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    settingsFeatureApi: SettingsFeatureApi
+) {
     NavHost(
         navController = navController,
         startDestination = SplashScreen.route,
@@ -30,12 +34,12 @@ fun NavGraph(navController: NavHostController, modifier: Modifier = Modifier) {
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None }
     ) {
+        register(featureApi = settingsFeatureApi, navController = navController, modifier = modifier)
         composable(SplashScreen.route) { SplashScreen(navController) }
         composable(ScreenBottom.ExpansesScreenBottom.route) { ExpensesScreen(modifier, navController) }
         composable(ScreenBottom.IncomeScreenBottom.route) { IncomeScreen(modifier, navController) }
         composable(ScreenBottom.AccountScreenBottom.route) { AccountScreen(modifier, navController) }
         composable(ScreenBottom.ArticlesScreenBottom.route) { CategoriesScreen(modifier, navController) }
-        composable(ScreenBottom.SettingsScreenBottom.route) { SettingsScreen(modifier, navController) }
         composable(HistoryExpensesScreen.route) { HistoryExpensesScreen(modifier, navController) }
         composable(HistoryIncomeScreen.route) { HistoryIncomeScreen(modifier, navController) }
         composable(AddAccountScreen.route) { UpdateBalanceAccountScreen(modifier, navController) }

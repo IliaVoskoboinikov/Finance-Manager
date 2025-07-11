@@ -23,30 +23,40 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import soft.divan.financemanager.R
+import soft.divan.financemanager.feature.expanses.presenter.screen.HistoryExpensesScreen
+import soft.divan.financemanager.feature.income.presenter.screen.HistoryIncomeScreen
+import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.presenter.MainViewModel
 import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
 import soft.divan.financemanager.presenter.navigation.NavGraph
 import soft.divan.financemanager.presenter.navigation.ScreenBottom
-import soft.divan.financemanager.presenter.ui.model.AccountUiState
+import soft.divan.financemanager.presenter.ui.TopBar
 import soft.divan.financemanager.presenter.ui.model.TopBarModel
-import soft.divan.financemanager.presenter.ui.theme.FinanceManagerTheme
-import soft.divan.financemanager.presenter.ui.viewmodel.AccountViewModel
 import soft.divan.financemanager.presenter.ui.viewmodel.UpdateBalanceAccountViewModel
-import soft.divan.financemanager.presenter.uiKit.TopBar
+import soft.divan.financemanager.string.R
+import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
+import soft.divan.finansemanager.account.presenter.model.AccountUiState
+import soft.divan.finansemanager.account.presenter.screens.AddAccountScreen
+import soft.divan.finansemanager.account.presenter.viewmodel.AccountViewModel
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun MainScreenPreview() {
     FinanceManagerTheme {
-        MainScreen()
+/*
+        MainScreen(settingsRoute = SettingsRouter. )
+*/
     }
 }
 
 @SuppressLint("FlowOperatorInvokedInComposition")
 @Composable
-fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltViewModel()) {
+fun MainScreen(
+    modifier: Modifier = Modifier,
+    viewModel: MainViewModel = hiltViewModel(),
+    settingsFeatureApi: SettingsFeatureApi
+) {
     val navController = rememberNavController()
     val currentDestination by navController.currentBackStackEntryAsState()
     val currentScreenBottom = ScreenBottom.fromRoute(currentDestination?.destination?.route)
@@ -117,7 +127,7 @@ fun MainScreen(modifier: Modifier = Modifier, viewModel: MainViewModel = hiltVie
                 .consumeWindowInsets(paddingValues)
 
         ) {
-            NavGraph(navController = navController)
+            NavGraph(navController = navController, settingsFeatureApi = settingsFeatureApi)
             val notConnectedMessage = stringResource(R.string.not_connected)
             LaunchedEffect(isOffline) {
                 if (isOffline) {
