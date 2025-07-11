@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data
+package soft.divan.financemanager.core.data.mapper
 
 data class AccountStateEntity(
     val id: Int,

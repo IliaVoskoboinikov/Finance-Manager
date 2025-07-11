@@ -1,21 +1,21 @@
-package soft.divan.finansemanager.account.data.repository
+package soft.divan.financemanager.core.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import soft.divan.financemanager.core.data.toAccountBriefDomain
-import soft.divan.financemanager.core.data.toDomain
-import soft.divan.financemanager.core.data.toEntity
+import soft.divan.financemanager.core.data.mapper.toAccountBriefDomain
+import soft.divan.financemanager.core.data.mapper.toDomain
+import soft.divan.financemanager.core.data.mapper.toEntity
+import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.AccountBrief
 import soft.divan.financemanager.core.domain.model.CreateAccountRequest
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.network.dto.CreateAccountRequestDto
-import soft.divan.finansemanager.account.data.sourse.AccountRemoteDataSource
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Реализация интерфейса [AccountRepository] для работы с аккаунтами через удаленный источник данных.
+ * Реализация интерфейса [soft.divan.financemanager.core.domain.repository.AccountRepository] для работы с аккаунтами через удаленный источник данных.
  *
  * Класс использует [soft.divan.financemanager.data.source.AccountRemoteDataSource] для получения, создания и обновления данных аккаунтов
  * из удаленного API. Все методы возвращают результаты в виде [kotlinx.coroutines.flow.Flow], что позволяет использовать
@@ -23,7 +23,7 @@ import javax.inject.Singleton
  *
  * @property accountRemoteDataSource источник удаленных данных для аккаунтов
  *
- * @see AccountRepository
+ * @see soft.divan.financemanager.core.domain.repository.AccountRepository
  * @see soft.divan.financemanager.data.source.AccountRemoteDataSource
  */
 @Singleton
