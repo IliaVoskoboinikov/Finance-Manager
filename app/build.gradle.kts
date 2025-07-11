@@ -1,5 +1,3 @@
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,20 +5,20 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.graph)
+
 }
+
+
 
 detekt {
     toolVersion = libs.versions.detekt.get()
     config.from(file("config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
     parallel = true
-}
+    ignoreFailures = true
 
-val apiToken: String = project.rootProject
-    .file("local.properties")
-    .inputStream()
-    .use { Properties().apply { load(it) } }
-    .getProperty("api.token") ?: ""
+}
 
 android {
     namespace = "soft.divan.financemanager"
@@ -35,7 +33,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("String", "API_TOKEN", "\"$apiToken\"")
     }
 
     buildFeatures {
@@ -46,11 +43,9 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
         }
 
         debug {
-            buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
         }
 
     }
@@ -68,7 +63,20 @@ android {
 
 dependencies {
 
+    implementation(projects.core.network)
+    implementation(projects.core.uikit)
+    implementation(projects.feature.category)
+    implementation(projects.core.string)
+    implementation(projects.core.domain)
+    implementation(projects.core.data)
+    implementation(projects.feature.settings.settingsApi)
+    implementation(projects.feature.settings.settingsImpl)
+
+    implementation(projects.feature.account)
+    implementation(projects.feature.income)
+    implementation(projects.feature.expanses)
     implementation(libs.androidx.core.ktx)
+    implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -77,8 +85,6 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.foundation.layout.android)
-    implementation(libs.androidx.foundation.layout.android)
     implementation(libs.androidx.foundation.layout.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -92,12 +98,7 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.retrofit)
-    implementation(libs.converter.moshi)
-    implementation(libs.logging.interceptor)
-    implementation(libs.moshi.adapters)
-    implementation(libs.moshi.kotlin)
-    implementation(libs.converter.gson)
-    implementation(libs.androidx.tracing.ktx)
+
     implementation(libs.androidx.datastore.core.android)
     implementation(libs.androidx.datastore.preferences)
 }

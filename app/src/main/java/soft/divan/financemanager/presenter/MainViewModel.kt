@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import soft.divan.financemanager.data.network.util.NetworkMonitor
+import soft.divan.financemanager.core.network.util.NetworkMonitor
 import javax.inject.Inject
 
 @HiltViewModel
