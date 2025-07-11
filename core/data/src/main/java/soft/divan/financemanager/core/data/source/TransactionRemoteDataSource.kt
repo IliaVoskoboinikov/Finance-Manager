@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data.repository
+package soft.divan.financemanager.core.data.source
 
 import retrofit2.Response
 import soft.divan.financemanager.core.network.dto.TransactionDto

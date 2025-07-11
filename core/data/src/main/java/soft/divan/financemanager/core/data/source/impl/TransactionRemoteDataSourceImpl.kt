@@ -1,9 +1,9 @@
-package soft.divan.financemanager.core.data.repository
+package soft.divan.financemanager.core.data.source.impl
 
 import retrofit2.Response
+import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.network.api.TransactionApiService
 import soft.divan.financemanager.core.network.dto.TransactionDto
-
 import javax.inject.Inject
 
 class TransactionRemoteDataSourceImpl @Inject constructor(
