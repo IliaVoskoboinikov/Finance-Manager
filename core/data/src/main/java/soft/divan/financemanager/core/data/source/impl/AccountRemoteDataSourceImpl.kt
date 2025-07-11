@@ -1,6 +1,7 @@
-package soft.divan.finansemanager.account.data.sourse
+package soft.divan.financemanager.core.data.source.impl
 
 import retrofit2.Response
+import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.domain.model.AccountBrief
 import soft.divan.financemanager.core.network.api.AccountApiService
 import soft.divan.financemanager.core.network.dto.AccountDto

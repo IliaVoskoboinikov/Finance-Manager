@@ -19,6 +19,8 @@ import soft.divan.financemanager.core.network.interceptor.AuthInterceptor
 import soft.divan.financemanager.core.network.interceptor.LoggingInterceptor
 import soft.divan.financemanager.core.network.interceptor.NetworkConnectionInterceptor
 import soft.divan.financemanager.core.network.interceptor.RetryInterceptor
+import soft.divan.financemanager.core.network.util.ConnectivityManagerNetworkMonitor
+import soft.divan.financemanager.core.network.util.NetworkMonitor
 import soft.divan.financemanager.network.BuildConfig
 
 @Module
@@ -75,5 +77,12 @@ object NetworkModule {
     @Provides
     fun provideCategoryApi(retrofit: Retrofit): CategoryApiService =
         retrofit.create(CategoryApiService::class.java)
+
+    @Provides
+    fun provideNetworkMonitor(
+        networkMonitor: ConnectivityManagerNetworkMonitor,
+    ): NetworkMonitor {
+        return networkMonitor
+    }
 
 }
