@@ -2,12 +2,12 @@ package soft.divan.financemanager.presenter.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.vector.ImageVector
-import soft.divan.financemanager.R
-import soft.divan.financemanager.presenter.ui.icons.Calculator
-import soft.divan.financemanager.presenter.ui.icons.Chart90
-import soft.divan.financemanager.presenter.ui.icons.Downtrend
-import soft.divan.financemanager.presenter.ui.icons.Settings
-import soft.divan.financemanager.presenter.ui.icons.Uptrend
+import soft.divan.financemanager.string.R
+import soft.divan.financemanager.uikit.icons.Calculator
+import soft.divan.financemanager.uikit.icons.Chart90
+import soft.divan.financemanager.uikit.icons.Downtrend
+import soft.divan.financemanager.uikit.icons.Settings
+import soft.divan.financemanager.uikit.icons.Uptrend
 
 
 sealed class ScreenBottom(
