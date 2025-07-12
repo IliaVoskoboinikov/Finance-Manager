@@ -1,11 +1,11 @@
 package soft.divan.financemanager.core.data.mapper
 
-
+//toddo data mapper
+import soft.divan.financemanager.core.data.dto.AccountDto
+import soft.divan.financemanager.core.data.dto.AccountStateDto
+import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.AccountBrief
-import soft.divan.financemanager.core.network.dto.AccountDto
-import soft.divan.financemanager.core.network.dto.AccountStateDto
-import soft.divan.financemanager.core.network.dto.AccountWithStatsDto
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

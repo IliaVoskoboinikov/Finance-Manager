@@ -1,8 +1,8 @@
 package soft.divan.financemanager.core.data.mapper
 
+import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.entity.TransactionEntity
 import soft.divan.financemanager.core.domain.model.Transaction
-import soft.divan.financemanager.core.network.dto.TransactionDto
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 

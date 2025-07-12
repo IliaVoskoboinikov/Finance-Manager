@@ -10,6 +10,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import retrofit2.Retrofit
+import soft.divan.financemanager.core.data.api.AccountApiService
+import soft.divan.financemanager.core.data.api.CategoryApiService
+import soft.divan.financemanager.core.data.api.TransactionApiService
 import soft.divan.financemanager.core.data.repository.AccountRepositoryImpl
 import soft.divan.financemanager.core.data.repository.CurrencyRepositoryImpl
 import soft.divan.financemanager.core.data.repository.TransactionRepositoryImp
@@ -73,4 +77,17 @@ object DataStoreModule {
     ): CurrencyLocalDataSource {
         return CurrencyLocalDataSourceImpl(dataStore)
     }
+
+    @Provides
+    fun provideAccountApi(retrofit: Retrofit): AccountApiService =
+        retrofit.create(AccountApiService::class.java)
+
+
+    @Provides
+    fun provideTransactionApi(retrofit: Retrofit): TransactionApiService =
+        retrofit.create(TransactionApiService::class.java)
+
+    @Provides
+    fun provideCategoryApi(retrofit: Retrofit): CategoryApiService =
+        retrofit.create(CategoryApiService::class.java)
 }
