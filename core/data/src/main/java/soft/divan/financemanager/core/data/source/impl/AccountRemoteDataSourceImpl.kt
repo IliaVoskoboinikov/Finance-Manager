@@ -1,13 +1,13 @@
 package soft.divan.financemanager.core.data.source.impl
 
 import retrofit2.Response
+import soft.divan.financemanager.core.data.api.AccountApiService
+import soft.divan.financemanager.core.data.dto.AccountDto
+import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
+import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
+import soft.divan.financemanager.core.data.dto.UpdateAccountRequestDto
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.domain.model.AccountBrief
-import soft.divan.financemanager.core.network.api.AccountApiService
-import soft.divan.financemanager.core.network.dto.AccountDto
-import soft.divan.financemanager.core.network.dto.AccountWithStatsDto
-import soft.divan.financemanager.core.network.dto.CreateAccountRequestDto
-import soft.divan.financemanager.core.network.dto.UpdateAccountRequestDto
 import javax.inject.Inject
 
 class AccountRemoteDataSourceImpl @Inject constructor(

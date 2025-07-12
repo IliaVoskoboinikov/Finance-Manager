@@ -2,6 +2,7 @@ package soft.divan.financemanager.core.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.data.mapper.toAccountBriefDomain
 import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toEntity
@@ -10,7 +11,6 @@ import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.AccountBrief
 import soft.divan.financemanager.core.domain.model.CreateAccountRequest
 import soft.divan.financemanager.core.domain.repository.AccountRepository
-import soft.divan.financemanager.core.network.dto.CreateAccountRequestDto
 import javax.inject.Inject
 import javax.inject.Singleton
 
