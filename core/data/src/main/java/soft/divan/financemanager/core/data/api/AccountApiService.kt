@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.network.api
+package soft.divan.financemanager.core.data.api
 
 import retrofit2.Response
 import retrofit2.http.Body
@@ -6,10 +6,10 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
-import soft.divan.financemanager.core.network.dto.AccountDto
-import soft.divan.financemanager.core.network.dto.AccountWithStatsDto
-import soft.divan.financemanager.core.network.dto.CreateAccountRequestDto
-import soft.divan.financemanager.core.network.dto.UpdateAccountRequestDto
+import soft.divan.financemanager.core.data.dto.AccountDto
+import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
+import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
+import soft.divan.financemanager.core.data.dto.UpdateAccountRequestDto
 
 interface AccountApiService {
 

@@ -12,9 +12,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import soft.divan.financemanager.core.network.api.AccountApiService
-import soft.divan.financemanager.core.network.api.CategoryApiService
-import soft.divan.financemanager.core.network.api.TransactionApiService
 import soft.divan.financemanager.core.network.interceptor.AuthInterceptor
 import soft.divan.financemanager.core.network.interceptor.LoggingInterceptor
 import soft.divan.financemanager.core.network.interceptor.NetworkConnectionInterceptor
@@ -66,17 +63,6 @@ object NetworkModule {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    @Provides
-    fun provideAccountApi(retrofit: Retrofit): AccountApiService =
-        retrofit.create(AccountApiService::class.java)
-
-    @Provides
-    fun provideTransactionApi(retrofit: Retrofit): TransactionApiService =
-        retrofit.create(TransactionApiService::class.java)
-
-    @Provides
-    fun provideCategoryApi(retrofit: Retrofit): CategoryApiService =
-        retrofit.create(CategoryApiService::class.java)
 
     @Provides
     fun provideNetworkMonitor(

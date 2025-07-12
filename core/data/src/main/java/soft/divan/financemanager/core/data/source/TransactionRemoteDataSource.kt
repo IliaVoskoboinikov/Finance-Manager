@@ -1,7 +1,7 @@
 package soft.divan.financemanager.core.data.source
 
 import retrofit2.Response
-import soft.divan.financemanager.core.network.dto.TransactionDto
+import soft.divan.financemanager.core.data.dto.TransactionDto
 
 
 interface TransactionRemoteDataSource {
