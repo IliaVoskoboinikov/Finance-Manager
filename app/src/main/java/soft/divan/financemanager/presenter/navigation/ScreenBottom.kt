@@ -15,9 +15,9 @@ sealed class ScreenBottom(
     val title: Int,
     val icon: ImageVector,
 ) {
-    data object ExpansesScreenBottom : ScreenBottom(
-        "expanses",
-        R.string.expanses,
+    data object ExpensesScreenBottom : ScreenBottom(
+        "expenses",
+        R.string.expenses,
         Icons.Filled.Downtrend,
     )
 
@@ -34,7 +34,7 @@ sealed class ScreenBottom(
     )
 
     data object ArticlesScreenBottom : ScreenBottom(
-        "articleUis",
+        "category",
         R.string.articles,
         Icons.Filled.Chart90,
     )
@@ -47,15 +47,12 @@ sealed class ScreenBottom(
 
     companion object {
         val items = listOf(
-            ExpansesScreenBottom,
+            ExpensesScreenBottom,
             IncomeScreenBottom,
             AccountScreenBottom,
             ArticlesScreenBottom,
             SettingsScreenBottom
         )
 
-        fun fromRoute(route: String?): ScreenBottom {
-            return items.find { it.route == route } ?: ExpansesScreenBottom
-        }
     }
 }

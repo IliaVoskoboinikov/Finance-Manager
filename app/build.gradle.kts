@@ -65,16 +65,23 @@ dependencies {
 
     implementation(projects.core.network)
     implementation(projects.core.uikit)
-    implementation(projects.feature.category)
+    implementation(projects.feature.category.categoryApi)
+    implementation(projects.feature.category.categoryImpl)
+
     implementation(projects.core.string)
     implementation(projects.core.domain)
     implementation(projects.core.data)
     implementation(projects.feature.settings.settingsApi)
     implementation(projects.feature.settings.settingsImpl)
 
-    implementation(projects.feature.account)
-    implementation(projects.feature.income)
-    implementation(projects.feature.expanses)
+    implementation(projects.feature.account.accountApi)
+    implementation(projects.feature.account.accountImpl)
+    implementation(projects.feature.income.incomeApi)
+    implementation(projects.feature.income.incomeImpl)
+
+    implementation(projects.feature.expenses.expensesApi)
+    implementation(projects.feature.expenses.expensesImpl)
+
     implementation(libs.androidx.core.ktx)
     implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(libs.androidx.lifecycle.runtime.ktx)
