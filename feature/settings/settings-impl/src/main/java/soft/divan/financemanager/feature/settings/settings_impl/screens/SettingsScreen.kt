@@ -1,13 +1,14 @@
 package soft.divan.financemanager.feature.settings.settings_impl.screens
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -20,10 +21,10 @@ import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.FMDriver
 import soft.divan.financemanager.uikit.components.ListItem
+import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.icons.Triangle
+import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
-
-
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
@@ -36,15 +37,19 @@ fun SettingsScreenPreview() {
 
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) {
-    Scaffold(
-        modifier = modifier,
-    ) { innerPadding ->
-        LazyColumn(modifier = Modifier.padding(innerPadding)) {
-            items(settingsItems) { item ->
-                RenderSettingsListItem(item)
-                FMDriver()
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            TopBar(
+                topBar = TopBarModel(title = R.string.settings),
+            )
+            LazyColumn {
+                items(settingsItems) { item ->
+                    RenderSettingsListItem(item)
+                    FMDriver()
+                }
             }
         }
+
     }
 }
 
