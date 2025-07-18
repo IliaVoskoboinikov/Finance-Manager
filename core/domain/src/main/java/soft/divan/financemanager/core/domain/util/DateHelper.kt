@@ -139,6 +139,9 @@ object DateHelper {
         return dateTime.format(displayDateTimeFormatter)
     }
 
+    fun dataTimeForApi(dateTime: LocalDateTime): String {
+        return dateTime.format(apiDateTimeFormatter)
+    }
     /**
      * Форматирует [java.time.LocalTime] в строку (`HH:mm`).
      */

@@ -36,8 +36,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.CategoriesUiState
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
-import soft.divan.financemanager.feature.category.category_impl.presenter.model.CategoriesUiState
 import soft.divan.financemanager.feature.category.category_impl.presenter.viewmodel.CategoriesViewModel
 import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.components.ContentTextListItem

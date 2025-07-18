@@ -25,6 +25,7 @@ import soft.divan.financemanager.feature.category.category_api.CategoryFeatureAp
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
 import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
+import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import soft.divan.financemanager.presenter.MainViewModel
 import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
 import soft.divan.financemanager.presenter.navigation.NavGraph
@@ -52,8 +53,8 @@ fun MainScreen(
     incomeFeatureApi: IncomeFeatureApi,
     accountFeatureApi: AccountFeatureApi,
     categoryFeatureApi: CategoryFeatureApi,
-
-    settingsFeatureApi: SettingsFeatureApi
+    settingsFeatureApi: SettingsFeatureApi,
+    transactionFeatureApi: TransactionFeatureApi
 ) {
     val navController = rememberNavController()
     val currentDestination by navController.currentBackStackEntryAsState()
@@ -96,7 +97,8 @@ fun MainScreen(
                 expenseFeatureApi = expenseFeatureApi,
                 categoryFeatureApi = categoryFeatureApi,
                 accountFeatureApi = accountFeatureApi,
-                settingsFeatureApi = settingsFeatureApi
+                settingsFeatureApi = settingsFeatureApi,
+                transactionFeatureApi = transactionFeatureApi
             )
 
             SnackbarHost(

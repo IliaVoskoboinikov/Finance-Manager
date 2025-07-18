@@ -11,10 +11,10 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import soft.divan.financemanager.feature.category.category_impl.domain.resolve
-import soft.divan.financemanager.feature.category.category_impl.domain.usecase.GetCategoriesUseCase
+import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
+import soft.divan.financemanager.core.domain.util.resolve
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.CategoriesUiState
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.SearchCategoryUseCase
-import soft.divan.financemanager.feature.category.category_impl.presenter.model.CategoriesUiState
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toDomain
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
 import javax.inject.Inject

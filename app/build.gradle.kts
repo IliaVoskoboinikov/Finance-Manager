@@ -82,6 +82,9 @@ dependencies {
     implementation(projects.feature.expenses.expensesApi)
     implementation(projects.feature.expenses.expensesImpl)
 
+    implementation(projects.feature.transaction.transactionApi)
+    implementation(projects.feature.transaction.transactionImpl)
+
     implementation(libs.androidx.core.ktx)
     implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(libs.androidx.lifecycle.runtime.ktx)

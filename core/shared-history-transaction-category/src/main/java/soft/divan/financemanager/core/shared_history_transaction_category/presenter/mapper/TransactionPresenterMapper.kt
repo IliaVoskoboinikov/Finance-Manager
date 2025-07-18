@@ -22,3 +22,16 @@ fun Transaction.toUi(currency: CurrencyCode): UiTransaction {
 
 fun BigDecimal.formatWith(currency: CurrencyCode): String =
     "${this.stripTrailingZeros().toPlainString()} ${currency.symbol()}"
+
+fun UiTransaction.toDomain(): Transaction {
+    return Transaction(
+        id = this.id,
+        accountId = this.accountId,
+        category = this.category.toDomain(),
+        amount = this.amount,
+        transactionDate = this.transactionDate,
+        comment = this.comment,
+        createdAt = this.createdAt,
+        updatedAt = this.updatedAt
+    )
+}
