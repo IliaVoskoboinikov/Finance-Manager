@@ -1,7 +1,8 @@
 package soft.divan.financemanager.core.domain.repository
 
+import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.core.domain.model.Category
 
 interface CategoryRepository {
-    suspend fun getCategories(): Result<List<Category>>
+    suspend fun getCategories(): Flow<List<Category>>
 }
