@@ -57,6 +57,7 @@ fun ExpensesScreenPreview() {
 fun ExpensesScreen(
     modifier: Modifier = Modifier,
     onNavigateToHistory: () -> Unit,
+    onNavigateToTransaction: () -> Unit,
     navController: NavController,
     viewModel: ExpensesViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -138,7 +139,7 @@ fun ExpensesScreen(
             }
         }
         FloatingButton(
-            onClick = {},
+            onClick = { onNavigateToTransaction() },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)

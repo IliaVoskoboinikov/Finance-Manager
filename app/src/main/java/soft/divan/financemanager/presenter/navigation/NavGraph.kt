@@ -13,6 +13,7 @@ import soft.divan.financemanager.feature.category.category_api.CategoryFeatureAp
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
 import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
+import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import soft.divan.financemanager.presenter.screens.SplashScreen
 
 @Composable
@@ -23,8 +24,9 @@ fun NavGraph(
     incomeFeatureApi: IncomeFeatureApi,
     categoryFeatureApi: CategoryFeatureApi,
     accountFeatureApi: AccountFeatureApi,
+    settingsFeatureApi: SettingsFeatureApi,
+    transactionFeatureApi: TransactionFeatureApi
 
-    settingsFeatureApi: SettingsFeatureApi
 ) {
     NavHost(
         navController = navController,
@@ -41,5 +43,6 @@ fun NavGraph(
         register(featureApi = expenseFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = categoryFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = accountFeatureApi, navController = navController, modifier = modifier)
+        register(featureApi = transactionFeatureApi, navController = navController, modifier = modifier)
     }
 }

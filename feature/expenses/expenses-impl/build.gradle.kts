@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(projects.core.sharedHistoryTransactionCategory)
+    implementation(projects.feature.transaction.transactionApi)
 
 
     implementation(libs.androidx.core.ktx)

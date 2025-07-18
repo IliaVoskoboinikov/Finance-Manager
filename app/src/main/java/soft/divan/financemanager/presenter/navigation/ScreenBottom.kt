@@ -35,7 +35,7 @@ sealed class ScreenBottom(
 
     data object ArticlesScreenBottom : ScreenBottom(
         "category",
-        R.string.articles,
+        R.string.category,
         Icons.Filled.Chart90,
     )
 
