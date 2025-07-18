@@ -6,8 +6,8 @@ plugins {
 }
 
 android {
-    namespace = "soft.divan.financemanager.core.data"
-    compileSdk = 35
+    namespace = "soft.divan.finansemanager.core.database"
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 26
@@ -32,23 +32,16 @@ android {
 }
 
 dependencies {
-    implementation(projects.core.database)
 
-    implementation(projects.core.domain)
-    implementation(projects.core.network)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.runtime.android)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
-    implementation(libs.androidx.datastore.core.android)
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.retrofit)
-
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.android)
-    implementation(libs.converter.gson)
-
 }
