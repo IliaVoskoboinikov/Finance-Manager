@@ -10,7 +10,7 @@
     <string name="expenses">Расходы</string>
     <string name="income">Доходы</string>
     <string name="account">Счет</string>
-    <string name="articles">Статьи</string>
+    <string name="category">Статьи</string>
     <string name="settings">Настройки</string>
 
     <string name="dark_theme">Тёмная тема</string>
@@ -39,6 +39,10 @@
     <string name="name_account">Название счёта</string>
     <string name="enter_the_name">Введите название</string>
     <string name="save">Сохранить</string>
-
-
+    <string name="my_expenses">Мои расходы</string>
+    <string name="my_incomes">Мои доходы</string>
+    <string name="sum">Сумма</string>
+    <string name="data">Дата</string>
+    <string name="time">Время</string>
+    <string name="comment">Комментрарий</string>
 </resources>
