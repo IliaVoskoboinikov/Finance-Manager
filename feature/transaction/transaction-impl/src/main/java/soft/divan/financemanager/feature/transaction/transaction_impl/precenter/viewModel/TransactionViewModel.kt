@@ -54,15 +54,10 @@ class TransactionViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { TransactionUiState.Loading }
 
-            val categoriesResult = getCategoriesUseCase()
+            val categoriesResult = getCategoriesUseCase().first()
             val accountsResult = getAccountsUseCase().first()
 
-            if (categoriesResult.isFailure) {
-                _uiState.update { TransactionUiState.Error("") }
-                return@launch
-            }
 
-            val categories = categoriesResult.getOrThrow()
 
 
             if (transactionId == null) {
@@ -71,7 +66,7 @@ class TransactionViewModel @Inject constructor(
                     transaction = UiTransaction(
                         id = -1,
                         accountId = accountsResult.first().id,
-                        category = categories.first().toUi(),
+                        category = categoriesResult.first().toUi(),
                         amount = BigDecimal.ZERO,
                         transactionDate = now,
                         comment = "",
@@ -79,7 +74,7 @@ class TransactionViewModel @Inject constructor(
                         updatedAt = now,
                         amountFormatted = BigDecimal.ZERO.toString(),
                     ),
-                    categories = categories.map {
+                    categories = categoriesResult.map {
                         it.toUi()
                     },
                     accountName = accountsResult.first().name
