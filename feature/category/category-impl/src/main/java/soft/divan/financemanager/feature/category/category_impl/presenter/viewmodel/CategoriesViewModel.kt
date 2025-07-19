@@ -7,12 +7,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
-import soft.divan.financemanager.core.domain.util.resolve
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.CategoriesUiState
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.SearchCategoryUseCase
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toDomain
@@ -36,16 +39,21 @@ class CategoriesViewModel @Inject constructor(
 
     private fun loadCategories() {
         viewModelScope.launch(Dispatchers.IO) {
-            getCategoriesUseCase.invoke().resolve(
-                onSuccess = { data ->
+            getCategoriesUseCase.invoke()
+                .onStart {
+                    _uiState.update { CategoriesUiState.Loading }
+                }
+                .onEach { data ->
                     val categories = data.map { it.toUi() }
                     _uiState.value =
                         CategoriesUiState.Success(categories = categories, sortedCategories = categories)
-                },
-                onError = { throwable ->
-                    _uiState.update { CategoriesUiState.Error(throwable.message.toString()) }
+
                 }
-            )
+                .catch { exception ->
+                    _uiState.update { CategoriesUiState.Error(exception.message.toString()) }
+                }
+                .flowOn(Dispatchers.IO)
+                .launchIn(viewModelScope)
         }
     }
 
