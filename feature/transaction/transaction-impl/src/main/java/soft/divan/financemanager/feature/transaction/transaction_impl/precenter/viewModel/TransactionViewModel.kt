@@ -43,7 +43,7 @@ class TransactionViewModel @Inject constructor(
                 _uiState.update { TransactionUiState.Loading }
                 createTransactionUseCase.invoke(transaction = currentState.transaction.toDomain())
                     .resolve(
-                        onSuccess = {},
+                        onSuccess = { _uiState.update { currentState } },
                         onError = { _uiState.update { TransactionUiState.Error("") } }
                     )
             }
