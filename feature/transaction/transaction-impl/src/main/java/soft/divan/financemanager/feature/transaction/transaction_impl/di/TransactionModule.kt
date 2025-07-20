@@ -8,7 +8,9 @@ import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.api.TransactionApiService
+import soft.divan.financemanager.feature.transaction.transaction_impl.data.datasourse.TransactionLocalDataSource
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.datasourse.TransactionRemoteDataSource
+import soft.divan.financemanager.feature.transaction.transaction_impl.data.datasourse.impl.TransactionLocalDataSourceImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.datasourse.impl.TransactionRemoteDataSourceImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.repository.TransactionRepositoryImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.repository.TransactionRepository
@@ -38,6 +40,11 @@ interface TransactionModule {
     abstract fun bindTransactionRemoteDataSource(
         impl: TransactionRemoteDataSourceImpl
     ): TransactionRemoteDataSource
+
+    @Binds
+    abstract fun bindTransactionLocalDataSource(
+        impl: TransactionLocalDataSourceImpl
+    ): TransactionLocalDataSource
 
     @Binds
     abstract fun bindTransactionRepository(

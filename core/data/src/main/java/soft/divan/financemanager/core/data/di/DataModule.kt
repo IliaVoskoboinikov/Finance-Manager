@@ -19,11 +19,13 @@ import soft.divan.financemanager.core.data.repository.CategoryRepositoryImpl
 import soft.divan.financemanager.core.data.repository.CurrencyRepositoryImpl
 import soft.divan.financemanager.core.data.repository.TransactionRepositoryImp
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
+import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
-import soft.divan.financemanager.core.data.source.CategoryRemoteDataSourceImpl
 import soft.divan.financemanager.core.data.source.CurrencyLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.source.impl.AccountRemoteDataSourceImpl
+import soft.divan.financemanager.core.data.source.impl.CategoryLocalDataSourceImpl
+import soft.divan.financemanager.core.data.source.impl.CategoryRemoteDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.CurrencyLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.TransactionRemoteDataSourceImpl
 import soft.divan.financemanager.core.domain.repository.AccountRepository
@@ -69,6 +71,11 @@ abstract class DataModule {
     abstract fun bindCategoryRemoteDataSource(
         impl: CategoryRemoteDataSourceImpl
     ): CategoryRemoteDataSource
+
+    @Binds
+    abstract fun bindCategoryLocalDataSource(
+        impl: CategoryLocalDataSourceImpl
+    ): CategoryLocalDataSource
 
     @Binds
     abstract fun bindGetCategoriesUseCase(
