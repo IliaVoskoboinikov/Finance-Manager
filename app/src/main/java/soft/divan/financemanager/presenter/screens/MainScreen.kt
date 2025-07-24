@@ -25,6 +25,7 @@ import soft.divan.financemanager.feature.category.category_api.CategoryFeatureAp
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
 import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
+import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import soft.divan.financemanager.presenter.MainViewModel
 import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
@@ -49,20 +50,20 @@ fun MainScreenPreview() {
 fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = hiltViewModel(),
+    splashFeatureApi: SplashScreenFeatureApi,
     expenseFeatureApi: ExpensesFeatureApi,
     incomeFeatureApi: IncomeFeatureApi,
     accountFeatureApi: AccountFeatureApi,
     categoryFeatureApi: CategoryFeatureApi,
     settingsFeatureApi: SettingsFeatureApi,
-    transactionFeatureApi: TransactionFeatureApi
+    transactionFeatureApi: TransactionFeatureApi,
 ) {
     val navController = rememberNavController()
     val currentDestination by navController.currentBackStackEntryAsState()
-    val showBars = currentDestination?.destination?.route != SplashScreen.route
+    val showBars = currentDestination?.destination?.route != splashFeatureApi.splashScreenRoute
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
     val bottomRoutes = ScreenBottom.items.map { it.route }
-
 
 // если текущий маршрут НЕ входит в нижнюю навигацию, сохраняем последний выбранный из нижнего меню
     val effectiveRoute = if (currentRoute in bottomRoutes) {
@@ -93,6 +94,7 @@ fun MainScreen(
         ) {
             NavGraph(
                 navController = navController,
+                splashScreenFeatureApi = splashFeatureApi,
                 incomeFeatureApi = incomeFeatureApi,
                 expenseFeatureApi = expenseFeatureApi,
                 categoryFeatureApi = categoryFeatureApi,
