@@ -17,7 +17,7 @@ private const val screenExpensesHistoryRoute = "$scenarioExpensesRoute/income_hi
 
 class ExpensesFeatureImpl @Inject constructor() : ExpensesFeatureApi {
 
-    override val expensesRoute: String = baseRoute
+    override val route: String = baseRoute
 
     @Inject
     lateinit var transactionFeatureApi: TransactionFeatureApi
@@ -28,14 +28,14 @@ class ExpensesFeatureImpl @Inject constructor() : ExpensesFeatureApi {
         modifier: Modifier
     ) {
 
-        navGraphBuilder.composable(expensesRoute) {
+        navGraphBuilder.composable(route) {
             ExpensesScreen(
                 modifier = modifier,
                 onNavigateToHistory = {
                     navController.navigate(scenarioExpensesRoute)
                 },
                 onNavigateToTransaction = {
-                    navController.navigate(transactionFeatureApi.transactionRoute)
+                    navController.navigate(transactionFeatureApi.route)
                 },
                 navController = navController,
             )
