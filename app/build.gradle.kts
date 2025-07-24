@@ -83,6 +83,9 @@ dependencies {
     implementation(projects.feature.expenses.expensesApi)
     implementation(projects.feature.expenses.expensesImpl)
 
+    implementation(projects.feature.splashScreen.splashScreenApi)
+    implementation(projects.feature.splashScreen.splashScreenImpl)
+
     implementation(projects.feature.transaction.transactionApi)
     implementation(projects.feature.transaction.transactionImpl)
 
@@ -104,7 +107,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.lottie.compose)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)

@@ -10,6 +10,7 @@ import soft.divan.financemanager.feature.category.category_api.CategoryFeatureAp
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
 import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
+import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import soft.divan.financemanager.presenter.screens.MainScreen
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
@@ -36,6 +37,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var transactionFeatureApi: TransactionFeatureApi
 
+    @Inject
+    lateinit var splashSettingsFeatureApi: SplashScreenFeatureApi
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +47,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             FinanceManagerTheme {
                 MainScreen(
+                    splashFeatureApi = splashSettingsFeatureApi,
                     incomeFeatureApi = incomeFeatureApi,
                     expenseFeatureApi = expensesFeatureApi,
                     categoryFeatureApi = categoryFeatureApi,
