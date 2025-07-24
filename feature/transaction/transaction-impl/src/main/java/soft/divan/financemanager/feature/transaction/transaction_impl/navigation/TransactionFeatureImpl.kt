@@ -9,14 +9,14 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.
 import javax.inject.Inject
 
 class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
-    override val transactionRoute: String = "transaction"
+    override val route: String = "transaction"
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(transactionRoute) {
+        navGraphBuilder.composable(route) {
             TransactionScreen(
                 modifier = modifier,
                 navController = navController

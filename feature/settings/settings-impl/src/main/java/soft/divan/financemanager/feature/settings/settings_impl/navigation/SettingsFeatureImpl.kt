@@ -11,14 +11,14 @@ import javax.inject.Inject
 
 class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
 
-    override val settingsRoute: String = "settings"
+    override val route: String = "settings"
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(settingsRoute) {
+        navGraphBuilder.composable(route) {
             SettingsScreen(
                 modifier = modifier,
                 navController = navController

@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 class SplashScreenFeatureImpl @Inject constructor() : SplashScreenFeatureApi {
 
-    override val splashScreenRoute: String = "splash-screen"
+    override val route: String = "splash-screen"
 
     @Inject
     lateinit var expensesFeatureApi: ExpensesFeatureApi
@@ -21,11 +21,11 @@ class SplashScreenFeatureImpl @Inject constructor() : SplashScreenFeatureApi {
         navController: NavHostController,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(splashScreenRoute) {
+        navGraphBuilder.composable(route) {
             SplashScreen(
                 onNavigateToExpenses = {
-                    navController.navigate(expensesFeatureApi.expensesRoute) {
-                        popUpTo(splashScreenRoute) { inclusive = true }
+                    navController.navigate(expensesFeatureApi.route) {
+                        popUpTo(route) { inclusive = true }
                     }
                 },
             )

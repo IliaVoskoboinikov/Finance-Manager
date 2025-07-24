@@ -26,11 +26,10 @@ fun NavGraph(
     accountFeatureApi: AccountFeatureApi,
     settingsFeatureApi: SettingsFeatureApi,
     transactionFeatureApi: TransactionFeatureApi
-
 ) {
     NavHost(
         navController = navController,
-        startDestination = splashScreenFeatureApi.splashScreenRoute,
+        startDestination = splashScreenFeatureApi.route,
         modifier = modifier,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },

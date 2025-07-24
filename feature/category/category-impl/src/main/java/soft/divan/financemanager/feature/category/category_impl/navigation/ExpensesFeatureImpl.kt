@@ -14,14 +14,14 @@ private const val screenCategoryHistoryRoute = "$scenarioCategoryRoute/income_hi
 
 class CategoryFeatureImpl @Inject constructor() : CategoryFeatureApi {
 
-    override val categoryRoute: String = baseRoute
+    override val route: String = baseRoute
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(categoryRoute) {
+        navGraphBuilder.composable(route) {
             CategoriesScreen(
                 modifier = modifier,
                 navController = navController,
