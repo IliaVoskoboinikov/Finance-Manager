@@ -1,10 +1,8 @@
 package soft.divan.financemanager.core.data.repository
 
-import android.util.Log
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -20,18 +18,14 @@ import javax.inject.Singleton
 @Singleton
 class CategoryRepositoryImpl @Inject constructor(
     private val categoryRemoteDataSource: CategoryRemoteDataSource,
-    private val categoryLocalDataSource: CategoryLocalDataSource
-
+    private val categoryLocalDataSource: CategoryLocalDataSource,
+    private val applicationScope: CoroutineScope,
+    private val dispatcher: CoroutineDispatcher,
+    private val exceptionHandler: CoroutineExceptionHandler
 ) : CategoryRepository {
 
-    private val scope = CoroutineScope(
-        SupervisorJob()
-                + Dispatchers.IO
-                + CoroutineExceptionHandler { _, t -> Log.w("CategoryRepository", t) }
-    )
-
     override suspend fun getCategories(): Flow<List<Category>> {
-        scope.launch {
+        applicationScope.launch(dispatcher + exceptionHandler) {
             val response = categoryRemoteDataSource.getCategories()
             val categoriesDto = response.body().orEmpty()
             val categoriesDtoEntity = categoriesDto.map { it.toEntity() }
