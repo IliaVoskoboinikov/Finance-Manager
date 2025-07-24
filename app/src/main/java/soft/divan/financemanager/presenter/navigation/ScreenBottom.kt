@@ -11,18 +11,11 @@ import soft.divan.financemanager.uikit.icons.Settings
 import soft.divan.financemanager.uikit.icons.Uptrend
 
 
-
-sealed class ScreenBottom(
+class ScreenBottom(
     val feature: FeatureApi,
     val title: Int,
     val icon: ImageVector
 ) {
-    class DynamicScreenBottom(
-        feature: FeatureApi,
-        title: Int,
-        icon: ImageVector
-    ) : ScreenBottom(feature, title, icon)
-
     companion object {
         fun items(
             expenses: FeatureApi,
@@ -31,11 +24,11 @@ sealed class ScreenBottom(
             category: FeatureApi,
             settings: FeatureApi,
         ) = listOf(
-            DynamicScreenBottom(expenses, R.string.expenses, Icons.Filled.Downtrend),
-            DynamicScreenBottom(income, R.string.income, Icons.Filled.Uptrend),
-            DynamicScreenBottom(account, R.string.account, Icons.Filled.Calculator),
-            DynamicScreenBottom(category, R.string.category, Icons.Filled.Chart90),
-            DynamicScreenBottom(settings, R.string.settings, Icons.Filled.Settings),
+            ScreenBottom(expenses, R.string.expenses, Icons.Filled.Downtrend),
+            ScreenBottom(income, R.string.income, Icons.Filled.Uptrend),
+            ScreenBottom(account, R.string.account, Icons.Filled.Calculator),
+            ScreenBottom(category, R.string.category, Icons.Filled.Chart90),
+            ScreenBottom(settings, R.string.settings, Icons.Filled.Settings),
         )
     }
 }
