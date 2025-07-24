@@ -14,16 +14,18 @@ private const val baseRoute = "income"
 private const val scenarioIncomeRoute = "${baseRoute}/scenario"
 private const val screenIncomeHistoryRoute = "$scenarioIncomeRoute/income_history"
 
-class IncomeFeatureImpl @Inject constructor() : IncomeFeatureApi {
 
-    override val incomeRoute: String = baseRoute
+class IncomeFeatureImpl @Inject constructor(
+) : IncomeFeatureApi {
+
+    override val route: String = baseRoute
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(incomeRoute) {
+        navGraphBuilder.composable(route) {
             IncomeScreen(
                 modifier = modifier,
                 onNavigateToHistory = {

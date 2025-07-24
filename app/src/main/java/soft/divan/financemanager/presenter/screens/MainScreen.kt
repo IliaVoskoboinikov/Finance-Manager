@@ -59,18 +59,24 @@ fun MainScreen(
     transactionFeatureApi: TransactionFeatureApi,
 ) {
     val navController = rememberNavController()
-    val currentDestination by navController.currentBackStackEntryAsState()
-    val showBars = currentDestination?.destination?.route != splashFeatureApi.splashScreenRoute
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
-    val bottomRoutes = ScreenBottom.items.map { it.route }
 
-// если текущий маршрут НЕ входит в нижнюю навигацию, сохраняем последний выбранный из нижнего меню
-    val effectiveRoute = if (currentRoute in bottomRoutes) {
-        currentRoute
-    } else {
-        bottomRoutes.firstOrNull { it in navController.previousBackStackEntry?.destination?.route.orEmpty() }
-            ?: bottomRoutes.first()
+    val bottomScreens = ScreenBottom.items(
+        expenses = expenseFeatureApi,
+        income = incomeFeatureApi,
+        account = accountFeatureApi,
+        category = categoryFeatureApi,
+        settings = settingsFeatureApi
+    )
+
+    val bottomRoutes = bottomScreens.map { it.feature.route }
+
+    val effectiveRoute = when {
+        currentRoute in bottomRoutes -> currentRoute
+        else -> bottomRoutes.firstOrNull {
+            it == navController.previousBackStackEntry?.destination?.route
+        } ?: bottomRoutes.first()
     }
 
     val isOffline by viewModel.isOffline.collectAsStateWithLifecycle()
@@ -86,12 +92,8 @@ fun MainScreen(
         }
     }
 
-    Column(
-        modifier = modifier
-    ) {
-        Box(
-            modifier = Modifier.weight(1f)
-        ) {
+    Column(modifier = modifier) {
+        Box(modifier = Modifier.weight(1f)) {
             NavGraph(
                 navController = navController,
                 splashScreenFeatureApi = splashFeatureApi,
@@ -109,20 +111,18 @@ fun MainScreen(
                     .padding(bottom = 72.dp),
                 hostState = snackbarHostState,
             )
-
         }
-        if (showBars) {
+
+        if (currentRoute != splashFeatureApi.route) {
             BottomNavigationBar(
                 modifier = Modifier,
                 navController = navController,
+                screens = bottomScreens,
                 currentRoute = effectiveRoute
             )
         }
-
     }
-
 }
-
 
 
 

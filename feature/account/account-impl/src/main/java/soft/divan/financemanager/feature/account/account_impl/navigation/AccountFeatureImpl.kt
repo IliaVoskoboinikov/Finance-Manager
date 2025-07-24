@@ -15,14 +15,14 @@ private const val screenAccountHistoryRoute = "$scenarioAccountRoute/income_hist
 
 class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
 
-    override val accountRoute: String = baseRoute
+    override val route: String = baseRoute
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(accountRoute) {
+        navGraphBuilder.composable(route) {
             AccountScreen(
                 modifier = modifier,
                 navController = navController,
