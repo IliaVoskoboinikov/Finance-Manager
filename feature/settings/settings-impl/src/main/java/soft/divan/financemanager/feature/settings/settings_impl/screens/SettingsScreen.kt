@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.settings.settings_impl.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,12 +12,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import soft.divan.financemanager.feature.settings.settings_impl.viewModel.SettingsViewModel
 import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.FMDriver
@@ -30,13 +34,61 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun SettingsScreenPreview() {
-    FinanceManagerTheme {
-        SettingsScreen(navController = rememberNavController())
+    FinanceManagerTheme(true) {
+        /*ettingsScreen(navController = rememberNavController())*/
     }
 }
 
 @Composable
-fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) {
+fun SettingsScreen(
+    modifier: Modifier = Modifier,
+    navController: NavController,
+    onNavigateToColor: () -> Unit,
+    onNavigateToAboutTheProgram: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel(),
+) {
+
+    val isDarkTheme by viewModel.isDarkThemeEnabled.collectAsState()
+
+    val settingsItems = listOf(
+        SettingsListItemModel.WithSwitch(
+            title = R.string.dark_theme,
+            isChecked = isDarkTheme,
+            onToggle = { isChecked -> viewModel.toggleTheme(!isDarkTheme) }
+        ),
+        SettingsListItemModel.WithArrow(
+            title = R.string.primary_color,
+            onClick = {
+                onNavigateToColor()
+            }
+        ),
+        SettingsListItemModel.WithArrow(
+            title = R.string.sounds,
+            onClick = { /* handle */ }
+        ),
+        SettingsListItemModel.WithArrow(
+            title = R.string.haptics,
+            onClick = { /* handle */ }
+        ),
+        SettingsListItemModel.WithArrow(
+            title = R.string.passcode,
+            onClick = { /* handle */ }
+        ),
+        SettingsListItemModel.WithArrow(
+            title = R.string.synchronization,
+            onClick = { /* handle */ }
+        ),
+        SettingsListItemModel.WithArrow(
+            title = R.string.language,
+            onClick = { /* handle */ }
+        ),
+        SettingsListItemModel.WithArrow(
+            title = R.string.program_notes,
+            onClick = { onNavigateToAboutTheProgram() }
+        )
+
+    )
+
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
             TopBar(
@@ -51,44 +103,9 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavController) 
         }
 
     }
+
+
 }
-
-private val settingsItems = listOf(
-    SettingsListItemModel.WithSwitch(
-        title = R.string.dark_theme,
-        isChecked = false,
-        onToggle = { isChecked -> /* handle */ }
-    ),
-    SettingsListItemModel.WithArrow(
-        title = R.string.primary_color,
-        onClick = { /* handle */ }
-    ),
-    SettingsListItemModel.WithArrow(
-        title = R.string.sounds,
-        onClick = { /* handle */ }
-    ),
-    SettingsListItemModel.WithArrow(
-        title = R.string.haptics,
-        onClick = { /* handle */ }
-    ),
-    SettingsListItemModel.WithArrow(
-        title = R.string.passcode,
-        onClick = { /* handle */ }
-    ),
-    SettingsListItemModel.WithArrow(
-        title = R.string.synchronization,
-        onClick = { /* handle */ }
-    ),
-    SettingsListItemModel.WithArrow(
-        title = R.string.language,
-        onClick = { /* handle */ }
-    ),
-    SettingsListItemModel.WithArrow(
-        title = R.string.program_notes,
-        onClick = { /* handle */ }
-    )
-
-)
 
 sealed interface SettingsListItemModel {
     data class WithSwitch(
@@ -122,8 +139,14 @@ fun RenderSettingsListItem(model: SettingsListItemModel) {
 
         is SettingsListItemModel.WithArrow -> {
             ListItem(
-                modifier = Modifier.height(55.dp),
-                content = { ContentTextListItem(stringResource(model.title)) },
+                modifier = Modifier
+                    .height(55.dp)
+                    .clickable(onClick = model.onClick),
+                content = {
+                    ContentTextListItem(
+                        stringResource(model.title)
+                    )
+                },
                 trail = {
                     Icon(
                         imageVector = Icons.Filled.Triangle,
