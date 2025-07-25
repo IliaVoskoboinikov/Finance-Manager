@@ -68,7 +68,6 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.feature.category.categoryApi)
     implementation(projects.feature.category.categoryImpl)
-
     implementation(projects.core.string)
     implementation(projects.core.domain)
     implementation(projects.core.data)

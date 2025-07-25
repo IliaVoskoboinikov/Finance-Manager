@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,7 +49,7 @@ fun ListItem(
     lead: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
     trail: (@Composable () -> Unit)? = null,
-    containerColor: Color = Color(0x00F9F0FF),
+    containerColor: Color = MaterialTheme.colorScheme.background,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
 ) {
 

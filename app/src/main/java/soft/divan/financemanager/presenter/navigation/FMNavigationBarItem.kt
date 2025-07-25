@@ -1,7 +1,9 @@
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,6 +23,8 @@ fun RowScope.FMNavigationBarItem(
     val destinationRoute = screenBottom.feature.route
 
     NavigationBarItem(
+        colors = NavigationBarItemDefaults.colors()
+            .copy(selectedIconColor = MaterialTheme.colorScheme.primary),
         selected = currentRoute == destinationRoute,
         onClick = {
             if (currentRoute != destinationRoute) {
