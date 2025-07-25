@@ -4,14 +4,24 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import androidx.navigation.navigation
 
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
+import soft.divan.financemanager.feature.settings.settings_impl.screens.AboutTheProgramScreen
+import soft.divan.financemanager.feature.settings.settings_impl.screens.ColorSelectionScreen
 import soft.divan.financemanager.feature.settings.settings_impl.screens.SettingsScreen
 import javax.inject.Inject
 
+private const val baseRoute = "settings"
+private const val scenarioSettingsRoute = "${baseRoute}/scenario"
+private const val screenSettingsColorRoute = "$scenarioSettingsRoute/color"
+private const val screenSettingsAboutTheProgramScreenRoute = "$scenarioSettingsRoute/about"
+
+
 class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
 
-    override val route: String = "settings"
+    override val route: String = baseRoute
+
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
@@ -21,8 +31,37 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
         navGraphBuilder.composable(route) {
             SettingsScreen(
                 modifier = modifier,
-                navController = navController
+                navController = navController,
+                onNavigateToColor = {
+                    navController.navigate(screenSettingsColorRoute)
+                },
+                onNavigateToAboutTheProgram = {
+                    navController.navigate(screenSettingsAboutTheProgramScreenRoute)
+                }
             )
         }
+
+        /* Nested graph for internal scenario */
+        navGraphBuilder.navigation(
+            route = scenarioSettingsRoute,
+            startDestination = screenSettingsColorRoute
+        ) {
+
+            composable(route = screenSettingsColorRoute) {
+                ColorSelectionScreen(
+                    modifier = modifier,
+                    navController = navController
+                )
+            }
+
+            composable(route = screenSettingsAboutTheProgramScreenRoute) {
+                AboutTheProgramScreen(
+                    modifier = modifier,
+                    navController = navController
+                )
+            }
+
+        }
+
     }
 }
