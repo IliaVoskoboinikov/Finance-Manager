@@ -44,7 +44,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
     onNavigateToColor: () -> Unit,
-
+    onNavigateToAboutTheProgram: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
 
@@ -84,7 +84,7 @@ fun SettingsScreen(
         ),
         SettingsListItemModel.WithArrow(
             title = R.string.program_notes,
-            onClick = { /* handle */ }
+            onClick = { onNavigateToAboutTheProgram() }
         )
 
     )
