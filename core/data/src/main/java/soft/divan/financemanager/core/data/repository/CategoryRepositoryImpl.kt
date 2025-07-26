@@ -6,6 +6,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import soft.divan.financemanager.core.data.Syncable
+import soft.divan.financemanager.core.data.Synchronizer
 import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
@@ -22,7 +24,7 @@ class CategoryRepositoryImpl @Inject constructor(
     private val applicationScope: CoroutineScope,
     private val dispatcher: CoroutineDispatcher,
     private val exceptionHandler: CoroutineExceptionHandler
-) : CategoryRepository {
+) : CategoryRepository, Syncable {
 
     override suspend fun getCategories(): Flow<List<Category>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
@@ -34,6 +36,15 @@ class CategoryRepositoryImpl @Inject constructor(
         val categoriesFlow =
             categoryLocalDataSource.getCategories().map { list -> list.map { it.toDomain() } }
         return categoriesFlow
+    }
+
+    override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
+        return runCatching {
+            val response = categoryRemoteDataSource.getCategories()
+            val categoriesDto = response.body().orEmpty()
+            val categoriesDtoEntity = categoriesDto.map { it.toEntity() }
+            categoryLocalDataSource.insertCategories(categoriesDtoEntity)
+        }.isSuccess
     }
 
 

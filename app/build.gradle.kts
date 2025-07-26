@@ -63,7 +63,7 @@ android {
 
 dependencies {
     implementation(projects.core.database)
-
+    implementation(projects.sync)
     implementation(projects.core.network)
     implementation(projects.core.uikit)
     implementation(projects.feature.category.categoryApi)
