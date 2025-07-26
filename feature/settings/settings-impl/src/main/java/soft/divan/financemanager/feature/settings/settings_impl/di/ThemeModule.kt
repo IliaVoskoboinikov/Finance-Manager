@@ -11,9 +11,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.feature.settings.settings_impl.data.ThemeRepositoryImpl
 import soft.divan.financemanager.feature.settings.settings_impl.domain.repositiry.ThemeRepository
+import soft.divan.financemanager.feature.settings.settings_impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.settings.settings_impl.domain.usecase.GetThemeModeUseCase
+import soft.divan.financemanager.feature.settings.settings_impl.domain.usecase.SetAccentColorUseCase
 import soft.divan.financemanager.feature.settings.settings_impl.domain.usecase.SetThemeModeUseCase
+import soft.divan.financemanager.feature.settings.settings_impl.domain.usecase.impl.GetAccentColorUseCaseImpl
 import soft.divan.financemanager.feature.settings.settings_impl.domain.usecase.impl.GetThemeModeUseCaseImpl
+import soft.divan.financemanager.feature.settings.settings_impl.domain.usecase.impl.SetAccentColorUseCaseImpl
 import soft.divan.financemanager.feature.settings.settings_impl.domain.usecase.impl.SetThemeModeUseCaseImpl
 import javax.inject.Qualifier
 
@@ -45,6 +49,16 @@ object ThemeModule {
 
     @Provides
     fun provideSetThemeUseCase(impl: SetThemeModeUseCaseImpl): SetThemeModeUseCase {
+        return impl
+    }
+
+    @Provides
+    fun provideGetAccentColorUseCaseImplUseCase(impl: GetAccentColorUseCaseImpl): GetAccentColorUseCase {
+        return impl
+    }
+
+    @Provides
+    fun provideSetAccentColorUseCase(impl: SetAccentColorUseCaseImpl): SetAccentColorUseCase {
         return impl
     }
 
