@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.settings.settings_impl.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,7 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.feature.settings.settings_impl.viewModel.SettingsViewModel
 import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.components.ContentTextListItem
@@ -35,7 +35,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @Composable
 fun SettingsScreenPreview() {
     FinanceManagerTheme(true) {
-        SettingsScreen(navController = rememberNavController())
+        /*ettingsScreen(navController = rememberNavController())*/
     }
 }
 
@@ -43,7 +43,9 @@ fun SettingsScreenPreview() {
 fun SettingsScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    viewModel: SettingsViewModel = hiltViewModel()
+    onNavigateToColor: () -> Unit,
+
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
 
     val isDarkTheme by viewModel.isDarkThemeEnabled.collectAsState()
@@ -56,7 +58,9 @@ fun SettingsScreen(
         ),
         SettingsListItemModel.WithArrow(
             title = R.string.primary_color,
-            onClick = { /* handle */ }
+            onClick = {
+                onNavigateToColor()
+            }
         ),
         SettingsListItemModel.WithArrow(
             title = R.string.sounds,
@@ -102,6 +106,7 @@ fun SettingsScreen(
 
 
 }
+
 sealed interface SettingsListItemModel {
     data class WithSwitch(
         val title: Int,
@@ -134,8 +139,14 @@ fun RenderSettingsListItem(model: SettingsListItemModel) {
 
         is SettingsListItemModel.WithArrow -> {
             ListItem(
-                modifier = Modifier.height(55.dp),
-                content = { ContentTextListItem(stringResource(model.title)) },
+                modifier = Modifier
+                    .height(55.dp)
+                    .clickable(onClick = model.onClick),
+                content = {
+                    ContentTextListItem(
+                        stringResource(model.title)
+                    )
+                },
                 trail = {
                     Icon(
                         imageVector = Icons.Filled.Triangle,
