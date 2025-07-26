@@ -1,9 +1,11 @@
 package soft.divan.financemanager.presenter.screens
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration.Indefinite
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -93,7 +95,11 @@ fun MainScreen(
     }
 
     Column(modifier = modifier) {
-        Box(modifier = Modifier.weight(1f)) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
             NavGraph(
                 navController = navController,
                 splashScreenFeatureApi = splashFeatureApi,
