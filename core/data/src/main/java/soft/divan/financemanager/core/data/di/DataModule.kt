@@ -36,6 +36,7 @@ import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCaseImpl
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCaseImpl
+import javax.inject.Qualifier
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -93,6 +94,10 @@ abstract class DataModule {
     ): GetAccountsUseCase
 }
 
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class CurrencyDataStore
+
 @Module
 @InstallIn(SingletonComponent::class)
 object DataStoreModule {
@@ -100,13 +105,14 @@ object DataStoreModule {
     private val Context.dataStore by preferencesDataStore("currency_dataStore")
 
     @Provides
+    @CurrencyDataStore
     fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
         return context.dataStore
     }
 
     @Provides
     fun provideCurrencyLocalDataSource(
-        dataStore: DataStore<Preferences>
+        @CurrencyDataStore dataStore: DataStore<Preferences>
     ): CurrencyLocalDataSource {
         return CurrencyLocalDataSourceImpl(dataStore)
     }

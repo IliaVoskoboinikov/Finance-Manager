@@ -37,6 +37,11 @@ dependencies {
 
     implementation(projects.core.string)
     implementation(projects.core.uikit)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    implementation(libs.androidx.datastore.core.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.android)
     implementation(platform(libs.androidx.compose.bom))
