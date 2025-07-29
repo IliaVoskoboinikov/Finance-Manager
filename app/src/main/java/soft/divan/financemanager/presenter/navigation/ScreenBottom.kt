@@ -11,7 +11,7 @@ import soft.divan.financemanager.uikit.icons.Settings
 import soft.divan.financemanager.uikit.icons.Uptrend
 
 
-class ScreenBottom(
+data class ScreenBottom(
     val feature: FeatureApi,
     val title: Int,
     val icon: ImageVector
