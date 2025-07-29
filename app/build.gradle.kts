@@ -88,6 +88,9 @@ dependencies {
     implementation(projects.feature.transaction.transactionApi)
     implementation(projects.feature.transaction.transactionImpl)
 
+    implementation(projects.feature.security.securityApi)
+    implementation(projects.feature.security.securityImpl)
+
     implementation(libs.androidx.core.ktx)
     implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(libs.androidx.lifecycle.runtime.ktx)
