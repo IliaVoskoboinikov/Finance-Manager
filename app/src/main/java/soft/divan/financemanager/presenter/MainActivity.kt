@@ -6,11 +6,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import dagger.hilt.android.AndroidEntryPoint
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
 import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
+import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
+import soft.divan.financemanager.feature.security.security_impl.domain.usecase.IsPinSetUseCase
+import soft.divan.financemanager.feature.security.security_impl.presenter.screen.PinLockScreen
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.settings.settings_impl.domain.ThemeMode
 import soft.divan.financemanager.feature.settings.settings_impl.domain.usecase.GetAccentColorUseCase
@@ -47,10 +53,16 @@ class MainActivity : ComponentActivity() {
     lateinit var splashSettingsFeatureApi: SplashScreenFeatureApi
 
     @Inject
+    lateinit var securityFeatureApi: SecurityFeatureApi
+
+    @Inject
     lateinit var getThemeModeUseCase: GetThemeModeUseCase
 
     @Inject
     lateinit var getAccentColorUseCase: GetAccentColorUseCase
+
+    @Inject
+    lateinit var isPinSetUseCase: IsPinSetUseCase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,16 +77,27 @@ class MainActivity : ComponentActivity() {
             val accentColor by getAccentColorUseCase().collectAsState(initial = AccentColor.MINT)
 
 
+            var isPinVerified by rememberSaveable { mutableStateOf(false) }
+
+
             FinanceManagerTheme(darkTheme = isDark, accentColor = accentColor) {
-                MainScreen(
-                    splashFeatureApi = splashSettingsFeatureApi,
-                    incomeFeatureApi = incomeFeatureApi,
-                    expenseFeatureApi = expensesFeatureApi,
-                    categoryFeatureApi = categoryFeatureApi,
-                    accountFeatureApi = accountFeatureApi,
-                    settingsFeatureApi = settingsFeatureApi,
-                    transactionFeatureApi = transactionFeatureApi
-                )
+
+                if (isPinSetUseCase() && !isPinVerified) {
+                    PinLockScreen(onPinCorrect = { isPinVerified = true })
+                } else {
+                    MainScreen(
+                        splashFeatureApi = splashSettingsFeatureApi,
+                        incomeFeatureApi = incomeFeatureApi,
+                        expenseFeatureApi = expensesFeatureApi,
+                        categoryFeatureApi = categoryFeatureApi,
+                        accountFeatureApi = accountFeatureApi,
+                        settingsFeatureApi = settingsFeatureApi,
+                        transactionFeatureApi = transactionFeatureApi,
+                        securityFeatureApi = securityFeatureApi,
+                    )
+                }
+
+
             }
         }
     }
