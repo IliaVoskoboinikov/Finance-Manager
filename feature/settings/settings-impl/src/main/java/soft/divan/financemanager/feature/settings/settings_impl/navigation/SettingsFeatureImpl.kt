@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.settings.settings_impl.screens.AboutTheProgramScreen
@@ -22,6 +23,8 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
 
     override val route: String = baseRoute
 
+    @Inject
+    lateinit var securityFeatureApi: SecurityFeatureApi
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
@@ -37,6 +40,9 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
                 },
                 onNavigateToAboutTheProgram = {
                     navController.navigate(screenSettingsAboutTheProgramScreenRoute)
+                },
+                onNavigateToSecurity = {
+                    navController.navigate(securityFeatureApi.route)
                 }
             )
         }
