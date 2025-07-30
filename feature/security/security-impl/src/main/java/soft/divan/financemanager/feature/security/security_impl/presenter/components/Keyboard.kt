@@ -1,12 +1,13 @@
 package soft.divan.financemanager.feature.security.security_impl.presenter.components
 
-import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Fingerprint
@@ -23,6 +24,7 @@ fun PreviewKeyboard() {
 
     FinanceManagerTheme {
         Keyboard(
+            showBiometricButton = true,
             onNumberClick = { number -> Log.d("Keyboard", "Clicked: $number") },
             onBackspaceClick = { Log.d("Keyboard", "Backspace") },
             onFingerprintClick = { Log.d("Keyboard", "Fingerprint") }
@@ -33,6 +35,7 @@ fun PreviewKeyboard() {
 @Composable
 fun Keyboard(
     modifier: Modifier = Modifier,
+    showBiometricButton: Boolean = false,
     onNumberClick: (String) -> Unit,
     onBackspaceClick: () -> Unit,
     onFingerprintClick: () -> Unit = {}
@@ -55,14 +58,22 @@ fun Keyboard(
             }
         }
 
-        Row() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        Row {
+            if (showBiometricButton) {
                 IconButton(
                     icon = Icons.Default.Fingerprint,
                     onClick = onFingerprintClick
                 )
             } else {
-                Spacer(modifier = Modifier.size(Dimens.keyBoardButtonSize))
+                Spacer(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .padding(
+                            vertical = Dimens.verticalKeyboardButtonPadding,
+                            horizontal = Dimens.horizontalKeyboardButtonPadding
+                        )
+                        .size(Dimens.keyBoardButtonSize)
+                )
             }
 
             NumberButton("0", onClick = { onNumberClick("0") })

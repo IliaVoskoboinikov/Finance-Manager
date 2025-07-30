@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import soft.divan.financemanager.feature.security.security_impl.R
 import soft.divan.financemanager.feature.security.security_impl.presenter.viewmodel.SecurityViewModel
 
 
@@ -50,10 +51,11 @@ fun PinLockScreen(onPinCorrect: () -> Unit, viewModel: SecurityViewModel = hiltV
         }
     }
     val password = viewModel.pin.collectAsStateWithLifecycle().value
-    PinEntryScreen(
-        title = "Введите пароль",
+    PinEntryCommonScreen(
+        titleId = R.string.input_password,
         errorMessage = errorMessage,
         clearPinTrigger = clearTrigger,
+        showBiometricButton = true,
         onPinEntered = { enteredPin ->
             if (enteredPin == password) {
                 errorMessage = ""

@@ -42,7 +42,7 @@ class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
 
             composable(route = screenScreenCreateRoute) {
                 CreatePinScreen(
-                    onNavegateBack = {
+                    onNavigateBack = {
                         navController.popBackStack()
                     }
                 )
