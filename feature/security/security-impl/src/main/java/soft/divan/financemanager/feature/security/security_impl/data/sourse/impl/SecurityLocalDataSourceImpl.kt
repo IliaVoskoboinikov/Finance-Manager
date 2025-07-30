@@ -1,16 +1,16 @@
-package soft.divan.financemanager.feature.security.security_impl.data
+package soft.divan.financemanager.feature.security.security_impl.data.sourse.impl
 
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import soft.divan.financemanager.feature.security.security_impl.domain.repository.SecurityRepository
+import soft.divan.financemanager.feature.security.security_impl.data.sourse.SecurityLocalDataSource
 import javax.inject.Inject
 
-class SecurityRepositoryImpl @Inject constructor(
+class SecurityLocalDataSourceImpl @Inject constructor(
     context: Context
-) : SecurityRepository {
+) : SecurityLocalDataSource {
     private val sharedPrefs: SharedPreferences by lazy {
         val masterKey = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)

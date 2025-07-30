@@ -8,7 +8,9 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
-import soft.divan.financemanager.feature.security.security_impl.data.SecurityRepositoryImpl
+import soft.divan.financemanager.feature.security.security_impl.data.repository.SecurityRepositoryImpl
+import soft.divan.financemanager.feature.security.security_impl.data.sourse.SecurityLocalDataSource
+import soft.divan.financemanager.feature.security.security_impl.data.sourse.impl.SecurityLocalDataSourceImpl
 import soft.divan.financemanager.feature.security.security_impl.domain.repository.SecurityRepository
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.GetSavedPinUseCase
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.IsPinSetUseCase
@@ -38,6 +40,9 @@ abstract class SecurityModule {
     @Binds
     abstract fun provideSecurityRepository(impl: SecurityRepositoryImpl): SecurityRepository
 
+    @Binds
+    abstract fun bindSecurityLocalDataSource(impl: SecurityLocalDataSourceImpl): SecurityLocalDataSource
+
 }
 
 @Module
@@ -45,9 +50,9 @@ abstract class SecurityModule {
 object SecurityProvidesModule {
 
     @Provides
-    fun provideSecurityRepository(
+    fun provideSecurityLocalDataSourceImpl(
         @ApplicationContext context: Context
-    ): SecurityRepositoryImpl = SecurityRepositoryImpl(context)
+    ): SecurityLocalDataSourceImpl = SecurityLocalDataSourceImpl(context)
 
 
 }

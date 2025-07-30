@@ -4,7 +4,6 @@ import android.hardware.biometrics.BiometricPrompt
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,7 +11,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
 import soft.divan.financemanager.feature.security.security_impl.R
 import soft.divan.financemanager.feature.security.security_impl.presenter.viewmodel.SecurityViewModel
 
@@ -26,7 +24,6 @@ fun PreviewPinLockScreen() {
 @Composable
 fun PinLockScreen(onPinCorrect: () -> Unit, viewModel: SecurityViewModel = hiltViewModel()) {
     var errorMessage by remember { mutableStateOf("") }
-    var clearTrigger by remember { mutableStateOf(false) }
 
     val authenticationCallback =
         @RequiresApi(Build.VERSION_CODES.P)
@@ -44,17 +41,10 @@ fun PinLockScreen(onPinCorrect: () -> Unit, viewModel: SecurityViewModel = hiltV
             }
         }
 
-    LaunchedEffect(clearTrigger) {
-        if (clearTrigger) {
-            delay(300)
-            clearTrigger = false
-        }
-    }
     val password = viewModel.pin.collectAsStateWithLifecycle().value
     PinEntryCommonScreen(
         titleId = R.string.input_password,
         errorMessage = errorMessage,
-        clearPinTrigger = clearTrigger,
         showBiometricButton = true,
         onPinEntered = { enteredPin ->
             if (enteredPin == password) {
@@ -62,9 +52,6 @@ fun PinLockScreen(onPinCorrect: () -> Unit, viewModel: SecurityViewModel = hiltV
                 onPinCorrect()
             } else {
                 errorMessage = "Неверный PIN, попробуйте снова"
-                clearTrigger = true // очистим поле
-                // откат триггера после задержки, чтобы снова сработал при следующем неверном вводе
-
             }
         },
         authenticationCallback = authenticationCallback
