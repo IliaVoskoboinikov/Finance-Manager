@@ -4,4 +4,11 @@
     <string name="use_biometry">Используйте биометрию для авторизации</string>
     <string name="confirm_identity">Подтвердите свою личность\n</string>
     <string name="cancel_action">Отмена</string>
+    <string name="repeat_pin">повторите пин</string>
+    <string name="сome_up_with_pin">придумайте пин</string>
+    <string name="input_password">Введите пароль</string>
+    <string name="create_pin">создать пин-код</string>
+    <string name="security">Безопасность</string>
+    <string name="pin_codes_do_not_match">PIN-коды не совпадают</string>
+
 </resources>
