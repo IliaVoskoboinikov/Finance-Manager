@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import soft.divan.financemanager.feature.security.security_impl.presenter.components.Keyboard
@@ -27,11 +28,11 @@ import soft.divan.financemanager.feature.security.security_impl.presenter.compon
 
 
 @Composable
-fun PinEntryScreen(
-    title: String,
+fun PinEntryCommonScreen(
+    titleId: Int,
     pinSize: Int = 4,
     errorMessage: String = "",
-    clearPinTrigger: Boolean = false,
+    showBiometricButton: Boolean = false,
     onPinEntered: (String) -> Unit,
     onBackspaceClick: () -> Unit = {},
     onFingerprintClick: () -> Unit = {},
@@ -39,13 +40,7 @@ fun PinEntryScreen(
 ) {
     val inputPin = remember { mutableStateListOf<Int>() }
     var showBiometricScreen by remember { mutableStateOf(true) }
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
-
-    // Сброс PIN по внешнему триггеру
-    LaunchedEffect(clearPinTrigger) {
-        if (clearPinTrigger) inputPin.clear()
-    }
 
 
     // Проверка длины и отправка результата
@@ -53,6 +48,7 @@ fun PinEntryScreen(
         if (inputPin.size == pinSize) {
             delay(200) // чтобы пользователь успел увидеть ввод
             onPinEntered(inputPin.joinToString(""))
+            inputPin.clear()
         }
     }
 
@@ -63,7 +59,7 @@ fun PinEntryScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        PinCodeScreenHeader(text = title)
+        PinCodeScreenHeader(text = stringResource(titleId))
 
 
         RoundedBoxesRow(
@@ -81,6 +77,7 @@ fun PinEntryScreen(
         }
 
         Keyboard(
+            showBiometricButton = showBiometricButton,
             onNumberClick = { number ->
                 if (inputPin.size < pinSize) inputPin.add(number.toInt())
             },
