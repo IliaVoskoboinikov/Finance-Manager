@@ -72,7 +72,7 @@ class MainActivity : ComponentActivity() {
 
     private val autoLockObserver = LifecycleEventObserver { _, event ->
         when (event) {
-            Lifecycle.Event.ON_PAUSE -> {
+            Lifecycle.Event.ON_STOP -> {
                 if (isPinSetUseCase()) {
                     shouldLock.value = true
                 }
