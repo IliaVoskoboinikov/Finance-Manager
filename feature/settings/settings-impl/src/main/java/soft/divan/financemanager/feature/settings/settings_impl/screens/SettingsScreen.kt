@@ -45,6 +45,7 @@ fun SettingsScreen(
     navController: NavController,
     onNavigateToColor: () -> Unit,
     onNavigateToAboutTheProgram: () -> Unit,
+    onNavigateToSecurity: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
 
@@ -72,7 +73,7 @@ fun SettingsScreen(
         ),
         SettingsListItemModel.WithArrow(
             title = R.string.passcode,
-            onClick = { /* handle */ }
+            onClick = { onNavigateToSecurity() }
         ),
         SettingsListItemModel.WithArrow(
             title = R.string.synchronization,
