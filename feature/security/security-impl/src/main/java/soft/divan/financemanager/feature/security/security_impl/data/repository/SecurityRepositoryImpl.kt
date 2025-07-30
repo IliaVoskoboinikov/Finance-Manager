@@ -20,4 +20,8 @@ class SecurityRepositoryImpl @Inject constructor(
     override fun isPinSet(): Boolean {
         return securityLocalDataSource.isPinSet()
     }
+
+    override fun deletePin() {
+        securityLocalDataSource.deletePin()
+    }
 }

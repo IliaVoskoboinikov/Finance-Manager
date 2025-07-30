@@ -12,9 +12,11 @@ import soft.divan.financemanager.feature.security.security_impl.data.repository.
 import soft.divan.financemanager.feature.security.security_impl.data.sourse.SecurityLocalDataSource
 import soft.divan.financemanager.feature.security.security_impl.data.sourse.impl.SecurityLocalDataSourceImpl
 import soft.divan.financemanager.feature.security.security_impl.domain.repository.SecurityRepository
+import soft.divan.financemanager.feature.security.security_impl.domain.usecase.DeletePinUseCase
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.GetSavedPinUseCase
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.IsPinSetUseCase
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.SavePinUseCase
+import soft.divan.financemanager.feature.security.security_impl.domain.usecase.impl.DeletePinUseCaseImpl
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.impl.GetSavedPinUseCaseImpl
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.impl.IsPinSetUseCaseImpl
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.impl.SavePinUseCaseImpl
@@ -42,6 +44,9 @@ abstract class SecurityModule {
 
     @Binds
     abstract fun bindSecurityLocalDataSource(impl: SecurityLocalDataSourceImpl): SecurityLocalDataSource
+
+    @Binds
+    abstract fun bindDeletePinUseCase(impl: DeletePinUseCaseImpl): DeletePinUseCase
 
 }
 
