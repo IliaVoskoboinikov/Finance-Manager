@@ -8,6 +8,7 @@
     <string name="сome_up_with_pin">придумайте пин</string>
     <string name="input_password">Введите пароль</string>
     <string name="create_pin">создать пин-код</string>
+    <string name="delete_pin">удалитьпин-код</string>
     <string name="security">Безопасность</string>
     <string name="pin_codes_do_not_match">PIN-коды не совпадают</string>
 

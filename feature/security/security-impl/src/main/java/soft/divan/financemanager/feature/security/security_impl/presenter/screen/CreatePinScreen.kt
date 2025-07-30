@@ -20,7 +20,6 @@ fun CreatePinScreen(
     onNavigateBack: () -> Unit
 ) {
 
-
     var headerId by remember { mutableIntStateOf(R.string.сome_up_with_pin) }
     var tempPin by remember { mutableStateOf<String?>(null) }
     val notificationText = ""
@@ -40,8 +39,6 @@ fun CreatePinScreen(
             headerId = R.string.repeat_pin
             tempPin = state.pin
             notification = ""
-
-
         }
 
         is CreatePinScreenState.ConfirmingPinState -> {
@@ -57,7 +54,6 @@ fun CreatePinScreen(
 
         is CreatePinScreenState.PinCreatedState -> {
             onNavigateBack()
-
         }
 
         is CreatePinScreenState.ErrorState -> {
@@ -76,7 +72,6 @@ fun CreatePinScreen(
                 viewModel.changeState(CreatePinScreenState.ConfirmingPinState(pinCode))
             }
         },
-
         )
 
 }
