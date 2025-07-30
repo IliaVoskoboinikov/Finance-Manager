@@ -1,5 +1,8 @@
 package soft.divan.financemanager.feature.security.security_impl.presenter.screen
 
+import android.hardware.biometrics.BiometricPrompt
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +27,22 @@ fun PinLockScreen(onPinCorrect: () -> Unit, viewModel: SecurityViewModel = hiltV
     var errorMessage by remember { mutableStateOf("") }
     var clearTrigger by remember { mutableStateOf(false) }
 
+    val authenticationCallback =
+        @RequiresApi(Build.VERSION_CODES.P)
+        object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                ""
+            }
+
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                onPinCorrect()
+            }
+
+            override fun onAuthenticationFailed() {
+                ""
+            }
+        }
+
     LaunchedEffect(clearTrigger) {
         if (clearTrigger) {
             delay(300)
@@ -45,7 +64,8 @@ fun PinLockScreen(onPinCorrect: () -> Unit, viewModel: SecurityViewModel = hiltV
                 // откат триггера после задержки, чтобы снова сработал при следующем неверном вводе
 
             }
-        }
+        },
+        authenticationCallback = authenticationCallback
     )
 }
 
