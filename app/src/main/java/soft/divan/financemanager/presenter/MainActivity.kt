@@ -4,11 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ProcessLifecycleOwner
 import dagger.hilt.android.AndroidEntryPoint
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
@@ -64,9 +68,26 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var isPinSetUseCase: IsPinSetUseCase
 
+    private val shouldLock = mutableStateOf(false)
+
+    private val autoLockObserver = LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_PAUSE -> {
+                if (isPinSetUseCase()) {
+                    shouldLock.value = true
+                }
+            }
+
+            else -> Unit
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(autoLockObserver)
+
         setContent {
             val themeMode by getThemeModeUseCase().collectAsState(initial = ThemeMode.LIGHT)
             val isDark = when (themeMode) {
@@ -76,14 +97,20 @@ class MainActivity : ComponentActivity() {
 
             val accentColor by getAccentColorUseCase().collectAsState(initial = AccentColor.MINT)
 
-
             var isPinVerified by rememberSaveable { mutableStateOf(false) }
 
+            LaunchedEffect(shouldLock.value) {
+                if (shouldLock.value) {
+                    isPinVerified = false
+                }
+            }
 
             FinanceManagerTheme(darkTheme = isDark, accentColor = accentColor) {
-
                 if (isPinSetUseCase() && !isPinVerified) {
-                    PinLockScreen(onPinCorrect = { isPinVerified = true })
+                    PinLockScreen(onPinCorrect = {
+                        isPinVerified = true
+                        shouldLock.value = false
+                    })
                 } else {
                     MainScreen(
                         splashFeatureApi = splashSettingsFeatureApi,
@@ -96,10 +123,13 @@ class MainActivity : ComponentActivity() {
                         securityFeatureApi = securityFeatureApi,
                     )
                 }
-
-
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(autoLockObserver)
     }
 
 }
