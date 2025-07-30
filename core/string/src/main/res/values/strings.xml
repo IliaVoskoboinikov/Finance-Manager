@@ -45,4 +45,5 @@
     <string name="data">Дата</string>
     <string name="time">Время</string>
     <string name="comment">Комментрарий</string>
+    <string name="security">Безопасность</string>
 </resources>
