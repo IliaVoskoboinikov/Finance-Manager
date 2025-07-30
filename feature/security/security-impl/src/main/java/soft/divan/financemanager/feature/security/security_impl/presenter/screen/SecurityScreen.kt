@@ -15,7 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.feature.security.security_impl.R
+import soft.divan.financemanager.feature.security.security_impl.presenter.viewmodel.SecurityViewModel
 import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.icons.ArrowBack
 import soft.divan.financemanager.uikit.model.TopBarModel
@@ -34,9 +37,13 @@ fun PreviewSecurityScreen() {
 
 @Composable
 fun SecurityScreen(
-    modifier: Modifier = Modifier, onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: SecurityViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit,
     onNavigateToCreatePin: () -> Unit
 ) {
+
+    val pin = viewModel.pin.collectAsStateWithLifecycle()
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
 
@@ -58,6 +65,18 @@ fun SecurityScreen(
             ) {
                 Text(text = stringResource(R.string.create_pin))
             }
+
+            Spacer(modifier = Modifier.size(50.dp))
+
+            if (!pin.value.isEmpty())
+                Button(
+                    onClick = { viewModel.deletePin() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 30.dp)
+                ) {
+                    Text(text = stringResource(R.string.delete_pin))
+                }
         }
 
 
