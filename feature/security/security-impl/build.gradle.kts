@@ -62,6 +62,6 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
     implementation("androidx.compose.material:material:1.6.5")
-
+    implementation("androidx.biometric:biometric-ktx:1.2.0-alpha05")
 
 }

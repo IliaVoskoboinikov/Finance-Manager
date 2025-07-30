@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="authorization">Авторизация</string>
+    <string name="use_biometry">Используйте биометрию для авторизации</string>
+    <string name="confirm_identity">Подтвердите свою личность\n</string>
+    <string name="cancel_action">Отмена</string>
+</resources>

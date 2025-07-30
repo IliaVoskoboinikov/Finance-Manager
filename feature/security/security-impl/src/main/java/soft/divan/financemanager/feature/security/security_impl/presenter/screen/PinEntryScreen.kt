@@ -1,5 +1,7 @@
 package soft.divan.financemanager.feature.security.security_impl.presenter.screen
 
+import android.hardware.biometrics.BiometricPrompt
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,8 +11,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,13 +35,18 @@ fun PinEntryScreen(
     onPinEntered: (String) -> Unit,
     onBackspaceClick: () -> Unit = {},
     onFingerprintClick: () -> Unit = {},
+    authenticationCallback: BiometricPrompt.AuthenticationCallback? = null,
 ) {
     val inputPin = remember { mutableStateListOf<Int>() }
+    var showBiometricScreen by remember { mutableStateOf(true) }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
 
     // Сброс PIN по внешнему триггеру
     LaunchedEffect(clearPinTrigger) {
         if (clearPinTrigger) inputPin.clear()
     }
+
 
     // Проверка длины и отправка результата
     LaunchedEffect(inputPin.size) {
@@ -81,9 +91,15 @@ fun PinEntryScreen(
                 }
             },
             onFingerprintClick = {
+                showBiometricScreen = true
                 onFingerprintClick()
             }
         )
+
+        if (showBiometricScreen && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && authenticationCallback != null) {
+            BiometricScreen(authenticationCallback = authenticationCallback)
+            showBiometricScreen = false
+        }
     }
 }
 
