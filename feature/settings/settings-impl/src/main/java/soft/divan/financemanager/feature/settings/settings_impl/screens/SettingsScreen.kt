@@ -12,15 +12,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import soft.divan.financemanager.feature.settings.settings_impl.viewModel.SettingsViewModel
 import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.FMDriver
@@ -46,21 +42,16 @@ fun SettingsScreen(
     onNavigateToColor: () -> Unit,
     onNavigateToAboutTheProgram: () -> Unit,
     onNavigateToSecurity: () -> Unit,
-    viewModel: SettingsViewModel = hiltViewModel(),
+    onNavigateToDesignApp: () -> Unit,
 ) {
 
-    val isDarkTheme by viewModel.isDarkThemeEnabled.collectAsState()
 
     val settingsItems = listOf(
-        SettingsListItemModel.WithSwitch(
-            title = R.string.dark_theme,
-            isChecked = isDarkTheme,
-            onToggle = { isChecked -> viewModel.toggleTheme(!isDarkTheme) }
-        ),
+
         SettingsListItemModel.WithArrow(
-            title = R.string.primary_color,
+            title = R.string.design,
             onClick = {
-                onNavigateToColor()
+                onNavigateToDesignApp()
             }
         ),
         SettingsListItemModel.WithArrow(

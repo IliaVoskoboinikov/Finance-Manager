@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import soft.divan.financemanager.feature.settings.settings_impl.viewModel.CollorSelectionViewModel
 import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.model.TopBarModel
 
@@ -16,7 +14,6 @@ import soft.divan.financemanager.uikit.model.TopBarModel
 fun AboutTheProgramScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
-    viewModel: CollorSelectionViewModel = hiltViewModel()
 ) {
 
 

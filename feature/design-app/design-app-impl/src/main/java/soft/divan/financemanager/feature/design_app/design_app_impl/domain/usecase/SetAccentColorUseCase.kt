@@ -1,0 +1,8 @@
+package soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase
+
+import soft.divan.financemanager.uikit.theme.AccentColor
+
+
+interface SetAccentColorUseCase {
+    suspend operator fun invoke(color: AccentColor)
+}

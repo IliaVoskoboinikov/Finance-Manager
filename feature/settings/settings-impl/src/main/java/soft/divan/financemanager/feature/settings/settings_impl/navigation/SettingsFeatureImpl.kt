@@ -5,11 +5,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.settings.settings_impl.screens.AboutTheProgramScreen
-import soft.divan.financemanager.feature.settings.settings_impl.screens.ColorSelectionScreen
 import soft.divan.financemanager.feature.settings.settings_impl.screens.SettingsScreen
 import javax.inject.Inject
 
@@ -25,6 +25,9 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
 
     @Inject
     lateinit var securityFeatureApi: SecurityFeatureApi
+
+    @Inject
+    lateinit var designAppFeatureApi: DesignAppFeatureApi
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
@@ -43,6 +46,10 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
                 },
                 onNavigateToSecurity = {
                     navController.navigate(securityFeatureApi.route)
+                },
+                onNavigateToDesignApp = {
+                    navController.navigate(designAppFeatureApi.route)
+
                 }
             )
         }
@@ -53,14 +60,8 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
             startDestination = screenSettingsColorRoute
         ) {
 
-            composable(route = screenSettingsColorRoute) {
-                ColorSelectionScreen(
-                    modifier = modifier,
-                    navController = navController
-                )
-            }
 
-            composable(route = screenSettingsAboutTheProgramScreenRoute) {
+        composable(route = screenSettingsAboutTheProgramScreenRoute) {
                 AboutTheProgramScreen(
                     modifier = modifier,
                     navController = navController
