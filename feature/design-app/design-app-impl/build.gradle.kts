@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation("com.github.skydoves:colorpicker-compose:1.1.2")
 
     implementation(libs.androidx.datastore.core.android)
     ksp(libs.hilt.compiler)
