@@ -6,6 +6,14 @@ val Purple80 = Color(0xFFF50000)
 
 val NeonMint = Color(0xFF2AE881)
 
+val Purple = Color(0xFF9C27B0)
+
+val Orange = Color(0xFFFF9800)
+
+val Blue = Color(0xFF2196F3)
+
+val Pink = Color(0xFFE91E63)
+
 val MintBackground = Color(0xFFD4FAE6)
 
 
