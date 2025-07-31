@@ -3,39 +3,39 @@ package soft.divan.financemanager.feature.design_app.design_app_impl.data
 
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.Flow
-import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.ThemeLocalSource
+import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.DesignAppLocalSource
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model.ThemeMode
-import soft.divan.financemanager.feature.design_app.design_app_impl.domain.repositiry.ThemeRepository
+import soft.divan.financemanager.feature.design_app.design_app_impl.domain.repositiry.DesignAppRepository
 import soft.divan.financemanager.uikit.theme.AccentColor
 import javax.inject.Inject
 
 
-class ThemeRepositoryImpl @Inject constructor(
-    private val themeLocalSource: ThemeLocalSource
-) : ThemeRepository {
+class DesignAppRepositoryImpl @Inject constructor(
+    private val designAppLocalSource: DesignAppLocalSource
+) : DesignAppRepository {
 
     override fun getThemeMode(): Flow<ThemeMode> {
-        return themeLocalSource.getThemeMode()
+        return designAppLocalSource.getThemeMode()
     }
 
     override suspend fun setThemeMode(mode: ThemeMode) {
-        themeLocalSource.setThemeMode(mode)
+        designAppLocalSource.setThemeMode(mode)
     }
 
     override fun getAccentColor(): Flow<AccentColor> {
-        return themeLocalSource.getAccentColor()
+        return designAppLocalSource.getAccentColor()
     }
 
     override suspend fun setAccentColor(color: AccentColor) {
-        themeLocalSource.setAccentColor(color)
+        designAppLocalSource.setAccentColor(color)
     }
 
     override fun getCustomAccentColor(): Flow<Color?> {
-        return themeLocalSource.getCustomAccentColor()
+        return designAppLocalSource.getCustomAccentColor()
     }
 
     override suspend fun setCustomAccentColor(color: Color) {
-        themeLocalSource.setCustomAccentColor(color)
+        designAppLocalSource.setCustomAccentColor(color)
     }
 
 }
