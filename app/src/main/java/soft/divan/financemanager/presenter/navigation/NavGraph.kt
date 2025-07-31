@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import soft.divan.financemanager.core.feature_api.register
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
+import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
 import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
@@ -27,7 +28,8 @@ fun NavGraph(
     accountFeatureApi: AccountFeatureApi,
     settingsFeatureApi: SettingsFeatureApi,
     transactionFeatureApi: TransactionFeatureApi,
-    securityFeatureApi: SecurityFeatureApi
+    securityFeatureApi: SecurityFeatureApi,
+    designAppFeatureApi: DesignAppFeatureApi
 ) {
     NavHost(
         navController = navController,
@@ -46,5 +48,6 @@ fun NavGraph(
         register(featureApi = accountFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = transactionFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = securityFeatureApi, navController = navController, modifier = modifier)
+        register(featureApi = designAppFeatureApi, navController = navController, modifier = modifier)
     }
 }

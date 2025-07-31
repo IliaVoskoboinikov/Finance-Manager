@@ -1,6 +1,5 @@
 package soft.divan.financemanager.presenter.screens
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
+import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
 import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
@@ -50,7 +50,6 @@ fun MainScreenPreview() {
     }
 }
 
-@SuppressLint("FlowOperatorInvokedInComposition")
 @Composable
 fun MainScreen(
     modifier: Modifier = Modifier,
@@ -62,7 +61,8 @@ fun MainScreen(
     categoryFeatureApi: CategoryFeatureApi,
     settingsFeatureApi: SettingsFeatureApi,
     transactionFeatureApi: TransactionFeatureApi,
-    securityFeatureApi: SecurityFeatureApi
+    securityFeatureApi: SecurityFeatureApi,
+    designAppFeatureApi: DesignAppFeatureApi
 ) {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -114,7 +114,8 @@ fun MainScreen(
                 accountFeatureApi = accountFeatureApi,
                 settingsFeatureApi = settingsFeatureApi,
                 transactionFeatureApi = transactionFeatureApi,
-                securityFeatureApi = securityFeatureApi
+                securityFeatureApi = securityFeatureApi,
+                designAppFeatureApi = designAppFeatureApi
             )
 
             SnackbarHost(
