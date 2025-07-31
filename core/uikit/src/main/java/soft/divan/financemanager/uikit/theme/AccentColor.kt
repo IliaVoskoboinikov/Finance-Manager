@@ -6,8 +6,8 @@ enum class AccentColor(val color: Color?) {
     CUSTOM(null),
     DYNAMIC(null),
     MINT(NeonMint),
-    PURPLE(Color(0xFF9C27B0)),
-    ORANGE(Color(0xFFFF9800)),
-    BLUE(Color(0xFF2196F3)),
-    PINK(Color(0xFFE91E63)),
+    PURPLE(Purple),
+    ORANGE(Orange),
+    BLUE(Blue),
+    PINK(Pink),
 }
