@@ -1,5 +1,7 @@
 package soft.divan.financemanager.feature.design_app.design_app_impl.data.source.impl
 
+import androidx.compose.ui.graphics.Color
+import androidx.core.graphics.toColorInt
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -42,6 +44,7 @@ class ThemeLocalSourceImpl @Inject constructor(
                 "BLUE" -> AccentColor.BLUE
                 "PINK" -> AccentColor.PINK
                 "DYNAMIC" -> AccentColor.DYNAMIC
+                "CUSTOM" -> AccentColor.CUSTOM
                 else -> AccentColor.MINT
             }
         }
@@ -52,4 +55,31 @@ class ThemeLocalSourceImpl @Inject constructor(
             prefs[colorKey] = color.name
         }
     }
+
+
+    private val customColorKey = stringPreferencesKey("app_custom_accent_hex")
+
+    override fun getCustomAccentColor(): Flow<Color?> {
+        return dataStore.data.map { prefs ->
+            prefs[customColorKey]?.let { hex ->
+                runCatching { Color(hex.toColorInt()) }.getOrNull()
+            }
+        }
+    }
+
+    override suspend fun setCustomAccentColor(color: Color) {
+        val hex = color.toHexString()
+        dataStore.edit { prefs ->
+            prefs[customColorKey] = hex
+        }
+    }
+
+    //todo utils
+    private fun Color.toHexString(): String {
+        val r = (red * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
+        val g = (green * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
+        val b = (blue * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
+        return "#${r}${g}${b}".uppercase()
+    }
 }
+
