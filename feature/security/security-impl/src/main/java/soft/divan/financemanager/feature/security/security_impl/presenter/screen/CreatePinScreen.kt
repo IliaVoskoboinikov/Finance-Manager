@@ -49,7 +49,6 @@ fun CreatePinScreen(
                 notification = stringResource(id = R.string.pin_codes_do_not_match)
                 viewModel.changeState(CreatePinScreenState.InitialState)
             }
-
         }
 
         is CreatePinScreenState.PinCreatedState -> {

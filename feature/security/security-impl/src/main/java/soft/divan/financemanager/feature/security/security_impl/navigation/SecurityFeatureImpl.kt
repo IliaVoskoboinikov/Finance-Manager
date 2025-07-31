@@ -18,7 +18,6 @@ class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
 
     override val route: String = baseRoute
 
-
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
