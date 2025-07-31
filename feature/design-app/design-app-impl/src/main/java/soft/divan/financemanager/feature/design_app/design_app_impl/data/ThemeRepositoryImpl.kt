@@ -1,7 +1,6 @@
 package soft.divan.financemanager.feature.design_app.design_app_impl.data
 
 
-import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.ThemeLocalSource
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model.ThemeMode
@@ -21,8 +20,6 @@ class ThemeRepositoryImpl @Inject constructor(
     override suspend fun setThemeMode(mode: ThemeMode) {
         themeLocalSource.setThemeMode(mode)
     }
-
-    private val colorKey = stringPreferencesKey("app_accent_color")
 
     override fun getAccentColor(): Flow<AccentColor> {
         return themeLocalSource.getAccentColor()
