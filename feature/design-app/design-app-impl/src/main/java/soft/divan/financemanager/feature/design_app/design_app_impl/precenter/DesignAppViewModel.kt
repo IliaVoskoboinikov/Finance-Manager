@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.design_app.design_app_impl.precenter
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -9,8 +10,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetAccentColorUseCase
+import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetThemeModeUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.SetAccentColorUseCase
+import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.SetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.SetThemeModeUseCase
 import soft.divan.financemanager.uikit.theme.AccentColor
 
@@ -22,6 +25,8 @@ class DesignAppViewModel @Inject constructor(
     private val setThemeModeUseCase: SetThemeModeUseCase,
     val getAccentColorUseCase: GetAccentColorUseCase,
     val setAccentColorUseCase: SetAccentColorUseCase,
+    private val getCustomAccentColorUseCase: GetCustomAccentColorUseCase,
+    private val setCustomAccentColorUseCase: SetCustomAccentColorUseCase
 ) : ViewModel() {
 
     val themeMode = getThemeModeUseCase().stateIn(
@@ -46,4 +51,12 @@ class DesignAppViewModel @Inject constructor(
             setThemeModeUseCase(mode)
         }
     }
+
+    fun setCustomColor(color: Color) {
+        viewModelScope.launch(Dispatchers.IO) {
+            setCustomAccentColorUseCase(color)
+            setAccentColor(AccentColor.CUSTOM)
+        }
+    }
+
 }

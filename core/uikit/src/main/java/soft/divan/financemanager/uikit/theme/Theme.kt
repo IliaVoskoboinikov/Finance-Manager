@@ -2,6 +2,7 @@ package soft.divan.financemanager.uikit.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -164,19 +165,56 @@ val PinkDarkColorScheme = darkColorScheme(
 )
 
 
+fun createCustomLightColorScheme(primaryColor: Color): ColorScheme {
+    return lightColorScheme(
+        primary = primaryColor,
+        background = RoseWhite,
+        primaryContainer = NeonMint,
+        onPrimaryContainer = White,
+        surface = primaryColor,
+        surfaceContainer = LavenderMist,
+        onSecondaryContainer = NeonMint,
+        secondaryContainer = MintBackground,
+        onSurfaceVariant = Graphite,
+        onSurface = CharcoalPurple,
+        error = CoralRed,
+        surfaceContainerHigh = SoftLavender
+    )
+}
+
+fun createCustomDarkColorScheme(primaryColor: Color): ColorScheme {
+    return darkColorScheme(
+        primary = primaryColor,
+        background = BlackDark,
+        primaryContainer = MintBackgroundDark,
+        onPrimaryContainer = BlackDark,
+        surface = primaryColor,
+        surfaceContainer = RoseWhiteDark,
+        onSecondaryContainer = WhiteDark,
+        secondaryContainer = SoftLavenderDark,
+        onSurfaceVariant = GraphiteDark,
+        onSurface = WhiteDark,
+        error = CoralRedDark,
+        surfaceContainerHigh = LavenderMistDark
+    )
+}
 @Composable
 fun FinanceManagerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     accentColor: AccentColor = AccentColor.MINT,
+    customColor: Color? = null,
     content: @Composable () -> Unit
 ) {
 
     val colorScheme = when {
-        // Dynamic color is available on Android 12+
         accentColor == AccentColor.DYNAMIC && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+
+        accentColor == AccentColor.CUSTOM -> {
+            val color = customColor ?: Color.Magenta
+            if (darkTheme) createCustomDarkColorScheme(color) else createCustomLightColorScheme(color)
         }
 
         else -> when (accentColor) {
@@ -185,14 +223,17 @@ fun FinanceManagerTheme(
             AccentColor.ORANGE -> if (darkTheme) OrangeDarkColorScheme else OrangeColorScheme
             AccentColor.BLUE -> if (darkTheme) BlueDarkColorScheme else BlueColorScheme
             AccentColor.PINK -> if (darkTheme) PinkDarkColorScheme else PinkColorScheme
-            AccentColor.DYNAMIC -> if (darkTheme) DarkColorScheme else LightColorScheme
+            else -> {
+                if (darkTheme) DarkColorScheme else LightColorScheme
+            }
         }
     }
-
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
         content = content
     )
+
+
 }

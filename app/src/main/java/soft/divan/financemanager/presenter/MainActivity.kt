@@ -20,6 +20,7 @@ import soft.divan.financemanager.feature.category.category_api.CategoryFeatureAp
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetAccentColorUseCase
+import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetThemeModeUseCase
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
 import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
@@ -72,6 +73,9 @@ class MainActivity : ComponentActivity() {
     lateinit var getAccentColorUseCase: GetAccentColorUseCase
 
     @Inject
+    lateinit var getCustomAccentColorUseCase: GetCustomAccentColorUseCase
+
+    @Inject
     lateinit var isPinSetUseCase: IsPinSetUseCase
 
     private val shouldLock = mutableStateOf(false)
@@ -103,6 +107,7 @@ class MainActivity : ComponentActivity() {
             }
 
             val accentColor by getAccentColorUseCase().collectAsState(initial = AccentColor.MINT)
+            val customColor = getCustomAccentColorUseCase().collectAsState(initial = null).value
 
             var isPinVerified by rememberSaveable { mutableStateOf(false) }
 
@@ -114,7 +119,8 @@ class MainActivity : ComponentActivity() {
 
             FinanceManagerTheme(
                 darkTheme = isDark,
-                accentColor = accentColor
+                accentColor = accentColor,
+                customColor = customColor
             ) {
                 if (isPinSetUseCase() && !isPinVerified) {
                     PinLockScreen(onPinCorrect = {

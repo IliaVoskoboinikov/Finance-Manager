@@ -1,6 +1,7 @@
 package soft.divan.financemanager.feature.design_app.design_app_impl.data
 
 
+import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.ThemeLocalSource
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model.ThemeMode
@@ -27,6 +28,14 @@ class ThemeRepositoryImpl @Inject constructor(
 
     override suspend fun setAccentColor(color: AccentColor) {
         themeLocalSource.setAccentColor(color)
+    }
+
+    override fun getCustomAccentColor(): Flow<Color?> {
+        return themeLocalSource.getCustomAccentColor()
+    }
+
+    override suspend fun setCustomAccentColor(color: Color) {
+        themeLocalSource.setCustomAccentColor(color)
     }
 
 }

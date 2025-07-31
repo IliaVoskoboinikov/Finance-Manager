@@ -16,12 +16,16 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.
 import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.impl.ThemeLocalSourceImpl
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.repositiry.ThemeRepository
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetAccentColorUseCase
+import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetThemeModeUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.SetAccentColorUseCase
+import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.SetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.SetThemeModeUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.impl.GetAccentColorUseCaseImpl
+import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.impl.GetCustomAccentColorUseCaseImpl
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.impl.GetThemeModeUseCaseImpl
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.impl.SetAccentColorUseCaseImpl
+import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.impl.SetCustomAccentColorUseCaseImpl
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.impl.SetThemeModeUseCaseImpl
 import soft.divan.financemanager.feature.design_app.design_app_impl.navigation.DesignAppFeatureImpl
 import javax.inject.Qualifier
@@ -78,6 +82,16 @@ object ThemeModule {
 
     @Provides
     fun provideSetAccentColorUseCase(impl: SetAccentColorUseCaseImpl): SetAccentColorUseCase {
+        return impl
+    }
+
+    @Provides
+    fun provideGetCustomAccentColorUseCase(impl: GetCustomAccentColorUseCaseImpl): GetCustomAccentColorUseCase {
+        return impl
+    }
+
+    @Provides
+    fun provideSetCustomAccentColorUseCase(impl: SetCustomAccentColorUseCaseImpl): SetCustomAccentColorUseCase {
         return impl
     }
 
