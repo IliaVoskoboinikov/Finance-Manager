@@ -12,44 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = NeonMintDark,
-    background = BlackDark,
-    primaryContainer = MintBackgroundDark,
-    onPrimaryContainer = BlackDark,
-    surface = LavenderMistDark,
-    surfaceContainer = RoseWhiteDark,
-    onSecondaryContainer = WhiteDark,
-    secondaryContainer = SoftLavenderDark,
-    onSurfaceVariant = GraphiteDark,
-    onSurface = WhiteDark,
-    error = CoralRedDark,
-    surfaceContainerHigh = LavenderMistDark,
-)
-
-private val LightColorScheme = lightColorScheme(
-
-    primary = NeonMint,
+fun baseLightColorScheme(primaryColor: Color): ColorScheme = lightColorScheme(
+    primary = primaryColor,
     background = RoseWhite,
     primaryContainer = NeonMint,
     onPrimaryContainer = White,
-    surface = NeonMint,
-    surfaceContainer = LavenderMist,
-    onSecondaryContainer = NeonMint,
-    secondaryContainer = MintBackground,
-    onSurfaceVariant = Graphite,
-    onSurface = CharcoalPurple,
-    error = CoralRed,
-    surfaceContainerHigh = SoftLavender
-
-)
-
-val PurpleColorScheme = lightColorScheme(
-    primary = Color(0xFF9C27B0),
-    background = RoseWhite,
-    primaryContainer = NeonMint,
-    onPrimaryContainer = White,
-    surface = NeonMint,
+    surface = primaryColor,
     surfaceContainer = LavenderMist,
     onSecondaryContainer = NeonMint,
     secondaryContainer = MintBackground,
@@ -59,145 +27,22 @@ val PurpleColorScheme = lightColorScheme(
     surfaceContainerHigh = SoftLavender
 )
 
-val OrangeColorScheme = lightColorScheme(
-    primary = Color(0xFFFF9800),
-    background = RoseWhite,
-    primaryContainer = NeonMint,
-    onPrimaryContainer = White,
-    surface = NeonMint,
-    surfaceContainer = LavenderMist,
-    onSecondaryContainer = NeonMint,
-    secondaryContainer = MintBackground,
-    onSurfaceVariant = Graphite,
-    onSurface = CharcoalPurple,
-    error = CoralRed,
-    surfaceContainerHigh = SoftLavender
-)
-
-val BlueColorScheme = lightColorScheme(
-    primary = Color(0xFF2196F3),
-    background = RoseWhite,
-    primaryContainer = NeonMint,
-    onPrimaryContainer = White,
-    surface = NeonMint,
-    surfaceContainer = LavenderMist,
-    onSecondaryContainer = NeonMint,
-    secondaryContainer = MintBackground,
-    onSurfaceVariant = Graphite,
-    onSurface = CharcoalPurple,
-    error = CoralRed,
-    surfaceContainerHigh = SoftLavender
-)
-
-val PinkColorScheme = lightColorScheme(
-    primary = Color(0xFFE91E63),
-    background = RoseWhite,
-    primaryContainer = NeonMint,
-    onPrimaryContainer = White,
-    surface = NeonMint,
-    surfaceContainer = LavenderMist,
-    onSecondaryContainer = NeonMint,
-    secondaryContainer = MintBackground,
-    onSurfaceVariant = Graphite,
-    onSurface = CharcoalPurple,
-    error = CoralRed,
-    surfaceContainerHigh = SoftLavender
-)
-
-val PurpleDarkColorScheme = darkColorScheme(
-    primary = Color(0xFF9C27B0),
+fun baseDarkColorScheme(primaryColor: Color): ColorScheme = darkColorScheme(
+    primary = primaryColor,
     background = BlackDark,
     primaryContainer = MintBackgroundDark,
     onPrimaryContainer = BlackDark,
-    surface = LavenderMistDark,
+    surface = primaryColor,
     surfaceContainer = RoseWhiteDark,
     onSecondaryContainer = WhiteDark,
     secondaryContainer = SoftLavenderDark,
     onSurfaceVariant = GraphiteDark,
     onSurface = WhiteDark,
     error = CoralRedDark,
-    surfaceContainerHigh = LavenderMistDark,
-)
-
-val OrangeDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFF9800),
-    background = BlackDark,
-    primaryContainer = MintBackgroundDark,
-    onPrimaryContainer = BlackDark,
-    surface = LavenderMistDark,
-    surfaceContainer = RoseWhiteDark,
-    onSecondaryContainer = WhiteDark,
-    secondaryContainer = SoftLavenderDark,
-    onSurfaceVariant = GraphiteDark,
-    onSurface = WhiteDark,
-    error = CoralRedDark,
-    surfaceContainerHigh = LavenderMistDark,
-)
-
-val BlueDarkColorScheme = darkColorScheme(
-    primary = Color(0xFF2196F3),
-    background = BlackDark,
-    primaryContainer = MintBackgroundDark,
-    onPrimaryContainer = BlackDark,
-    surface = LavenderMistDark,
-    surfaceContainer = RoseWhiteDark,
-    onSecondaryContainer = WhiteDark,
-    secondaryContainer = SoftLavenderDark,
-    onSurfaceVariant = GraphiteDark,
-    onSurface = WhiteDark,
-    error = CoralRedDark,
-    surfaceContainerHigh = LavenderMistDark,
-)
-
-val PinkDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFE91E63),
-    background = BlackDark,
-    primaryContainer = MintBackgroundDark,
-    onPrimaryContainer = BlackDark,
-    surface = LavenderMistDark,
-    surfaceContainer = RoseWhiteDark,
-    onSecondaryContainer = WhiteDark,
-    secondaryContainer = SoftLavenderDark,
-    onSurfaceVariant = GraphiteDark,
-    onSurface = WhiteDark,
-    error = CoralRedDark,
-    surfaceContainerHigh = LavenderMistDark,
+    surfaceContainerHigh = LavenderMistDark
 )
 
 
-fun createCustomLightColorScheme(primaryColor: Color): ColorScheme {
-    return lightColorScheme(
-        primary = primaryColor,
-        background = RoseWhite,
-        primaryContainer = NeonMint,
-        onPrimaryContainer = White,
-        surface = primaryColor,
-        surfaceContainer = LavenderMist,
-        onSecondaryContainer = NeonMint,
-        secondaryContainer = MintBackground,
-        onSurfaceVariant = Graphite,
-        onSurface = CharcoalPurple,
-        error = CoralRed,
-        surfaceContainerHigh = SoftLavender
-    )
-}
-
-fun createCustomDarkColorScheme(primaryColor: Color): ColorScheme {
-    return darkColorScheme(
-        primary = primaryColor,
-        background = BlackDark,
-        primaryContainer = MintBackgroundDark,
-        onPrimaryContainer = BlackDark,
-        surface = primaryColor,
-        surfaceContainer = RoseWhiteDark,
-        onSecondaryContainer = WhiteDark,
-        secondaryContainer = SoftLavenderDark,
-        onSurfaceVariant = GraphiteDark,
-        onSurface = WhiteDark,
-        error = CoralRedDark,
-        surfaceContainerHigh = LavenderMistDark
-    )
-}
 @Composable
 fun FinanceManagerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -213,19 +58,13 @@ fun FinanceManagerTheme(
         }
 
         accentColor == AccentColor.CUSTOM -> {
-            val color = customColor ?: Color.Magenta
-            if (darkTheme) createCustomDarkColorScheme(color) else createCustomLightColorScheme(color)
+            val resolvedColor = customColor ?: Color.Magenta
+            if (darkTheme) baseDarkColorScheme(resolvedColor) else baseLightColorScheme(resolvedColor)
         }
 
-        else -> when (accentColor) {
-            AccentColor.MINT -> if (darkTheme) DarkColorScheme else LightColorScheme
-            AccentColor.PURPLE -> if (darkTheme) PurpleDarkColorScheme else PurpleColorScheme
-            AccentColor.ORANGE -> if (darkTheme) OrangeDarkColorScheme else OrangeColorScheme
-            AccentColor.BLUE -> if (darkTheme) BlueDarkColorScheme else BlueColorScheme
-            AccentColor.PINK -> if (darkTheme) PinkDarkColorScheme else PinkColorScheme
-            else -> {
-                if (darkTheme) DarkColorScheme else LightColorScheme
-            }
+        else -> {
+            val primaryColor = accentColor.color ?: NeonMint
+            if (darkTheme) baseDarkColorScheme(primaryColor) else baseLightColorScheme(primaryColor)
         }
     }
 
