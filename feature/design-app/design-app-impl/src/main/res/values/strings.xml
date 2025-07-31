@@ -6,4 +6,7 @@
     <string name="light">Светлая</string>
     <string name="dark">Тёмная</string>
     <string name="system">Системная</string>
+    <string name="dynamic_color">Dynamic (Material You)</string>
+    <string name="color_palette">Цветовая палитра</string>
+
 </resources>

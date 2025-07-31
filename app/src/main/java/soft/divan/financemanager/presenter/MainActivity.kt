@@ -112,7 +112,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            FinanceManagerTheme(darkTheme = isDark, accentColor = accentColor) {
+            FinanceManagerTheme(
+                darkTheme = isDark,
+                accentColor = accentColor
+            ) {
                 if (isPinSetUseCase() && !isPinVerified) {
                     PinLockScreen(onPinCorrect = {
                         isPinVerified = true
