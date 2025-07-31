@@ -41,8 +41,6 @@ fun PinEntryCommonScreen(
     val inputPin = remember { mutableStateListOf<Int>() }
     var showBiometricScreen by remember { mutableStateOf(true) }
 
-
-
     // Проверка длины и отправка результата
     LaunchedEffect(inputPin.size) {
         if (inputPin.size == pinSize) {
@@ -51,7 +49,6 @@ fun PinEntryCommonScreen(
             inputPin.clear()
         }
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,12 +58,10 @@ fun PinEntryCommonScreen(
     ) {
         PinCodeScreenHeader(text = stringResource(titleId))
 
-
         RoundedBoxesRow(
             startQuantity = pinSize,
             quantity = inputPin.size
         )
-
 
         if (errorMessage.isNotEmpty()) {
             Text(
