@@ -41,6 +41,7 @@ class ThemeLocalSourceImpl @Inject constructor(
                 "ORANGE" -> AccentColor.ORANGE
                 "BLUE" -> AccentColor.BLUE
                 "PINK" -> AccentColor.PINK
+                "DYNAMIC" -> AccentColor.DYNAMIC
                 else -> AccentColor.MINT
             }
         }

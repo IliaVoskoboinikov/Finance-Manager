@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.design_app.design_app_impl.precenter
 
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,11 +22,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,8 +53,14 @@ fun DesignAppScreen(
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
 
     val selectedColor by viewModel.accentColor.collectAsStateWithLifecycle()
-    val colorOptions = AccentColor.entries
 
+    val colorOptions = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            AccentColor.entries
+        } else {
+            AccentColor.entries.filter { it != AccentColor.DYNAMIC }
+        }
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -59,86 +69,103 @@ fun DesignAppScreen(
             TopBar(topBar = TopBarModel(title = R.string.design))
 
 
-            Column(
-                modifier
+
+            LazyColumn(
+                modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-
-
-                Text(
-                    stringResource(R.string.choice_theme),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onSurface
+                // --- Блок выбора темы ---
+                item {
+                    Text(
+                        text = stringResource(R.string.choice_theme),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     )
-                )
+                }
 
-                Spacer(Modifier.height(16.dp))
+                item {
+                    Spacer(Modifier.height(8.dp))
+                }
 
-                ThemeSwitchItem(
-                    title = stringResource(R.string.light),
-                    selected = themeMode == ThemeMode.LIGHT,
-                    onClick = { viewModel.onThemeSelected(ThemeMode.LIGHT) }
-                )
-                ThemeSwitchItem(
-                    title = stringResource(R.string.dark),
-                    selected = themeMode == ThemeMode.DARK,
-                    onClick = { viewModel.onThemeSelected(ThemeMode.DARK) }
-                )
-                ThemeSwitchItem(
-                    title = stringResource(R.string.system),
-                    selected = themeMode == ThemeMode.SYSTEM,
-                    onClick = { viewModel.onThemeSelected(ThemeMode.SYSTEM) }
-                )
+                item {
+                    ThemeSwitchItem(
+                        title = stringResource(R.string.light),
+                        selected = themeMode == ThemeMode.LIGHT,
+                        onClick = { viewModel.onThemeSelected(ThemeMode.LIGHT) }
+                    )
+                }
 
+                item {
+                    ThemeSwitchItem(
+                        title = stringResource(R.string.dark),
+                        selected = themeMode == ThemeMode.DARK,
+                        onClick = { viewModel.onThemeSelected(ThemeMode.DARK) }
+                    )
+                }
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(colorOptions) { color ->
-                        val isSelected = color == selectedColor
-                        val colorPreview = getColorForAccent(color)
+                item {
+                    ThemeSwitchItem(
+                        title = stringResource(R.string.system),
+                        selected = themeMode == ThemeMode.SYSTEM,
+                        onClick = { viewModel.onThemeSelected(ThemeMode.SYSTEM) }
+                    )
+                }
 
-                        Card(
+                // --- Блок цветовой палитры ---
+                item {
+                    Spacer(Modifier.height(24.dp))
+                    Text(
+                        text = stringResource(R.string.color_palette),
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
+
+                items(colorOptions) { color ->
+                    val isSelected = color == selectedColor
+                    val colorPreview = getColorForAccent(color)
+
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .clickable {
+                                viewModel.setAccentColor(color)
+                            },
+                        colors = CardDefaults.cardColors(
+                            containerColor = colorPreview,
+                            contentColor = contentColorFor(colorPreview)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .clickable {
-                                    viewModel.setAccentColor(color)
-
-                                },
-                            colors = CardDefaults.cardColors(
-                                containerColor = colorPreview,
-                                contentColor = contentColorFor(colorPreview)
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = color.name.lowercase().replaceFirstChar { it.titlecase() },
-                                    style = MaterialTheme.typography.bodyLarge
+                            Text(
+                                text = color.name.lowercase().replaceFirstChar { it.titlecase() },
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = contentColorFor(colorPreview)
                                 )
-                                if (isSelected) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = "Selected",
-                                        tint = contentColorFor(colorPreview)
-                                    )
-                                }
                             }
                         }
                     }
                 }
             }
+
+
 
         }
     }
@@ -168,10 +195,21 @@ fun ThemeSwitchItem(title: String, selected: Boolean, onClick: () -> Unit) {
 @Composable
 fun getColorForAccent(accentColor: AccentColor): Color {
     return when (accentColor) {
+        AccentColor.DYNAMIC -> getDynamicColorPreview()
         AccentColor.MINT -> Color(0xFF00E5A0)
         AccentColor.PURPLE -> Color(0xFF9C27B0)
         AccentColor.ORANGE -> Color(0xFFFF9800)
         AccentColor.BLUE -> Color(0xFF2196F3)
         AccentColor.PINK -> Color(0xFFE91E63)
+    }
+}
+
+@Composable
+fun getDynamicColorPreview(): Color {
+    val context = LocalContext.current
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        dynamicLightColorScheme(context).primary
+    } else {
+        Color.Gray
     }
 }
