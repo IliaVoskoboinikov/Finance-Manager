@@ -13,55 +13,41 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model
 import soft.divan.financemanager.uikit.theme.AccentColor
 import javax.inject.Inject
 
+
+private val KEY_THEME_MODE = stringPreferencesKey("app_theme_mode")
+private val KEY_ACCENT_COLOR = stringPreferencesKey("app_accent_color")
+private val KEY_CUSTOM_COLOR = stringPreferencesKey("app_custom_accent_hex")
+
 class ThemeLocalSourceImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) : ThemeLocalSource {
-    private val key = stringPreferencesKey("app_theme_mode")
-
     override fun getThemeMode(): Flow<ThemeMode> {
         return dataStore.data.map { prefs ->
-            when (prefs[key]) {
-                "LIGHT" -> ThemeMode.LIGHT
-                "DARK" -> ThemeMode.DARK
-                else -> ThemeMode.SYSTEM
-            }
+            prefs[KEY_THEME_MODE]?.toEnumOrNull<ThemeMode>() ?: ThemeMode.SYSTEM
         }
     }
 
     override suspend fun setThemeMode(mode: ThemeMode) {
         dataStore.edit { prefs ->
-            prefs[key] = mode.name
+            prefs[KEY_THEME_MODE] = mode.name
         }
     }
 
-    private val colorKey = stringPreferencesKey("app_accent_color")
-
     override fun getAccentColor(): Flow<AccentColor> {
         return dataStore.data.map { prefs ->
-            when (prefs[colorKey]) {
-                "PURPLE" -> AccentColor.PURPLE
-                "ORANGE" -> AccentColor.ORANGE
-                "BLUE" -> AccentColor.BLUE
-                "PINK" -> AccentColor.PINK
-                "DYNAMIC" -> AccentColor.DYNAMIC
-                "CUSTOM" -> AccentColor.CUSTOM
-                else -> AccentColor.MINT
-            }
+            prefs[KEY_ACCENT_COLOR]?.toEnumOrNull<AccentColor>() ?: AccentColor.MINT
         }
     }
 
     override suspend fun setAccentColor(color: AccentColor) {
         dataStore.edit { prefs ->
-            prefs[colorKey] = color.name
+            prefs[KEY_ACCENT_COLOR] = color.name
         }
     }
 
-
-    private val customColorKey = stringPreferencesKey("app_custom_accent_hex")
-
     override fun getCustomAccentColor(): Flow<Color?> {
         return dataStore.data.map { prefs ->
-            prefs[customColorKey]?.let { hex ->
+            prefs[KEY_CUSTOM_COLOR]?.let { hex ->
                 runCatching { Color(hex.toColorInt()) }.getOrNull()
             }
         }
@@ -70,16 +56,23 @@ class ThemeLocalSourceImpl @Inject constructor(
     override suspend fun setCustomAccentColor(color: Color) {
         val hex = color.toHexString()
         dataStore.edit { prefs ->
-            prefs[customColorKey] = hex
+            prefs[KEY_CUSTOM_COLOR] = hex
         }
     }
 
+    //todo utils // val color = "mint".toEnumOrNull<AccentColor>() ->  AccentColor.Mint
+    inline fun <reified T : Enum<T>> String.toEnumOrNull(): T? {
+        return enumValues<T>().firstOrNull { it.name.equals(this, ignoreCase = true) }
+    }
+
     //todo utils
-    private fun Color.toHexString(): String {
+    fun Color.toHexString(): String {
+        val a = (alpha * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
         val r = (red * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
         val g = (green * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
         val b = (blue * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
-        return "#${r}${g}${b}".uppercase()
+        return "#$a$r$g$b".uppercase()
     }
+
 }
 
