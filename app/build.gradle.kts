@@ -91,6 +91,10 @@ dependencies {
     implementation(projects.feature.security.securityApi)
     implementation(projects.feature.security.securityImpl)
 
+    implementation(projects.feature.designApp.designAppApi)
+    implementation(projects.feature.designApp.designAppImpl)
+
+
     implementation(libs.androidx.core.ktx)
     implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(libs.androidx.lifecycle.runtime.ktx)

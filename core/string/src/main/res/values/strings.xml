@@ -14,7 +14,7 @@
     <string name="settings">Настройки</string>
 
     <string name="dark_theme">Тёмная тема</string>
-    <string name="primary_color">Основной цвет</string>
+    <string name="design">Оформление</string>
     <string name="sounds">Звуки</string>
     <string name="haptics">Хаптики</string>
     <string name="passcode">Код пароль</string>
@@ -45,4 +45,5 @@
     <string name="data">Дата</string>
     <string name="time">Время</string>
     <string name="comment">Комментрарий</string>
+    <string name="choice_theme">s\n\n</string>
 </resources>
