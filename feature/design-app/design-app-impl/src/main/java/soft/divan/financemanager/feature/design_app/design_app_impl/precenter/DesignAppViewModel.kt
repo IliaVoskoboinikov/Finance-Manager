@@ -34,7 +34,6 @@ class DesignAppViewModel @Inject constructor(
     private val setCustomAccentColorUseCase: SetCustomAccentColorUseCase
 ) : ViewModel() {
 
-
     private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     val themeMode: StateFlow<ThemeMode> = _themeMode
         .onStart { getThemeMode() }

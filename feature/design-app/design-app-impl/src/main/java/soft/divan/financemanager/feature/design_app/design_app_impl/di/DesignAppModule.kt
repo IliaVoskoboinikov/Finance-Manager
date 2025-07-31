@@ -11,10 +11,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
-import soft.divan.financemanager.feature.design_app.design_app_impl.data.ThemeRepositoryImpl
-import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.ThemeLocalSource
-import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.impl.ThemeLocalSourceImpl
-import soft.divan.financemanager.feature.design_app.design_app_impl.domain.repositiry.ThemeRepository
+import soft.divan.financemanager.feature.design_app.design_app_impl.data.DesignAppRepositoryImpl
+import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.DesignAppLocalSource
+import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.impl.DesignAppLocalSourceImpl
+import soft.divan.financemanager.feature.design_app.design_app_impl.domain.repositiry.DesignAppRepository
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetThemeModeUseCase
@@ -39,7 +39,7 @@ abstract class DesignAppModule {
     abstract fun bindDesignAppRouter(impl: DesignAppFeatureImpl): DesignAppFeatureApi
 
     @Binds
-    abstract fun bindThemeRepository(impl: ThemeRepositoryImpl): ThemeRepository
+    abstract fun bindThemeRepository(impl: DesignAppRepositoryImpl): DesignAppRepository
 
 }
 
@@ -61,8 +61,8 @@ object ThemeModule {
     }
 
     @Provides
-    fun provideThemePreferences(@ThemeDataStore dataStore: DataStore<Preferences>): ThemeLocalSource {
-        return ThemeLocalSourceImpl(dataStore)
+    fun provideThemePreferences(@ThemeDataStore dataStore: DataStore<Preferences>): DesignAppLocalSource {
+        return DesignAppLocalSourceImpl(dataStore)
     }
 
     @Provides

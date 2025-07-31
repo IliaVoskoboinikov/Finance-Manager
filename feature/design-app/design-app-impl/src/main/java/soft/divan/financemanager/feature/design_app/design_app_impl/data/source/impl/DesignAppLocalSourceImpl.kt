@@ -8,7 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.ThemeLocalSource
+import soft.divan.financemanager.feature.design_app.design_app_impl.data.source.DesignAppLocalSource
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model.ThemeMode
 import soft.divan.financemanager.uikit.theme.AccentColor
 import javax.inject.Inject
@@ -18,9 +18,9 @@ private val KEY_THEME_MODE = stringPreferencesKey("app_theme_mode")
 private val KEY_ACCENT_COLOR = stringPreferencesKey("app_accent_color")
 private val KEY_CUSTOM_COLOR = stringPreferencesKey("app_custom_accent_hex")
 
-class ThemeLocalSourceImpl @Inject constructor(
+class DesignAppLocalSourceImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
-) : ThemeLocalSource {
+) : DesignAppLocalSource {
     override fun getThemeMode(): Flow<ThemeMode> {
         return dataStore.data.map { prefs ->
             prefs[KEY_THEME_MODE]?.toEnumOrNull<ThemeMode>() ?: ThemeMode.SYSTEM
