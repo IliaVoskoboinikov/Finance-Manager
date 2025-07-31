@@ -12,7 +12,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -76,11 +78,12 @@ fun MainScreen(
 
     val bottomRoutes = bottomScreens.map { it.feature.route }
 
-    val effectiveRoute = when {
-        currentRoute in bottomRoutes -> currentRoute
-        else -> bottomRoutes.firstOrNull {
-            it == navController.previousBackStackEntry?.destination?.route
-        } ?: bottomRoutes.first()
+    val selectedBottomRoute = rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(currentRoute) {
+        if (currentRoute in bottomRoutes) {
+            selectedBottomRoute.value = currentRoute
+        }
     }
 
     val isOffline by viewModel.isOffline.collectAsStateWithLifecycle()
@@ -127,7 +130,7 @@ fun MainScreen(
                 modifier = Modifier,
                 navController = navController,
                 screens = bottomScreens,
-                currentRoute = effectiveRoute
+                currentRoute = selectedBottomRoute.value
             )
         }
     }
