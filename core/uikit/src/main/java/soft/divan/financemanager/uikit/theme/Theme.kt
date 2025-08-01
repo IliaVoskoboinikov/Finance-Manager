@@ -50,7 +50,6 @@ fun FinanceManagerTheme(
     customColor: Color? = null,
     content: @Composable () -> Unit
 ) {
-
     val colorScheme = when {
         accentColor == AccentColor.DYNAMIC && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
@@ -73,6 +72,4 @@ fun FinanceManagerTheme(
         typography = Typography,
         content = content
     )
-
-
 }
