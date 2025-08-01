@@ -65,7 +65,6 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var designAppFeatureApi: DesignAppFeatureApi
 
-
     @Inject
     lateinit var getThemeModeUseCase: GetThemeModeUseCase
 
