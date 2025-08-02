@@ -1,7 +1,6 @@
 plugins {
     id("android-app-module")
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
+    id("android-hilt")
     alias(libs.plugins.detekt)
     alias(libs.plugins.graph)
 }
@@ -61,9 +60,5 @@ dependencies {
     implementation(projects.feature.designApp.designAppApi)
     implementation(projects.feature.designApp.designAppImpl)
 
-
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.android)
-    implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.lifecycle.process)
 }

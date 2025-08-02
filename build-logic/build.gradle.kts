@@ -13,6 +13,12 @@ gradlePlugin {
         id = "check-conventions-plugin"
         implementationClass = "plugins.conventions.CheckConventionsPlugin"
     }
+    plugins {
+        register("hiltPlugin") {
+            id = "android-hilt"
+            implementationClass = "plugins.HiltPlugin"
+        }
+    }
 }
 
 
