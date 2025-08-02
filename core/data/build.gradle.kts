@@ -1,7 +1,6 @@
 plugins {
     id("android-core-module")
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
+    id("android-hilt")
 }
 
 android {
@@ -14,8 +13,6 @@ dependencies {
     implementation(projects.core.network)
 
     implementation(libs.androidx.datastore.preferences)
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.android)
     implementation(libs.converter.gson)
 
 }

@@ -1,7 +1,6 @@
 plugins {
     id("android-featureImpl-module")
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
+    id("android-hilt")
 }
 
 android {
@@ -15,7 +14,4 @@ dependencies {
     implementation(projects.core.uikit)
 
     implementation(libs.lottie.compose)
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.android)
-
 }

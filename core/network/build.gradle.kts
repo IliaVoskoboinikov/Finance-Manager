@@ -2,8 +2,7 @@ import java.util.Properties
 
 plugins {
     id("android-core-module")
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
+    id("android-hilt")
 }
 
 val apiToken: String = project.rootProject
@@ -35,8 +34,6 @@ android {
 }
 
 dependencies {
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.android)
     implementation(libs.retrofit)
     implementation(libs.logging.interceptor)
     implementation(libs.converter.gson)

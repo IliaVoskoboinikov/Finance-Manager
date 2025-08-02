@@ -24,5 +24,5 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.material)
     debugImplementation(libs.androidx.ui.tooling)
-
+    implementation(libs.androidx.hilt.navigation.compose)
 }
