@@ -1,8 +1,7 @@
 plugins {
     id("android-core-module")
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
-    alias(libs.plugins.hilt)
+    id("android-hilt")
 }
 
 android {
@@ -19,8 +18,4 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     //todo протом удалить     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.compose)
-
-    ksp(libs.hilt.compiler)
-    implementation(libs.hilt.android)
-
 }

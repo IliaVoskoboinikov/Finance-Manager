@@ -1,4 +1,5 @@
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+import gradle.kotlin.dsl.accessors._573e7aba2835e861a8ea7c68c30028a7.implementation
 
 plugins {
     id("android-base")
@@ -25,4 +26,5 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.material)
+    implementation(libs.androidx.hilt.navigation.compose)
 }
