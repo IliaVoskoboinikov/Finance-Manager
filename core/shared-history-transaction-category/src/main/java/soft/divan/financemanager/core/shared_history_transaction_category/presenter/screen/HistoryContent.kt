@@ -21,14 +21,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import soft.divan.financemanager.core.domain.util.DateHelper
+import soft.divan.financemanager.core.string.R
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.model.HistoryUiState
-import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.EmojiCircle
 import soft.divan.financemanager.uikit.components.ErrorSnackbar
 import soft.divan.financemanager.uikit.components.FMDriver
 import soft.divan.financemanager.uikit.components.ListItem
-
 import soft.divan.financemanager.uikit.components.LoadingProgressBar
 import soft.divan.financemanager.uikit.components.SubContentTextListItem
 import soft.divan.financemanager.uikit.components.TopBar

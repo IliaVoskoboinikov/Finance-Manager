@@ -3,10 +3,6 @@ plugins {
     id("android-hilt")
 }
 
-android {
-    namespace = "soft.divan.financemanager.sync"
-}
-
 dependencies {
     implementation(projects.core.data)
 

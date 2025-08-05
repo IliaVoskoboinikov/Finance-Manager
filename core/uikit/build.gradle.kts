@@ -3,10 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-android {
-    namespace = "soft.divan.financemanager.uikit"
-}
-
 dependencies {
     implementation(projects.core.string)
 

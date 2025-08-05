@@ -2,7 +2,7 @@ package soft.divan.financemanager.uikit.model
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.vector.ImageVector
-import soft.divan.financemanager.string.R
+import soft.divan.financemanager.core.string.R
 import soft.divan.financemanager.uikit.icons.ArrowConfirm
 import soft.divan.financemanager.uikit.icons.Cross
 import soft.divan.financemanager.uikit.icons.Pencil
