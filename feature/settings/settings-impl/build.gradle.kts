@@ -3,11 +3,6 @@ plugins {
     id("android-hilt")
 }
 
-android {
-    namespace = "soft.divan.financemanager.feature.settings.settings_impl"
-
-}
-
 dependencies {
     implementation(projects.feature.settings.settingsApi)
     implementation(projects.feature.security.securityApi)

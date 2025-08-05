@@ -15,7 +15,8 @@ object Const {
 }
 
 fun BaseExtension.baseAndroidConfig(project: Project) {
-//    namespace = "${Const.NAMESPACE}.${project.name}"
+    namespace = generateNamespace(project)
+
     setCompileSdkVersion(Const.COMPILE_SKD)
     defaultConfig {
         minSdk = Const.MIN_SKD
@@ -35,3 +36,13 @@ fun BaseExtension.baseAndroidConfig(project: Project) {
 
 internal val Project.libs: LibrariesForLibs
     get() = (this as ExtensionAware).extensions.getByName("libs") as LibrariesForLibs
+
+private fun generateNamespace(project: Project): String {
+    val root = Const.NAMESPACE
+    val path = project.path
+
+    return path.split(":")
+        .drop(1)
+        .joinToString(separator = ".") { it.replace("-", "_") }
+        .let { if (it.isEmpty()) root else "$root.$it" }
+}

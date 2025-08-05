@@ -14,7 +14,6 @@ detekt {
 }
 
 android {
-    namespace = "soft.divan.financemanager"
     defaultConfig {
         applicationId = Const.NAMESPACE
         versionCode = 1

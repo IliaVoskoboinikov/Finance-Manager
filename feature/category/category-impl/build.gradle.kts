@@ -3,10 +3,6 @@ plugins {
     id("android-hilt")
 }
 
-android {
-    namespace = "soft.divan.financemanager.feature.category.category_impl"
-}
-
 dependencies {
     implementation(projects.feature.category.categoryApi)
     implementation(projects.core.string)

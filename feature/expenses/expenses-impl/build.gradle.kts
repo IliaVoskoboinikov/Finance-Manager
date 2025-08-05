@@ -3,10 +3,6 @@ plugins {
     id("android-hilt")
 }
 
-android {
-    namespace = "soft.divan.financemanager.feature.expenses.expenses_impl"
-}
-
 dependencies {
     implementation(projects.feature.expenses.expensesApi)
     implementation(projects.core.string)

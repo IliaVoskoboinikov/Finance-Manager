@@ -12,7 +12,6 @@ val apiToken: String = project.rootProject
     .getProperty("api.token") ?: ""
 
 android {
-    namespace = "soft.divan.financemanager.network"
     defaultConfig {
         buildConfigField("String", "API_TOKEN", "\"$apiToken\"")
     }
@@ -23,7 +22,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
         }
 
