@@ -4,10 +4,6 @@ plugins {
     id("android-hilt")
 }
 
-android {
-    namespace = "soft.divan.financemanager.core.shared_history_transaction_category"
-}
-
 dependencies {
     implementation(projects.core.string)
     implementation(projects.core.network)

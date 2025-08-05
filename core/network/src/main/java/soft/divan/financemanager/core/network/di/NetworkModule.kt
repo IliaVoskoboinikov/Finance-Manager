@@ -12,13 +12,13 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import soft.divan.financemanager.core.network.BuildConfig
 import soft.divan.financemanager.core.network.interceptor.AuthInterceptor
 import soft.divan.financemanager.core.network.interceptor.LoggingInterceptor
 import soft.divan.financemanager.core.network.interceptor.NetworkConnectionInterceptor
 import soft.divan.financemanager.core.network.interceptor.RetryInterceptor
 import soft.divan.financemanager.core.network.util.ConnectivityManagerNetworkMonitor
 import soft.divan.financemanager.core.network.util.NetworkMonitor
-import soft.divan.financemanager.network.BuildConfig
 
 @Module
 @InstallIn(SingletonComponent::class)

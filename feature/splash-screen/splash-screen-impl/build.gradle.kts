@@ -3,10 +3,6 @@ plugins {
     id("android-hilt")
 }
 
-android {
-    namespace = "soft.divan.financemanager.feature.splash_screen.splash_screen_impl"
-}
-
 dependencies {
     implementation(projects.feature.splashScreen.splashScreenApi)
     implementation(projects.feature.expenses.expensesApi)

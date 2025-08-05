@@ -25,9 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import soft.divan.financemanager.core.string.R
 import soft.divan.financemanager.feature.expenses.expenses_impl.presenter.mapper.ExpensesUiState
 import soft.divan.financemanager.feature.expenses.expenses_impl.presenter.viewmodel.ExpensesViewModel
-import soft.divan.financemanager.string.R
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.EmojiCircle
 import soft.divan.financemanager.uikit.components.ErrorSnackbar
