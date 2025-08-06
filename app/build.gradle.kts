@@ -1,8 +1,15 @@
+import com.asarkar.gradle.buildtimetracker.BarPosition
+import com.asarkar.gradle.buildtimetracker.Output
+import com.asarkar.gradle.buildtimetracker.Sort
+import java.time.Duration
+
 plugins {
     id("android-app-module")
     id("android-hilt")
     alias(libs.plugins.detekt)
     alias(libs.plugins.graph)
+    alias(libs.plugins.time.tracker)
+
 }
 
 detekt {
@@ -13,7 +20,17 @@ detekt {
     ignoreFailures = true
 }
 
+buildTimeTracker {
+    barPosition = BarPosition.TRAILING
+    sortBy = Sort.ASC
+    output = Output.CSV
+    minTaskDuration = Duration.ofSeconds(1)
+    reportsDir.set(File(layout.buildDirectory.get().asFile, "reports/buildTimeTracker"))
+}
+
+
 android {
+    namespace = Const.NAMESPACE
     defaultConfig {
         applicationId = Const.NAMESPACE
         versionCode = 1
