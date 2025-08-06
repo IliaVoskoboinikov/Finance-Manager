@@ -1,7 +1,7 @@
 plugins {
     id("android-core-module")
     alias(libs.plugins.kotlin.compose)
-    id("android-hilt")
+    alias(libs.plugins.soft.divan.hilt)
 }
 
 dependencies {

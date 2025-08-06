@@ -1,6 +1,6 @@
 plugins {
     id("android-core-module")
-    id("android-hilt")
+    alias(libs.plugins.soft.divan.hilt)
 }
 
 dependencies {
