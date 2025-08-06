@@ -2,7 +2,7 @@ import java.util.Properties
 
 plugins {
     id("android-core-module")
-    id("android-hilt")
+    alias(libs.plugins.soft.divan.hilt)
 }
 
 val apiToken: String = project.rootProject

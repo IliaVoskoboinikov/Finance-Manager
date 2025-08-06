@@ -5,7 +5,7 @@ import java.time.Duration
 
 plugins {
     id("android-app-module")
-    id("android-hilt")
+    alias(libs.plugins.soft.divan.hilt)
     alias(libs.plugins.detekt)
     alias(libs.plugins.graph)
     alias(libs.plugins.time.tracker)
