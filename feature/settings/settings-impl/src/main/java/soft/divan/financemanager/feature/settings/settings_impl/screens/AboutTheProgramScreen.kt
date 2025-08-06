@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
+import soft.divan.financemanager.core.string.R
 import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.model.TopBarModel
 
@@ -22,7 +23,7 @@ fun AboutTheProgramScreen(
 
 
             TopBar(
-                topBar = TopBarModel(title = soft.divan.financemanager.string.R.string.settings),
+                topBar = TopBarModel(title = R.string.settings),
             )
 
 

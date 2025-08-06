@@ -24,7 +24,10 @@ appcompat = "1.7.1"
 material = "1.12.0"
 datastoreCoreAndroid = "1.1.7"
 jetbrainsKotlinJvm = "2.1.21"
+
 graph-plugin = "2.9.0"
+time-tracker = "5.0.1"
+
 room = "2.7.2"
 androidxWork = "2.10.0"
 hiltExt = "1.2.0"
@@ -76,4 +79,5 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 graph = { id = "com.jraska.module.graph.assertion", version.ref = "graph-plugin" }
+time-tracker = { id = "com.asarkar.gradle.build-time-tracker", version.ref = "time-tracker" }
 
