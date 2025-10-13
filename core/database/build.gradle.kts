@@ -1,5 +1,5 @@
 plugins {
-    id("android-core-module")
+    alias(libs.plugins.soft.divan.core.module)
     alias(libs.plugins.soft.divan.hilt)
 }
 

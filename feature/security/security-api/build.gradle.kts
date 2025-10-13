@@ -1,5 +1,5 @@
 plugins {
-    id("android-featureApi-module")
+    alias(libs.plugins.soft.divan.featureApi.module)
 }
 
 dependencies {

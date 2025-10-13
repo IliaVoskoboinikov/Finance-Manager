@@ -9,8 +9,8 @@ class HiltPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         val libs = project.extensions.getByName("libs") as LibrariesForLibs
 
-        project.pluginManager.apply("com.google.dagger.hilt.android")
-        project.pluginManager.apply("com.google.devtools.ksp")
+        project.pluginManager.apply(libs.plugins.hilt.get().pluginId)
+        project.pluginManager.apply(libs.plugins.ksp.get().pluginId)
 
         project.dependencies {
             add("implementation", libs.hilt.android)

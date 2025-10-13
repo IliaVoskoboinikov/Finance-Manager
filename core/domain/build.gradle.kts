@@ -1,3 +1,3 @@
 plugins {
-    id("jvm-module")
+    alias(libs.plugins.soft.divan.jvm.module)
 }

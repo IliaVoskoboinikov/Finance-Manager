@@ -4,7 +4,7 @@ import com.asarkar.gradle.buildtimetracker.Sort
 import java.time.Duration
 
 plugins {
-    id("android-app-module")
+    alias(libs.plugins.soft.divan.android.app.module)
     alias(libs.plugins.soft.divan.hilt)
     alias(libs.plugins.detekt)
     alias(libs.plugins.graph)
