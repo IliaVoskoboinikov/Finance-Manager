@@ -1,6 +1,5 @@
 plugins {
-    id("android-featureImpl-module")
-    alias(libs.plugins.soft.divan.hilt)
+    alias(libs.plugins.soft.divan.featureImpl.module)
 }
 
 dependencies {
