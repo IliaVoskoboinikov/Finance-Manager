@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,9 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.core.string.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockTransactionUiStateSuccess
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.viewModel.TransactionViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.ErrorContent
@@ -56,7 +58,13 @@ import java.time.LocalDate
 @Composable
 fun TransactionScreenPreview() {
     FinanceManagerTheme {
-        TransactionScreen(navController = rememberNavController())
+        TransactionContent(
+            uiState = mockTransactionUiStateSuccess,
+            popBackStack = {},
+            createTransaction = { },
+            updateAmount = { },
+            updateComment = {}
+        )
     }
 }
 
@@ -69,150 +77,61 @@ fun TransactionScreen(
     viewModel: TransactionViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val showStartDatePicker = remember { mutableStateOf(false) }
 
     LaunchedEffect(transactionId) {
-
         viewModel.load(transactionId, false)
 
     }
-    when (uiState) {
-        is TransactionUiState.Error -> {
-            ErrorContent({})
-        }
 
-        TransactionUiState.Loading -> {
-            LoadingProgressBar()
-        }
+    TransactionContent(
+        modifier = modifier,
+        uiState = uiState,
+        transactionId = transactionId,
+        isIncome = isIncome,
+        popBackStack = { navController.popBackStack() },
+        createTransaction = { viewModel.createTransaction() },
+        updateAmount = { viewModel.updateAmount(it) },
+        updateComment = { viewModel.updateComment(it) }
+    )
+}
 
-        is TransactionUiState.Success -> {
-            val state = (uiState as TransactionUiState.Success)
+@Composable
+fun TransactionContent(
+    modifier: Modifier = Modifier,
+    uiState: TransactionUiState,
+    transactionId: Int? = null,
+    isIncome: Boolean? = null,
+    popBackStack: () -> Unit,
+    createTransaction: () -> Unit,
+    updateAmount: (String) -> Unit,
+    updateComment: (String) -> Unit
+) {
 
-            Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            TopBar(
+                topBar = TopBarModel(
+                    title = R.string.my_expenses,
+                    navigationIcon = Icons.Filled.Cross,
+                    navigationIconClick = { popBackStack() },
+                    actionIcon = Icons.Filled.ArrowConfirm,
+                    actionIconClick = { createTransaction() })
+            )
 
-                if (showStartDatePicker.value) {
-                    FMDatePickerDialog(
-                        initialDate = LocalDate.now(),
-                        onDateSelected = {
-                            /* startDate = it
-                             viewModel.updateStartDate(startDate)
-                             viewModel.loadHistory(startDate, endDate)*/
-                            showStartDatePicker.value = false
-                        },
-                        onDismissRequest = { showStartDatePicker.value = false }
-                    )
+            when (uiState) {
+                is TransactionUiState.Error -> {
+                    ErrorContent({})
                 }
-                Column(modifier = Modifier.fillMaxSize()) {
-                    TopBar(
-                        topBar = TopBarModel(
-                            title = R.string.my_expenses,
-                            navigationIcon = Icons.Filled.Cross,
-                            navigationIconClick = { navController.popBackStack() },
-                            actionIcon = Icons.Filled.ArrowConfirm,
-                            actionIconClick = {
-                                viewModel.createTransaction()
-                            })
-                    )
 
-                    ListItem(
-                        modifier = Modifier
-                            .height(70.dp)
-                            .fillMaxWidth(),
-                        content = { ContentTextListItem(stringResource(R.string.account)) },
-                        trail = {
+                is TransactionUiState.Loading -> {
+                    LoadingProgressBar()
+                }
 
-                            ContentTextListItem(state.accountName)
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Icon(
-                                imageVector = Icons.Filled.Arrow,
-                                contentDescription = "arrow",
-                                tint = colorScheme.onSurfaceVariant
-
-                            )
-                        },
-                    )
-                    FMDriver()
-
-                    ListItem(
-                        modifier = Modifier
-                            .height(70.dp)
-                            .fillMaxWidth(),
-                        content = { ContentTextListItem(stringResource(R.string.category)) },
-                        trail = {
-                            ContentTextListItem(state.transaction.category.name)
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Icon(
-                                imageVector = Icons.Filled.Arrow,
-                                contentDescription = "arrow",
-                                tint = colorScheme.onSurfaceVariant
-
-                            )
-                        },
-                    )
-                    FMDriver()
-
-                    ListItem(
-                        modifier = Modifier
-                            .height(70.dp)
-                            .fillMaxWidth(),
-                        content = { ContentTextListItem(stringResource(R.string.sum)) },
-                        trail = {
-
-                            BasicTextField(
-                                value = state.transaction.amount.toString(),
-                                onValueChange = { newValue ->
-                                    if (newValue.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
-                                        viewModel.updateAmount(newValue)
-                                    }
-                                },
-                                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    textAlign = TextAlign.End
-                                ),
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Number
-                                ),
-                                singleLine = true,
-                                modifier = Modifier.width(70.dp),
-                                decorationBox = { innerTextField ->
-                                    Box(
-                                        contentAlignment = Alignment.CenterEnd,
-                                        modifier = Modifier.fillMaxHeight()
-                                    ) {
-
-                                        innerTextField()
-                                    }
-                                }
-                            )
-                        },
-                    )
-                    FMDriver()
-
-                    ListItem(
-                        modifier = Modifier
-                            .height(70.dp)
-                            .fillMaxWidth()
-                            .clickable { showStartDatePicker.value = true },
-                        content = { ContentTextListItem(stringResource(R.string.data)) },
-                        trail = { ContentTextListItem(state.transaction.transactionDate.toString()) },
-                    )
-                    FMDriver()
-
-                    ListItem(
-                        modifier = Modifier
-                            .height(70.dp)
-                            .fillMaxWidth(),
-                        content = { ContentTextListItem(stringResource(R.string.time)) },
-                        trail = { ContentTextListItem("state.sumTransaction") },
-                    )
-                    FMDriver()
-
-                    CommentInputField(
-                        value = state.transaction.comment,
-                        onValueChange = {
-                            viewModel.updateComment(it)
-                        },
-                        modifier = modifier
+                is TransactionUiState.Success -> {
+                    UiStateSuccessContent(
+                        uiState = uiState,
+                        updateAmount = updateAmount,
+                        updateComment = updateComment
                     )
                 }
             }
@@ -220,6 +139,158 @@ fun TransactionScreen(
     }
 }
 
+@Composable
+fun UiStateSuccessContent(
+    uiState: TransactionUiState.Success,
+    updateAmount: (String) -> Unit,
+    updateComment: (String) -> Unit,
+) {
+    val showStartDatePicker = remember { mutableStateOf(false) }
+    if (showStartDatePicker.value) {
+        FMDatePickerDialog(
+            initialDate = LocalDate.now(),
+            onDateSelected = {
+                /* startDate = it
+                 viewModel.updateStartDate(startDate)
+                 viewModel.loadHistory(startDate, endDate)*/
+                showStartDatePicker.value = false
+            },
+            onDismissRequest = { showStartDatePicker.value = false }
+        )
+    }
+
+    Account(uiState)
+    FMDriver()
+
+    Category(uiState)
+
+    FMDriver()
+
+    Amount(uiState, updateAmount)
+    FMDriver()
+
+    Data(showStartDatePicker, uiState)
+    FMDriver()
+
+    Time(uiState)
+    FMDriver()
+
+    CommentInputField(
+        value = uiState.transaction.comment,
+        onValueChange = {
+            updateComment(it)
+        },
+    )
+}
+
+@Composable
+private fun Account(uiState: TransactionUiState.Success) {
+    ListItem(
+        modifier = Modifier
+            .height(70.dp)
+            .fillMaxWidth(),
+        content = { ContentTextListItem(stringResource(R.string.account)) },
+        trail = {
+
+            ContentTextListItem(uiState.accountName)
+            Spacer(modifier = Modifier.width(16.dp))
+            Icon(
+                imageVector = Icons.Filled.Arrow,
+                contentDescription = "arrow",
+                tint = colorScheme.onSurfaceVariant
+
+            )
+        },
+    )
+}
+
+@Composable
+private fun Category(uiState: TransactionUiState.Success) {
+    ListItem(
+        modifier = Modifier
+            .height(70.dp)
+            .fillMaxWidth(),
+        content = { ContentTextListItem(stringResource(R.string.category)) },
+        trail = {
+            ContentTextListItem(uiState.transaction.category.name)
+            Spacer(modifier = Modifier.width(16.dp))
+            Icon(
+                imageVector = Icons.Filled.Arrow,
+                contentDescription = "arrow",
+                tint = colorScheme.onSurfaceVariant
+
+            )
+        },
+    )
+}
+
+@Composable
+private fun Amount(
+    uiState: TransactionUiState.Success,
+    updateAmount: (String) -> Unit
+) {
+    ListItem(
+        modifier = Modifier
+            .height(70.dp)
+            .fillMaxWidth(),
+        content = { ContentTextListItem(stringResource(R.string.sum)) },
+        trail = {
+
+            BasicTextField(
+                value = uiState.transaction.amount.toString(),
+                onValueChange = { newValue ->
+                    if (newValue.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
+                        updateAmount(newValue)
+                    }
+                },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = colorScheme.onSurface,
+                    textAlign = TextAlign.End
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number
+                ),
+                singleLine = true,
+                modifier = Modifier.width(70.dp),
+                decorationBox = { innerTextField ->
+                    Box(
+                        contentAlignment = Alignment.CenterEnd,
+                        modifier = Modifier.fillMaxHeight()
+                    ) {
+
+                        innerTextField()
+                    }
+                }
+            )
+        },
+    )
+}
+
+@Composable
+private fun Data(
+    showStartDatePicker: MutableState<Boolean>,
+    uiState: TransactionUiState.Success
+) {
+    ListItem(
+        modifier = Modifier
+            .height(70.dp)
+            .fillMaxWidth()
+            .clickable { showStartDatePicker.value = true },
+        content = { ContentTextListItem(stringResource(R.string.data)) },
+        trail = { ContentTextListItem(DateHelper.formatDateForDisplay(uiState.transaction.transactionDate.toLocalDate())) },
+    )
+}
+
+@Composable
+private fun Time(uiState: TransactionUiState.Success) {
+    ListItem(
+        modifier = Modifier
+            .height(70.dp)
+            .fillMaxWidth(),
+        content = { ContentTextListItem(stringResource(R.string.time)) },
+        trail = { ContentTextListItem(DateHelper.formatTimeForDisplay(uiState.transaction.transactionDate)) },
+    )
+}
 
 @Composable
 fun CommentInputField(
@@ -245,7 +316,7 @@ fun CommentInputField(
                 value = value,
                 onValueChange = onValueChange,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = colorScheme.onSurface
                 ),
                 keyboardOptions = KeyboardOptions.Default,
                 singleLine = false,
@@ -261,7 +332,7 @@ fun CommentInputField(
                             Text(
                                 text = placeholder,
                                 style = MaterialTheme.typography.bodyLarge.copy(
-                                    color = MaterialTheme.colorScheme.outline
+                                    color = colorScheme.outline
                                 ),
                                 maxLines = maxLines
                             )

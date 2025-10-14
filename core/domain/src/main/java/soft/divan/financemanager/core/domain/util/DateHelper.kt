@@ -3,7 +3,6 @@ package soft.divan.financemanager.core.domain.util
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -145,7 +144,7 @@ object DateHelper {
     /**
      * Форматирует [java.time.LocalTime] в строку (`HH:mm`).
      */
-    fun formatTimeForDisplay(time: LocalTime): String {
+    fun formatTimeForDisplay(time: LocalDateTime): String {
         return time.format(displayTimeFormatter)
     }
 

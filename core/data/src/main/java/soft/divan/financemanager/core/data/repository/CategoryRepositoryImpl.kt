@@ -26,6 +26,7 @@ class CategoryRepositoryImpl @Inject constructor(
     private val exceptionHandler: CoroutineExceptionHandler
 ) : CategoryRepository, Syncable {
 
+    //todo возвращает пустой список при сетевой ошибке
     override suspend fun getCategories(): Flow<List<Category>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
             val response = categoryRemoteDataSource.getCategories()
