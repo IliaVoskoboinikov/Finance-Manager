@@ -12,6 +12,8 @@ object Const {
     const val COMPILE_SKD = 35
     const val MIN_SKD = 26
     val COMPILE_JDK_VERSION = JavaVersion.VERSION_11
+    const val VERSION_CODE = 1
+    const val VERSION_NAME = "1.0"
 }
 
 fun BaseExtension.baseAndroidConfig(project: Project) {
