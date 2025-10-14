@@ -21,13 +21,8 @@ class FeatureImplModulePlugin : Plugin<Project> {
 
         project.extensions.configure<LibraryExtension> {
             baseAndroidConfig(project)
-
             buildFeatures {
                 compose = true
-            }
-
-            composeOptions {
-                kotlinCompilerExtensionVersion = "1.5.1"
             }
         }
 
