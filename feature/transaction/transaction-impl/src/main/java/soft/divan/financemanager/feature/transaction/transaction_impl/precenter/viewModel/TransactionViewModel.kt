@@ -20,7 +20,9 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.domain.use
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -116,6 +118,45 @@ class TransactionViewModel @Inject constructor(
                     )
                 }
 
+            }
+        }
+    }
+
+    fun updateDate(date: LocalDate) {
+        viewModelScope.launch {
+            val currentState = uiState.value
+            if (currentState is TransactionUiState.Success) {
+                val oldTransaction = currentState.transaction
+                // сохраняем время, чтобы не сбрасывалось при смене даты
+                val newDateTime = LocalDateTime.of(date, oldTransaction.transactionDate.toLocalTime())
+
+                _uiState.update {
+                    currentState.copy(
+                        transaction = oldTransaction.copy(
+                            transactionDate = newDateTime,
+                            updatedAt = LocalDateTime.now()
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fun updateTime(time: LocalTime) {
+        viewModelScope.launch {
+            val currentState = uiState.value
+            if (currentState is TransactionUiState.Success) {
+                val oldTransaction = currentState.transaction
+                val newDateTime = LocalDateTime.of(oldTransaction.transactionDate.toLocalDate(), time)
+
+                _uiState.update {
+                    currentState.copy(
+                        transaction = oldTransaction.copy(
+                            transactionDate = newDateTime,
+                            updatedAt = LocalDateTime.now()
+                        )
+                    )
+                }
             }
         }
     }
