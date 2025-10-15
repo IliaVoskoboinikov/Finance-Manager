@@ -1,7 +1,5 @@
 package soft.divan.financemanager.uikit.components
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -11,11 +9,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import soft.divan.financemanager.core.uikit.R
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FMDatePickerDialog(
@@ -35,14 +34,15 @@ fun FMDatePickerDialog(
                     val selectedDate =
                         Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
                     onDateSelected(selectedDate)
+                    onDismissRequest()
                 }
             }) {
-                Text("ОК")
+                Text(stringResource(R.string.ok))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Отмена")
+                Text(stringResource(R.string.cancel))
             }
         },
         colors = DatePickerDefaults.colors()

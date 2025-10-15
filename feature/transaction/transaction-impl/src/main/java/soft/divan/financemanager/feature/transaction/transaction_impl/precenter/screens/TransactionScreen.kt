@@ -11,12 +11,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +46,7 @@ import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.ErrorContent
 import soft.divan.financemanager.uikit.components.FMDatePickerDialog
 import soft.divan.financemanager.uikit.components.FMDriver
+import soft.divan.financemanager.uikit.components.FMTimePickerDialog
 import soft.divan.financemanager.uikit.components.ListItem
 import soft.divan.financemanager.uikit.components.LoadingProgressBar
 import soft.divan.financemanager.uikit.components.TopBar
@@ -52,6 +56,7 @@ import soft.divan.financemanager.uikit.icons.Cross
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import java.time.LocalDate
+import java.time.LocalTime
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
@@ -60,10 +65,12 @@ fun TransactionScreenPreview() {
     FinanceManagerTheme {
         TransactionContent(
             uiState = mockTransactionUiStateSuccess,
-            popBackStack = {},
-            createTransaction = { },
-            updateAmount = { },
-            updateComment = {}
+            onNavigateBack = { },
+            onSave = { },
+            onAmountChange = { },
+            onCommentChange = { },
+            onDateChange = { },
+            onTimeChange = { }
         )
     }
 }
@@ -80,18 +87,18 @@ fun TransactionScreen(
 
     LaunchedEffect(transactionId) {
         viewModel.load(transactionId, false)
-
     }
 
     TransactionContent(
         modifier = modifier,
         uiState = uiState,
-        transactionId = transactionId,
-        isIncome = isIncome,
-        popBackStack = { navController.popBackStack() },
-        createTransaction = { viewModel.createTransaction() },
-        updateAmount = { viewModel.updateAmount(it) },
-        updateComment = { viewModel.updateComment(it) }
+        onNavigateBack = { navController.popBackStack() },
+        onSave = viewModel::createTransaction,
+        onAmountChange = viewModel::updateAmount,
+        onCommentChange = viewModel::updateComment,
+        onDateChange = viewModel::updateDate,
+        onTimeChange = viewModel::updateTime
+
     )
 }
 
@@ -99,88 +106,113 @@ fun TransactionScreen(
 fun TransactionContent(
     modifier: Modifier = Modifier,
     uiState: TransactionUiState,
-    transactionId: Int? = null,
-    isIncome: Boolean? = null,
-    popBackStack: () -> Unit,
-    createTransaction: () -> Unit,
-    updateAmount: (String) -> Unit,
-    updateComment: (String) -> Unit
+    onNavigateBack: () -> Unit,
+    onSave: () -> Unit,
+    onAmountChange: (String) -> Unit,
+    onCommentChange: (String) -> Unit,
+    onDateChange: (LocalDate) -> Unit,
+    onTimeChange: (LocalTime) -> Unit
 ) {
 
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    Scaffold(
+        topBar = {
             TopBar(
                 topBar = TopBarModel(
                     title = R.string.my_expenses,
                     navigationIcon = Icons.Filled.Cross,
-                    navigationIconClick = { popBackStack() },
+                    navigationIconClick = onNavigateBack,
                     actionIcon = Icons.Filled.ArrowConfirm,
-                    actionIconClick = { createTransaction() })
+                    actionIconClick = onSave
+                )
             )
-
+        }
+    ) { paddingValues ->
+        Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
-                is TransactionUiState.Error -> {
-                    ErrorContent({})
-                }
-
-                is TransactionUiState.Loading -> {
-                    LoadingProgressBar()
-                }
-
-                is TransactionUiState.Success -> {
-                    UiStateSuccessContent(
-                        uiState = uiState,
-                        updateAmount = updateAmount,
-                        updateComment = updateComment
-                    )
-                }
+                is TransactionUiState.Loading -> LoadingProgressBar()
+                is TransactionUiState.Error -> ErrorContent(onRetry = onSave)
+                is TransactionUiState.Success -> TransactionForm(
+                    uiState = uiState,
+                    onAmountChange = onAmountChange,
+                    onCommentChange = onCommentChange,
+                    onDateChange = onDateChange,
+                    onTimeChange = onTimeChange
+                )
             }
         }
     }
 }
 
 @Composable
-fun UiStateSuccessContent(
+fun TransactionForm(
     uiState: TransactionUiState.Success,
-    updateAmount: (String) -> Unit,
-    updateComment: (String) -> Unit,
+    onAmountChange: (String) -> Unit,
+    onCommentChange: (String) -> Unit,
+    onDateChange: (LocalDate) -> Unit,
+    onTimeChange: (LocalTime) -> Unit
 ) {
-    val showStartDatePicker = remember { mutableStateOf(false) }
-    if (showStartDatePicker.value) {
-        FMDatePickerDialog(
-            initialDate = LocalDate.now(),
-            onDateSelected = {
-                /* startDate = it
-                 viewModel.updateStartDate(startDate)
-                 viewModel.loadHistory(startDate, endDate)*/
-                showStartDatePicker.value = false
+    val isShowDatePicker = remember { mutableStateOf(false) }
+    val isShowTimePicker = remember { mutableStateOf(false) }
+
+    DataPicker(isShowDatePicker = isShowDatePicker, onDateChange = onDateChange)
+    TimePicker(isShowTimePicker = isShowTimePicker, onTimeChange = onTimeChange)
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+    ) {
+        Account(uiState)
+        FMDriver()
+        Category(uiState)
+        FMDriver()
+        Amount(uiState, onAmountChange)
+        FMDriver()
+        Data(isShowStartDatePicker = isShowDatePicker, uiState = uiState)
+        FMDriver()
+        Time(uiState, isShowTimePicker = isShowTimePicker)
+        FMDriver()
+        CommentInputField(
+            value = uiState.transaction.comment,
+            onValueChange = {
+                onCommentChange(it)
             },
-            onDismissRequest = { showStartDatePicker.value = false }
         )
     }
+}
 
-    Account(uiState)
-    FMDriver()
+@Composable
+private fun DataPicker(
+    isShowDatePicker: MutableState<Boolean>,
+    onDateChange: (LocalDate) -> Unit
+) {
+    if (isShowDatePicker.value) {
+        FMDatePickerDialog(
+            initialDate = LocalDate.now(),
+            onDateSelected = { date ->
+                onDateChange(date)
+            },
+            onDismissRequest = { isShowDatePicker.value = false }
+        )
+    }
+}
 
-    Category(uiState)
-
-    FMDriver()
-
-    Amount(uiState, updateAmount)
-    FMDriver()
-
-    Data(showStartDatePicker, uiState)
-    FMDriver()
-
-    Time(uiState)
-    FMDriver()
-
-    CommentInputField(
-        value = uiState.transaction.comment,
-        onValueChange = {
-            updateComment(it)
-        },
-    )
+@Composable
+private fun TimePicker(
+    isShowTimePicker: MutableState<Boolean>,
+    onTimeChange: (LocalTime) -> Unit
+) {
+    if (isShowTimePicker.value) {
+        FMTimePickerDialog(
+            initialTime = LocalTime.now(),
+            onTimeSelected = { time ->
+                onTimeChange(time)
+            },
+            onDismissRequest = {
+                isShowTimePicker.value = false
+            }
+        )
+    }
 }
 
 @Composable
@@ -251,13 +283,12 @@ private fun Amount(
                     keyboardType = KeyboardType.Number
                 ),
                 singleLine = true,
-                modifier = Modifier.width(70.dp),
+                modifier = Modifier.width(200.dp),
                 decorationBox = { innerTextField ->
                     Box(
                         contentAlignment = Alignment.CenterEnd,
                         modifier = Modifier.fillMaxHeight()
                     ) {
-
                         innerTextField()
                     }
                 }
@@ -268,25 +299,26 @@ private fun Amount(
 
 @Composable
 private fun Data(
-    showStartDatePicker: MutableState<Boolean>,
-    uiState: TransactionUiState.Success
+    isShowStartDatePicker: MutableState<Boolean>,
+    uiState: TransactionUiState.Success,
 ) {
     ListItem(
         modifier = Modifier
             .height(70.dp)
             .fillMaxWidth()
-            .clickable { showStartDatePicker.value = true },
+            .clickable { isShowStartDatePicker.value = true },
         content = { ContentTextListItem(stringResource(R.string.data)) },
         trail = { ContentTextListItem(DateHelper.formatDateForDisplay(uiState.transaction.transactionDate.toLocalDate())) },
     )
 }
 
 @Composable
-private fun Time(uiState: TransactionUiState.Success) {
+private fun Time(uiState: TransactionUiState.Success, isShowTimePicker: MutableState<Boolean>) {
     ListItem(
         modifier = Modifier
             .height(70.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { isShowTimePicker.value = true },
         content = { ContentTextListItem(stringResource(R.string.time)) },
         trail = { ContentTextListItem(DateHelper.formatTimeForDisplay(uiState.transaction.transactionDate)) },
     )
@@ -342,8 +374,8 @@ fun CommentInputField(
                 }
             )
         }
-
         FMDriver()
     }
 }
+
 
