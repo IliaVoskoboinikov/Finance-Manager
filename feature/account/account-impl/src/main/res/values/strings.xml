@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="my_account">Мой счет</string>
+    <string name="name_account">Название счёта</string>
+    <string name="enter_the_name">Введите название</string>
+    <string name="cancellation">Отмена</string>
+    <string name="save">Сохранить</string>
+    <string name="currency">Валюта</string>
+    <string name="rub">Российский рубль</string>
+    <string name="usd">Американский доллар</string>
+    <string name="eur">Евро</string>
+</resources>

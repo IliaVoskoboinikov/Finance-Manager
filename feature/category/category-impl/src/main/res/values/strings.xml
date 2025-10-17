@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="my_articles">Мои статьи</string>
+    <string name="find_article">Найти статью</string>
+
+    <string name="it_seems_nothing_found">Кажется ни чего не нашлось</string>
+</resources>

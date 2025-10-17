@@ -4,7 +4,6 @@ plugins {
 
 dependencies {
     implementation(projects.feature.expenses.expensesApi)
-    implementation(projects.core.string)
     implementation(projects.core.network)
     implementation(projects.core.uikit)
     implementation(projects.core.domain)

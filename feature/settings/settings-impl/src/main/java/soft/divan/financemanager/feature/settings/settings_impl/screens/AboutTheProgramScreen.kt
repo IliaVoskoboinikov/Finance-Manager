@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
-import soft.divan.financemanager.core.string.R
+import soft.divan.financemanager.feature.settings.settings_impl.R
 import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.model.TopBarModel
 
@@ -27,7 +28,7 @@ fun AboutTheProgramScreen(
             )
 
 
-            Text(text = "About the program")
+            Text(text = stringResource(R.string.about_the_program))
 
         }
     }
