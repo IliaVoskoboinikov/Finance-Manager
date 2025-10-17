@@ -44,7 +44,6 @@ dependencies {
     implementation(projects.sync)
     implementation(projects.core.network)
     implementation(projects.core.uikit)
-    implementation(projects.core.string)
     implementation(projects.core.domain)
     implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(projects.core.data)

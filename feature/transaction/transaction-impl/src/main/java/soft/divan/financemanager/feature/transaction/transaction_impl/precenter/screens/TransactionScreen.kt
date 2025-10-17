@@ -46,7 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
-import soft.divan.financemanager.core.string.R
+import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockCategories
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockTransactionUiStateSuccess

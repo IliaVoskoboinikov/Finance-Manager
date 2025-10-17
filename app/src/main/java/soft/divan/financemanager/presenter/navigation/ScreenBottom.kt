@@ -2,8 +2,8 @@ package soft.divan.financemanager.presenter.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.vector.ImageVector
+import soft.divan.financemanager.R
 import soft.divan.financemanager.core.feature_api.FeatureApi
-import soft.divan.financemanager.core.string.R
 import soft.divan.financemanager.uikit.icons.Calculator
 import soft.divan.financemanager.uikit.icons.Chart90
 import soft.divan.financemanager.uikit.icons.Downtrend
