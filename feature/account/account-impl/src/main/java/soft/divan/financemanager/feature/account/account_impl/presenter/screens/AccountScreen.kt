@@ -51,7 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
-import soft.divan.financemanager.core.string.R
+import soft.divan.financemanager.feature.account.account_impl.R
 import soft.divan.financemanager.feature.account.account_impl.presenter.model.AccountUiModel
 import soft.divan.financemanager.feature.account.account_impl.presenter.model.AccountUiState
 import soft.divan.financemanager.feature.account.account_impl.presenter.viewmodel.AccountViewModel

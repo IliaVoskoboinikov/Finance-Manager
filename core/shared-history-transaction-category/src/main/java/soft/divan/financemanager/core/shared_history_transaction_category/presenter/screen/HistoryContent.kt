@@ -21,7 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import soft.divan.financemanager.core.domain.util.DateHelper
-import soft.divan.financemanager.core.string.R
+import soft.divan.financemanager.core.shared_history_transaction_category.R
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.model.HistoryUiState
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.EmojiCircle
