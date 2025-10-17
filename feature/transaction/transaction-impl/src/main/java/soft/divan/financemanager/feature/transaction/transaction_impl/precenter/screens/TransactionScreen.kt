@@ -11,16 +11,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -38,8 +45,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import soft.divan.financemanager.core.domain.util.DateHelper
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 import soft.divan.financemanager.core.string.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockCategories
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockTransactionUiStateSuccess
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.viewModel.TransactionViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
@@ -70,8 +79,17 @@ fun TransactionScreenPreview() {
             onAmountChange = { },
             onCommentChange = { },
             onDateChange = { },
-            onTimeChange = { }
+            onTimeChange = { },
+            onCategoryChange = {}
         )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+fun CategoryPreview() {
+    FinanceManagerTheme {
+        CategorySheetContent(mockCategories, {}, {})
     }
 }
 
@@ -97,9 +115,10 @@ fun TransactionScreen(
         onAmountChange = viewModel::updateAmount,
         onCommentChange = viewModel::updateComment,
         onDateChange = viewModel::updateDate,
-        onTimeChange = viewModel::updateTime
+        onTimeChange = viewModel::updateTime,
+        onCategoryChange = viewModel::updateCategory,
 
-    )
+        )
 }
 
 @Composable
@@ -111,7 +130,8 @@ fun TransactionContent(
     onAmountChange: (String) -> Unit,
     onCommentChange: (String) -> Unit,
     onDateChange: (LocalDate) -> Unit,
-    onTimeChange: (LocalTime) -> Unit
+    onTimeChange: (LocalTime) -> Unit,
+    onCategoryChange: (UiCategory) -> Unit,
 ) {
 
     Scaffold(
@@ -136,7 +156,8 @@ fun TransactionContent(
                     onAmountChange = onAmountChange,
                     onCommentChange = onCommentChange,
                     onDateChange = onDateChange,
-                    onTimeChange = onTimeChange
+                    onTimeChange = onTimeChange,
+                    onCategoryChange = onCategoryChange,
                 )
             }
         }
@@ -149,13 +170,26 @@ fun TransactionForm(
     onAmountChange: (String) -> Unit,
     onCommentChange: (String) -> Unit,
     onDateChange: (LocalDate) -> Unit,
-    onTimeChange: (LocalTime) -> Unit
+    onTimeChange: (LocalTime) -> Unit,
+    onCategoryChange: (UiCategory) -> Unit
 ) {
     val isShowDatePicker = remember { mutableStateOf(false) }
     val isShowTimePicker = remember { mutableStateOf(false) }
+    val isShowCategorySheet = remember { mutableStateOf(false) }
 
     DataPicker(isShowDatePicker = isShowDatePicker, onDateChange = onDateChange)
     TimePicker(isShowTimePicker = isShowTimePicker, onTimeChange = onTimeChange)
+
+
+    if (isShowCategorySheet.value) {
+        CategoryBottomSheet(
+            categories = uiState.categories,
+            onCategorySelected = {
+                onCategoryChange(it)
+            },
+            onDismissRequest = { isShowCategorySheet.value = false }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -164,7 +198,7 @@ fun TransactionForm(
     ) {
         Account(uiState)
         FMDriver()
-        Category(uiState)
+        Category(uiState = uiState, onClick = { isShowCategorySheet.value = true })
         FMDriver()
         Amount(uiState, onAmountChange)
         FMDriver()
@@ -237,24 +271,85 @@ private fun Account(uiState: TransactionUiState.Success) {
 }
 
 @Composable
-private fun Category(uiState: TransactionUiState.Success) {
+private fun Category(
+    uiState: TransactionUiState.Success,
+    onClick: () -> Unit
+) {
     ListItem(
         modifier = Modifier
             .height(70.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         content = { ContentTextListItem(stringResource(R.string.category)) },
         trail = {
-            ContentTextListItem(uiState.transaction.category.name)
-            Spacer(modifier = Modifier.width(16.dp))
-            Icon(
-                imageVector = Icons.Filled.Arrow,
-                contentDescription = "arrow",
-                tint = colorScheme.onSurfaceVariant
-
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                ContentTextListItem(uiState.transaction.category.name)
+                Spacer(modifier = Modifier.width(16.dp))
+                Icon(
+                    imageVector = Icons.Filled.Arrow,
+                    contentDescription = "arrow",
+                    tint = colorScheme.onSurfaceVariant
+                )
+            }
         },
     )
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CategoryBottomSheet(
+    categories: List<UiCategory>,
+    onCategorySelected: (UiCategory) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = colorScheme.surfaceContainerHigh,
+    ) {
+        CategorySheetContent(categories, onCategorySelected, onDismissRequest)
+    }
+}
+
+@Composable
+private fun CategorySheetContent(
+    categories: List<UiCategory>,
+    onCategorySelected: (UiCategory) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = stringResource(soft.divan.financemanager.feature.transaction.transaction_impl.R.string.select_category),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+
+        LazyColumn {
+            items(categories) { category ->
+                ListItem(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onCategorySelected(category)
+                            onDismissRequest()
+                        }, content = {
+                        Text(
+                            text = category.name,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    })
+                FMDriver()
+
+            }
+        }
+    }
+}
+
 
 @Composable
 private fun Amount(

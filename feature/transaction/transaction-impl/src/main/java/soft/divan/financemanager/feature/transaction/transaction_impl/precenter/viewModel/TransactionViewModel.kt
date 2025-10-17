@@ -10,13 +10,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
-import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.util.resolve
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toDomain
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesExpensesUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import java.math.BigDecimal
@@ -31,7 +32,7 @@ class TransactionViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getTransactionsUseCase: GetTransactionUseCase,
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
-    private val getCategoriesUseCase: GetCategoriesUseCase
+    private val getCategoriesUseCase: GetCategoriesExpensesUseCase
 
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TransactionUiState>(TransactionUiState.Loading)
@@ -173,6 +174,21 @@ class TransactionViewModel @Inject constructor(
                     )
                 }
 
+            }
+        }
+    }
+
+    fun updateCategory(category: UiCategory) {
+        viewModelScope.launch {
+            val currentState = uiState.value
+            if (currentState is TransactionUiState.Success) {
+                _uiState.update {
+                    currentState.copy(
+                        transaction = currentState.transaction.copy(
+                            category = category
+                        )
+                    )
+                }
             }
         }
     }
