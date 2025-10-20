@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.Category
+import soft.divan.financemanager.core.domain.model.CurrencyCode
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.util.resolve
@@ -53,59 +56,64 @@ class TransactionViewModel @Inject constructor(
         }
     }
 
-    fun load(transactionId: Int?, isIncome: Boolean) {
+    fun load(transactionId: Int?, isIncome: Boolean?) {
         viewModelScope.launch {
             _uiState.update { TransactionUiState.Loading }
 
             val categoriesResult = getCategoriesUseCase().first()
             val accountsResult = getAccountsUseCase().first()
 
-
-
-
             if (transactionId == null) {
-                val now = LocalDateTime.now()
-                _uiState.value = TransactionUiState.Success(
-                    transaction = UiTransaction(
-                        id = -1,
-                        accountId = accountsResult.first().id,
-                        category = categoriesResult.first().toUi(),
-                        amount = BigDecimal.ZERO,
-                        transactionDate = now,
-                        comment = "",
-                        createdAt = now,
-                        updatedAt = now,
-                        amountFormatted = BigDecimal.ZERO.toString(),
-                    ),
-                    categories = categoriesResult.map {
-                        it.toUi()
-                    },
-                    accountName = accountsResult.first().name
-                )
+                crateNewTransaction(accountsResult, categoriesResult)
             } else {
-                /* val result = getTransactionUseCase(transactionId)
-                 if (result.isSuccess) {
-                     val transaction = result.getOrThrow()
-                     _uiState.value = TransactionUiState.Success(
-                         transaction = transaction,
-                         categories = categories,
-                         accounts = cachedAccounts,
-                         isEditMode = true
-                     )
-                 } else {
-                     _uiState.value = TransactionUiState.Error("Не удалось загрузить транзакцию")
-                 }*/
+                loadOldTransaction(transactionId, categoriesResult, accountsResult)
             }
         }
     }
 
-    /*  fun updateStartDate(startDate: LocalDate) {
-          val currentState = _uiState.value
-          if (currentState is TransactionUiState.Success) {
-              _uiState.update { currentState.copy(transaction = currentState.transaction.copy()) }
-          }
+    private fun crateNewTransaction(
+        accountsResult: List<Account>,
+        categoriesResult: List<Category>
+    ) {
+        val now = LocalDateTime.now()
+        _uiState.value = TransactionUiState.Success(
+            transaction = UiTransaction(
+                id = -1,
+                accountId = accountsResult.first().id,
+                category = categoriesResult.first().toUi(),
+                amount = BigDecimal.ZERO,
+                transactionDate = now,
+                comment = "",
+                createdAt = now,
+                updatedAt = now,
+                amountFormatted = BigDecimal.ZERO.toString(),
+            ),
+            categories = categoriesResult.map {
+                it.toUi()
+            },
+            accountName = accountsResult.first().name
+        )
+    }
 
-      }*/
+    private suspend fun loadOldTransaction(
+        transactionId: Int,
+        categoriesResult: List<Category>,
+        accountsResult: List<Account>
+    ) {
+        val result = getTransactionsUseCase(transactionId)
+        if (result.isSuccess) {
+            val transaction = result.getOrThrow()
+            _uiState.update {
+                TransactionUiState.Success(
+                    transaction = transaction.toUi(currency = CurrencyCode("RUB")),
+                    categories = categoriesResult.map { it.toUi() },
+                    accountName = accountsResult.first().name
+                )
+            }
+        } else {
+            _uiState.value = TransactionUiState.Error("Не удалось загрузить транзакцию")
+        }
+    }
 
     fun updateComment(comment: String) {
         viewModelScope.launch {

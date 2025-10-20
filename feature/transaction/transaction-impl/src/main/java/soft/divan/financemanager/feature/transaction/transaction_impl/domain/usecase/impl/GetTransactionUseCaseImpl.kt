@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetTransactionUseCaseImpl @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) : GetTransactionUseCase {
-    override suspend fun invoke(id: String): Result<List<Transaction>> {
+    override suspend fun invoke(id: Int): Result<Transaction> {
         return transactionRepository.getTransactions(id)
     }
 }

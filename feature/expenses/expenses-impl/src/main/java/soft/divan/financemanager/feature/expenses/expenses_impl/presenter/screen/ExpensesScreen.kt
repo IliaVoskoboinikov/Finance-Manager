@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.expenses.expenses_impl.presenter.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -57,7 +58,8 @@ fun ExpensesScreenPreview() {
 fun ExpensesScreen(
     modifier: Modifier = Modifier,
     onNavigateToHistory: () -> Unit,
-    onNavigateToTransaction: () -> Unit,
+    onNavigateToNewTransaction: () -> Unit,
+    onNavigateToOldTransaction: (Int) -> Unit,
     navController: NavController,
     viewModel: ExpensesViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -105,7 +107,11 @@ fun ExpensesScreen(
                         LazyColumn() {
                             items(items) { item ->
                                 ListItem(
-                                    modifier = Modifier.height(70.dp),
+                                    modifier = Modifier
+                                        .height(70.dp)
+                                        .clickable {
+                                            onNavigateToOldTransaction(item.id)
+                                        },
                                     lead = {
                                         EmojiCircle(emoji = item.category.emoji)
 
@@ -139,7 +145,7 @@ fun ExpensesScreen(
             }
         }
         FloatingButton(
-            onClick = { onNavigateToTransaction() },
+            onClick = { onNavigateToNewTransaction() },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
