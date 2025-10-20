@@ -23,9 +23,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -47,11 +48,14 @@ import androidx.navigation.NavController
 import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockCategories
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockTransactionUiStateSuccess
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.viewModel.TransactionViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
+import soft.divan.financemanager.uikit.components.DeleteButton
+import soft.divan.financemanager.uikit.components.DeleteDialog
 import soft.divan.financemanager.uikit.components.ErrorContent
 import soft.divan.financemanager.uikit.components.FMDatePickerDialog
 import soft.divan.financemanager.uikit.components.FMDriver
@@ -80,7 +84,9 @@ fun TransactionScreenPreview() {
             onCommentChange = { },
             onDateChange = { },
             onTimeChange = { },
-            onCategoryChange = {}
+            onCategoryChange = {},
+            onDelete = {},
+            snackbarHostState = remember { SnackbarHostState() }
         )
     }
 }
@@ -99,12 +105,31 @@ fun TransactionScreen(
     navController: NavController,
     transactionId: Int? = null,
     isIncome: Boolean? = null,
-    viewModel: TransactionViewModel = hiltViewModel()
+    viewModel: TransactionViewModel = hiltViewModel(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(transactionId) {
         viewModel.load(transactionId, isIncome)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.eventFlow.collect { event ->
+            when (event) {
+                is TransactionEvent.TransactionDeleted -> {
+                    navController.popBackStack()
+                }
+
+                is TransactionEvent.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                        withDismissAction = true
+                    )
+                }
+            }
+        }
     }
 
     TransactionContent(
@@ -117,8 +142,9 @@ fun TransactionScreen(
         onDateChange = viewModel::updateDate,
         onTimeChange = viewModel::updateTime,
         onCategoryChange = viewModel::updateCategory,
-
-        )
+        onDelete = { viewModel.delete(transactionId) },
+        snackbarHostState = snackbarHostState
+    )
 }
 
 @Composable
@@ -132,6 +158,8 @@ fun TransactionContent(
     onDateChange: (LocalDate) -> Unit,
     onTimeChange: (LocalTime) -> Unit,
     onCategoryChange: (UiCategory) -> Unit,
+    onDelete: () -> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
 
     Scaffold(
@@ -145,7 +173,8 @@ fun TransactionContent(
                     actionIconClick = onSave
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
@@ -158,6 +187,7 @@ fun TransactionContent(
                     onDateChange = onDateChange,
                     onTimeChange = onTimeChange,
                     onCategoryChange = onCategoryChange,
+                    onDelete = onDelete
                 )
             }
         }
@@ -171,25 +201,18 @@ fun TransactionForm(
     onCommentChange: (String) -> Unit,
     onDateChange: (LocalDate) -> Unit,
     onTimeChange: (LocalTime) -> Unit,
-    onCategoryChange: (UiCategory) -> Unit
+    onCategoryChange: (UiCategory) -> Unit,
+    onDelete: () -> Unit
 ) {
     val isShowDatePicker = remember { mutableStateOf(false) }
     val isShowTimePicker = remember { mutableStateOf(false) }
     val isShowCategorySheet = remember { mutableStateOf(false) }
+    val isShowDeleteDialog = remember { mutableStateOf(false) }
 
-    DataPicker(isShowDatePicker = isShowDatePicker, onDateChange = onDateChange)
-    TimePicker(isShowTimePicker = isShowTimePicker, onTimeChange = onTimeChange)
-
-
-    if (isShowCategorySheet.value) {
-        CategoryBottomSheet(
-            categories = uiState.categories,
-            onCategorySelected = {
-                onCategoryChange(it)
-            },
-            onDismissRequest = { isShowCategorySheet.value = false }
-        )
-    }
+    ShowDataPickerDialog(isShowDatePicker = isShowDatePicker, onDateChange = onDateChange)
+    ShowTimePickerDialog(isShowTimePicker = isShowTimePicker, onTimeChange = onTimeChange)
+    ShowCategoryBottomSheet(isShowCategorySheet, uiState, onCategoryChange)
+    ShowDeleteDialog(isShowDeleteDialog, onDelete)
 
     Column(
         modifier = Modifier
@@ -212,11 +235,15 @@ fun TransactionForm(
                 onCommentChange(it)
             },
         )
+        FMDriver()
+        Spacer(modifier = Modifier.height(24.dp))
+        if (uiState.transaction.id != -1)
+            DeleteButton({ isShowDeleteDialog.value = true })
     }
 }
 
 @Composable
-private fun DataPicker(
+private fun ShowDataPickerDialog(
     isShowDatePicker: MutableState<Boolean>,
     onDateChange: (LocalDate) -> Unit
 ) {
@@ -232,7 +259,7 @@ private fun DataPicker(
 }
 
 @Composable
-private fun TimePicker(
+private fun ShowTimePickerDialog(
     isShowTimePicker: MutableState<Boolean>,
     onTimeChange: (LocalTime) -> Unit
 ) {
@@ -250,6 +277,30 @@ private fun TimePicker(
 }
 
 @Composable
+private fun ShowCategoryBottomSheet(
+    isShowCategorySheet: MutableState<Boolean>,
+    uiState: TransactionUiState.Success,
+    onCategoryChange: (UiCategory) -> Unit
+) {
+    if (isShowCategorySheet.value) {
+        CategoryBottomSheet(
+            categories = uiState.categories,
+            onCategorySelected = {
+                onCategoryChange(it)
+            },
+            onDismissRequest = { isShowCategorySheet.value = false }
+        )
+    }
+}
+
+@Composable
+private fun ShowDeleteDialog(isShowDeleteDialog: MutableState<Boolean>, onDelete: () -> Unit) {
+    if (isShowDeleteDialog.value) {
+        DeleteDialog(isShowDeleteDialog, onDelete)
+    }
+}
+
+@Composable
 private fun Account(uiState: TransactionUiState.Success) {
     ListItem(
         modifier = Modifier
@@ -263,7 +314,7 @@ private fun Account(uiState: TransactionUiState.Success) {
             Icon(
                 imageVector = Icons.Filled.Arrow,
                 contentDescription = "arrow",
-                tint = colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
 
             )
         },
@@ -288,7 +339,7 @@ private fun Category(
                 Icon(
                     imageVector = Icons.Filled.Arrow,
                     contentDescription = "arrow",
-                    tint = colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },
@@ -306,7 +357,7 @@ fun CategoryBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = colorScheme.surfaceContainerHigh,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         CategorySheetContent(categories, onCategorySelected, onDismissRequest)
     }
@@ -371,7 +422,7 @@ private fun Amount(
                     }
                 },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.End
                 ),
                 keyboardOptions = KeyboardOptions(
@@ -443,7 +494,7 @@ fun CommentInputField(
                 value = value,
                 onValueChange = onValueChange,
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface
                 ),
                 keyboardOptions = KeyboardOptions.Default,
                 singleLine = false,
@@ -459,7 +510,7 @@ fun CommentInputField(
                             Text(
                                 text = placeholder,
                                 style = MaterialTheme.typography.bodyLarge.copy(
-                                    color = colorScheme.outline
+                                    color = MaterialTheme.colorScheme.outline
                                 ),
                                 maxLines = maxLines
                             )
@@ -469,7 +520,6 @@ fun CommentInputField(
                 }
             )
         }
-        FMDriver()
     }
 }
 

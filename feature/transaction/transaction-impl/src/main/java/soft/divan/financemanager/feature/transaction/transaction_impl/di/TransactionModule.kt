@@ -15,9 +15,11 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.data.datas
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.repository.TransactionRepositoryImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.repository.TransactionRepository
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesExpensesUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.CreateTransactionUseCaseImpl
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.DeleteTransactionUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.GetCategoriesExpensesUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.GetTransactionUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.navigation.TransactionFeatureImpl
@@ -58,6 +60,11 @@ interface TransactionModule {
     abstract fun bindGetCategoriesExpensesUseCase(
         impl: GetCategoriesExpensesUseCaseImpl
     ): GetCategoriesExpensesUseCase
+
+    @Binds
+    abstract fun bindDeleteTransactionUseCase(
+        impl: DeleteTransactionUseCaseImpl
+    ): DeleteTransactionUseCase
 }
 
 @Module

@@ -3,8 +3,10 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.precenter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
@@ -20,8 +22,10 @@ import soft.divan.financemanager.core.shared_history_transaction_category.presen
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toDomain
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesExpensesUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -35,12 +39,15 @@ class TransactionViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getTransactionsUseCase: GetTransactionUseCase,
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
-    private val getCategoriesUseCase: GetCategoriesExpensesUseCase
+    private val getCategoriesUseCase: GetCategoriesExpensesUseCase,
+    private val deleteTransactionUseCase: DeleteTransactionUseCase
 
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TransactionUiState>(TransactionUiState.Loading)
     val uiState: StateFlow<TransactionUiState> = _uiState.asStateFlow()
 
+    private val _eventFlow = MutableSharedFlow<TransactionEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
 
     fun createTransaction() {
         viewModelScope.launch {
@@ -197,6 +204,18 @@ class TransactionViewModel @Inject constructor(
                         )
                     )
                 }
+            }
+        }
+    }
+
+    fun delete(idTransaction: Int?) {
+        viewModelScope.launch {
+            val currentState = uiState.value
+            if (idTransaction != null && currentState is TransactionUiState.Success) {
+                deleteTransactionUseCase.invoke(idTransaction).fold(
+                    onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
+                    onFailure = { _eventFlow.emit(TransactionEvent.ShowError("Не удалось удалить транзакцию")) }
+                )
             }
         }
     }

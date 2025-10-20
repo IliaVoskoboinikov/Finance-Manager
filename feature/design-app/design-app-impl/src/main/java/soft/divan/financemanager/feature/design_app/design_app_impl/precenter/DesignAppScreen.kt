@@ -314,6 +314,7 @@ fun CustomColorPickerDialog(
     val controller = rememberColorPickerController()
 
     AlertDialog(
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
         onDismissRequest = onDismissRequest,
         title = { Text("Выберите цвет") },
         text = {

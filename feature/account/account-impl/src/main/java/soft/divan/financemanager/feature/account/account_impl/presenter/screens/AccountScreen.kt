@@ -115,10 +115,6 @@ fun AccountScreen(
     )
 }
 
-object AddAccountScreen {
-    const val route = "add_account"
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccountContent(
