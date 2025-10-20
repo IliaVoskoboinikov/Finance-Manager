@@ -104,7 +104,7 @@ fun TransactionScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(transactionId) {
-        viewModel.load(transactionId, false)
+        viewModel.load(transactionId, isIncome)
     }
 
     TransactionContent(
