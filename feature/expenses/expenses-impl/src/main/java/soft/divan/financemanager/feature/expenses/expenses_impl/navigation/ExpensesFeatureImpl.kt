@@ -27,15 +27,22 @@ class ExpensesFeatureImpl @Inject constructor() : ExpensesFeatureApi {
         navController: NavHostController,
         modifier: Modifier
     ) {
-
         navGraphBuilder.composable(route) {
             ExpensesScreen(
                 modifier = modifier,
                 onNavigateToHistory = {
                     navController.navigate(scenarioExpensesRoute)
                 },
-                onNavigateToTransaction = {
+                onNavigateToNewTransaction = {
                     navController.navigate(transactionFeatureApi.route)
+                },
+                onNavigateToOldTransaction = { transitionId ->
+                    navController.navigate(
+                        transactionFeatureApi.transactionRouteWithArgs(
+                            transitionId,
+                            false
+                        )
+                    )
                 },
                 navController = navController,
             )
