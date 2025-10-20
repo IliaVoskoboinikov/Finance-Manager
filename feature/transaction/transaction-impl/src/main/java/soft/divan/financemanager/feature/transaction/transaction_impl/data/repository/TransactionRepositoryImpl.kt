@@ -36,5 +36,9 @@ class TransactionRepositoryImpl @Inject constructor(
 
     }
 
+    override suspend fun deleteTransaction(transactionId: Int): Result<Unit> = runCatching {
+        val response = transactionRemoteDataSource.deleteTransaction(transactionId)
+    }
+
 
 }

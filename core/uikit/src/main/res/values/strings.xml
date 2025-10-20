@@ -5,5 +5,9 @@
     <string name="try_again">Попробовать еще раз</string>
     <string name="error_occurred">Произошла ошибка :(</string>
     <string name="my_account">Мой счет</string>
+    <string name="delete_transaction">Удалить транзакцию</string>
+    <string name="delete">Удалить</string>
+    <string name="delete_transaction_">Удалить транзакцию?</string>
+    <string name="this_action_cannot_be_undone">Это действие нельзя будет отменить.</string>
 
 </resources>
