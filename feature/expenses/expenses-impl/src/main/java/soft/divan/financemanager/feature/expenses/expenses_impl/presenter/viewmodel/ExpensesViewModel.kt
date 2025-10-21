@@ -27,6 +27,7 @@ class ExpensesViewModel @Inject constructor(
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase
 ) : ViewModel() {
 
+    //todo
     private val _uiState = MutableStateFlow<ExpensesUiState>(ExpensesUiState.Loading)
     val uiState: StateFlow<ExpensesUiState> = _uiState
         .onStart { loadTodayExpenses() }
@@ -37,7 +38,7 @@ class ExpensesViewModel @Inject constructor(
         )
 
 
-    private fun loadTodayExpenses() {
+    fun loadTodayExpenses() {
         getTodayExpensesUseCase.invoke()
             .onStart {
                 _uiState.update { ExpensesUiState.Loading }

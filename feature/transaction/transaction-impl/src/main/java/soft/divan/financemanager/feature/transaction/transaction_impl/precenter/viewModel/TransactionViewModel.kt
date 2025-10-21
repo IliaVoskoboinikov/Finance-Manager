@@ -16,7 +16,6 @@ import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencyCode
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
-import soft.divan.financemanager.core.domain.util.resolve
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toDomain
@@ -55,9 +54,10 @@ class TransactionViewModel @Inject constructor(
             if (currentState is TransactionUiState.Success) {
                 _uiState.update { TransactionUiState.Loading }
                 createTransactionUseCase.invoke(transaction = currentState.transaction.toDomain())
-                    .resolve(
-                        onSuccess = { _uiState.update { currentState } },
-                        onError = { _uiState.update { TransactionUiState.Error("") } }
+                    .fold(
+                        onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
+                        //todo
+                        onFailure = { _eventFlow.emit(TransactionEvent.ShowError("Ошибка сохранения")) }
                     )
             }
         }
@@ -112,12 +112,14 @@ class TransactionViewModel @Inject constructor(
             val transaction = result.getOrThrow()
             _uiState.update {
                 TransactionUiState.Success(
+                    //todo
                     transaction = transaction.toUi(currency = CurrencyCode("RUB")),
                     categories = categoriesResult.map { it.toUi() },
                     accountName = accountsResult.first().name
                 )
             }
         } else {
+            //todo
             _uiState.value = TransactionUiState.Error("Не удалось загрузить транзакцию")
         }
     }
@@ -214,6 +216,7 @@ class TransactionViewModel @Inject constructor(
             if (idTransaction != null && currentState is TransactionUiState.Success) {
                 deleteTransactionUseCase.invoke(idTransaction).fold(
                     onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
+                    //todo
                     onFailure = { _eventFlow.emit(TransactionEvent.ShowError("Не удалось удалить транзакцию")) }
                 )
             }
