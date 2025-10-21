@@ -4,6 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
+import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCaseImpl
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCaseImpl
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
@@ -13,29 +15,23 @@ import soft.divan.financemanager.feature.account.account_impl.domain.usecase.imp
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.impl.UpdateCurrencyUseCaseIml
 import soft.divan.financemanager.feature.account.account_impl.navigation.AccountFeatureImpl
 
-
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AccountModule {
+interface AccountModule {
 
     @Binds
-    abstract fun bindAccountRouter(impl: AccountFeatureImpl): AccountFeatureApi
-
-
-    @Binds
-    abstract fun bindUpdateAccountUseCase(
-        impl: UpdateAccountUseCaseImpl
-    ): UpdateAccountUseCase
-
+    fun bindAccountRouter(impl: AccountFeatureImpl): AccountFeatureApi
 
     @Binds
-    abstract fun bindGetSumTransactionsUseCase(
-        impl: GetSumTransactionsUseCaseImpl
-    ): GetSumTransactionsUseCase
-
+    fun bindUpdateAccountUseCase(impl: UpdateAccountUseCaseImpl): UpdateAccountUseCase
 
     @Binds
-    abstract fun bindUpdateCurrencyUseCase(
-        impl: UpdateCurrencyUseCaseIml
-    ): UpdateCurrencyUseCase
+    fun bindGetSumTransactionsUseCase(impl: GetSumTransactionsUseCaseImpl): GetSumTransactionsUseCase
+
+    @Binds
+    fun bindUpdateCurrencyUseCase(impl: UpdateCurrencyUseCaseIml): UpdateCurrencyUseCase
+
+    @Binds
+    fun bindGetAccountsUseCase(impl: GetAccountsUseCaseImpl): GetAccountsUseCase
+
 }

@@ -21,32 +21,35 @@ import soft.divan.financemanager.feature.security.security_impl.domain.usecase.i
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.impl.IsPinSetUseCaseImpl
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.impl.SavePinUseCaseImpl
 import soft.divan.financemanager.feature.security.security_impl.navigation.SecurityFeatureImpl
+import javax.inject.Singleton
 
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class SecurityModule {
+interface SecurityModule {
 
     @Binds
-    abstract fun bindSecurityRouter(impl: SecurityFeatureImpl): SecurityFeatureApi
+    fun bindSecurityRouter(impl: SecurityFeatureImpl): SecurityFeatureApi
 
     @Binds
-    abstract fun bindSavePinUseCase(impl: SavePinUseCaseImpl): SavePinUseCase
+    fun bindSavePinUseCase(impl: SavePinUseCaseImpl): SavePinUseCase
 
     @Binds
-    abstract fun bindGetSavedPinUseCase(impl: GetSavedPinUseCaseImpl): GetSavedPinUseCase
+    fun bindGetSavedPinUseCase(impl: GetSavedPinUseCaseImpl): GetSavedPinUseCase
 
     @Binds
-    abstract fun bindIsPinSetUseCase(impl: IsPinSetUseCaseImpl): IsPinSetUseCase
+    fun bindIsPinSetUseCase(impl: IsPinSetUseCaseImpl): IsPinSetUseCase
 
     @Binds
-    abstract fun provideSecurityRepository(impl: SecurityRepositoryImpl): SecurityRepository
+    @Singleton
+    fun provideSecurityRepository(impl: SecurityRepositoryImpl): SecurityRepository
 
     @Binds
-    abstract fun bindSecurityLocalDataSource(impl: SecurityLocalDataSourceImpl): SecurityLocalDataSource
+    @Singleton
+    fun bindSecurityLocalDataSource(impl: SecurityLocalDataSourceImpl): SecurityLocalDataSource
 
     @Binds
-    abstract fun bindDeletePinUseCase(impl: DeletePinUseCaseImpl): DeletePinUseCase
+    fun bindDeletePinUseCase(impl: DeletePinUseCaseImpl): DeletePinUseCase
 
 }
 
@@ -55,9 +58,9 @@ abstract class SecurityModule {
 object SecurityProvidesModule {
 
     @Provides
+    @Singleton
     fun provideSecurityLocalDataSourceImpl(
         @ApplicationContext context: Context
     ): SecurityLocalDataSourceImpl = SecurityLocalDataSourceImpl(context)
-
 
 }
