@@ -44,7 +44,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
@@ -102,7 +101,7 @@ fun CategoryPreview() {
 @Composable
 fun TransactionScreen(
     modifier: Modifier = Modifier,
-    navController: NavController,
+    onNavigateBack: () -> Unit,
     transactionId: Int? = null,
     isIncome: Boolean? = null,
     viewModel: TransactionViewModel = hiltViewModel(),
@@ -118,16 +117,17 @@ fun TransactionScreen(
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
-                is TransactionEvent.TransactionDeleted -> {
-                    navController.popBackStack()
-                }
+                is TransactionEvent.TransactionDeleted ->
+                    onNavigateBack()
 
-                is TransactionEvent.ShowError -> {
+                is TransactionEvent.ShowError ->
                     snackbarHostState.showSnackbar(
                         message = event.message,
                         withDismissAction = true
                     )
-                }
+
+                is TransactionEvent.TransactionSaved ->
+                    onNavigateBack()
             }
         }
     }
@@ -135,7 +135,7 @@ fun TransactionScreen(
     TransactionContent(
         modifier = modifier,
         uiState = uiState,
-        onNavigateBack = { navController.popBackStack() },
+        onNavigateBack = onNavigateBack,
         onSave = viewModel::createTransaction,
         onAmountChange = viewModel::updateAmount,
         onCommentChange = viewModel::updateComment,
