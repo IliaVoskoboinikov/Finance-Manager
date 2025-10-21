@@ -1,5 +1,6 @@
 package soft.divan.financemanager.core.network.interceptor
 
+import android.os.SystemClock
 import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
@@ -16,13 +17,14 @@ class RetryInterceptor(
 
         while (true) {
             response = chain.proceed(request)
-            if (!response.isSuccessful && response.code() == 500 && attempt < maxRetries) {
-                Log.d("RetryInterceptor", "Retry attempt $attempt")
-                attempt++
-                Thread.sleep(delayMillis)
-                continue
-            }
-            return response
+            if (response.isSuccessful) return response
+
+            if (response.code() !in 500..599 || attempt >= maxRetries) return response
+
+            response.close()
+            attempt++
+            Log.d("RetryInterceptor", "Retry attempt $attempt after error ${response.code()}")
+            SystemClock.sleep(delayMillis)
         }
     }
 }

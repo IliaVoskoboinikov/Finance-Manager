@@ -14,23 +14,16 @@ import soft.divan.financemanager.feature.income.income_impl.navigation.IncomeFea
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class IncomeModule {
-
-
-    @Binds
-    abstract fun bindIncomeRouter(impl: IncomeFeatureImpl): IncomeFeatureApi
-
+interface IncomeModule {
 
     @Binds
-    abstract fun bindGetIncomeByPeriodUseCase(
-        impl: GetIncomeByPeriodUseCaseImpl
-    ): GetIncomeByPeriodUseCase
+    fun bindIncomeRouter(impl: IncomeFeatureImpl): IncomeFeatureApi
 
     @Binds
-    abstract fun bindGetTodayIncomeUseCase(
-        impl: GetTodayIncomeUseCaseImpl
-    ): GetTodayIncomeUseCase
+    fun bindGetIncomeByPeriodUseCase(impl: GetIncomeByPeriodUseCaseImpl): GetIncomeByPeriodUseCase
 
+    @Binds
+    fun bindGetTodayIncomeUseCase(impl: GetTodayIncomeUseCaseImpl): GetTodayIncomeUseCase
 
 }
 

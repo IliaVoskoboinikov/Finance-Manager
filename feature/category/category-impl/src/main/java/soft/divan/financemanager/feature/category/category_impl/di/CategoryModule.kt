@@ -4,6 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
+import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCaseImpl
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.SearchCategoryUseCase
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.impl.SearchCategoryUseCaseImpl
@@ -12,17 +14,15 @@ import soft.divan.financemanager.feature.category.category_impl.navigation.Categ
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class CategoryModule {
-
-
-    @Binds
-    abstract fun bindCategoryRouter(impl: CategoryFeatureImpl): CategoryFeatureApi
-
+interface CategoryModule {
 
     @Binds
-    abstract fun bindSearchCategoryUseCase(
-        impl: SearchCategoryUseCaseImpl
-    ): SearchCategoryUseCase
+    fun bindCategoryRouter(impl: CategoryFeatureImpl): CategoryFeatureApi
 
+    @Binds
+    fun bindSearchCategoryUseCase(impl: SearchCategoryUseCaseImpl): SearchCategoryUseCase
+
+    @Binds
+    fun bindGetCategoriesUseCase(impl: GetCategoriesUseCaseImpl): GetCategoriesUseCase
 
 }

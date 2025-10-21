@@ -10,24 +10,30 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
     @Provides
-    fun provideApplicationScope(): CoroutineScope {
-        return CoroutineScope(SupervisorJob())
+    @Singleton
+    fun provideApplicationScope(
+        ioDispatcher: CoroutineDispatcher,
+        exceptionHandler: CoroutineExceptionHandler
+    ): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + ioDispatcher + exceptionHandler)
     }
 
-
     @Provides
+    @Singleton
     fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
     @Provides
+    @Singleton
     fun provideAppCoroutineExceptionHandler(): CoroutineExceptionHandler =
         CoroutineExceptionHandler { _, throwable ->
             Log.e("AppCoroutineException", "Unhandled exception: ${throwable.message}", throwable)
-
         }
+
 }

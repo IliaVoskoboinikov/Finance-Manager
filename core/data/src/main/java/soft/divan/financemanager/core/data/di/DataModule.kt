@@ -32,66 +32,45 @@ import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
-import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
-import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCaseImpl
-import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
-import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCaseImpl
 import javax.inject.Qualifier
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class DataModule {
+interface DataModule {
 
     @Binds
-    abstract fun bindAccountRemoteDataSource(
-        impl: AccountRemoteDataSourceImpl
-    ): AccountRemoteDataSource
+    @Singleton
+    fun bindAccountRemoteDataSource(impl: AccountRemoteDataSourceImpl): AccountRemoteDataSource
 
     @Binds
-    abstract fun bindAccountRepository(
-        impl: AccountRepositoryImpl
-    ): AccountRepository
+    @Singleton
+    fun bindAccountRepository(impl: AccountRepositoryImpl): AccountRepository
 
     @Binds
-    abstract fun bindTransactionRemoteDataSource(
-        impl: TransactionRemoteDataSourceImpl
-    ): TransactionRemoteDataSource
+    @Singleton
+    fun bindTransactionRemoteDataSource(impl: TransactionRemoteDataSourceImpl): TransactionRemoteDataSource
 
     @Binds
-    abstract fun bindTransactionRepository(
-        impl: TransactionRepositoryImp
-    ): TransactionRepository
-
+    @Singleton
+    fun bindTransactionRepository(impl: TransactionRepositoryImp): TransactionRepository
 
     @Binds
-    abstract fun bindCurrencyRepository(
-        impl: CurrencyRepositoryImpl
-    ): CurrencyRepository
+    @Singleton
+    fun bindCurrencyRepository(impl: CurrencyRepositoryImpl): CurrencyRepository
 
     @Binds
-    abstract fun bindCategoryRemoteDataSource(
-        impl: CategoryRemoteDataSourceImpl
-    ): CategoryRemoteDataSource
+    @Singleton
+    fun bindCategoryRemoteDataSource(impl: CategoryRemoteDataSourceImpl): CategoryRemoteDataSource
 
     @Binds
-    abstract fun bindCategoryLocalDataSource(
-        impl: CategoryLocalDataSourceImpl
-    ): CategoryLocalDataSource
+    @Singleton
+    fun bindCategoryLocalDataSource(impl: CategoryLocalDataSourceImpl): CategoryLocalDataSource
 
     @Binds
-    abstract fun bindGetCategoriesUseCase(
-        impl: GetCategoriesUseCaseImpl
-    ): GetCategoriesUseCase
+    @Singleton
+    fun bindCategoryRepository(impl: CategoryRepositoryImpl): CategoryRepository
 
-    @Binds
-    abstract fun bindCategoryRepository(
-        impl: CategoryRepositoryImpl
-    ): CategoryRepository
-
-    @Binds
-    abstract fun bindGetAccountsUseCase(
-        impl: GetAccountsUseCaseImpl
-    ): GetAccountsUseCase
 }
 
 @Qualifier
@@ -100,35 +79,34 @@ annotation class CurrencyDataStore
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DataStoreModule {
+object DataProviderModule {
 
     private val Context.dataStore by preferencesDataStore("currency_dataStore")
 
     @Provides
+    @Singleton
     @CurrencyDataStore
-    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
-        return context.dataStore
-    }
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        context.dataStore
 
     @Provides
-    fun provideCurrencyLocalDataSource(
-        @CurrencyDataStore dataStore: DataStore<Preferences>
-    ): CurrencyLocalDataSource {
-        return CurrencyLocalDataSourceImpl(dataStore)
-    }
+    @Singleton
+    fun provideCurrencyLocalDataSource(@CurrencyDataStore dataStore: DataStore<Preferences>): CurrencyLocalDataSource =
+        CurrencyLocalDataSourceImpl(dataStore)
 
     @Provides
+    @Singleton
     fun provideAccountApi(retrofit: Retrofit): AccountApiService =
         retrofit.create(AccountApiService::class.java)
 
-
     @Provides
+    @Singleton
     fun provideTransactionApi(retrofit: Retrofit): TransactionApiService =
         retrofit.create(TransactionApiService::class.java)
 
     @Provides
+    @Singleton
     fun provideCategoryApi(retrofit: Retrofit): CategoryApiService =
         retrofit.create(CategoryApiService::class.java)
-
 
 }

@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import soft.divan.finansemanager.core.database.dao.CategoryDao
 import soft.divan.finansemanager.core.database.dao.TransactionDao
 import soft.divan.finansemanager.core.database.db.FinanceManagerDatabase
+import javax.inject.Singleton
 
 
 @Module
@@ -17,20 +18,19 @@ import soft.divan.finansemanager.core.database.db.FinanceManagerDatabase
 object LocalDBModule {
 
     @Provides
+    @Singleton
     fun provideDatabase(
         @ApplicationContext context: Context
     ): FinanceManagerDatabase =
         Room.databaseBuilder(context, FinanceManagerDatabase::class.java, "finance_manager_db.db")
-            .fallbackToDestructiveMigration(false)
-            .build()
+            .fallbackToDestructiveMigration(false).build()
 
     @Provides
-    fun provideTransactionDao(
-        financeManagerDatabase: FinanceManagerDatabase
-    ): TransactionDao = financeManagerDatabase.transactionDao()
+    @Singleton
+    fun provideTransactionDao(db: FinanceManagerDatabase): TransactionDao = db.transactionDao()
 
     @Provides
-    fun provideCategoryDaoDao(
-        financeManagerDatabase: FinanceManagerDatabase
-    ): CategoryDao = financeManagerDatabase.categoryDaoDao()
+    @Singleton
+    fun provideCategoryDao(db: FinanceManagerDatabase): CategoryDao = db.categoryDaoDao()
+
 }

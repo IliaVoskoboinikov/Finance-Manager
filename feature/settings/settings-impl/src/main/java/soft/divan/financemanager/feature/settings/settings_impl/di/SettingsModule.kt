@@ -10,6 +10,8 @@ import soft.divan.financemanager.feature.settings.settings_impl.navigation.Setti
 @Module
 @InstallIn(SingletonComponent::class)
 interface SettingsModule {
+
     @Binds
     fun bindSettingsRouter(impl: SettingsFeatureImpl): SettingsFeatureApi
+
 }

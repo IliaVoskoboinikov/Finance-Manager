@@ -8,7 +8,6 @@ import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Реализация интерфейса [TransactionRepository] для работы с транзакциями через удаленный источник данных.
@@ -21,7 +20,6 @@ import javax.inject.Singleton
  * @see TransactionRepository
  * @see soft.divan.financemanager.data.source.TransactionRemoteDataSource
  */
-@Singleton
 class TransactionRepositoryImp @Inject constructor(
     private val transactionRemoteDataSource: TransactionRemoteDataSource
 ) : TransactionRepository {

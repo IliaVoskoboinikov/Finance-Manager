@@ -6,7 +6,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import jakarta.inject.Named
+import okhttp3.Cache
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -19,37 +19,61 @@ import soft.divan.financemanager.core.network.interceptor.NetworkConnectionInter
 import soft.divan.financemanager.core.network.interceptor.RetryInterceptor
 import soft.divan.financemanager.core.network.util.ConnectivityManagerNetworkMonitor
 import soft.divan.financemanager.core.network.util.NetworkMonitor
+import java.io.File
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    @Named("authInterceptor")
+    private const val CACHE_SIZE_MB = 10L // 10 MB
+
     @Provides
+    @Singleton
+    fun provideCache(@ApplicationContext context: Context): Cache {
+        val cacheSize = CACHE_SIZE_MB * 1024 * 1024 // bytes
+        val cacheDir = File(context.cacheDir, "http_cache")
+        return Cache(cacheDir, cacheSize)
+    }
+// todo
+    /* По умолчанию OkHttp будет кэшировать только те ответы, где сервер возвращает корректные заголовки Cache-Control или Expires.
+    Пример серверного ответа, который будет кэшироваться:
+        Cache-Control: public, max-age=3600
+        */
+
+    @Provides
+    @Singleton
+    @AuthInterceptorQualifier
     fun provideAuthInterceptor(): Interceptor = AuthInterceptor { BuildConfig.API_TOKEN }
 
-    @Named("networkInterceptor")
     @Provides
+    @Singleton
+    @NetworkInterceptorQualifier
     fun provideNetworkInterceptor(@ApplicationContext context: Context): Interceptor =
         NetworkConnectionInterceptor(context)
 
-    @Named("retryInterceptor")
     @Provides
+    @Singleton
+    @RetryInterceptorQualifier
     fun provideRetryInterceptor(): Interceptor = RetryInterceptor()
 
     @Provides
+    @Singleton
     fun provideHttpLoggingInterceptor(
         provider: LoggingInterceptor
     ): HttpLoggingInterceptor = provider.provide()
 
 
     @Provides
+    @Singleton
     fun provideOkHttpClient(
-        @Named("authInterceptor") auth: Interceptor,
-        @Named("networkInterceptor") network: Interceptor,
-        @Named("retryInterceptor") retry: Interceptor,
-        loggingInterceptor: HttpLoggingInterceptor
+        @AuthInterceptorQualifier auth: Interceptor,
+        @NetworkInterceptorQualifier network: Interceptor,
+        @RetryInterceptorQualifier retry: Interceptor,
+        loggingInterceptor: HttpLoggingInterceptor,
+        cache: Cache
     ): OkHttpClient = OkHttpClient.Builder()
+        .cache(cache)
         .addInterceptor(network)
         .addInterceptor(auth)
         .addInterceptor(retry)
@@ -57,6 +81,7 @@ object NetworkModule {
         .build()
 
     @Provides
+    @Singleton
     fun provideRetrofit(okHttp: OkHttpClient): Retrofit = Retrofit.Builder()
         .baseUrl(BuildConfig.HOST)
         .client(okHttp)
@@ -65,10 +90,9 @@ object NetworkModule {
 
 
     @Provides
+    @Singleton
     fun provideNetworkMonitor(
-        networkMonitor: ConnectivityManagerNetworkMonitor,
-    ): NetworkMonitor {
-        return networkMonitor
-    }
+        networkMonitor: ConnectivityManagerNetworkMonitor
+    ): NetworkMonitor = networkMonitor
 
 }

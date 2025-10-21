@@ -23,53 +23,45 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.domain.use
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.GetCategoriesExpensesUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.GetTransactionUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.navigation.TransactionFeatureImpl
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface TransactionModule {
+interface TransactionBindModule {
+
     @Binds
     fun bindTransactionRouter(impl: TransactionFeatureImpl): TransactionFeatureApi
 
     @Binds
-    fun bindCreateTransactionUseCase(
-        impl: CreateTransactionUseCaseImpl
-    ): CreateTransactionUseCase
+    @Singleton
+    fun bindTransactionRemoteDataSource(impl: TransactionRemoteDataSourceImpl): TransactionRemoteDataSource
 
     @Binds
-    abstract fun bindGetTransactionUseCase(
-        impl: GetTransactionUseCaseImpl
-    ): GetTransactionUseCase
+    @Singleton
+    fun bindTransactionLocalDataSource(impl: TransactionLocalDataSourceImpl): TransactionLocalDataSource
 
     @Binds
-    abstract fun bindTransactionRemoteDataSource(
-        impl: TransactionRemoteDataSourceImpl
-    ): TransactionRemoteDataSource
+    @Singleton
+    fun bindTransactionRepository(impl: TransactionRepositoryImpl): TransactionRepository
 
     @Binds
-    abstract fun bindTransactionLocalDataSource(
-        impl: TransactionLocalDataSourceImpl
-    ): TransactionLocalDataSource
+    fun bindCreateTransactionUseCase(impl: CreateTransactionUseCaseImpl): CreateTransactionUseCase
 
     @Binds
-    abstract fun bindTransactionRepository(
-        impl: TransactionRepositoryImpl
-    ): TransactionRepository
-
+    fun bindGetTransactionUseCase(impl: GetTransactionUseCaseImpl): GetTransactionUseCase
 
     @Binds
-    abstract fun bindGetCategoriesExpensesUseCase(
-        impl: GetCategoriesExpensesUseCaseImpl
-    ): GetCategoriesExpensesUseCase
+    fun bindGetCategoriesExpensesUseCase(impl: GetCategoriesExpensesUseCaseImpl): GetCategoriesExpensesUseCase
 
     @Binds
-    abstract fun bindDeleteTransactionUseCase(
-        impl: DeleteTransactionUseCaseImpl
-    ): DeleteTransactionUseCase
+    fun bindDeleteTransactionUseCase(impl: DeleteTransactionUseCaseImpl): DeleteTransactionUseCase
+
 }
 
 @Module
 @InstallIn(SingletonComponent::class)
-object TranModule {
+object TransactionNetworkModule {
+
     @Provides
     fun provideTransactionApi(retrofit: Retrofit): TransactionApiService =
         retrofit.create(TransactionApiService::class.java)

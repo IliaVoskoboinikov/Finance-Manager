@@ -15,13 +15,13 @@ class NetworkConnectionInterceptor(
 
     @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
     override fun intercept(chain: Interceptor.Chain): Response {
-        if (!isConnected(context)) {
+        if (!isConnected()) {
             throw NoInternetException()
         }
         return chain.proceed(chain.request())
     }
 
-    private fun isConnected(context: Context): Boolean {
+    private fun isConnected(): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val capabilities = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
