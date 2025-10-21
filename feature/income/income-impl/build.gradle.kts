@@ -8,4 +8,5 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
     implementation(projects.core.sharedHistoryTransactionCategory)
+    implementation(projects.feature.transaction.transactionApi)
 }

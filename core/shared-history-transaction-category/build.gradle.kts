@@ -11,6 +11,5 @@ dependencies {
 
     implementation(libs.androidx.material3)
     implementation(platform(libs.androidx.compose.bom))
-    //todo протом удалить     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.navigation.compose)
+
 }
