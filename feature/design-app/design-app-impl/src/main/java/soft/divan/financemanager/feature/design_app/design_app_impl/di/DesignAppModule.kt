@@ -29,18 +29,34 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.domain.useca
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.impl.SetThemeModeUseCaseImpl
 import soft.divan.financemanager.feature.design_app.design_app_impl.navigation.DesignAppFeatureImpl
 import javax.inject.Qualifier
+import javax.inject.Singleton
 
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class DesignAppModule {
+interface DesignAppModule {
 
     @Binds
-    abstract fun bindDesignAppRouter(impl: DesignAppFeatureImpl): DesignAppFeatureApi
+    fun bindDesignAppRouter(impl: DesignAppFeatureImpl): DesignAppFeatureApi
 
     @Binds
-    abstract fun bindThemeRepository(impl: DesignAppRepositoryImpl): DesignAppRepository
+    @Singleton
+    fun bindThemeRepository(impl: DesignAppRepositoryImpl): DesignAppRepository
 
+}
+
+val Context.themeDataStore: DataStore<Preferences> by preferencesDataStore("user_preferences")
+
+@Module
+@InstallIn(SingletonComponent::class)
+object ThemeDataStoreModule {
+
+    @Provides
+    @Singleton
+    @ThemeDataStore
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return context.themeDataStore
+    }
 }
 
 
@@ -50,49 +66,36 @@ annotation class ThemeDataStore
 
 @Module
 @InstallIn(SingletonComponent::class)
-object ThemeModule {
-
-    private val Context.dataStore by preferencesDataStore("user_preferences")
+object ThemeLocalModule {
 
     @Provides
-    @ThemeDataStore
-    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
-        return context.dataStore
-    }
-
-    @Provides
+    @Singleton
     fun provideThemePreferences(@ThemeDataStore dataStore: DataStore<Preferences>): DesignAppLocalSource {
         return DesignAppLocalSourceImpl(dataStore)
     }
 
-    @Provides
-    fun provideGetThemeUseCase(impl: GetThemeModeUseCaseImpl): GetThemeModeUseCase {
-        return impl
-    }
+}
 
-    @Provides
-    fun provideSetThemeUseCase(impl: SetThemeModeUseCaseImpl): SetThemeModeUseCase {
-        return impl
-    }
+@Module
+@InstallIn(SingletonComponent::class)
+interface ThemeUseCaseModule {
 
-    @Provides
-    fun provideGetAccentColorUseCaseImplUseCase(impl: GetAccentColorUseCaseImpl): GetAccentColorUseCase {
-        return impl
-    }
+    @Binds
+    fun bindGetThemeModeUseCase(impl: GetThemeModeUseCaseImpl): GetThemeModeUseCase
 
-    @Provides
-    fun provideSetAccentColorUseCase(impl: SetAccentColorUseCaseImpl): SetAccentColorUseCase {
-        return impl
-    }
+    @Binds
+    fun bindSetThemeModeUseCase(impl: SetThemeModeUseCaseImpl): SetThemeModeUseCase
 
-    @Provides
-    fun provideGetCustomAccentColorUseCase(impl: GetCustomAccentColorUseCaseImpl): GetCustomAccentColorUseCase {
-        return impl
-    }
+    @Binds
+    fun bindGetAccentColorUseCase(impl: GetAccentColorUseCaseImpl): GetAccentColorUseCase
 
-    @Provides
-    fun provideSetCustomAccentColorUseCase(impl: SetCustomAccentColorUseCaseImpl): SetCustomAccentColorUseCase {
-        return impl
-    }
+    @Binds
+    fun bindSetAccentColorUseCase(impl: SetAccentColorUseCaseImpl): SetAccentColorUseCase
+
+    @Binds
+    fun bindGetCustomAccentColorUseCase(impl: GetCustomAccentColorUseCaseImpl): GetCustomAccentColorUseCase
+
+    @Binds
+    fun bindSetCustomAccentColorUseCase(impl: SetCustomAccentColorUseCaseImpl): SetCustomAccentColorUseCase
 
 }

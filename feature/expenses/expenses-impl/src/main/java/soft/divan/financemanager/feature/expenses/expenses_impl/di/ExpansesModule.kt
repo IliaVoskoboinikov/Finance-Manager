@@ -14,21 +14,15 @@ import soft.divan.financemanager.feature.expenses.expenses_impl.navigation.Expen
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class ExpensesModule {
-
-
-    @Binds
-    abstract fun bindExpensesRouter(impl: ExpensesFeatureImpl): ExpensesFeatureApi
+interface ExpensesModule {
 
     @Binds
-    abstract fun bindGetTodayExpensesUseCase(
-        impl: GetTodayExpensesUseCaseImpl
-    ): GetTodayExpensesUseCase
+    fun bindExpensesRouter(impl: ExpensesFeatureImpl): ExpensesFeatureApi
 
     @Binds
-    abstract fun bindGetExpensesByPeriodUseCase(
-        impl: GetExpensesByPeriodUseCaseImpl
-    ): GetExpensesByPeriodUseCase
+    fun bindGetTodayExpensesUseCase(impl: GetTodayExpensesUseCaseImpl): GetTodayExpensesUseCase
 
+    @Binds
+    fun bindGetExpensesByPeriodUseCase(impl: GetExpensesByPeriodUseCaseImpl): GetExpensesByPeriodUseCase
 
 }
