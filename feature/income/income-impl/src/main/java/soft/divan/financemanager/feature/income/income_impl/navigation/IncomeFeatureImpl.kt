@@ -8,6 +8,7 @@ import androidx.navigation.navigation
 import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.income.income_impl.presenter.screen.HistoryIncomeScreen
 import soft.divan.financemanager.feature.income.income_impl.presenter.screen.IncomeScreen
+import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import javax.inject.Inject
 
 private const val baseRoute = "income"
@@ -19,6 +20,9 @@ class IncomeFeatureImpl @Inject constructor(
 ) : IncomeFeatureApi {
 
     override val route: String = baseRoute
+
+    @Inject
+    lateinit var transactionFeatureApi: TransactionFeatureApi
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
@@ -44,7 +48,15 @@ class IncomeFeatureImpl @Inject constructor(
             composable(route = screenIncomeHistoryRoute) {
                 HistoryIncomeScreen(
                     modifier = modifier,
-                    navController = navController
+                    onNavigateBack = navController::popBackStack,
+                    onNavigateToTransaction = { transitionId ->
+                        navController.navigate(
+                            transactionFeatureApi.transactionRouteWithArgs(
+                                transitionId,
+                                true
+                            )
+                        )
+                    },
                 )
             }
 

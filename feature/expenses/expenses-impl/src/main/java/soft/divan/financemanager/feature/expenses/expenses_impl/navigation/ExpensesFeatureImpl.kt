@@ -13,7 +13,7 @@ import javax.inject.Inject
 
 private const val baseRoute = "expenses"
 private const val scenarioExpensesRoute = "${baseRoute}/scenario"
-private const val screenExpensesHistoryRoute = "$scenarioExpensesRoute/income_history"
+private const val screenExpensesHistoryRoute = "$scenarioExpensesRoute/expenses_history"
 
 class ExpensesFeatureImpl @Inject constructor() : ExpensesFeatureApi {
 
@@ -57,7 +57,15 @@ class ExpensesFeatureImpl @Inject constructor() : ExpensesFeatureApi {
             composable(route = screenExpensesHistoryRoute) {
                 HistoryExpensesScreen(
                     modifier = modifier,
-                    navController = navController
+                    onNavigateBack = navController::popBackStack,
+                    onNavigateToTransaction = { transitionId ->
+                        navController.navigate(
+                            transactionFeatureApi.transactionRouteWithArgs(
+                                transitionId,
+                                false
+                            )
+                        )
+                    },
                 )
             }
 
