@@ -10,8 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.screen.HistoryContent
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.screen.provideMockHistoryUiState
 import soft.divan.financemanager.feature.income.income_impl.presenter.viewmodel.HistoryIncomeViewModel
@@ -38,7 +36,9 @@ fun HistoryIncomeScreenPreview() {
             endDate = endDate,
             onStartDateClick = { showStartDatePicker.value = true },
             onEndDateClick = { showEndDatePicker.value = true },
-            navController = rememberNavController()
+            onNavigateToTransaction = {},
+            onNavigateBack = {},
+  
         )
     }
 }
@@ -46,7 +46,8 @@ fun HistoryIncomeScreenPreview() {
 @Composable
 fun HistoryIncomeScreen(
     modifier: Modifier = Modifier,
-    navController: NavController,
+    onNavigateBack: () -> Unit,
+    onNavigateToTransaction: (Int) -> Unit,
     viewModel: HistoryIncomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -71,7 +72,8 @@ fun HistoryIncomeScreen(
         endDate = endDate,
         onStartDateClick = { showStartDatePicker.value = true },
         onEndDateClick = { showEndDatePicker.value = true },
-        navController = navController
+        onNavigateToTransaction = onNavigateToTransaction,
+        onNavigateBack = onNavigateBack,
     )
 
     if (showStartDatePicker.value) {
