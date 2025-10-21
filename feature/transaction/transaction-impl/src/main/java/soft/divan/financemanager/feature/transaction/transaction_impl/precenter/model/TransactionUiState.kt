@@ -9,7 +9,6 @@ sealed interface TransactionUiState {
         val transaction: UiTransaction,
         val categories: List<UiCategory>,
         val accountName: String,
-        val isDeleted: Boolean = false
     ) : TransactionUiState
 
     data class Error(val message: String) : TransactionUiState
@@ -17,5 +16,6 @@ sealed interface TransactionUiState {
 
 sealed interface TransactionEvent {
     data object TransactionDeleted : TransactionEvent
+    data object TransactionSaved : TransactionEvent
     data class ShowError(val message: String) : TransactionEvent
 }

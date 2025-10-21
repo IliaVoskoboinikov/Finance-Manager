@@ -50,14 +50,15 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
                 modifier = modifier,
                 transactionId = transactionId,
                 isIncome = isIncome,
-                navController = navController
+                onNavigateBack = navController::popBackStack
             )
+
         }
 
         navGraphBuilder.composable(route) {
             TransactionScreen(
                 modifier = modifier,
-                navController = navController
+                onNavigateBack = navController::popBackStack
             )
         }
     }
