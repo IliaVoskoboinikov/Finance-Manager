@@ -39,7 +39,7 @@ class CategoriesViewModel @Inject constructor(
 
     private fun loadCategories() {
         viewModelScope.launch(Dispatchers.IO) {
-            getCategoriesUseCase.invoke()
+            getCategoriesUseCase()
                 .onStart {
                     _uiState.update { CategoriesUiState.Loading }
                 }

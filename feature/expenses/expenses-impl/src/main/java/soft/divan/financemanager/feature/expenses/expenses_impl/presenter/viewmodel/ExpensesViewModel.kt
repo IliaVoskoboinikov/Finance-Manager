@@ -39,7 +39,7 @@ class ExpensesViewModel @Inject constructor(
 
 
     fun loadTodayExpenses() {
-        getTodayExpensesUseCase.invoke()
+        getTodayExpensesUseCase()
             .onStart {
                 _uiState.update { ExpensesUiState.Loading }
             }
