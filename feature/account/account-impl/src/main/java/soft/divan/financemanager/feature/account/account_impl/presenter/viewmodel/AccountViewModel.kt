@@ -41,8 +41,7 @@ class AccountViewModel @Inject constructor(
         )
 
     private fun loadAccount() {
-        //todo remove invoke -> getAccountsUseCase()
-        getAccountsUseCase.invoke()
+        getAccountsUseCase()
             .onStart {
                 _uiState.update { AccountUiState.Loading }
             }
