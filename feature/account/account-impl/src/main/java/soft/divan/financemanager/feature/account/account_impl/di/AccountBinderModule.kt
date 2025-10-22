@@ -17,7 +17,7 @@ import soft.divan.financemanager.feature.account.account_impl.navigation.Account
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface AccountModule {
+interface AccountBinderModule {
 
     @Binds
     fun bindAccountRouter(impl: AccountFeatureImpl): AccountFeatureApi

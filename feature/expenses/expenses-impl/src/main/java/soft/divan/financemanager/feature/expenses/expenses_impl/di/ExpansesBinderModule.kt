@@ -14,7 +14,7 @@ import soft.divan.financemanager.feature.expenses.expenses_impl.navigation.Expen
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface ExpensesModule {
+interface ExpensesBinderModule {
 
     @Binds
     fun bindExpensesRouter(impl: ExpensesFeatureImpl): ExpensesFeatureApi
