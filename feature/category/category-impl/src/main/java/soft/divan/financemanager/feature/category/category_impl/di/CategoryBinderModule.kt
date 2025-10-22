@@ -14,7 +14,7 @@ import soft.divan.financemanager.feature.category.category_impl.navigation.Categ
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface CategoryModule {
+interface CategoryBinderModule {
 
     @Binds
     fun bindCategoryRouter(impl: CategoryFeatureImpl): CategoryFeatureApi

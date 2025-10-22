@@ -2,12 +2,9 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.di
 
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import retrofit2.Retrofit
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
-import soft.divan.financemanager.feature.transaction.transaction_impl.data.api.TransactionApiService
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.datasourse.TransactionLocalDataSource
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.datasourse.TransactionRemoteDataSource
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.datasourse.impl.TransactionLocalDataSourceImpl
@@ -27,7 +24,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface TransactionBindModule {
+interface TransactionBinderModule {
 
     @Binds
     fun bindTransactionRouter(impl: TransactionFeatureImpl): TransactionFeatureApi
@@ -57,14 +54,3 @@ interface TransactionBindModule {
     fun bindDeleteTransactionUseCase(impl: DeleteTransactionUseCaseImpl): DeleteTransactionUseCase
 
 }
-
-@Module
-@InstallIn(SingletonComponent::class)
-object TransactionNetworkModule {
-
-    @Provides
-    fun provideTransactionApi(retrofit: Retrofit): TransactionApiService =
-        retrofit.create(TransactionApiService::class.java)
-
-}
-
