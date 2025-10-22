@@ -14,7 +14,7 @@ import soft.divan.financemanager.feature.income.income_impl.navigation.IncomeFea
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface IncomeModule {
+interface IncomeBinderModule {
 
     @Binds
     fun bindIncomeRouter(impl: IncomeFeatureImpl): IncomeFeatureApi

@@ -9,7 +9,7 @@ import soft.divan.financemanager.feature.splash_screen.splash_screen_impl.naviga
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface SplashScreenModule {
+interface SplashScreenBinderModule {
 
     @Binds
     fun bindSplashScreenRouter(impl: SplashScreenFeatureImpl): SplashScreenFeatureApi
