@@ -20,6 +20,7 @@ import soft.divan.financemanager.core.shared_history_transaction_category.presen
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toDomain
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
+import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesExpensesUseCase
@@ -56,8 +57,10 @@ class TransactionViewModel @Inject constructor(
                 createTransactionUseCase.invoke(transaction = currentState.transaction.toDomain())
                     .fold(
                         onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
-                        //todo
-                        onFailure = { _eventFlow.emit(TransactionEvent.ShowError("Ошибка сохранения")) }
+                        onFailure = {
+                            _eventFlow.emit(TransactionEvent.ShowError(R.string.eror_save))
+                            _uiState.update { currentState }
+                        }
                     )
             }
         }
@@ -216,8 +219,10 @@ class TransactionViewModel @Inject constructor(
             if (idTransaction != null && currentState is TransactionUiState.Success) {
                 deleteTransactionUseCase.invoke(idTransaction).fold(
                     onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
-                    //todo
-                    onFailure = { _eventFlow.emit(TransactionEvent.ShowError("Не удалось удалить транзакцию")) }
+                    onFailure = {
+                        _eventFlow.emit(TransactionEvent.ShowError(R.string.fail_delete_transaction))
+                        _uiState.update { currentState }
+                    }
                 )
             }
         }

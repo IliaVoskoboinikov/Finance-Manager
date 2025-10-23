@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model
 
+import androidx.annotation.StringRes
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
 
@@ -17,5 +18,5 @@ sealed interface TransactionUiState {
 sealed interface TransactionEvent {
     data object TransactionDeleted : TransactionEvent
     data object TransactionSaved : TransactionEvent
-    data class ShowError(val message: String) : TransactionEvent
+    data class ShowError(@StringRes val messageRes: Int) : TransactionEvent
 }

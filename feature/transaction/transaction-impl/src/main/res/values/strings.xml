@@ -8,4 +8,6 @@
     <string name="data">Дата</string>
     <string name="time">Время</string>
     <string name="comment">Комментрарий</string>
+    <string name="eror_save">Ошибка сохранения</string>
+    <string name="fail_delete_transaction">Не удалось удалить транзакцию</string>
 </resources>
