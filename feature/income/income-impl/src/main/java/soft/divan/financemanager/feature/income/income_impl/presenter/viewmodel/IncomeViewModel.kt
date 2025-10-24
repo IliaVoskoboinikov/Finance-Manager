@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.formatWith
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.formatWith
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toUi
 import soft.divan.financemanager.feature.income.income_impl.domain.usecase.GetTodayIncomeUseCase
 import soft.divan.financemanager.feature.income.income_impl.presenter.model.IncomeUiState
 import javax.inject.Inject
@@ -42,12 +42,17 @@ class IncomeViewModel @Inject constructor(
             .onStart {
                 _uiState.update { IncomeUiState.Loading }
             }
-            .onEach { transactions ->
-                val sumTransactions = getSumTransactionsUseCase(transactions.first)
+            .onEach { data ->
+                val sumTransactions = getSumTransactionsUseCase(data.first)
                 _uiState.update {
                     IncomeUiState.Success(
-                        transactions = transactions.first.map { it.toUi(transactions.second) },
-                        sumTransaction = sumTransactions.formatWith(transactions.second)
+                        transactions = data.first.map { transaction ->
+                            transaction.toUi(
+                                data.second,
+                                data.third.find { it.id == transaction.categoryId }!!
+                            )
+                        },
+                        sumTransaction = sumTransactions.formatWith(data.second)
                     )
                 }
             }

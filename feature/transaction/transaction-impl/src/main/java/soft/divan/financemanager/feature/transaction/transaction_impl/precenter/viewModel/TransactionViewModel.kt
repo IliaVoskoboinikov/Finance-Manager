@@ -16,9 +16,10 @@ import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencyCode
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toDomain
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toUi
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toDomain
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
@@ -116,7 +117,10 @@ class TransactionViewModel @Inject constructor(
             _uiState.update {
                 TransactionUiState.Success(
                     //todo
-                    transaction = transaction.toUi(currency = CurrencyCode("RUB")),
+                    transaction = transaction.toUi(
+                        currency = CurrencyCode("RUB"),
+                        category = categoriesResult.find { it.id == transaction.categoryId }!!
+                    ),
                     categories = categoriesResult.map { it.toUi() },
                     accountName = accountsResult.first().name
                 )

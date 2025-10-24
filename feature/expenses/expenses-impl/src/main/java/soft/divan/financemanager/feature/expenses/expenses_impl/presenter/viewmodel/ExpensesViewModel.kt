@@ -15,10 +15,10 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.formatWith
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toUi
 import soft.divan.financemanager.feature.expenses.expenses_impl.domain.GetTodayExpensesUseCase
 import soft.divan.financemanager.feature.expenses.expenses_impl.presenter.mapper.ExpensesUiState
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.formatWith
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
 import javax.inject.Inject
 
 @HiltViewModel
@@ -44,7 +44,12 @@ class ExpensesViewModel @Inject constructor(
                 _uiState.update { ExpensesUiState.Loading }
             }
             .onEach { data ->
-                val uiTransactions = data.first.map { it.toUi(data.second) }
+                val uiTransactions = data.first.map { transition ->
+                    transition.toUi(
+                        data.second,
+                        data.third.find { it.id == transition.categoryId }!!
+                    )
+                }
                 val sumTransactions = getSumTransactionsUseCase.invoke(data.first)
                 _uiState.update {
                     ExpensesUiState.Success(

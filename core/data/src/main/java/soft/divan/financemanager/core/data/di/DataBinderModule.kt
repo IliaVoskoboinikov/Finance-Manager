@@ -11,10 +11,12 @@ import soft.divan.financemanager.core.data.repository.TransactionRepositoryImp
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
+import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.source.impl.AccountRemoteDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.CategoryLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.CategoryRemoteDataSourceImpl
+import soft.divan.financemanager.core.data.source.impl.TransactionLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.TransactionRemoteDataSourceImpl
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
@@ -41,6 +43,10 @@ interface DataBinderModule {
     @Binds
     @Singleton
     fun bindTransactionRepository(impl: TransactionRepositoryImp): TransactionRepository
+
+    @Binds
+    @Singleton
+    fun bindTransactionLocalDataSource(impl: TransactionLocalDataSourceImpl): TransactionLocalDataSource
 
     @Binds
     @Singleton

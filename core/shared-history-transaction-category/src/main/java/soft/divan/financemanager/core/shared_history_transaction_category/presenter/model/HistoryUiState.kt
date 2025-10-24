@@ -8,7 +8,6 @@ sealed interface HistoryUiState {
     data class Success(
         val transactions: List<UiTransaction>,
         val sumTransaction: String,
-
         val startDate: String = DateHelper.getCurrentMonthStartDisplayFormat(),
         val endDate: String = DateHelper.getTodayDisplayFormat(),
     ) : HistoryUiState

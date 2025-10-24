@@ -1,9 +1,9 @@
-package soft.divan.financemanager.feature.expenses_income_shared.presenter.screen
+package soft.divan.financemanager.core.shared_history_transaction_category.presenter.screen
 
 import soft.divan.financemanager.core.domain.model.CurrencyCode
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.formatWith
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.formatWith
 import soft.divan.financemanager.feature.expenses_income_shared.presenter.model.HistoryUiState
 import java.math.BigDecimal
 import java.time.LocalDateTime
