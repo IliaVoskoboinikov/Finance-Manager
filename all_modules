@@ -55,6 +55,7 @@ digraph G {
 ":feature:income:income-impl" -> ":core:uikit"
 ":feature:income:income-impl" -> ":core:domain"
 ":feature:income:income-impl" -> ":core:shared-history-transaction-category"
+":feature:income:income-impl" -> ":feature:transaction:transaction-api"
 ":feature:expenses:expenses-api" -> ":core:feature-api"
 ":feature:expenses:expenses-impl" -> ":feature:expenses:expenses-api"
 ":feature:expenses:expenses-impl" -> ":core:network"

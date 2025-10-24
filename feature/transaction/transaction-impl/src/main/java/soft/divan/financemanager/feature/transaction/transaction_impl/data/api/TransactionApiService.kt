@@ -15,7 +15,7 @@ interface TransactionApiService {
     @POST("v1/transactions")
     suspend fun createTransaction(
         @Body request: TransactionRequestDto
-    ): Response<TransactionRequestDto>
+    ): Response<TransactionDto>
 
     @GET("v1/transactions/{id}")
     suspend fun getTransaction(
