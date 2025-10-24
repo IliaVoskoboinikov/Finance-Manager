@@ -11,7 +11,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.screen.HistoryContent
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.screen.provideMockHistoryUiState
+import soft.divan.financemanager.core.shared_history_transaction_category.presenter.screen.provideMockHistoryUiState
 import soft.divan.financemanager.feature.income.income_impl.presenter.viewmodel.HistoryIncomeViewModel
 import soft.divan.financemanager.uikit.components.FMDatePickerDialog
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme

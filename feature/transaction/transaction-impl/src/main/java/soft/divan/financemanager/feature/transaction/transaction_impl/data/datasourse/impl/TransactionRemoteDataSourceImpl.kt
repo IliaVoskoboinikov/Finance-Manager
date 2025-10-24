@@ -11,7 +11,7 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
     private val api: TransactionApiService
 ) : TransactionRemoteDataSource {
 
-    override suspend fun createTransaction(request: TransactionRequestDto): Response<TransactionRequestDto> {
+    override suspend fun createTransaction(request: TransactionRequestDto): Response<TransactionDto> {
         return api.createTransaction(request)
     }
 

@@ -13,4 +13,8 @@ class TransactionLocalDataSourceImpl @Inject constructor(
         transactionDto.insert(transaction)
     }
 
+    override suspend fun updateTransactionId(createdAt: String, newId: Int) {
+        transactionDto.updateTransactionId(createdAt, newId)
+    }
+
 }

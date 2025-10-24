@@ -2,13 +2,11 @@ package soft.divan.finansemanager.core.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.util.UUID
 
 @Entity(tableName = "transactions")
 data class TransactionEntity(
     @PrimaryKey
-    val localId: String = UUID.randomUUID().toString(),
-    val remoteId: String?,
+    val id: Int = 0,
     val accountId: Int,
     val categoryId: Int,
     val amount: String,

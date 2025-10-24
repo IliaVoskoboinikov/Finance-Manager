@@ -6,7 +6,7 @@ import soft.divan.financemanager.core.domain.model.Transaction
 interface TransactionRepository {
     suspend fun getTransactionsByAccountAndPeriod(
         accountId: Int,
-        startDate: String? = null,
-        endDate: String? = null
+        startDate: String,
+        endDate: String
     ): Flow<List<Transaction>>
 }
