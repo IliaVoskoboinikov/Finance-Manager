@@ -40,7 +40,7 @@ class AccountViewModel @Inject constructor(
             AccountUiState.Loading
         )
 
-    private fun loadAccount() {
+    private suspend fun loadAccount() {
         getAccountsUseCase()
             .onStart {
                 _uiState.update { AccountUiState.Loading }
