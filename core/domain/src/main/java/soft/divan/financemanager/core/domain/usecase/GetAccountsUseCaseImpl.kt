@@ -19,7 +19,7 @@ import javax.inject.Inject
 class GetAccountsUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : GetAccountsUseCase {
-    override fun invoke(): Flow<List<Account>> {
+    override suspend fun invoke(): Flow<List<Account>> {
         return accountRepository.getAccounts()
     }
 }

@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import soft.divan.finansemanager.core.database.dao.AccountDao
 import soft.divan.finansemanager.core.database.dao.CategoryDao
 import soft.divan.finansemanager.core.database.dao.TransactionDao
 import soft.divan.finansemanager.core.database.db.FinanceManagerDatabase
@@ -31,6 +32,10 @@ object DataBaseProviderModule {
 
     @Provides
     @Singleton
-    fun provideCategoryDao(db: FinanceManagerDatabase): CategoryDao = db.categoryDaoDao()
+    fun provideCategoryDao(db: FinanceManagerDatabase): CategoryDao = db.categoryDao()
+
+    @Provides
+    @Singleton
+    fun provideAccountDao(db: FinanceManagerDatabase): AccountDao = db.accountDao()
 
 }
