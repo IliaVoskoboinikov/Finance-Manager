@@ -20,7 +20,6 @@ import soft.divan.financemanager.core.shared_history_transaction_category.presen
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toUi
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
@@ -86,12 +85,16 @@ class TransactionViewModel @Inject constructor(
         accountsResult: List<Account>,
         categoriesResult: List<Category>
     ) {
+        //todo !!!
+        val accountId = accountsResult.firstOrNull()?.id
+        val accountName = accountsResult.firstOrNull()?.name
+        val category = categoriesResult.firstOrNull()?.toUi() ?: UiCategory(1, "empyt", "empyt", false)
         val now = LocalDateTime.now()
         _uiState.value = TransactionUiState.Success(
             transaction = UiTransaction(
                 id = -1,
-                accountId = accountsResult.first().id,
-                category = categoriesResult.first().toUi(),
+                accountId = accountId ?: 1,
+                category = category,
                 amount = BigDecimal.ZERO,
                 transactionDate = now,
                 comment = "",
@@ -102,7 +105,7 @@ class TransactionViewModel @Inject constructor(
             categories = categoriesResult.map {
                 it.toUi()
             },
-            accountName = accountsResult.first().name
+            accountName = accountName ?: " empty"
         )
     }
 

@@ -5,7 +5,6 @@ import soft.divan.financemanager.core.domain.model.CurrencyCode
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.model.symbol
 import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
-import soft.divan.financemanager.feature.expenses_income_shared.presenter.mapper.toUi
 import java.math.BigDecimal
 
 fun Transaction.toUi(currency: CurrencyCode, category: Category): UiTransaction {
