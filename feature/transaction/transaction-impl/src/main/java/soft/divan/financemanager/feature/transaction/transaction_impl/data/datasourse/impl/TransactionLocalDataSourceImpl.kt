@@ -17,4 +17,16 @@ class TransactionLocalDataSourceImpl @Inject constructor(
         transactionDto.updateTransactionId(createdAt, newId)
     }
 
+    override suspend fun deleteTransaction(transactionId: Int) {
+        transactionDto.deleteTransaction(transactionId)
+    }
+
+    override suspend fun getTransactionById(transactionId: Int): TransactionEntity? {
+        return transactionDto.getTransactionById(transactionId)
+    }
+
+    override suspend fun updateTransaction(transaction: TransactionEntity) {
+        return transactionDto.updateTransaction(transaction)
+    }
+
 }

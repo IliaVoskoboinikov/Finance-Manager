@@ -13,6 +13,7 @@ import javax.inject.Inject
 class AccountRemoteDataSourceImpl @Inject constructor(
     private val accountApiService: AccountApiService,
 ) : AccountRemoteDataSource {
+
     override suspend fun getAccounts(): Response<List<AccountDto>> {
         return accountApiService.getAccounts()
     }
