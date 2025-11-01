@@ -47,9 +47,7 @@ fun RoundedBox(isFilled: Boolean) {
     Box(
         modifier = boxModifier,
         contentAlignment = Alignment.Center
-    ) {
-        /** You can add additional content inside the round Box if necessary **/
-    }
+    ) {}
 }
 
 
