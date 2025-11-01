@@ -413,12 +413,28 @@ private fun Amount(
             .fillMaxWidth(),
         content = { ContentTextListItem(stringResource(R.string.sum)) },
         trail = {
-
+// todo сделать что бы изначально фокус ставился в начало и пренисти во viewModel
             BasicTextField(
                 value = uiState.transaction.amount.toString(),
                 onValueChange = { newValue ->
-                    if (newValue.matches(Regex("^\\d*\\.?\\d{0,2}$"))) {
-                        updateAmount(newValue)
+                    val moneyRegex = Regex("^(0|[1-9]\\d*)(\\.\\d{0,2})?$")
+
+                    when {
+                        newValue.isEmpty() -> {
+                            updateAmount("0")
+                        }
+
+                        uiState.transaction.amount.toString() == "0" &&
+                                newValue.length == 2 &&
+                                newValue.startsWith("0") &&
+                                newValue[1].isDigit() -> {
+                            updateAmount(newValue.last().toString())
+                        }
+
+                        newValue.matches(moneyRegex) -> {
+
+                            updateAmount(newValue)
+                        }
                     }
                 },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
