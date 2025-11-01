@@ -26,12 +26,40 @@ class TransactionRepositoryImpl @Inject constructor(
 
     //todo
     override suspend fun getTransactions(id: Int): Result<Transaction> = runCatching {
+
+        // Пытаемся сначала получить транзакцию из локальной БД
+        val localTransaction = transactionLocalDataSource.getTransactionById(id)?.toDomain()
+        if (localTransaction != null) {
+            // Асинхронно обновляем данные с сервера
+            applicationScope.launch(dispatcher + exceptionHandler) {
+                val response = transactionRemoteDataSource.getTransaction(id)
+                if (response.isSuccessful) {
+                    val updatedTransaction = response.body()?.toEntity()
+                    if (updatedTransaction != null) {
+                        transactionLocalDataSource.updateTransaction(updatedTransaction)
+                    }
+                }
+            }
+            return Result.success(localTransaction)
+        }
+
+
+        // Если локально нет — запрашиваем с сервера
         val response = transactionRemoteDataSource.getTransaction(id)
-        val transactionDto = response.body()
-        val transaction = transactionDto?.toEntity()?.toDomain()
-        return Result.success(transaction!!)
+        if (response.isSuccessful) {
+            val transactionDto = response.body() ?: throw IllegalStateException("Response body is null")
+            val transaction = transactionDto.toEntity().toDomain()
+
+            // Сохраняем в локальную базу для кеширования
+            transactionLocalDataSource.saveTransaction(transaction.toEntity())
+
+            return Result.success(transaction)
+        } else {
+            throw Exception("Failed to fetch transaction: ${response.code()} ${response.message()}")
+        }
     }
 
+    //todo баг с измененим транзакции
     override suspend fun createTransaction(transaction: Transaction): Result<Unit> = runCatching {
 
         transactionLocalDataSource.saveTransaction(transaction.toEntity())
@@ -52,9 +80,19 @@ class TransactionRepositoryImpl @Inject constructor(
         return Result.success(Unit)
     }
 
-    //todo бд
+    //todo
     override suspend fun deleteTransaction(transactionId: Int): Result<Unit> = runCatching {
-        val response = transactionRemoteDataSource.deleteTransaction(transactionId)
+        transactionLocalDataSource.deleteTransaction(transactionId)
+
+        // Асинхронно пытаемся удалить на сервере
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            val response = transactionRemoteDataSource.deleteTransaction(transactionId)
+            if (!response.isSuccessful) {
+                // Если серверное удаление не удалось — можно добавить обработку
+                // Например, логирование или флаг "требует синхронизации"
+                // syncManager.markForDeletion(transactionId)
+            }
+        }
     }
 
 

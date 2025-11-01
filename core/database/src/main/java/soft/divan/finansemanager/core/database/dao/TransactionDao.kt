@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import soft.divan.finansemanager.core.database.entity.TransactionEntity
 
@@ -46,4 +47,13 @@ interface TransactionDao {
     """
     )
     suspend fun updateTransactionId(createdAt: String, newId: Int)
+
+    @Query("DELETE FROM transactions WHERE id = :transactionId")
+    suspend fun deleteTransaction(transactionId: Int)
+
+    @Query("SELECT * FROM transactions WHERE id = :transactionId LIMIT 1")
+    suspend fun getTransactionById(transactionId: Int): TransactionEntity?
+
+    @Update
+    suspend fun updateTransaction(transaction: TransactionEntity)
 }
