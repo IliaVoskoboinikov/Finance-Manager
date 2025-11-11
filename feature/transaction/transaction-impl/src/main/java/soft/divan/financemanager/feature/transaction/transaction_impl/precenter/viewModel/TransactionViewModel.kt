@@ -54,6 +54,7 @@ class TransactionViewModel @Inject constructor(
             val currentState = uiState.value
             if (currentState is TransactionUiState.Success) {
                 _uiState.update { TransactionUiState.Loading }
+                //todo удалить invoke
                 createTransactionUseCase.invoke(transaction = currentState.transaction.toDomain())
                     .fold(
                         onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
@@ -114,6 +115,7 @@ class TransactionViewModel @Inject constructor(
         categoriesResult: List<Category>,
         accountsResult: List<Account>
     ) {
+        //todo fold
         val result = getTransactionsUseCase(transactionId)
         if (result.isSuccess) {
             val transaction = result.getOrThrow()
