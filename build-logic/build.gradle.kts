@@ -46,16 +46,13 @@ gradlePlugin {
             implementationClass = "plugins.FeatureImplModulePlugin"
         }
 
-
         register("jvmModulePlugin") {
             id = "jvm-module"
             implementationClass = "plugins.JvmModulePlugin"
         }
 
-
     }
 }
-
 
 dependencies {
     implementation(libs.agp)

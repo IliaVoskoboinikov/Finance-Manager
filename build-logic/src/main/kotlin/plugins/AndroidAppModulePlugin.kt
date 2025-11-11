@@ -1,39 +1,25 @@
 package plugins
 
-
-import baseAndroidConfig
+import addDefaultComposeDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
-import org.gradle.accessors.dm.LibrariesForLibs
+import configureBaseAndroid
+import libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
-import org.gradle.kotlin.dsl.dependencies
-
 
 class AndroidAppModulePlugin : Plugin<Project> {
-
     override fun apply(project: Project) {
-        val libs = project.extensions.getByName("libs") as LibrariesForLibs
-
+        val libs = project.libs
         project.pluginManager.apply(libs.plugins.soft.divan.android.base.get().pluginId)
         project.pluginManager.apply(libs.plugins.android.application.get().pluginId)
         project.pluginManager.apply(libs.plugins.kotlin.compose.get().pluginId)
 
         project.extensions.configure<BaseAppModuleExtension> {
-            baseAndroidConfig(project)
+            configureBaseAndroid(project)
             buildFeatures.compose = true
         }
 
-        project.dependencies {
-            add("implementation", libs.androidx.core.ktx)
-            add("implementation", libs.androidx.appcompat)
-            add("implementation", platform(libs.androidx.compose.bom))
-            add("implementation", libs.androidx.ui)
-            add("implementation", libs.androidx.ui.graphics)
-            add("implementation", libs.androidx.ui.tooling.preview)
-            add("implementation", libs.androidx.material3)
-            add("implementation", libs.material)
-            add("implementation", libs.androidx.hilt.navigation.compose)
-        }
+        addDefaultComposeDependencies(project)
     }
 }

@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.graph)
     alias(libs.plugins.time.tracker)
-
 }
 
 detekt {

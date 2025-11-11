@@ -5,39 +5,45 @@ import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
+import org.gradle.kotlin.dsl.dependencies
 
-object Const {
+internal val Project.libs: LibrariesForLibs
+    get() = (this as ExtensionAware).extensions.getByName("libs") as LibrariesForLibs
 
-    const val NAMESPACE = "soft.divan.financemanager"
-    const val COMPILE_SKD = 35
-    const val MIN_SKD = 26
-    val COMPILE_JDK_VERSION = JavaVersion.VERSION_11
-    const val VERSION_CODE = 1
-    const val VERSION_NAME = "1.0"
-}
-
-fun BaseExtension.baseAndroidConfig(project: Project) {
+fun BaseExtension.configureBaseAndroid(project: Project) {
     namespace = generateNamespace(project)
-
     setCompileSdkVersion(Const.COMPILE_SKD)
+
     defaultConfig {
         minSdk = Const.MIN_SKD
-
     }
+
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+
     compileOptions {
-        sourceCompatibility = Const.COMPILE_JDK_VERSION
-        targetCompatibility = Const.COMPILE_JDK_VERSION
+        sourceCompatibility = JavaVersion.toVersion(Const.JAVA_VERSION)
+        targetCompatibility = JavaVersion.toVersion(Const.JAVA_VERSION)
     }
 }
 
-internal val Project.libs: LibrariesForLibs
-    get() = (this as ExtensionAware).extensions.getByName("libs") as LibrariesForLibs
+fun addDefaultComposeDependencies(project: Project) {
+    val libs = project.libs
+    project.dependencies {
+        add(Conf.IMPLEMENTATION, libs.androidx.core.ktx)
+        add(Conf.IMPLEMENTATION, libs.androidx.appcompat)
+        add(Conf.IMPLEMENTATION, project.libs.androidx.compose.bom)
+        add(Conf.IMPLEMENTATION, libs.androidx.ui)
+        add(Conf.IMPLEMENTATION, libs.androidx.ui.tooling.preview)
+        add(Conf.IMPLEMENTATION, libs.androidx.material3)
+        add(Conf.IMPLEMENTATION, libs.material)
+        add(Conf.IMPLEMENTATION, libs.androidx.hilt.navigation.compose)
+    }
+}
 
 private fun generateNamespace(project: Project): String {
     val root = Const.NAMESPACE
