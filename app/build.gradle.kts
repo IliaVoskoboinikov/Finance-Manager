@@ -1,40 +1,11 @@
-import com.asarkar.gradle.buildtimetracker.BarPosition
-import com.asarkar.gradle.buildtimetracker.Output
-import com.asarkar.gradle.buildtimetracker.Sort
-import java.time.Duration
-
 plugins {
     alias(libs.plugins.soft.divan.android.app.module)
-    alias(libs.plugins.soft.divan.hilt)
-    alias(libs.plugins.detekt)
-    alias(libs.plugins.graph)
-    alias(libs.plugins.time.tracker)
 }
-
-detekt {
-    toolVersion = libs.versions.detekt.get()
-    config.from(file("config/detekt/detekt.yml"))
-    buildUponDefaultConfig = true
-    parallel = true
-    ignoreFailures = true
-}
-
-buildTimeTracker {
-    barPosition = BarPosition.TRAILING
-    sortBy = Sort.ASC
-    output = Output.CSV
-    minTaskDuration = Duration.ofSeconds(1)
-    reportsDir.set(File(layout.buildDirectory.get().asFile, "reports/buildTimeTracker"))
-}
-
 
 android {
     namespace = Const.NAMESPACE
     defaultConfig {
         applicationId = Const.NAMESPACE
-        versionCode = Const.VERSION_CODE
-        versionName = Const.VERSION_NAME
-        targetSdk = Const.COMPILE_SKD
     }
 }
 

@@ -14,24 +14,25 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 class JvmModulePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
-        val libs = project.libs
-        project.pluginManager.apply(libs.plugins.java.library.get().pluginId)
-        project.pluginManager.apply(libs.plugins.jetbrains.kotlin.jvm.get().pluginId)
+        with(project) {
+            pluginManager.apply(libs.plugins.java.library.get().pluginId)
+            pluginManager.apply(libs.plugins.jetbrains.kotlin.jvm.get().pluginId)
 
-        project.extensions.configure<org.gradle.api.plugins.JavaPluginExtension> {
-            sourceCompatibility = JavaVersion.toVersion(Const.JAVA_VERSION)
-            targetCompatibility = JavaVersion.toVersion(Const.JAVA_VERSION)
-        }
-
-        project.extensions.configure<KotlinJvmProjectExtension> {
-            compilerOptions {
-                jvmTarget.set(JvmTarget.fromTarget(Const.JAVA_VERSION))
+            extensions.configure<org.gradle.api.plugins.JavaPluginExtension> {
+                sourceCompatibility = JavaVersion.toVersion(Const.JAVA_VERSION)
+                targetCompatibility = JavaVersion.toVersion(Const.JAVA_VERSION)
             }
-        }
 
-        project.dependencies {
-            add(Conf.IMPLEMENTATION, libs.kotlinx.coroutines.core)
-            add(Conf.IMPLEMENTATION, libs.javax.inject)
+            extensions.configure<KotlinJvmProjectExtension> {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.fromTarget(Const.JAVA_VERSION))
+                }
+            }
+
+            dependencies {
+                add(Conf.IMPLEMENTATION, libs.kotlinx.coroutines.core)
+                add(Conf.IMPLEMENTATION, libs.javax.inject)
+            }
         }
     }
 }
