@@ -32,16 +32,17 @@ fun BaseExtension.configureBaseAndroid(project: Project) {
 }
 
 fun addDefaultComposeDependencies(project: Project) {
-    val libs = project.libs
-    project.dependencies {
-        add(Conf.IMPLEMENTATION, libs.androidx.core.ktx)
-        add(Conf.IMPLEMENTATION, libs.androidx.appcompat)
-        add(Conf.IMPLEMENTATION, project.libs.androidx.compose.bom)
-        add(Conf.IMPLEMENTATION, libs.androidx.ui)
-        add(Conf.IMPLEMENTATION, libs.androidx.ui.tooling.preview)
-        add(Conf.IMPLEMENTATION, libs.androidx.material3)
-        add(Conf.IMPLEMENTATION, libs.material)
-        add(Conf.IMPLEMENTATION, libs.androidx.hilt.navigation.compose)
+    with(project) {
+        dependencies {
+            add(Conf.IMPLEMENTATION, libs.androidx.core.ktx)
+            add(Conf.IMPLEMENTATION, libs.androidx.appcompat)
+            add(Conf.IMPLEMENTATION, libs.androidx.compose.bom)
+            add(Conf.IMPLEMENTATION, libs.androidx.ui)
+            add(Conf.IMPLEMENTATION, libs.androidx.ui.tooling.preview)
+            add(Conf.IMPLEMENTATION, libs.androidx.material3)
+            add(Conf.IMPLEMENTATION, libs.material)
+            add(Conf.IMPLEMENTATION, libs.androidx.hilt.navigation.compose)
+        }
     }
 }
 

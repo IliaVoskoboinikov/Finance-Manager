@@ -8,14 +8,21 @@ repositories {
     gradlePluginPortal()
 }
 
+dependencies {
+
+    compileOnly(libs.agp)
+    compileOnly(libs.kotlin.gradle.plugin)
+    compileOnly(libs.compose.plugin)
+
+    compileOnly(libs.detekt.gradle)
+    compileOnly(libs.build.time.tracker)
+
+    implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
+}
+
+
 gradlePlugin {
     plugins {
-
-        register("checkConventionsPlugin") {
-            id = "check-conventions-plugin"
-            implementationClass = "plugins.conventions.CheckConventionsPlugin"
-        }
-
         register("hiltPlugin") {
             id = "android-hilt"
             implementationClass = "plugins.HiltPlugin"
@@ -51,12 +58,14 @@ gradlePlugin {
             implementationClass = "plugins.JvmModulePlugin"
         }
 
-    }
-}
+        register("DetektConventionPlugin") {
+            id = "detekt-plugin"
+            implementationClass = "plugins.DetektConventionPlugin"
+        }
 
-dependencies {
-    implementation(libs.agp)
-    implementation(libs.kotlin.gradle.plugin)
-    implementation(libs.compose.plugin)
-    implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
+        register("BuildTimeTrackerConventionPlugin") {
+            id = "build-time-tracker-plugin"
+            implementationClass = "plugins.BuildTimeTrackerConventionPlugin"
+        }
+    }
 }

@@ -11,12 +11,13 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 class AndroidBasePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
-        val libs = project.libs
-        project.pluginManager.apply(libs.plugins.kotlin.android.get().pluginId)
+        with(project) {
+            pluginManager.apply(libs.plugins.kotlin.android.get().pluginId)
 
-        project.extensions.configure<KotlinAndroidProjectExtension> {
-            compilerOptions {
-                jvmTarget.set(JvmTarget.fromTarget(Const.JAVA_VERSION))
+            extensions.configure<KotlinAndroidProjectExtension> {
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.fromTarget(Const.JAVA_VERSION))
+                }
             }
         }
     }

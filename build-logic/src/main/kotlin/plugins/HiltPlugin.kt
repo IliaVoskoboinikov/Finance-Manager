@@ -8,13 +8,14 @@ import org.gradle.kotlin.dsl.dependencies
 
 class HiltPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val libs = project.libs
-        project.pluginManager.apply(libs.plugins.hilt.get().pluginId)
-        project.pluginManager.apply(libs.plugins.ksp.get().pluginId)
+        with(project) {
+            pluginManager.apply(libs.plugins.hilt.get().pluginId)
+            pluginManager.apply(libs.plugins.ksp.get().pluginId)
 
-        project.dependencies {
-            add(Conf.IMPLEMENTATION, libs.hilt.android)
-            add(Conf.KSP, libs.hilt.compiler)
+            dependencies {
+                add(Conf.IMPLEMENTATION, libs.hilt.android)
+                add(Conf.KSP, libs.hilt.compiler)
+            }
         }
     }
 }

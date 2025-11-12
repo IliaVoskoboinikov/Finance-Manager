@@ -10,13 +10,13 @@ import org.gradle.kotlin.dsl.configure
 class FeatureApiModulePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
-        val libs = project.libs
+        with(project) {
+            pluginManager.apply(libs.plugins.soft.divan.android.base.get().pluginId)
+            pluginManager.apply(libs.plugins.android.library.get().pluginId)
 
-        project.pluginManager.apply(libs.plugins.soft.divan.android.base.get().pluginId)
-        project.pluginManager.apply(libs.plugins.android.library.get().pluginId)
-
-        project.extensions.configure<LibraryExtension> {
-            configureBaseAndroid(project)
+            extensions.configure<LibraryExtension> {
+                configureBaseAndroid(project)
+            }
         }
     }
 }
