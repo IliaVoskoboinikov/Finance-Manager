@@ -1,7 +1,7 @@
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.soft.divan.core.module)
+    alias(libs.plugins.soft.divan.core)
     alias(libs.plugins.soft.divan.hilt)
 }
 

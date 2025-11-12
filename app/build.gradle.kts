@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.soft.divan.android.app.module)
+    alias(libs.plugins.soft.divan.android.app)
 }
 
 android {

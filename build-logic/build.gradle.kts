@@ -23,33 +23,28 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        register("hiltPlugin") {
-            id = "android-hilt"
-            implementationClass = "plugins.HiltPlugin"
-        }
-
         register("androidBasePlugin") {
-            id = "android-base"
+            id = "soft.divan.android.base"
             implementationClass = "plugins.AndroidBasePlugin"
         }
 
         register("androidAppPlugin") {
-            id = "android-app-module"
+            id = "soft.divan.android.app"
             implementationClass = "plugins.AndroidAppModulePlugin"
         }
 
         register("coreModulePlugin") {
-            id = "core-module"
+            id = "soft.divan.core"
             implementationClass = "plugins.CoreModulePlugin"
         }
 
         register("featureApiModulePlugin") {
-            id = "featureApi-module"
+            id = "soft.divan.feature.api"
             implementationClass = "plugins.FeatureApiModulePlugin"
         }
 
         register("featureImplModulePlugin") {
-            id = "featureImpl-module"
+            id = "soft.divan.feature.impl"
             implementationClass = "plugins.FeatureImplModulePlugin"
         }
 
@@ -58,13 +53,18 @@ gradlePlugin {
             implementationClass = "plugins.JvmModulePlugin"
         }
 
-        register("DetektConventionPlugin") {
-            id = "detekt-plugin"
+        register("hiltPlugin") {
+            id = "soft.divan.hilt"
+            implementationClass = "plugins.HiltPlugin"
+        }
+
+        register("detektConventionPlugin") {
+            id = "soft.divan.detekt"
             implementationClass = "plugins.DetektConventionPlugin"
         }
 
         register("BuildTimeTrackerConventionPlugin") {
-            id = "build-time-tracker-plugin"
+            id = "soft.divan.build.time.tracker"
             implementationClass = "plugins.BuildTimeTrackerConventionPlugin"
         }
     }
