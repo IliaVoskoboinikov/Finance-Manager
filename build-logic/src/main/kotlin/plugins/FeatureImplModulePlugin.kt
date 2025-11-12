@@ -13,23 +13,24 @@ import org.gradle.kotlin.dsl.dependencies
 class FeatureImplModulePlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
-        val libs = project.libs
-        project.pluginManager.apply(libs.plugins.soft.divan.android.base.get().pluginId)
-        project.pluginManager.apply(libs.plugins.android.library.get().pluginId)
-        project.pluginManager.apply(libs.plugins.kotlin.compose.get().pluginId)
-        project.pluginManager.apply(libs.plugins.soft.divan.hilt.get().pluginId)
+        with(project) {
+            pluginManager.apply(libs.plugins.soft.divan.android.base.get().pluginId)
+            pluginManager.apply(libs.plugins.android.library.get().pluginId)
+            pluginManager.apply(libs.plugins.kotlin.compose.get().pluginId)
+            pluginManager.apply(libs.plugins.soft.divan.hilt.get().pluginId)
 
-        project.extensions.configure<LibraryExtension> {
-            configureBaseAndroid(project)
-            buildFeatures {
-                compose = true
+            extensions.configure<LibraryExtension> {
+                configureBaseAndroid(project)
+                buildFeatures {
+                    compose = true
+                }
             }
-        }
 
-        addDefaultComposeDependencies(project)
+            addDefaultComposeDependencies(project)
 
-        project.dependencies {
-            add(Conf.DEBUG_IMPLEMENTATION, libs.androidx.ui.tooling)
+            dependencies {
+                add(Conf.DEBUG_IMPLEMENTATION, libs.androidx.ui.tooling)
+            }
         }
     }
 }

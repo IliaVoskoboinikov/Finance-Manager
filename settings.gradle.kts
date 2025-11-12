@@ -28,7 +28,6 @@ rootProject.name = "FinanceManager"
 include(":app")
 include(":core:network")
 include(":core:uikit")
-include(":core:string")
 include(":core:domain")
 include(":core:data")
 include(":feature:income")
