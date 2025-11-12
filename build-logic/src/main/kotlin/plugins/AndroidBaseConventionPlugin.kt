@@ -8,7 +8,7 @@ import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
 
-class AndroidBasePlugin : Plugin<Project> {
+class AndroidBaseConventionPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         with(project) {
