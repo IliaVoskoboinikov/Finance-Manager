@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.soft.divan.featureImpl.module)
+    alias(libs.plugins.soft.divan.feature.impl)
 }
 
 dependencies {

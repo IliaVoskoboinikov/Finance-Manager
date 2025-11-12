@@ -1,7 +1,6 @@
 package plugins
 
 import Conf
-import addDefaultComposeDependencies
 import com.android.build.gradle.LibraryExtension
 import configureBaseAndroid
 import libs
@@ -26,7 +25,7 @@ class FeatureImplModulePlugin : Plugin<Project> {
                 }
             }
 
-            addDefaultComposeDependencies(project)
+            addDefaultComposeDependencies()
 
             dependencies {
                 add(Conf.DEBUG_IMPLEMENTATION, libs.androidx.ui.tooling)
