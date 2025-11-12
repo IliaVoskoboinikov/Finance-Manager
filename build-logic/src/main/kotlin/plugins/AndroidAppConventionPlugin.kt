@@ -1,6 +1,7 @@
 package plugins
 
 import Const
+import addDefaultComposeDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import configureBaseAndroid
 import libs
@@ -8,7 +9,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 
-class AndroidAppModulePlugin : Plugin<Project> {
+class AndroidAppConventionPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         with(project) {

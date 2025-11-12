@@ -1,7 +1,3 @@
-package plugins
-
-import Conf
-import libs
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 

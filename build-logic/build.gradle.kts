@@ -23,39 +23,39 @@ dependencies {
 
 gradlePlugin {
     plugins {
-        register("androidBasePlugin") {
+        register("androidBaseConventionPlugin") {
             id = "soft.divan.android.base"
-            implementationClass = "plugins.AndroidBasePlugin"
+            implementationClass = "plugins.AndroidBaseConventionPlugin"
         }
 
-        register("androidAppPlugin") {
+        register("androidAppConventionPlugin") {
             id = "soft.divan.android.app"
-            implementationClass = "plugins.AndroidAppModulePlugin"
+            implementationClass = "plugins.AndroidAppConventionPlugin"
         }
 
-        register("coreModulePlugin") {
+        register("coreConventionPlugin") {
             id = "soft.divan.core"
-            implementationClass = "plugins.CoreModulePlugin"
+            implementationClass = "plugins.CoreConventionPlugin"
         }
 
-        register("featureApiModulePlugin") {
+        register("featureApiConventionPlugin") {
             id = "soft.divan.feature.api"
-            implementationClass = "plugins.FeatureApiModulePlugin"
+            implementationClass = "plugins.FeatureApiConventionPlugin"
         }
 
-        register("featureImplModulePlugin") {
+        register("featureImplConventionPlugin") {
             id = "soft.divan.feature.impl"
-            implementationClass = "plugins.FeatureImplModulePlugin"
+            implementationClass = "plugins.FeatureImplConventionPlugin"
         }
 
-        register("jvmModulePlugin") {
-            id = "jvm-module"
-            implementationClass = "plugins.JvmModulePlugin"
+        register("jvmLibraryConventionPlugin") {
+            id = "soft.divan.jvm.library"
+            implementationClass = "plugins.JvmLibraryConventionPlugin"
         }
 
-        register("hiltPlugin") {
+        register("hiltConventionPlugin") {
             id = "soft.divan.hilt"
-            implementationClass = "plugins.HiltPlugin"
+            implementationClass = "plugins.HiltConventionPlugin"
         }
 
         register("detektConventionPlugin") {

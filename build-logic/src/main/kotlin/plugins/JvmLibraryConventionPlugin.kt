@@ -11,7 +11,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 
-class JvmModulePlugin : Plugin<Project> {
+class JvmLibraryConventionPlugin : Plugin<Project> {
 
     override fun apply(project: Project) {
         with(project) {

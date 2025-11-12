@@ -1,3 +1,3 @@
 plugins {
-    alias(libs.plugins.soft.divan.jvm)
+    alias(libs.plugins.soft.divan.jvm.library)
 }
