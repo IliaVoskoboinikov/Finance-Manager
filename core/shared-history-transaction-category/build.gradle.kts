@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.soft.divan.core.module)
+    alias(libs.plugins.soft.divan.core)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.soft.divan.hilt)
 }

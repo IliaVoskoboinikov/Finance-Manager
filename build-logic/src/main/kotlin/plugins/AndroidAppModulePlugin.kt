@@ -1,7 +1,6 @@
 package plugins
 
 import Const
-import addDefaultComposeDependencies
 import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import configureBaseAndroid
 import libs
@@ -34,7 +33,7 @@ class AndroidAppModulePlugin : Plugin<Project> {
                 buildFeatures.compose = true
             }
 
-            addDefaultComposeDependencies(project)
+            addDefaultComposeDependencies()
         }
     }
 }
