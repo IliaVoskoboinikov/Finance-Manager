@@ -33,6 +33,7 @@ room = "2.7.2"
 androidxWork = "2.10.0"
 hiltExt = "1.2.0"
 
+
 [libraries]
 agp = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 androidx-biometric-ktx = { module = "androidx.biometric:biometric-ktx", version.ref = "biometricKtx" }
