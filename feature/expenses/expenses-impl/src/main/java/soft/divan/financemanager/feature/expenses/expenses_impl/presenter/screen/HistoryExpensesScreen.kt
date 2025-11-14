@@ -39,6 +39,7 @@ fun HistoryExpensesScreenPreview() {
             onEndDateClick = { showEndDatePicker.value = true },
             onNavigateToTransaction = {},
             onNavigateBack = {},
+            onNavigateToAnalysis = {}
         )
     }
 }
@@ -48,6 +49,7 @@ fun HistoryExpensesScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     onNavigateToTransaction: (Int) -> Unit,
+    onNavigateToAnalysis: () -> Unit,
     viewModel: HistoryExpensesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,6 +80,7 @@ fun HistoryExpensesScreen(
         onEndDateClick = { showEndDatePicker.value = true },
         onNavigateToTransaction = onNavigateToTransaction,
         onNavigateBack = onNavigateBack,
+        onNavigateToAnalysis = onNavigateToAnalysis
     )
 
     if (showStartDatePicker.value) {

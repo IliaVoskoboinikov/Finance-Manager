@@ -25,7 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
 import soft.divan.financemanager.feature.expenses.expenses_impl.R
 import soft.divan.financemanager.feature.expenses.expenses_impl.presenter.mapper.ExpensesUiState
 import soft.divan.financemanager.feature.expenses.expenses_impl.presenter.viewmodel.ExpensesViewModel
@@ -60,7 +59,6 @@ fun ExpensesScreen(
     onNavigateToHistory: () -> Unit,
     onNavigateToNewTransaction: () -> Unit,
     onNavigateToOldTransaction: (Int) -> Unit,
-    navController: NavController,
     viewModel: ExpensesViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 

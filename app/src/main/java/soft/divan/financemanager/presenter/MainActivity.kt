@@ -16,6 +16,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import dagger.hilt.android.AndroidEntryPoint
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
+import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model.ThemeMode
@@ -55,6 +56,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var transactionFeatureApi: TransactionFeatureApi
+
+    @Inject
+    lateinit var analysisFeatureApi: AnalysisFeatureApi
 
     @Inject
     lateinit var splashSettingsFeatureApi: SplashScreenFeatureApi
@@ -137,6 +141,7 @@ class MainActivity : ComponentActivity() {
                         transactionFeatureApi = transactionFeatureApi,
                         securityFeatureApi = securityFeatureApi,
                         designAppFeatureApi = designAppFeatureApi,
+                        analysisFeatureApi = analysisFeatureApi
                     )
                 }
             }

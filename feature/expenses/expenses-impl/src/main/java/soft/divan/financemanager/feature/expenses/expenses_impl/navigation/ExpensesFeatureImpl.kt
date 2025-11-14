@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
 import soft.divan.financemanager.feature.expenses.expenses_impl.presenter.screen.ExpensesScreen
 import soft.divan.financemanager.feature.expenses.expenses_impl.presenter.screen.HistoryExpensesScreen
@@ -21,6 +22,9 @@ class ExpensesFeatureImpl @Inject constructor() : ExpensesFeatureApi {
 
     @Inject
     lateinit var transactionFeatureApi: TransactionFeatureApi
+
+    @Inject
+    lateinit var analysisFeatureApi: AnalysisFeatureApi
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
@@ -44,7 +48,6 @@ class ExpensesFeatureImpl @Inject constructor() : ExpensesFeatureApi {
                         )
                     )
                 },
-                navController = navController,
             )
         }
 
@@ -66,6 +69,9 @@ class ExpensesFeatureImpl @Inject constructor() : ExpensesFeatureApi {
                             )
                         )
                     },
+                    onNavigateToAnalysis = {
+                        navController.navigate(analysisFeatureApi.analysisRouteWithArgs(isIncome = false))
+                    }
                 )
             }
 
