@@ -45,5 +45,8 @@ dependencies {
     implementation(projects.feature.designApp.designAppApi)
     implementation(projects.feature.designApp.designAppImpl)
 
+    implementation(projects.feature.analysis.analysisApi)
+    implementation(projects.feature.analysis.analysisImpl)
+
     implementation(libs.androidx.lifecycle.process)
 }

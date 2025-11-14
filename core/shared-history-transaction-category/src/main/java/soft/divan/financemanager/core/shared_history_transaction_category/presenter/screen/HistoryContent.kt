@@ -47,6 +47,7 @@ fun HistoryContent(
     onEndDateClick: () -> Unit,
     onNavigateToTransaction: (Int) -> Unit,
     onNavigateBack: () -> Unit,
+    onNavigateToAnalysis: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
 
@@ -59,7 +60,7 @@ fun HistoryContent(
                     navigationIcon = Icons.Filled.ArrowBack,
                     navigationIconClick = onNavigateBack,
                     actionIcon = Icons.Filled.TabletWatch,
-                    actionIconClick = {}
+                    actionIconClick = onNavigateToAnalysis
                 ),
 
                 )
