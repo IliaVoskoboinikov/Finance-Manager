@@ -25,6 +25,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
+import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
@@ -62,7 +63,8 @@ fun MainScreen(
     settingsFeatureApi: SettingsFeatureApi,
     transactionFeatureApi: TransactionFeatureApi,
     securityFeatureApi: SecurityFeatureApi,
-    designAppFeatureApi: DesignAppFeatureApi
+    designAppFeatureApi: DesignAppFeatureApi,
+    analysisFeatureApi: AnalysisFeatureApi
 ) {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -115,7 +117,8 @@ fun MainScreen(
                 settingsFeatureApi = settingsFeatureApi,
                 transactionFeatureApi = transactionFeatureApi,
                 securityFeatureApi = securityFeatureApi,
-                designAppFeatureApi = designAppFeatureApi
+                designAppFeatureApi = designAppFeatureApi,
+                analysisFeatureApi = analysisFeatureApi,
             )
 
             SnackbarHost(

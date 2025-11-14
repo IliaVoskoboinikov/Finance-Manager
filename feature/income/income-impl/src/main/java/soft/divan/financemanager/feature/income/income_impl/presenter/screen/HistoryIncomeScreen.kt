@@ -38,6 +38,7 @@ fun HistoryIncomeScreenPreview() {
             onEndDateClick = { showEndDatePicker.value = true },
             onNavigateToTransaction = {},
             onNavigateBack = {},
+            onNavigateToAnalysis = {}
   
         )
     }
@@ -74,6 +75,7 @@ fun HistoryIncomeScreen(
         onEndDateClick = { showEndDatePicker.value = true },
         onNavigateToTransaction = onNavigateToTransaction,
         onNavigateBack = onNavigateBack,
+        onNavigateToAnalysis = {}
     )
 
     if (showStartDatePicker.value) {
