@@ -24,6 +24,8 @@ digraph G {
 ":app" -> ":feature:security:security-impl"
 ":app" -> ":feature:design-app:design-app-api"
 ":app" -> ":feature:design-app:design-app-impl"
+":app" -> ":feature:analysis:analysis-api"
+":app" -> ":feature:analysis:analysis-impl"
 ":sync" -> ":core:data" [color=red style=bold]
 ":core:shared-history-transaction-category" -> ":core:network"
 ":core:shared-history-transaction-category" -> ":core:uikit"
@@ -63,6 +65,7 @@ digraph G {
 ":feature:expenses:expenses-impl" -> ":core:domain"
 ":feature:expenses:expenses-impl" -> ":core:shared-history-transaction-category"
 ":feature:expenses:expenses-impl" -> ":feature:transaction:transaction-api"
+":feature:expenses:expenses-impl" -> ":feature:analysis:analysis-api"
 ":feature:splash-screen:splash-screen-api" -> ":core:feature-api"
 ":feature:splash-screen:splash-screen-impl" -> ":feature:splash-screen:splash-screen-api"
 ":feature:splash-screen:splash-screen-impl" -> ":feature:expenses:expenses-api"
@@ -84,4 +87,9 @@ digraph G {
 ":feature:design-app:design-app-api" -> ":core:feature-api"
 ":feature:design-app:design-app-impl" -> ":feature:design-app:design-app-api"
 ":feature:design-app:design-app-impl" -> ":core:uikit"
+":feature:analysis:analysis-api" -> ":core:feature-api"
+":feature:analysis:analysis-impl" -> ":feature:analysis:analysis-api"
+":feature:analysis:analysis-impl" -> ":core:uikit"
+":feature:analysis:analysis-impl" -> ":core:domain"
+":feature:analysis:analysis-impl" -> ":core:shared-history-transaction-category"
 }

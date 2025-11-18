@@ -3,6 +3,7 @@
 ```shell script
 ./gradlew generateModulesGraphStatistics
 ```
+
 # Текстовое представление всех модулей
 ```shell script
 ./gradlew generateModulesGraphvizText -Pmodules.graph.output.gv=all_modules 
