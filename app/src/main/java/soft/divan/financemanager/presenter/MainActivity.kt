@@ -23,14 +23,13 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetThemeModeUseCase
-import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
-import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.IsPinSetUseCase
 import soft.divan.financemanager.feature.security.security_impl.presenter.screen.PinLockScreen
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
+import soft.divan.financemanager.feature.transactions_today.transactions_today_api.TransactionsTodayFeatureApi
 import soft.divan.financemanager.presenter.screens.MainScreen
 import soft.divan.financemanager.uikit.theme.AccentColor
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
@@ -43,10 +42,7 @@ class MainActivity : ComponentActivity() {
     lateinit var settingsFeatureApi: SettingsFeatureApi
 
     @Inject
-    lateinit var incomeFeatureApi: IncomeFeatureApi
-
-    @Inject
-    lateinit var expensesFeatureApi: ExpensesFeatureApi
+    lateinit var transactionsTodayFeatureApi: TransactionsTodayFeatureApi
 
     @Inject
     lateinit var categoryFeatureApi: CategoryFeatureApi
@@ -133,8 +129,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     MainScreen(
                         splashFeatureApi = splashSettingsFeatureApi,
-                        incomeFeatureApi = incomeFeatureApi,
-                        expenseFeatureApi = expensesFeatureApi,
+                        transactionsTodayFeatureApi = transactionsTodayFeatureApi,
                         categoryFeatureApi = categoryFeatureApi,
                         accountFeatureApi = accountFeatureApi,
                         settingsFeatureApi = settingsFeatureApi,

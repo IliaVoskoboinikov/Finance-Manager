@@ -18,14 +18,10 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
 
     override val route: String = "transaction"
 
-    override fun transactionRouteWithArgs(
-        transactionId: Int,
-        isIncome: Boolean
-    ): String {
-        val id = transactionId.toString()
-        val income = isIncome.toString()
-        return "$route/$id/$income"
-    }
+    override fun transactionRouteWithArgs(transactionId: Int, isIncome: Boolean) =
+        "$route/$transactionId/$isIncome"
+
+    override fun transactionRouteWithArgs(isIncome: Boolean) = "$route/$isIncome"
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
@@ -40,11 +36,13 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
                 },
                 navArgument(isIncomeKey) {
                     type = NavType.BoolType
+                    defaultValue = false
                 }
             )
         ) { backStackEntry ->
+
             val transactionId = backStackEntry.arguments?.getInt(transactionIdKey)
-            val isIncome = backStackEntry.arguments?.getBoolean(isIncomeKey)
+            val isIncome = backStackEntry.arguments?.getBoolean(isIncomeKey) ?: false
 
             TransactionScreen(
                 modifier = modifier,
@@ -55,9 +53,21 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
 
         }
 
-        navGraphBuilder.composable(route) {
+        navGraphBuilder.composable(
+            "${route}/{$isIncomeKey}",
+            arguments = listOf(
+                navArgument(isIncomeKey) {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+
+            val isIncome = backStackEntry.arguments?.getBoolean(isIncomeKey) ?: false
+
             TransactionScreen(
                 modifier = modifier,
+                isIncome = isIncome,
                 onNavigateBack = navController::popBackStack
             )
         }
