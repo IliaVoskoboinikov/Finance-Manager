@@ -78,6 +78,7 @@ fun TransactionScreenPreview() {
     FinanceManagerTheme {
         TransactionContent(
             uiState = mockTransactionUiStateSuccess,
+            isIncome = false,
             onNavigateBack = { },
             onSave = { },
             onAmountChange = { },
@@ -104,7 +105,7 @@ fun TransactionScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     transactionId: Int? = null,
-    isIncome: Boolean? = null,
+    isIncome: Boolean = false,
     viewModel: TransactionViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 
@@ -135,6 +136,7 @@ fun TransactionScreen(
     TransactionContent(
         modifier = modifier,
         uiState = uiState,
+        isIncome = isIncome,
         onNavigateBack = onNavigateBack,
         onSave = viewModel::createTransaction,
         onAmountChange = viewModel::updateAmount,
@@ -150,6 +152,7 @@ fun TransactionScreen(
 @Composable
 fun TransactionContent(
     modifier: Modifier = Modifier,
+    isIncome: Boolean,
     uiState: TransactionUiState,
     onNavigateBack: () -> Unit,
     onSave: () -> Unit,
@@ -166,7 +169,7 @@ fun TransactionContent(
         topBar = {
             TopBar(
                 topBar = TopBarModel(
-                    title = R.string.my_expenses,
+                    title = if (isIncome) R.string.my_income else R.string.my_expenses,
                     navigationIcon = Icons.Filled.Cross,
                     navigationIconClick = onNavigateBack,
                     actionIcon = Icons.Filled.ArrowConfirm,

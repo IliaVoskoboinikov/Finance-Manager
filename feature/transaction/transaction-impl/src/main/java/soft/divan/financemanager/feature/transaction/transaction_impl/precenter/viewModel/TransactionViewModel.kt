@@ -59,7 +59,7 @@ class TransactionViewModel @Inject constructor(
                     .fold(
                         onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
                         onFailure = {
-                            _eventFlow.emit(TransactionEvent.ShowError(R.string.eror_save))
+                            _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
                             _uiState.update { currentState }
                         }
                     )

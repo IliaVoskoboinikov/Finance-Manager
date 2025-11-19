@@ -3,14 +3,11 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.core.database)
+    implementation(projects.feature.transactionsToday.transactionsTodayApi)
     implementation(projects.core.network)
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
-    implementation(projects.core.data)
     implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(projects.feature.transaction.transactionApi)
-
-    implementation(libs.converter.gson)
-    implementation(libs.retrofit)
+    implementation(projects.feature.analysis.analysisApi)
 }

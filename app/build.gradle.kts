@@ -27,11 +27,8 @@ dependencies {
     implementation(projects.feature.account.accountApi)
     implementation(projects.feature.account.accountImpl)
 
-    implementation(projects.feature.income.incomeApi)
-    implementation(projects.feature.income.incomeImpl)
-
-    implementation(projects.feature.expenses.expensesApi)
-    implementation(projects.feature.expenses.expensesImpl)
+    implementation(projects.feature.transactionsToday.transactionsTodayApi)
+    implementation(projects.feature.transactionsToday.transactionsTodayImpl)
 
     implementation(projects.feature.splashScreen.splashScreenApi)
     implementation(projects.feature.splashScreen.splashScreenImpl)

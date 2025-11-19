@@ -11,20 +11,18 @@ import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
-import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
-import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
+import soft.divan.financemanager.feature.transactions_today.transactions_today_api.TransactionsTodayFeatureApi
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     splashScreenFeatureApi: SplashScreenFeatureApi,
-    expenseFeatureApi: ExpensesFeatureApi,
-    incomeFeatureApi: IncomeFeatureApi,
+    transactionsTodayFeatureApi: TransactionsTodayFeatureApi,
     categoryFeatureApi: CategoryFeatureApi,
     accountFeatureApi: AccountFeatureApi,
     settingsFeatureApi: SettingsFeatureApi,
@@ -44,8 +42,11 @@ fun NavGraph(
     ) {
         register(featureApi = splashScreenFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = settingsFeatureApi, navController = navController, modifier = modifier)
-        register(featureApi = incomeFeatureApi, navController = navController, modifier = modifier)
-        register(featureApi = expenseFeatureApi, navController = navController, modifier = modifier)
+        register(
+            featureApi = transactionsTodayFeatureApi,
+            navController = navController,
+            modifier = modifier
+        )
         register(featureApi = categoryFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = accountFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = transactionFeatureApi, navController = navController, modifier = modifier)

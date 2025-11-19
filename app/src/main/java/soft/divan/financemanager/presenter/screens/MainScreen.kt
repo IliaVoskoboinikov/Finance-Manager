@@ -28,12 +28,11 @@ import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
-import soft.divan.financemanager.feature.expenses.expenses_api.ExpensesFeatureApi
-import soft.divan.financemanager.feature.income.income_api.IncomeFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
+import soft.divan.financemanager.feature.transactions_today.transactions_today_api.TransactionsTodayFeatureApi
 import soft.divan.financemanager.presenter.MainViewModel
 import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
 import soft.divan.financemanager.presenter.navigation.NavGraph
@@ -56,8 +55,7 @@ fun MainScreen(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = hiltViewModel(),
     splashFeatureApi: SplashScreenFeatureApi,
-    expenseFeatureApi: ExpensesFeatureApi,
-    incomeFeatureApi: IncomeFeatureApi,
+    transactionsTodayFeatureApi: TransactionsTodayFeatureApi,
     accountFeatureApi: AccountFeatureApi,
     categoryFeatureApi: CategoryFeatureApi,
     settingsFeatureApi: SettingsFeatureApi,
@@ -71,14 +69,13 @@ fun MainScreen(
     val currentRoute = currentBackStack?.destination?.route
 
     val bottomScreens = ScreenBottom.items(
-        expenses = expenseFeatureApi,
-        income = incomeFeatureApi,
+        transactionsToday = transactionsTodayFeatureApi,
         account = accountFeatureApi,
         category = categoryFeatureApi,
         settings = settingsFeatureApi
     )
 
-    val bottomRoutes = bottomScreens.map { it.feature.route }
+    val bottomRoutes = bottomScreens.map { it.route }
 
     val selectedBottomRoute = rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -110,8 +107,7 @@ fun MainScreen(
             NavGraph(
                 navController = navController,
                 splashScreenFeatureApi = splashFeatureApi,
-                incomeFeatureApi = incomeFeatureApi,
-                expenseFeatureApi = expenseFeatureApi,
+                transactionsTodayFeatureApi = transactionsTodayFeatureApi,
                 categoryFeatureApi = categoryFeatureApi,
                 accountFeatureApi = accountFeatureApi,
                 settingsFeatureApi = settingsFeatureApi,
