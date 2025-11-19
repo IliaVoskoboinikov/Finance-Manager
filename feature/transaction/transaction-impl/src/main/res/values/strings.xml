@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="my_expenses">Мои расходы</string>
+    <string name="my_income">Мои доходы</string>
     <string name="select_category">Выберите категорию</string>
     <string name="account">Счет</string>
     <string name="category">Статьи</string>
@@ -8,6 +9,6 @@
     <string name="data">Дата</string>
     <string name="time">Время</string>
     <string name="comment">Комментрарий</string>
-    <string name="eror_save">Ошибка сохранения</string>
+    <string name="error_save">Ошибка сохранения</string>
     <string name="fail_delete_transaction">Не удалось удалить транзакцию</string>
 </resources>

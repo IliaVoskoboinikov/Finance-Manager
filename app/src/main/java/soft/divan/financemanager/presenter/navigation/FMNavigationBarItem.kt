@@ -20,15 +20,16 @@ fun RowScope.FMNavigationBarItem(
     screenBottom: ScreenBottom,
     navController: NavHostController
 ) {
-    val destinationRoute = screenBottom.feature.route
+
+    val selected = currentRoute == screenBottom.route
 
     NavigationBarItem(
         colors = NavigationBarItemDefaults.colors()
             .copy(selectedIconColor = MaterialTheme.colorScheme.primary),
-        selected = currentRoute == destinationRoute,
+        selected = selected,
         onClick = {
-            if (currentRoute != destinationRoute) {
-                navController.navigate(destinationRoute) {
+            if (!selected) {
+                navController.navigate(screenBottom.route) {
                     popUpTo(navController.graph.startDestinationId) {
                         saveState = true
                     }
@@ -47,7 +48,7 @@ fun RowScope.FMNavigationBarItem(
         label = {
             Text(
                 text = stringResource(screenBottom.title),
-                fontWeight = if (currentRoute == destinationRoute) FontWeight.Bold else FontWeight.Normal,
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                 fontSize = 12.sp,
             )
         },

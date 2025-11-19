@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     implementation(projects.feature.splashScreen.splashScreenApi)
-    implementation(projects.feature.expenses.expensesApi)
+    implementation(projects.feature.transactionsToday.transactionsTodayApi)
     implementation(projects.core.uikit)
 
     implementation(libs.lottie.compose)
