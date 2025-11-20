@@ -2,12 +2,10 @@ package soft.divan.financemanager.feature.analysis.analysis_impl.precenter.model
 
 import co.yml.charts.ui.piechart.models.PieChartData
 import soft.divan.financemanager.core.domain.util.DateHelper
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
 
 sealed interface AnalysisUiState {
     data object Loading : AnalysisUiState
     data class Success(
-        val transactions: List<UiTransaction>,
         val sumTransaction: String,
         val categoryPieSlice: PieChartData,
         val startDate: String = DateHelper.getCurrentMonthStartDisplayFormat(),

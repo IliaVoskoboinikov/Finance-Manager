@@ -7,7 +7,6 @@ dependencies {
     implementation(projects.core.network)
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
-    implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(projects.feature.transaction.transactionApi)
-    implementation(projects.feature.analysis.analysisApi)
+    implementation(projects.feature.history.historyApi)
 }

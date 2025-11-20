@@ -16,17 +16,18 @@ import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencyCode
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toDomain
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toUi
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiCategory
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.UiTransaction
+
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesExpensesUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toDomain
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiCategory
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiTransaction
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime

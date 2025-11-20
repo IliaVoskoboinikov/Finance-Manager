@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.R
-import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.mapper.TransactionsTodayUiState
+import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.model.TransactionsTodayUiState
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.viewmodel.TransactionsTodayViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.EmojiCircle

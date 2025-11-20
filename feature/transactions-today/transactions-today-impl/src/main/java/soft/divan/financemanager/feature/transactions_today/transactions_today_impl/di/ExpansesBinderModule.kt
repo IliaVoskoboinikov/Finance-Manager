@@ -7,8 +7,6 @@ import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.feature.transactions_today.transactions_today_api.TransactionsTodayFeatureApi
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTodayTransactionsUseCase
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTodayTransactionsUseCaseImpl
-import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTransactionsByPeriodUseCase
-import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTransactionsByPeriodUseCaseImpl
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.navigation.TransactionsTodayFeatureImpl
 
 
@@ -20,9 +18,7 @@ interface TransactionsTodayBinderModule {
     fun bindTransactionsTodayRouter(impl: TransactionsTodayFeatureImpl): TransactionsTodayFeatureApi
 
     @Binds
-    fun bindGetTodayExpensesUseCase(impl: GetTodayTransactionsUseCaseImpl): GetTodayTransactionsUseCase
+    fun bindGetTodayTransactionsUseCase(impl: GetTodayTransactionsUseCaseImpl): GetTodayTransactionsUseCase
 
-    @Binds
-    fun bindGetTransactionsByPeriodUseCase(impl: GetTransactionsByPeriodUseCaseImpl): GetTransactionsByPeriodUseCase
 
 }

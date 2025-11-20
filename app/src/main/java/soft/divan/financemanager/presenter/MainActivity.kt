@@ -23,6 +23,7 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetThemeModeUseCase
+import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.IsPinSetUseCase
 import soft.divan.financemanager.feature.security.security_impl.presenter.screen.PinLockScreen
@@ -49,6 +50,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var accountFeatureApi: AccountFeatureApi
+
+    @Inject
+    lateinit var historyFeatureApi: HistoryFeatureApi
 
     @Inject
     lateinit var transactionFeatureApi: TransactionFeatureApi
@@ -136,7 +140,8 @@ class MainActivity : ComponentActivity() {
                         transactionFeatureApi = transactionFeatureApi,
                         securityFeatureApi = securityFeatureApi,
                         designAppFeatureApi = designAppFeatureApi,
-                        analysisFeatureApi = analysisFeatureApi
+                        analysisFeatureApi = analysisFeatureApi,
+                        historyFeatureApi = historyFeatureApi
                     )
                 }
             }

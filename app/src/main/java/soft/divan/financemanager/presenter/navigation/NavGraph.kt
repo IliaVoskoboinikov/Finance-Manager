@@ -11,6 +11,7 @@ import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
+import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
@@ -29,7 +30,8 @@ fun NavGraph(
     transactionFeatureApi: TransactionFeatureApi,
     securityFeatureApi: SecurityFeatureApi,
     designAppFeatureApi: DesignAppFeatureApi,
-    analysisFeatureApi: AnalysisFeatureApi
+    analysisFeatureApi: AnalysisFeatureApi,
+    historyFeatureApi: HistoryFeatureApi
 ) {
     NavHost(
         navController = navController,
@@ -53,5 +55,6 @@ fun NavGraph(
         register(featureApi = securityFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = designAppFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = analysisFeatureApi, navController = navController, modifier = modifier)
+        register(featureApi = historyFeatureApi, navController = navController, modifier = modifier)
     }
 }

@@ -6,17 +6,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import androidx.navigation.navigation
-import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
+import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transactions_today.transactions_today_api.TransactionsTodayFeatureApi
-import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.screen.HistoryExpensesScreen
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.screen.TransactionsTodayScreen
 import javax.inject.Inject
 
 private const val baseRoute = "transactionsToday"
-private const val scenarioExpensesRoute = "${baseRoute}/scenario"
-private const val screenExpensesHistoryRoute = "$scenarioExpensesRoute/expenses_history"
 private const val isIncomeKey: String = "isIncome"
 
 class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeatureApi {
@@ -29,7 +25,7 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
     lateinit var transactionFeatureApi: TransactionFeatureApi
 
     @Inject
-    lateinit var analysisFeatureApi: AnalysisFeatureApi
+    lateinit var historyFeatureApi: HistoryFeatureApi
 
     override fun transactionsTodayRouteWithArgs(isIncome: Boolean) = "$route/$isIncome"
 
@@ -51,7 +47,7 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
                 modifier = modifier,
                 isIncome = isIncome,
                 onNavigateToHistory = {
-                    navController.navigate(scenarioExpensesRoute)
+                    navController.navigate(historyFeatureApi.transactionRouteWithArgs(isIncome = isIncome))
                 },
                 onNavigateToNewTransaction = {
                     navController.navigate(transactionFeatureApi.transactionRouteWithArgs(isIncome))
@@ -77,7 +73,7 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
                 modifier = modifier,
                 isIncome = false,
                 onNavigateToHistory = {
-                    navController.navigate(scenarioExpensesRoute)
+                    navController.navigate(historyFeatureApi.transactionRouteWithArgs(isIncome = false))
                 },
                 onNavigateToNewTransaction = {
                     navController.navigate(transactionFeatureApi.transactionRouteWithArgs(false))
@@ -103,7 +99,7 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
                 modifier = modifier,
                 isIncome = true,
                 onNavigateToHistory = {
-                    navController.navigate(scenarioExpensesRoute)
+                    navController.navigate(historyFeatureApi.transactionRouteWithArgs(isIncome = true))
                 },
                 onNavigateToNewTransaction = {
                     navController.navigate(transactionFeatureApi.transactionRouteWithArgs(true))
@@ -117,33 +113,6 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
                     )
                 },
             )
-        }
-
-
-        /* Nested graph for internal scenario */
-        navGraphBuilder.navigation(
-            route = scenarioExpensesRoute,
-            startDestination = screenExpensesHistoryRoute
-        ) {
-
-            composable(route = screenExpensesHistoryRoute) {
-                HistoryExpensesScreen(
-                    modifier = modifier,
-                    onNavigateBack = navController::popBackStack,
-                    onNavigateToTransaction = { transitionId ->
-                        navController.navigate(
-                            transactionFeatureApi.transactionRouteWithArgs(
-                                transitionId,
-                                false
-                            )
-                        )
-                    },
-                    onNavigateToAnalysis = {
-                        navController.navigate(analysisFeatureApi.analysisRouteWithArgs(isIncome = false))
-                    }
-                )
-            }
-
         }
     }
 

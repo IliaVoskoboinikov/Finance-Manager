@@ -13,11 +13,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import soft.divan.financemanager.core.domain.model.formatWith
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionByPeriodUseCase
 import soft.divan.financemanager.core.domain.util.DateHelper
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.formatWith
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toUi
 import soft.divan.financemanager.feature.analysis.analysis_impl.domain.usecase.GetCategoryPieChartDataUseCase
 import soft.divan.financemanager.feature.analysis.analysis_impl.precenter.mapper.toPieChartData
 import soft.divan.financemanager.feature.analysis.analysis_impl.precenter.model.AnalysisUiState
@@ -52,20 +51,14 @@ class AnalysisViewModel @Inject constructor(
                 _uiState.update { AnalysisUiState.Loading }
             }
             .onEach { data ->
-                val uiTransactions = data.first.map { transaction ->
-                    transaction.toUi(
-                        data.second,
-                        data.third.find { it.id == transaction.categoryId }!!
-                    )
-                }
-                val sumTransactions = getSumTransactionsUseCase(data.first)
+
+            val sumTransactions = getSumTransactionsUseCase(data.first)
 
                 val categoryPieSlice = getCategoryPieChartDataUseCase(data.first, data.third)
 
                 if (!data.first.isEmpty()) {
                     _uiState.update {
                         AnalysisUiState.Success(
-                            transactions = uiTransactions,
                             sumTransaction = sumTransactions.formatWith(data.second),
                             categoryPieSlice = categoryPieSlice.toPieChartData()
                         )

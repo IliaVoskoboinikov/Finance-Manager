@@ -7,7 +7,6 @@ dependencies {
     implementation(projects.core.network)
     implementation(projects.core.uikit)
     implementation(projects.core.data)
-    implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(projects.core.domain)
 
 
