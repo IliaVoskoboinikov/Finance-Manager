@@ -9,7 +9,13 @@ import javax.inject.Inject
 class CategoryRemoteDataSourceImpl @Inject constructor(
     private val categoryApiService: CategoryApiService,
 ) : CategoryRemoteDataSource {
+
     override suspend fun getCategories(): Response<List<CategoryDto>> {
         return categoryApiService.getCategories()
     }
+
+    override suspend fun getCategoriesByType(isIncome: Boolean): Response<List<CategoryDto>> {
+        return categoryApiService.getCategoriesByType(isIncome)
+    }
+
 }
