@@ -393,7 +393,7 @@ private fun CategorySheetContent(
                             onDismissRequest()
                         }, content = {
                         Text(
-                            text = category.name,
+                            text = category.emoji + " " + category.name,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     })
