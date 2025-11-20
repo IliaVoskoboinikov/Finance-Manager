@@ -15,12 +15,11 @@ import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencyCode
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
-import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
-import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesExpensesUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toDomain
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toUi
@@ -39,8 +38,7 @@ class TransactionViewModel @Inject constructor(
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getTransactionsUseCase: GetTransactionUseCase,
-    private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
-    private val getCategoriesUseCase: GetCategoriesExpensesUseCase,
+    private val getCategoriesUseCase: GetCategoriesByTypeUseCase,
     private val deleteTransactionUseCase: DeleteTransactionUseCase
 
 ) : ViewModel() {
@@ -68,11 +66,11 @@ class TransactionViewModel @Inject constructor(
         }
     }
 
-    fun load(transactionId: Int?, isIncome: Boolean?) {
+    fun load(transactionId: Int?, isIncome: Boolean) {
         viewModelScope.launch {
             _uiState.update { TransactionUiState.Loading }
 
-            val categoriesResult = getCategoriesUseCase().first()
+            val categoriesResult = getCategoriesUseCase(isIncome).first()
             val accountsResult = getAccountsUseCase().first()
 
             if (transactionId == null) {

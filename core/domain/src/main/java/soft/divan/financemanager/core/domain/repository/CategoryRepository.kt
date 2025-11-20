@@ -5,4 +5,5 @@ import soft.divan.financemanager.core.domain.model.Category
 
 interface CategoryRepository {
     suspend fun getCategories(): Flow<List<Category>>
+    suspend fun getCategoriesByType(isIncome: Boolean): Flow<List<Category>>
 }

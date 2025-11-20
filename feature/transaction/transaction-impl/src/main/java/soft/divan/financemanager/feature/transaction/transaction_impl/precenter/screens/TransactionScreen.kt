@@ -105,7 +105,7 @@ fun TransactionScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     transactionId: Int? = null,
-    isIncome: Boolean = false,
+    isIncome: Boolean,
     viewModel: TransactionViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 
