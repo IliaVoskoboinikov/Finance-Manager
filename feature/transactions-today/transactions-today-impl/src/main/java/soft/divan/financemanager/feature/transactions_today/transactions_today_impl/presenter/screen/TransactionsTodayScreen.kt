@@ -67,7 +67,7 @@ fun TransactionsTodayScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(isIncome) {
-        viewModel.loadTodayExpenses(isIncome)
+        viewModel.loadTodayTransactions(isIncome)
     }
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
