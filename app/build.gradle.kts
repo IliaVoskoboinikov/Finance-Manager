@@ -15,7 +15,6 @@ dependencies {
     implementation(projects.core.network)
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
-    implementation(projects.core.sharedHistoryTransactionCategory)
     implementation(projects.core.data)
 
     implementation(projects.feature.category.categoryApi)
@@ -44,6 +43,9 @@ dependencies {
 
     implementation(projects.feature.analysis.analysisApi)
     implementation(projects.feature.analysis.analysisImpl)
+
+    implementation(projects.feature.history.historyApi)
+    implementation(projects.feature.history.historyImpl)
 
     implementation(libs.androidx.lifecycle.process)
 }

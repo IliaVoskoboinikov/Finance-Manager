@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import soft.divan.financemanager.core.domain.model.formatWith
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.formatWith
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toUi
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTodayTransactionsUseCase
-import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.mapper.TransactionsTodayUiState
+import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.mapper.toUi
+import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.model.TransactionsTodayUiState
 import javax.inject.Inject
 
 @HiltViewModel

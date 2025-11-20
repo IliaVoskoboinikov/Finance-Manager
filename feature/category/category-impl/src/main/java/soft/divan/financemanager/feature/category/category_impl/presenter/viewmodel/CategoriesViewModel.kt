@@ -16,10 +16,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toDomain
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.mapper.toUi
-import soft.divan.financemanager.core.shared_history_transaction_category.presenter.model.CategoriesUiState
+
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.SearchCategoryUseCase
+import soft.divan.financemanager.feature.category.category_impl.presenter.mapper.toDomain
+import soft.divan.financemanager.feature.category.category_impl.presenter.mapper.toUi
+import soft.divan.financemanager.feature.category.category_impl.presenter.model.CategoriesUiState
 import javax.inject.Inject
 
 @HiltViewModel
