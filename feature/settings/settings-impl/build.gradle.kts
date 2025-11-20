@@ -9,5 +9,5 @@ dependencies {
     implementation(projects.core.uikit)
 
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.datastore.core.android)
+    implementation(libs.androidx.datastore.core)
 }
