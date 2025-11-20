@@ -337,7 +337,7 @@ private fun Category(
         content = { ContentTextListItem(stringResource(R.string.category)) },
         trail = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                ContentTextListItem(uiState.transaction.category.name)
+                ContentTextListItem(uiState.transaction.category.emoji + " " + uiState.transaction.category.name)
                 Spacer(modifier = Modifier.width(16.dp))
                 Icon(
                     imageVector = Icons.Filled.Arrow,
