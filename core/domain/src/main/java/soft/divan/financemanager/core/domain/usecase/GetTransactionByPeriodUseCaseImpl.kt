@@ -37,7 +37,7 @@ class GetTransactionByPeriodUseCaseImpl @Inject constructor(
         val categories = categoryRepository.getCategories().first()
         val categoriesMap = categories.associateBy { it.id }
 
-        val expenses = transactions.filter { transaction ->
+        val transactionsByType = transactions.filter { transaction ->
             val category = categoriesMap[transaction.categoryId]
             category?.isIncome == isIncome
         }.sortedByDescending { it.transactionDate }
@@ -45,6 +45,6 @@ class GetTransactionByPeriodUseCaseImpl @Inject constructor(
 
         val currency = currencyRepository.getCurrency().first()
 
-        emit(Triple(expenses, currency, categories))
+        emit(Triple(transactionsByType, currency, categories))
     }
 }
