@@ -1,98 +1,143 @@
+##############################################
+#                  Versions
+##############################################
+
 [versions]
+
+# Build & Kotlin
 agp = "8.13.0"
-biometricKtx = "1.2.0-alpha05"
-buildTimeTracker = "5.0.1"
-colorpickerCompose = "1.1.2"
-datastorePreferences = "1.1.7"
 kotlin = "2.1.21"
-coreKtx = "1.16.0"
-lifecycleProcess = "2.9.2"
-composeBom = "2024.04.01"
-lottieCompose = "6.3.0"
-materialIconsExtended = "1.7.8"
-materialVersion = "1.8.3"
-navigationCompose = "2.8.9"
-hilt = "2.56.2"
-androidxHiltNavigationCompose = "1.2.0"
 ksp = "2.1.21-2.0.1"
-retrofit = "2.9.0"
-loggingInterceptor = "3.9.0"
-converterMoshi = "2.11.0"
-detekt = "1.23.6"
-detektCompose = "0.3.0"
+coroutines = "1.10.2"
+buildTimeTracker = "5.0.1"
+graphPlugin = "2.9.0"
+
+# AndroidX Core
+coreKtx = "1.16.0"
+appcompat = "1.7.1"
+lifecycleProcess = "2.9.2"
 securityCrypto = "1.1.0"
 tracingKtx = "1.3.0"
-appcompat = "1.7.1"
-material = "1.12.0"
-datastoreCoreAndroid = "1.1.7"
-coroutines = "1.10.2"
+biometricKtx = "1.2.0-alpha05"
 
-graph-plugin = "2.9.0"
-
+# Datastore & Storage
+datastore = "1.1.7"
 room = "2.7.2"
-androidxWork = "2.10.0"
-hiltExt = "1.2.0"
+workManager = "2.10.0"
 
+# Compose
+composeBom = "2024.04.01"
+material3 = "1.12.0"
+materialIconsExtended = "1.7.8"
+navigationCompose = "2.8.9"
+
+# UI Libraries
+lottieCompose = "6.3.0"
+colorPicker = "1.1.2"
 ycharts = "2.1.0"
 
+# Dependency Injection
+hilt = "2.56.2"
+hiltExt = "1.2.0"
+
+# Networking
+retrofit = "2.9.0"
+converterGson = "2.11.0"
+loggingInterceptor = "3.9.0"
+
+# Lint & QA Tools
+detekt = "1.23.6"
+detektCompose = "0.3.0"
+
+
+
+##############################################
+#                  Libraries
+##############################################
 
 [libraries]
+
+# Build Tools
 agp = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
-androidx-biometric-ktx = { module = "androidx.biometric:biometric-ktx", version.ref = "biometricKtx" }
-androidx-material = { module = "androidx.compose.material:material", version.ref = "materialVersion" }
-androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
-androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
-build-time-tracker = { module = "com.asarkar.gradle:build-time-tracker", version.ref = "buildTimeTracker" }
-colorpicker-compose = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorpickerCompose" }
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 compose-plugin = { group = "org.jetbrains.kotlin.plugin.compose", name = "org.jetbrains.kotlin.plugin.compose.gradle.plugin", version.ref = "kotlin" }
+build-time-tracker = { module = "com.asarkar.gradle:build-time-tracker", version.ref = "buildTimeTracker" }
+
+# AndroidX Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-biometric-ktx = { module = "androidx.biometric:biometric-ktx", version.ref = "biometricKtx" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycleProcess" }
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-tracing-ktx = { module = "androidx.tracing:tracing-ktx", version.ref = "tracingKtx" }
+
+# Datastore & Storage
+androidx-datastore-core = { group = "androidx.datastore", name = "datastore-core-android", version.ref = "datastore" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime-android", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+androidx-work-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
+
+# Compose
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+
+# UI Libraries
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
+colorpicker-compose = { module = "com.github.skydoves:colorpicker-compose", version.ref = "colorPicker" }
+ycharts = { module = "co.yml:ycharts", version.ref = "ycharts" }
+
+# Dependency Injection
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
-androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "androidxHiltNavigationCompose" }
-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
-logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterMoshi" }
-androidx-datastore-core-android = { group = "androidx.datastore", name = "datastore-core-android", version.ref = "datastoreCoreAndroid" }
-androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
-androidx-room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "room" }
-androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
-androidx-work-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "androidxWork" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltExt" }
 hilt-ext-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltExt" }
 hilt-ext-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltExt" }
-
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 javax-inject = { module = "javax.inject:javax.inject", version = "1" }
 
+# Networking
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
+converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
+
+# Coroutines
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+
+# Static analysis
 detekt-gradle = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 detekt-compose = { module = "io.nlopez.compose.rules:detekt", version.ref = "detektCompose" }
 
-ycharts = { module = "co.yml:ycharts", version.ref = "ycharts" }
+
+
+##############################################
+#                  Plugins
+##############################################
 
 [plugins]
+
+# Android & Kotlin
 android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
-android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-graph = { id = "com.jraska.module.graph.assertion", version.ref = "graph-plugin" }
-buld-time-tracker = { id = "com.asarkar.gradle.build-time-tracker", version.ref = "buildTimeTracker" }
 java-library = { id = "java-library" }
 
+# DI
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+
+# Tools
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+graph = { id = "com.jraska.module.graph.assertion", version.ref = "graphPlugin" }
+buld-time-tracker = { id = "com.asarkar.gradle.build-time-tracker", version.ref = "buildTimeTracker" }
+
+# Custom Plugins
 soft-divan-android-base = { id = "soft.divan.android.base" }
 soft-divan-android-app = { id = "soft.divan.android.app" }
 soft-divan-core = { id = "soft.divan.core" }

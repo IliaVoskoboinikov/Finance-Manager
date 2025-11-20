@@ -7,10 +7,9 @@ fun Project.addDefaultComposeDependencies() {
             add(Conf.IMPLEMENTATION, libs.androidx.core.ktx)
             add(Conf.IMPLEMENTATION, libs.androidx.appcompat)
             add(Conf.IMPLEMENTATION, libs.androidx.compose.bom)
-            add(Conf.IMPLEMENTATION, libs.androidx.ui)
             add(Conf.IMPLEMENTATION, libs.androidx.ui.tooling.preview)
             add(Conf.IMPLEMENTATION, libs.androidx.material3)
-            add(Conf.IMPLEMENTATION, libs.androidx.hilt.navigation.compose)
+            add(Conf.IMPLEMENTATION, libs.hilt.navigation.compose)
         }
     }
 }

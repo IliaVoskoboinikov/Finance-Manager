@@ -4,6 +4,6 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.androidx.room.runtime.android)
+    implementation(libs.androidx.room.runtime)
     ksp(libs.androidx.room.compiler)
 }
