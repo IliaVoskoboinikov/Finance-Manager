@@ -39,7 +39,7 @@ class TransactionsTodayViewModel @Inject constructor(
      )*/
 
 
-    fun loadTodayExpenses(isIncome: Boolean) {
+    fun loadTodayTransactions(isIncome: Boolean) {
         getTodayTransactionsUseCase(isIncome)
             .onStart {
                 _uiState.update { TransactionsTodayUiState.Loading }
