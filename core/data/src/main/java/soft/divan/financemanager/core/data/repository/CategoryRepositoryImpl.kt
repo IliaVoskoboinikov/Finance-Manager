@@ -39,6 +39,19 @@ class CategoryRepositoryImpl @Inject constructor(
         return categoriesFlow
     }
 
+    override suspend fun getCategoriesByType(isIncome: Boolean): Flow<List<Category>> {
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            val response = categoryRemoteDataSource.getCategoriesByType(isIncome)
+            val categoriesDto = response.body().orEmpty()
+            val categoriesDtoEntity = categoriesDto.map { it.toEntity() }
+            categoryLocalDataSource.insertCategories(categoriesDtoEntity)
+        }
+        val categoriesFlow =
+            categoryLocalDataSource.getCategoriesByType(isIncome)
+                .map { list -> list.map { it.toDomain() } }
+        return categoriesFlow
+    }
+
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
         return runCatching {
             val response = categoryRemoteDataSource.getCategories()

@@ -5,4 +5,5 @@ import soft.divan.financemanager.core.data.dto.CategoryDto
 
 interface CategoryRemoteDataSource {
     suspend fun getCategories(): Response<List<CategoryDto>>
+    suspend fun getCategoriesByType(isIncome: Boolean): Response<List<CategoryDto>>
 }

@@ -14,7 +14,11 @@ class CategoryLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun insertCategories(categories: List<CategoryEntity>) {
-        categoryDao.insertCategories(categories)
+        return categoryDao.insertCategories(categories)
+    }
+
+    override suspend fun getCategoriesByType(isIncome: Boolean): Flow<List<CategoryEntity>> {
+        return categoryDao.getByType(isIncome)
     }
 
 }

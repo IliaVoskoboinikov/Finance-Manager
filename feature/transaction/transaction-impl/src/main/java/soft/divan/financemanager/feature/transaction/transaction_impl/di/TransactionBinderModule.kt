@@ -13,11 +13,11 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.data.repos
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.repository.TransactionRepository
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
-import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesExpensesUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.CreateTransactionUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.DeleteTransactionUseCaseImpl
-import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.GetCategoriesExpensesUseCaseImpl
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.GetCategoriesByTypeUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.GetTransactionUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.navigation.TransactionFeatureImpl
 import javax.inject.Singleton
@@ -48,7 +48,7 @@ interface TransactionBinderModule {
     fun bindGetTransactionUseCase(impl: GetTransactionUseCaseImpl): GetTransactionUseCase
 
     @Binds
-    fun bindGetCategoriesExpensesUseCase(impl: GetCategoriesExpensesUseCaseImpl): GetCategoriesExpensesUseCase
+    fun bindGetCategoriesByTypeUseCase(impl: GetCategoriesByTypeUseCaseImpl): GetCategoriesByTypeUseCase
 
     @Binds
     fun bindDeleteTransactionUseCase(impl: DeleteTransactionUseCaseImpl): DeleteTransactionUseCase
