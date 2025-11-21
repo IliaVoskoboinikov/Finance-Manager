@@ -1,23 +1,19 @@
-package plugins
-
-import Conf
-import addDefaultComposeDependencies
 import com.android.build.gradle.LibraryExtension
-import configureBaseAndroid
-import libs
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import soft.divan.finansemanager.addDefaultComposeDependencies
+import soft.divan.finansemanager.configureBaseAndroid
+import soft.divan.finansemanager.libs
 
 class FeatureImplConventionPlugin : Plugin<Project> {
-
     override fun apply(project: Project) {
         with(project) {
-            pluginManager.apply(libs.plugins.soft.divan.android.base.get().pluginId)
-            pluginManager.apply(libs.plugins.android.library.get().pluginId)
-            pluginManager.apply(libs.plugins.kotlin.compose.get().pluginId)
-            pluginManager.apply(libs.plugins.soft.divan.hilt.get().pluginId)
+            pluginManager.apply(libs.findPlugin("soft-divan-android-base").get().get().pluginId)
+            pluginManager.apply(libs.findPlugin("android-library").get().get().pluginId)
+            pluginManager.apply(libs.findPlugin("kotlin-compose").get().get().pluginId)
+            pluginManager.apply(libs.findPlugin("soft-divan-hilt").get().get().pluginId)
 
             extensions.configure<LibraryExtension> {
                 configureBaseAndroid(project)
@@ -29,7 +25,7 @@ class FeatureImplConventionPlugin : Plugin<Project> {
             addDefaultComposeDependencies()
 
             dependencies {
-                add(Conf.DEBUG_IMPLEMENTATION, libs.androidx.ui.tooling)
+                add(Conf.DEBUG_IMPLEMENTATION, libs.findLibrary("androidx-ui-tooling").get())
             }
         }
     }

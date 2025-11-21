@@ -1,5 +1,6 @@
-@file:Suppress("MatchingDeclarationName")
+package soft.divan.finansemanager
 
+import Const
 import com.android.build.gradle.BaseExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
