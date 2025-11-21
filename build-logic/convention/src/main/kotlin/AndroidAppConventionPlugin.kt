@@ -4,20 +4,20 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import soft.divan.finansemanager.addDefaultComposeDependencies
+import soft.divan.finansemanager.applyPlugin
 import soft.divan.finansemanager.configureBaseAndroid
-import soft.divan.finansemanager.libs
 
 class AndroidAppConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
-            pluginManager.apply(libs.findPlugin("soft-divan-android-base").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("android-application").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("kotlin-compose").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("soft-divan-hilt").get().get().pluginId)
+            applyPlugin("soft-divan-android-base")
+            applyPlugin("android-application")
+            applyPlugin("kotlin-compose")
+            applyPlugin("soft-divan-hilt")
 
-            pluginManager.apply(libs.findPlugin("graph").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("soft-divan-detect").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("soft-divan-build-time-tracker").get().get().pluginId)
+            applyPlugin("graph")
+            applyPlugin("soft-divan-detect")
+            applyPlugin("soft-divan-build-time-tracker")
 
             extensions.configure<BaseAppModuleExtension> {
                 configureBaseAndroid(project)

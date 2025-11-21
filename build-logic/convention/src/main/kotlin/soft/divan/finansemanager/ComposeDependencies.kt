@@ -1,16 +1,15 @@
 package soft.divan.finansemanager
 
-import Conf
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.dependencies
 
 fun Project.addDefaultComposeDependencies() {
     dependencies {
-        add(Conf.IMPLEMENTATION, libs.findLibrary("androidx-core-ktx").get())
-        add(Conf.IMPLEMENTATION, libs.findLibrary("androidx-appcompat").get())
-        add(Conf.IMPLEMENTATION, libs.findLibrary("androidx-compose-bom").get())
-        add(Conf.IMPLEMENTATION, libs.findLibrary("androidx-ui-tooling-preview").get())
-        add(Conf.IMPLEMENTATION, libs.findLibrary("androidx-material3").get())
-        add(Conf.IMPLEMENTATION, libs.findLibrary("hilt-navigation-compose").get())
+        add(Conf.IMPLEMENTATION, lib("androidx-core-ktx"))
+        add(Conf.IMPLEMENTATION, lib("androidx-appcompat"))
+        add(Conf.IMPLEMENTATION, lib("androidx-compose-bom"))
+        add(Conf.IMPLEMENTATION, lib("androidx-ui-tooling-preview"))
+        add(Conf.IMPLEMENTATION, lib("androidx-material3"))
+        add(Conf.IMPLEMENTATION, lib("hilt-navigation-compose"))
     }
 }
