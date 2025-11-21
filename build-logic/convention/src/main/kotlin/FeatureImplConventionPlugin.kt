@@ -3,17 +3,19 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
+import soft.divan.finansemanager.Conf
 import soft.divan.finansemanager.addDefaultComposeDependencies
+import soft.divan.finansemanager.applyPlugin
 import soft.divan.finansemanager.configureBaseAndroid
-import soft.divan.finansemanager.libs
+import soft.divan.finansemanager.lib
 
 class FeatureImplConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
-            pluginManager.apply(libs.findPlugin("soft-divan-android-base").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("android-library").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("kotlin-compose").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("soft-divan-hilt").get().get().pluginId)
+            applyPlugin("soft-divan-android-base")
+            applyPlugin("android-library")
+            applyPlugin("kotlin-compose")
+            applyPlugin("soft-divan-hilt")
 
             extensions.configure<LibraryExtension> {
                 configureBaseAndroid(project)
@@ -25,7 +27,7 @@ class FeatureImplConventionPlugin : Plugin<Project> {
             addDefaultComposeDependencies()
 
             dependencies {
-                add(Conf.DEBUG_IMPLEMENTATION, libs.findLibrary("androidx-ui-tooling").get())
+                add(Conf.DEBUG_IMPLEMENTATION, lib("androidx-ui-tooling"))
             }
         }
     }

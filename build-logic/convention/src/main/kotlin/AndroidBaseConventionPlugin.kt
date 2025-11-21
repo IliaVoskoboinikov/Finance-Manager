@@ -3,12 +3,12 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
-import soft.divan.finansemanager.libs
+import soft.divan.finansemanager.applyPlugin
 
 class AndroidBaseConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
-            pluginManager.apply(libs.findPlugin("kotlin-android").get().get().pluginId)
+            applyPlugin("kotlin-android")
 
             extensions.configure<KotlinAndroidProjectExtension> {
                 compilerOptions {
