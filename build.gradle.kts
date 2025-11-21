@@ -9,6 +9,6 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.jvm) apply false
     alias(libs.plugins.graph) apply false
     alias(libs.plugins.build.time.tracker) apply false
-    alias(libs.plugins.detekt)
+    alias(libs.plugins.detekt) apply false
 
 }
