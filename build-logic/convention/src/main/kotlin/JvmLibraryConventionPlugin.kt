@@ -6,13 +6,15 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
-import soft.divan.finansemanager.libs
+import soft.divan.finansemanager.Conf
+import soft.divan.finansemanager.applyPlugin
+import soft.divan.finansemanager.lib
 
 class JvmLibraryConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
-            pluginManager.apply(libs.findPlugin("java-library").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("jetbrains-kotlin-jvm").get().get().pluginId)
+            applyPlugin("java-library")
+            applyPlugin("jetbrains-kotlin-jvm")
 
             extensions.configure<JavaPluginExtension> {
                 sourceCompatibility = JavaVersion.toVersion(Const.JAVA_VERSION)
@@ -26,8 +28,8 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
             }
 
             dependencies {
-                add(Conf.IMPLEMENTATION, libs.findLibrary("kotlinx-coroutines-core").get())
-                add(Conf.IMPLEMENTATION, libs.findLibrary("javax-inject").get())
+                add(Conf.IMPLEMENTATION, lib("kotlinx-coroutines-core"))
+                add(Conf.IMPLEMENTATION, lib("javax-inject"))
             }
         }
     }

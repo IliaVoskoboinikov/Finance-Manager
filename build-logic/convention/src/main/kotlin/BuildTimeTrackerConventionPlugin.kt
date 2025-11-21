@@ -5,13 +5,13 @@ import com.asarkar.gradle.buildtimetracker.Sort
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
-import soft.divan.finansemanager.libs
+import soft.divan.finansemanager.applyPlugin
 import java.time.Duration
 
 class BuildTimeTrackerConventionPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            pluginManager.apply(libs.findPlugin("build-time-tracker").get().get().pluginId)
+            applyPlugin("build-time-tracker")
 
             extensions.configure<BuildTimeTrackerPluginExtension> {
                 barPosition.set(BarPosition.TRAILING)

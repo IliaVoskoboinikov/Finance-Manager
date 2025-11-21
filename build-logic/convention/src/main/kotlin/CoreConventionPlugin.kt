@@ -2,14 +2,14 @@ import com.android.build.gradle.LibraryExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import soft.divan.finansemanager.applyPlugin
 import soft.divan.finansemanager.configureBaseAndroid
-import soft.divan.finansemanager.libs
 
 class CoreConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
-            pluginManager.apply(libs.findPlugin("android-library").get().get().pluginId)
-            pluginManager.apply(libs.findPlugin("soft-divan-android-base").get().get().pluginId)
+            applyPlugin("android-library")
+            applyPlugin("soft-divan-android-base")
 
             extensions.configure<LibraryExtension> {
                 configureBaseAndroid(project)
