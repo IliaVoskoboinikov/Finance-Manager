@@ -1,9 +1,7 @@
-import org.gradle.accessors.dm.LibrariesForLibs
-import org.gradle.api.Project
-import org.gradle.api.plugins.ExtensionAware
+package soft.divan.finansemanager
 
-internal val Project.libs: LibrariesForLibs
-    get() = (this as ExtensionAware).extensions.getByName("libs") as LibrariesForLibs
+import Const
+import org.gradle.api.Project
 
 fun generateNamespace(project: Project): String {
     val root = Const.NAMESPACE

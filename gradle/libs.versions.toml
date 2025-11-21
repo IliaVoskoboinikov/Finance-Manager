@@ -135,7 +135,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 # Tools
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 graph = { id = "com.jraska.module.graph.assertion", version.ref = "graphPlugin" }
-buld-time-tracker = { id = "com.asarkar.gradle.build-time-tracker", version.ref = "buildTimeTracker" }
+build-time-tracker = { id = "com.asarkar.gradle.build-time-tracker", version.ref = "buildTimeTracker" }
 
 # Custom Plugins
 soft-divan-android-base = { id = "soft.divan.android.base" }
@@ -146,4 +146,4 @@ soft-divan-feature-impl = { id = "soft.divan.feature.impl" }
 soft-divan-jvm-library = { id = "soft.divan.jvm.library" }
 soft-divan-hilt = { id = "soft.divan.hilt" }
 soft-divan-detect = { id = "soft.divan.detekt" }
-soft-divan-buld-time-tracker = { id = "soft.divan.build.time.tracker" }
+soft-divan-build-time-tracker = { id = "soft.divan.build.time.tracker" }
