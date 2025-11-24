@@ -22,14 +22,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -40,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,9 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.feature.account.account_impl.R
 import soft.divan.financemanager.feature.account.account_impl.presenter.model.AccountUiModel
 import soft.divan.financemanager.feature.account.account_impl.presenter.model.AccountUiState
@@ -64,11 +57,7 @@ import soft.divan.financemanager.uikit.components.LoadingProgressBar
 import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.icons.Arrow
 import soft.divan.financemanager.uikit.icons.Diagram
-import soft.divan.financemanager.uikit.icons.MdiDollar
-import soft.divan.financemanager.uikit.icons.MdiEuro
-import soft.divan.financemanager.uikit.icons.MdiRuble
 import soft.divan.financemanager.uikit.icons.Pencil
-import soft.divan.financemanager.uikit.icons.RoundCross
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
@@ -84,34 +73,25 @@ fun AccountScreenPreview() {
                     balance = "1000000$",
                     currency = "$",
                 )
-            ), updateCurrency = {}, updateName = {}, navController = rememberNavController()
+            ),
+            onNavigateToCreateAccount = {},
+            updateName = {}
         )
     }
 }
 
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewCurrencySheet() {
-    FinanceManagerTheme {
-        CurrencySheetContent({}, {})
-    }
-}
-
-
 @Composable
 fun AccountScreen(
     modifier: Modifier = Modifier,
-    navController: NavController,
+    onNavigateToCreateAccount: () -> Unit,
     viewModel: AccountViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     AccountContent(
         modifier = modifier,
         uiState = uiState,
-        updateCurrency = viewModel::updateCurrency,
+        onNavigateToCreateAccount = onNavigateToCreateAccount,
         updateName = viewModel::updateName,
-        navController = navController,
     )
 }
 
@@ -120,9 +100,8 @@ fun AccountScreen(
 fun AccountContent(
     modifier: Modifier = Modifier,
     uiState: AccountUiState,
-    updateCurrency: (String) -> Unit,
+    onNavigateToCreateAccount: () -> Unit,
     updateName: (String) -> Unit,
-    navController: NavController,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -150,12 +129,12 @@ fun AccountContent(
                 }
 
                 is AccountUiState.Success -> {
-                    UiStateSuccessContent(uiState, updateCurrency, updateName)
+                    UiStateSuccessContent(uiState, updateName)
                 }
             }
         }
         FloatingButton(
-            onClick = {},
+            onClick = onNavigateToCreateAccount,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
@@ -172,21 +151,15 @@ fun AccountContent(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun UiStateSuccessContent(
     uiState: AccountUiState.Success,
-
-    updateCurrency: (String) -> Unit,
     updateName: (String) -> Unit
 ) {
-    val currencySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val isCurrencySheetOpen = remember { mutableStateOf(false) }
     val updateNameShowDialog = remember { mutableStateOf(false) }
 
-    Column() {
+    Column {
         AccountBalance(uiState, updateNameShowDialog)
         FMDriver()
-        AccountCurrency(isCurrencySheetOpen, uiState)
         Spacer(modifier = Modifier.height(16.dp))
         Diagram()
-        ChoiceCurrency(isCurrencySheetOpen, currencySheetState, updateCurrency)
         UpdateName(updateNameShowDialog, updateName)
     }
 }
@@ -280,31 +253,6 @@ fun AccountNameDialog(
     }
 }
 
-
-@Composable
-private fun AccountCurrency(
-    isSheetOpen: MutableState<Boolean>,
-    uiState: AccountUiState.Success
-) {
-    ListItem(
-        modifier = Modifier
-            .height(56.dp)
-            .clickable { isSheetOpen.value = true },
-        content = { ContentTextListItem(stringResource(R.string.currency)) },
-        trail = {
-            ContentTextListItem(uiState.account.currency)
-            Spacer(modifier = Modifier.width(16.dp))
-            Icon(
-                imageVector = Icons.Filled.Arrow,
-                contentDescription = "AccountCurrency",
-                tint = colorScheme.onSurfaceVariant
-            )
-        },
-        containerColor = colorScheme.secondaryContainer
-    )
-}
-
-
 @Composable
 private fun Diagram() {
     Icon(
@@ -313,85 +261,6 @@ private fun Diagram() {
         modifier = Modifier.fillMaxWidth(),
         tint = Color.Unspecified
     )
-}
-
-
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun ChoiceCurrency(
-    isSheetOpen: MutableState<Boolean>,
-    sheetState: SheetState,
-    updateCurrency: (String) -> Unit
-) {
-    if (isSheetOpen.value) {
-        ModalBottomSheet(
-            onDismissRequest = { isSheetOpen.value = false },
-            sheetState = sheetState,
-            containerColor = colorScheme.surfaceContainerHigh,
-            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
-        ) {
-            CurrencySheetContent(
-                onCancel = { isSheetOpen.value = false },
-                updateCurrency = updateCurrency
-            )
-        }
-    }
-
-}
-
-@Composable
-fun CurrencySheetContent(onCancel: () -> Unit, updateCurrency: (String) -> Unit) {
-    val currencies = listOf(
-        Triple(Icons.Filled.MdiRuble, R.string.rub, CurrencySymbol.RUB.symbol),
-        Triple(Icons.Filled.MdiDollar, R.string.usd, CurrencySymbol.USD.symbol),
-        Triple(Icons.Filled.MdiEuro, R.string.eur, CurrencySymbol.EUR.symbol)
-    )
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        currencies.forEach { (icon, name, symbol) ->
-            CurrencyItem(icon = icon, title = name, symbol, onClick = {
-                updateCurrency(symbol)
-                onCancel()
-            })
-            FMDriver()
-        }
-
-        ListItem(
-            modifier = Modifier
-                .background(color = colorScheme.error)
-                .clickable { onCancel() },
-            lead = {
-                Icon(
-                    imageVector = Icons.Filled.RoundCross,
-                    contentDescription = stringResource(R.string.cancellation),
-                    tint = Color.White
-                )
-            },
-            content = {
-                ContentTextListItem(
-                    text = stringResource(R.string.cancellation),
-                    color = Color.White
-                )
-            },
-        )
-
-    }
-}
-
-@Composable
-fun CurrencyItem(icon: ImageVector, title: Int, symbol: String, onClick: () -> Unit) {
-    ListItem(
-        modifier = Modifier.clickable { onClick() },
-        lead = {
-            Icon(
-                imageVector = icon,
-                contentDescription = "Currency",
-                tint = Color.Unspecified
-            )
-        },
-        content = { ContentTextListItem(text = stringResource(title) + " $symbol") },
-    )
-
 }
 
 

@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="create_account">Создание счета</string>
+    <string name="currency">Валюта</string>
+    <string name="rub">Российский рубль</string>
+    <string name="usd">Американский доллар</string>
+    <string name="eur">Евро</string>
+    <string name="cancellation">Отмена</string>
+    <string name="error_save">Ошибка сохранения</string>
+
 </resources>
