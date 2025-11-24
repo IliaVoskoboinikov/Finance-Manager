@@ -4,6 +4,6 @@ import androidx.annotation.StringRes
 
 sealed interface CreateAccountUiState {
     data object Loading : CreateAccountUiState
-    data object Success : CreateAccountUiState
-    data class Error(@field:StringRes val message: String) : CreateAccountUiState
+    data class Success(val account: AccountUiModel) : CreateAccountUiState
+    data class Error(@field:StringRes val message: Int) : CreateAccountUiState
 }
