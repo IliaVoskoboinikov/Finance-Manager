@@ -18,6 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
+import soft.divan.financemanager.feature.create_account.create_account_api.CreateAccountFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetAccentColorUseCase
@@ -65,6 +66,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var securityFeatureApi: SecurityFeatureApi
+
+    @Inject
+    lateinit var createAccountFeatureApi: CreateAccountFeatureApi
 
     @Inject
     lateinit var designAppFeatureApi: DesignAppFeatureApi
@@ -141,7 +145,8 @@ class MainActivity : ComponentActivity() {
                         securityFeatureApi = securityFeatureApi,
                         designAppFeatureApi = designAppFeatureApi,
                         analysisFeatureApi = analysisFeatureApi,
-                        historyFeatureApi = historyFeatureApi
+                        historyFeatureApi = historyFeatureApi,
+                        createAccountFeatureApi = createAccountFeatureApi,
                     )
                 }
             }

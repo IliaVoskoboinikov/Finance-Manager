@@ -17,5 +17,5 @@ sealed interface TransactionUiState {
 sealed interface TransactionEvent {
     data object TransactionDeleted : TransactionEvent
     data object TransactionSaved : TransactionEvent
-    data class ShowError(@StringRes val messageRes: Int) : TransactionEvent
+    data class ShowError(@field:StringRes val messageRes: Int) : TransactionEvent
 }
