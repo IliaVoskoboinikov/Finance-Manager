@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="my_account">Мой счет</string>
+    <string name="my_accounts">Мои счета</string>
     <string name="name_account">Название счёта</string>
     <string name="enter_the_name">Введите название</string>
     <string name="cancellation">Отмена</string>

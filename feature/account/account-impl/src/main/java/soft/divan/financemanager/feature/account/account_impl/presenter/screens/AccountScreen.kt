@@ -130,7 +130,7 @@ fun AccountContent(
 
             TopBar(
                 topBar = TopBarModel(
-                    title = R.string.my_account,
+                    title = R.string.my_accounts,
                     actionIcon = Icons.Filled.Pencil,
                     actionIconClick = { /*navController ->*/
 

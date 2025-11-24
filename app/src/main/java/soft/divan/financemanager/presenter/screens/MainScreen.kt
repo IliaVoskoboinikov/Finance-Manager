@@ -27,6 +27,7 @@ import soft.divan.financemanager.R
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
+import soft.divan.financemanager.feature.create_account.create_account_api.CreateAccountFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
@@ -64,7 +65,8 @@ fun MainScreen(
     securityFeatureApi: SecurityFeatureApi,
     designAppFeatureApi: DesignAppFeatureApi,
     analysisFeatureApi: AnalysisFeatureApi,
-    historyFeatureApi: HistoryFeatureApi
+    historyFeatureApi: HistoryFeatureApi,
+    createAccountFeatureApi: CreateAccountFeatureApi
 ) {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -117,7 +119,8 @@ fun MainScreen(
                 securityFeatureApi = securityFeatureApi,
                 designAppFeatureApi = designAppFeatureApi,
                 analysisFeatureApi = analysisFeatureApi,
-                historyFeatureApi = historyFeatureApi
+                historyFeatureApi = historyFeatureApi,
+                createAccountFeatureApi = createAccountFeatureApi
             )
 
             SnackbarHost(
