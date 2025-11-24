@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.data.mapper.toAccountBriefDomain
 import soft.divan.financemanager.core.data.mapper.toDomain
+import soft.divan.financemanager.core.data.mapper.toDto
 import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
@@ -41,20 +41,12 @@ class AccountRepositoryImpl @Inject constructor(
 
     }
 
-    //todo
-    override fun createAccount(createAccountRequest: CreateAccountRequest): Flow<Account> = flow {
-        val requestDto = CreateAccountRequestDto(
-            name = createAccountRequest.name,
-            balance = createAccountRequest.balance.toPlainString(),
-            currency = createAccountRequest.currency
-        )
-        val response = accountRemoteDataSource.createAccount(requestDto)
-        val accountDto = response.body()!!
-        val accountsEntity = accountDto.toEntity()
-        val accounts = accountsEntity.toDomain()
-        emit(accounts)
-
-
+    //todo добавить бд
+    override fun createAccount(createAccountRequest: CreateAccountRequest): Result<Unit> = runCatching {
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            val response = accountRemoteDataSource.createAccount(createAccountRequest.toDto())
+        }
+        return Result.success(Unit)
     }
 
     //todo
