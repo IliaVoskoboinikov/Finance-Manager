@@ -47,5 +47,8 @@ dependencies {
     implementation(projects.feature.history.historyApi)
     implementation(projects.feature.history.historyImpl)
 
+    implementation(projects.feature.createAccount.createAccountApi)
+    implementation(projects.feature.createAccount.createAccountImpl)
+
     implementation(libs.androidx.lifecycle.process)
 }
