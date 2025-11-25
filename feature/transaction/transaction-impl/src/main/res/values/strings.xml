@@ -3,6 +3,7 @@
     <string name="my_expenses">Мои расходы</string>
     <string name="my_income">Мои доходы</string>
     <string name="select_category">Выберите категорию</string>
+    <string name="select_account">Выберите счет</string>
     <string name="account">Счет</string>
     <string name="category">Статьи</string>
     <string name="sum">Сумма</string>
