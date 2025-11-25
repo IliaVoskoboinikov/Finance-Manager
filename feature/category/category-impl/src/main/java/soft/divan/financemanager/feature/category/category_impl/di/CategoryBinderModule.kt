@@ -5,7 +5,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
-import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCaseImpl
+import soft.divan.financemanager.core.domain.usecase.impl.GetCategoriesUseCaseImpl
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.SearchCategoryUseCase
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.impl.SearchCategoryUseCaseImpl
