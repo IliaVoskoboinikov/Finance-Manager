@@ -5,9 +5,9 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
-import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCaseImpl
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
-import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCaseImpl
+import soft.divan.financemanager.core.domain.usecase.impl.GetAccountsUseCaseImpl
+import soft.divan.financemanager.core.domain.usecase.impl.GetSumTransactionsUseCaseImpl
 import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.UpdateAccountUseCase
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.UpdateCurrencyUseCase

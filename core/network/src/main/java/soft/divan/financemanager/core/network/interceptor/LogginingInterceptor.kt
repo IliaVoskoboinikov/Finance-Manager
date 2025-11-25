@@ -1,10 +1,8 @@
 package soft.divan.financemanager.core.network.interceptor
 
-
 import okhttp3.logging.HttpLoggingInterceptor
 import soft.divan.financemanager.core.network.BuildConfig
 import javax.inject.Inject
-
 
 class LoggingInterceptor @Inject constructor() {
     fun provide(): HttpLoggingInterceptor {
