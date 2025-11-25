@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.domain.usecase
+package soft.divan.financemanager.core.domain.usecase.impl
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -13,6 +13,7 @@ import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
+import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
 import soft.divan.financemanager.core.domain.util.DateHelper
 import java.time.LocalDate
 import javax.inject.Inject

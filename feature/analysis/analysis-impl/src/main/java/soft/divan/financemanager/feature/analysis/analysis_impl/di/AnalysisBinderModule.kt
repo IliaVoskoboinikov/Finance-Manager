@@ -5,7 +5,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
-import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCaseImpl
+import soft.divan.financemanager.core.domain.usecase.impl.GetTransactionsByPeriodUseCaseImpl
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_impl.domain.usecase.GetCategoryPieChartDataUseCase
 import soft.divan.financemanager.feature.analysis.analysis_impl.domain.usecase.impl.GetCategoryPieChartDataUseCaseImpl
