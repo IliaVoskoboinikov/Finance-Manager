@@ -51,6 +51,7 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiCategory
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockAccounts
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockCategories
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockTransactionUiStateSuccess
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.viewModel.TransactionViewModel
@@ -99,6 +100,14 @@ fun TransactionScreenPreview() {
 fun CategoryPreview() {
     FinanceManagerTheme {
         CategorySheetContent(mockCategories, {}, {})
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+fun AccountPreview() {
+    FinanceManagerTheme {
+        AccountSheetContent(mockAccounts, {}, {})
     }
 }
 
@@ -426,7 +435,7 @@ private fun AccountSheetContent(
             .fillMaxWidth()
     ) {
         Text(
-            text = stringResource(R.string.select_category),
+            text = stringResource(R.string.select_account),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
