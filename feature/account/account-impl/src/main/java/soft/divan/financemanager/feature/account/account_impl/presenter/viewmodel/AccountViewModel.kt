@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
-import soft.divan.financemanager.feature.account.account_impl.domain.usecase.UpdateAccountUseCase
-import soft.divan.financemanager.feature.account.account_impl.presenter.mapper.toDomain
 import soft.divan.financemanager.feature.account.account_impl.presenter.mapper.toUiModel
 import soft.divan.financemanager.feature.account.account_impl.presenter.model.AccountUiState
 import javax.inject.Inject
@@ -24,14 +22,13 @@ import javax.inject.Inject
 @HiltViewModel
 class AccountViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
-    private val updateAccountUseCase: UpdateAccountUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState: StateFlow<AccountUiState> = _uiState
         .onStart { loadAccount() }
         .stateIn(
             viewModelScope,
-            SharingStarted.Companion.WhileSubscribed(5000L),
+            SharingStarted.WhileSubscribed(5000L),
             AccountUiState.Loading
         )
 
@@ -41,7 +38,7 @@ class AccountViewModel @Inject constructor(
                 _uiState.update { AccountUiState.Loading }
             }
             .onEach { data ->
-                _uiState.update { AccountUiState.Success(data.first().toUiModel()) }
+                _uiState.update { AccountUiState.Success(data.map { it.toUiModel() }) }
             }
             .catch { exception ->
                 _uiState.update { AccountUiState.Error(exception.message.toString()) }
@@ -49,25 +46,5 @@ class AccountViewModel @Inject constructor(
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
     }
-
-    fun updateName(name: String) {
-        val currentState = uiState.value
-
-        if (currentState !is AccountUiState.Success) return
-
-        updateAccountUseCase.invoke(currentState.account.copy(name = name).toDomain())
-            .onStart {
-                _uiState.update { AccountUiState.Loading }
-            }
-            .onEach { data ->
-                _uiState.update { AccountUiState.Success(data.toUiModel()) }
-            }
-            .catch { exception ->
-                _uiState.update { AccountUiState.Error(exception.message.toString()) }
-            }
-            .flowOn(Dispatchers.IO)
-            .launchIn(viewModelScope)
-    }
-
 
 }

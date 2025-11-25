@@ -1,10 +1,10 @@
 package soft.divan.financemanager.feature.create_account.create_account_impl.precenter.screens
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -248,8 +248,10 @@ private fun Balance(
                     .padding(vertical = 8.dp),
                 decorationBox = { innerTextField ->
                     Box(
-                        contentAlignment = Alignment.CenterEnd,
-                        modifier = Modifier.fillMaxHeight()
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .border(1.dp, colorScheme.primaryContainer)
                     ) {
                         innerTextField()
                     }
@@ -287,8 +289,10 @@ private fun Name(
                     .padding(vertical = 8.dp),
                 decorationBox = { innerTextField ->
                     Box(
-                        contentAlignment = Alignment.CenterEnd,
-                        modifier = Modifier.fillMaxHeight()
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .border(1.dp, colorScheme.primaryContainer)
                     ) {
                         innerTextField()
                     }
