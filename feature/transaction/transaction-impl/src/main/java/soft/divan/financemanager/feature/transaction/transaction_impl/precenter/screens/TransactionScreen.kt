@@ -451,7 +451,7 @@ private fun AccountSheetContent(
                             onDismissRequest()
                         }, content = {
                         Text(
-                            text = account.name + " " + account.balance,
+                            text = account.name + " " + account.balance + " " + account.currency,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     })

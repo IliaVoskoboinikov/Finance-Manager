@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain
+package soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.impl
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -14,6 +14,7 @@ import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.util.DateHelper
+import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTodayTransactionsUseCase
 import javax.inject.Inject
 
 class GetTodayTransactionsUseCaseImpl @Inject constructor(
