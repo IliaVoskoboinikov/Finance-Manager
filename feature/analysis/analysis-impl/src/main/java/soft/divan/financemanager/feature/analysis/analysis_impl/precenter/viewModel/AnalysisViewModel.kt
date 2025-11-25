@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.model.formatWith
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
-import soft.divan.financemanager.core.domain.usecase.GetTransactionByPeriodUseCase
+import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
 import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.analysis.analysis_impl.domain.usecase.GetCategoryPieChartDataUseCase
 import soft.divan.financemanager.feature.analysis.analysis_impl.precenter.mapper.toPieChartData
@@ -26,7 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AnalysisViewModel @Inject constructor(
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
-    private val getTransactionByPeriodUseCase: GetTransactionByPeriodUseCase,
+    private val getTransactionsByPeriodUseCase: GetTransactionsByPeriodUseCase,
     private val getCategoryPieChartDataUseCase: GetCategoryPieChartDataUseCase
 ) : ViewModel() {
 
@@ -42,7 +42,7 @@ class AnalysisViewModel @Inject constructor(
 
     //todo
     fun load(startDate: LocalDate, endDate: LocalDate) {
-        getTransactionByPeriodUseCase(
+        getTransactionsByPeriodUseCase(
             isIncome = isIncome,
             startDate = startDate,
             endDate = endDate

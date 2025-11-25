@@ -2,13 +2,13 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.domain.us
 
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.repository.TransactionRepository
-import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.UpdateTransactionUseCase
 import javax.inject.Inject
 
-class CreateTransactionUseCaseImpl @Inject constructor(
+class UpdateTransactionUseCaseImpl @Inject constructor(
     val transactionRepository: TransactionRepository
-) : CreateTransactionUseCase {
+) : UpdateTransactionUseCase {
     override suspend fun invoke(transaction: Transaction): Result<Unit> {
-        return transactionRepository.createTransaction(transaction)
+        return transactionRepository.updateTransaction(transaction)
     }
 }

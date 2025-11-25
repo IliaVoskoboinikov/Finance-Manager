@@ -15,14 +15,15 @@ import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencyCode
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
-
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.UpdateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toDomain
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toUi
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiCategory
@@ -39,6 +40,7 @@ class TransactionViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getTransactionsUseCase: GetTransactionUseCase,
     private val getCategoriesUseCase: GetCategoriesByTypeUseCase,
+    private val updateTransactionUseCase: UpdateTransactionUseCase,
     private val deleteTransactionUseCase: DeleteTransactionUseCase
 
 ) : ViewModel() {
@@ -53,15 +55,24 @@ class TransactionViewModel @Inject constructor(
             val currentState = uiState.value
             if (currentState is TransactionUiState.Success) {
                 _uiState.update { TransactionUiState.Loading }
-                //todo удалить invoke
-                createTransactionUseCase.invoke(transaction = currentState.transaction.toDomain())
-                    .fold(
-                        onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
-                        onFailure = {
-                            _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
-                            _uiState.update { currentState }
-                        }
-                    )
+                if (currentState.transaction.id != -1)
+                    updateTransactionUseCase(transaction = currentState.transaction.toDomain())
+                        .fold(
+                            onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
+                            onFailure = {
+                                _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
+                                _uiState.update { currentState }
+                            }
+                        )
+                else
+                    createTransactionUseCase(transaction = currentState.transaction.toDomain())
+                        .fold(
+                            onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
+                            onFailure = {
+                                _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
+                                _uiState.update { currentState }
+                            }
+                        )
             }
         }
     }
@@ -87,7 +98,6 @@ class TransactionViewModel @Inject constructor(
     ) {
         //todo !!!
         val accountId = accountsResult.firstOrNull()?.id
-        val accountName = accountsResult.firstOrNull()?.name
         val category = categoriesResult.firstOrNull()?.toUi() ?: UiCategory(1, "empyt", "empyt", false)
         val now = LocalDateTime.now()
         _uiState.value = TransactionUiState.Success(
@@ -105,7 +115,7 @@ class TransactionViewModel @Inject constructor(
             categories = categoriesResult.map {
                 it.toUi()
             },
-            accountName = accountName ?: " empty"
+            accounts = accountsResult.map { it.toUi() },
         )
     }
 
@@ -126,7 +136,7 @@ class TransactionViewModel @Inject constructor(
                         category = categoriesResult.find { it.id == transaction.categoryId }!!
                     ),
                     categories = categoriesResult.map { it.toUi() },
-                    accountName = accountsResult.first().name
+                    accounts = accountsResult.map { it.toUi() },
                 )
             }
         } else {
@@ -146,7 +156,6 @@ class TransactionViewModel @Inject constructor(
                         )
                     )
                 }
-
             }
         }
     }
@@ -201,7 +210,6 @@ class TransactionViewModel @Inject constructor(
                         )
                     )
                 }
-
             }
         }
     }
@@ -221,11 +229,26 @@ class TransactionViewModel @Inject constructor(
         }
     }
 
+    fun updateAccount(account: AccountUi) {
+        viewModelScope.launch {
+            val currentState = uiState.value
+            if (currentState is TransactionUiState.Success) {
+                _uiState.update {
+                    currentState.copy(
+                        transaction = currentState.transaction.copy(
+                            accountId = account.id
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     fun delete(idTransaction: Int?) {
         viewModelScope.launch {
             val currentState = uiState.value
             if (idTransaction != null && currentState is TransactionUiState.Success) {
-                deleteTransactionUseCase.invoke(idTransaction).fold(
+                deleteTransactionUseCase(idTransaction).fold(
                     onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
                     onFailure = {
                         _eventFlow.emit(TransactionEvent.ShowError(R.string.fail_delete_transaction))

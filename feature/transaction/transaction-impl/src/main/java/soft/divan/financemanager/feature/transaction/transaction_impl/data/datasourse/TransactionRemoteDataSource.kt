@@ -7,6 +7,6 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.data.dto.T
 interface TransactionRemoteDataSource {
     suspend fun createTransaction(request: TransactionRequestDto): Response<TransactionDto>
     suspend fun getTransaction(id: Int): Response<TransactionDto>
-    suspend fun updateTransaction(id: Int, request: TransactionRequestDto): Response<TransactionDto>
+    suspend fun updateTransaction(id: Int, transaction: TransactionRequestDto): Response<TransactionDto>
     suspend fun deleteTransaction(id: Int): Response<Unit>
 }

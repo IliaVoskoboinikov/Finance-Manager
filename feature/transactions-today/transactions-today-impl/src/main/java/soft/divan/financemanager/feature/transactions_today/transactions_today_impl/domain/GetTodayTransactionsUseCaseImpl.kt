@@ -1,7 +1,9 @@
 package soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import soft.divan.financemanager.core.domain.model.Category
@@ -23,39 +25,43 @@ class GetTodayTransactionsUseCaseImpl @Inject constructor(
     ) : GetTodayTransactionsUseCase {
     override operator fun invoke(isIncome: Boolean): Flow<Triple<List<Transaction>, CurrencyCode, List<Category>>> =
         flow {
+            // 1) Загружаем все аккаунты
+            val allAccounts = accountRepository.getAccounts().first()
 
-            val account = accountRepository.getAccounts().first().first()
+            // 2) Загружаем категории и формируем map
+            val categories = categoryRepository.getCategories().first()
+            val categoriesMap = categories.associateBy { it.id }
 
+            // 3) Загружаем валюту
+            val currency = currencyRepository.getCurrency().first()
+
+            // 4) Получаем сегодняшнюю дату
             val todayDate = DateHelper.getTodayApiFormat()
 
-            val transactionsFlow =
-                transactionRepository.getTransactionsByAccountAndPeriod(
-                    accountId = account.id,
-                    startDate = todayDate,
-                    endDate = todayDate
-                )
-
-            val categoriesFlow = categoryRepository.getCategories()
-            val currencyFlow = currencyRepository.getCurrency()
-
-            combine(
-                transactionsFlow,
-                categoriesFlow,
-                currencyFlow
-            ) { transactions, categories, currency ->
-
-                val categoriesMap = categories.associateBy { it.id }
-
-                val transactions = transactions
-                    .filter { transaction ->
-                        val category = categoriesMap[transaction.categoryId]
-                        category?.isIncome == isIncome
+            // 5) Загружаем транзакции по всем аккаунтам ПАРАЛЛЕЛЬНО
+            val allTransactions = coroutineScope {
+                allAccounts.map { account ->
+                    async {
+                        transactionRepository
+                            .getTransactionsByAccountAndPeriod(
+                                accountId = account.id,
+                                startDate = todayDate,
+                                endDate = todayDate
+                            )
+                            .first()
                     }
-                    .sortedByDescending { it.transactionDate }
-
-                Triple(transactions, currency, categories)
-            }.collect {
-                emit(it)
+                }.awaitAll().flatten()
             }
+
+            // 6) Фильтруем по типу доход / расход
+            val filtered = allTransactions.filter { tx ->
+                categoriesMap[tx.categoryId]?.isIncome == isIncome
+            }
+
+            // 7) Сортируем по дате
+            val sorted = filtered.sortedByDescending { it.transactionDate }
+
+            // 8) Эмитим итог
+            emit(Triple(sorted, currency, categories))
         }
 }

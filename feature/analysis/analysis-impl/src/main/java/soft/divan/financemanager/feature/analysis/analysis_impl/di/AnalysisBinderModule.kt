@@ -4,8 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import soft.divan.financemanager.core.domain.usecase.GetTransactionByPeriodUseCase
-import soft.divan.financemanager.core.domain.usecase.GetTransactionByPeriodUseCaseImpl
+import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
+import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCaseImpl
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_impl.domain.usecase.GetCategoryPieChartDataUseCase
 import soft.divan.financemanager.feature.analysis.analysis_impl.domain.usecase.impl.GetCategoryPieChartDataUseCaseImpl
@@ -18,7 +18,7 @@ interface AnalysisBinderModule {
     fun bindTransactionRouter(impl: AnalysisFeatureImpl): AnalysisFeatureApi
 
     @Binds
-    fun bindGetTransactionByPeriodUseCaseImpl(impl: GetTransactionByPeriodUseCaseImpl): GetTransactionByPeriodUseCase
+    fun bindGetTransactionsByPeriodUseCaseImpl(impl: GetTransactionsByPeriodUseCaseImpl): GetTransactionsByPeriodUseCase
 
     @Binds
     fun bindGetCategoryPieChartDataUseCase(impl: GetCategoryPieChartDataUseCaseImpl): GetCategoryPieChartDataUseCase

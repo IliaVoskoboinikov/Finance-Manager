@@ -15,10 +15,12 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.domain.use
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.UpdateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.CreateTransactionUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.DeleteTransactionUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.GetCategoriesByTypeUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.GetTransactionUseCaseImpl
+import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl.UpdateTransactionUseCaseImpl
 import soft.divan.financemanager.feature.transaction.transaction_impl.navigation.TransactionFeatureImpl
 import javax.inject.Singleton
 
@@ -52,5 +54,8 @@ interface TransactionBinderModule {
 
     @Binds
     fun bindDeleteTransactionUseCase(impl: DeleteTransactionUseCaseImpl): DeleteTransactionUseCase
+
+    @Binds
+    fun bindUpdateTransactionUseCase(impl: UpdateTransactionUseCaseImpl): UpdateTransactionUseCase
 
 }

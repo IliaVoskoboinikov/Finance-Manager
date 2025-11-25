@@ -51,7 +51,7 @@ class TransactionsTodayViewModel @Inject constructor(
                         data.third.find { it.id == transition.categoryId }!!
                     )
                 }
-                val sumTransactions = getSumTransactionsUseCase.invoke(data.first)
+                val sumTransactions = getSumTransactionsUseCase(data.first)
                 _uiState.update {
                     TransactionsTodayUiState.Success(
                         transactions = uiTransactions,

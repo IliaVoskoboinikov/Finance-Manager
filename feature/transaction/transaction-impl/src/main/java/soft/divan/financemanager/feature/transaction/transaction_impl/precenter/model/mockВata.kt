@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model
 
+import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -38,6 +39,8 @@ val mockCategories = listOf(
     )
 )
 
+val mockAccounts = listOf(AccountUi(1, "Основной счёт", "1000", CurrencySymbol.RUB.symbol))
+
 val mockTransaction = UiTransaction(
     id = 1001,
     accountId = 1,
@@ -53,7 +56,7 @@ val mockTransaction = UiTransaction(
 val mockTransactionUiStateSuccess = TransactionUiState.Success(
     transaction = mockTransaction,
     categories = mockCategories,
-    accountName = "Основной счёт"
+    accounts = mockAccounts
 )
 
 val mockTransactionUiStateLoading = TransactionUiState.Loading
