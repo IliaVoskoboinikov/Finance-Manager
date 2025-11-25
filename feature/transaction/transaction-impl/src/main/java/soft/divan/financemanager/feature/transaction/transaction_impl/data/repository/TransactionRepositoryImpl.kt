@@ -80,6 +80,27 @@ class TransactionRepositoryImpl @Inject constructor(
         return Result.success(Unit)
     }
 
+    override suspend fun updateTransaction(transaction: Transaction): Result<Unit> {
+        transactionLocalDataSource.saveTransaction(transaction.toEntity())
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            val response =
+                transactionRemoteDataSource.updateTransaction(
+                    id = transaction.id,
+                    transaction = transaction.toDto()
+                )
+            if (response.isSuccessful) {
+                val serverTransaction = response.body()!!
+                transactionLocalDataSource.updateTransactionId(
+                    //todo время унифицировать во все прилке
+                    createdAt = transaction.createdAt.atOffset(ZoneOffset.UTC)
+                        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
+                    newId = serverTransaction.id
+                )
+            }
+        }
+        return Result.success(Unit)
+    }
+
     //todo
     override suspend fun deleteTransaction(transactionId: Int): Result<Unit> = runCatching {
         transactionLocalDataSource.deleteTransaction(transactionId)

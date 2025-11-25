@@ -21,9 +21,9 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun updateTransaction(
         id: Int,
-        request: TransactionRequestDto
+        transaction: TransactionRequestDto
     ): Response<TransactionDto> {
-        return api.updateTransaction(id, request)
+        return api.updateTransaction(id, transaction)
     }
 
     override suspend fun deleteTransaction(id: Int): Response<Unit> {

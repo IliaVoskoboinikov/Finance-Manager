@@ -47,6 +47,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiCategory
@@ -86,6 +87,7 @@ fun TransactionScreenPreview() {
             onDateChange = { },
             onTimeChange = { },
             onCategoryChange = {},
+            onAccountChange = {},
             onDelete = {},
             snackbarHostState = remember { SnackbarHostState() }
         )
@@ -144,6 +146,7 @@ fun TransactionScreen(
         onDateChange = viewModel::updateDate,
         onTimeChange = viewModel::updateTime,
         onCategoryChange = viewModel::updateCategory,
+        onAccountChange = viewModel::updateAccount,
         onDelete = { viewModel.delete(transactionId) },
         snackbarHostState = snackbarHostState
     )
@@ -161,6 +164,7 @@ fun TransactionContent(
     onDateChange: (LocalDate) -> Unit,
     onTimeChange: (LocalTime) -> Unit,
     onCategoryChange: (UiCategory) -> Unit,
+    onAccountChange: (AccountUi) -> Unit,
     onDelete: () -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
@@ -190,6 +194,7 @@ fun TransactionContent(
                     onDateChange = onDateChange,
                     onTimeChange = onTimeChange,
                     onCategoryChange = onCategoryChange,
+                    onAccountChange = onAccountChange,
                     onDelete = onDelete
                 )
             }
@@ -205,8 +210,10 @@ fun TransactionForm(
     onDateChange: (LocalDate) -> Unit,
     onTimeChange: (LocalTime) -> Unit,
     onCategoryChange: (UiCategory) -> Unit,
+    onAccountChange: (AccountUi) -> Unit,
     onDelete: () -> Unit
 ) {
+    val isShowAccountsSheet = remember { mutableStateOf(false) }
     val isShowDatePicker = remember { mutableStateOf(false) }
     val isShowTimePicker = remember { mutableStateOf(false) }
     val isShowCategorySheet = remember { mutableStateOf(false) }
@@ -215,6 +222,8 @@ fun TransactionForm(
     ShowDataPickerDialog(isShowDatePicker = isShowDatePicker, onDateChange = onDateChange)
     ShowTimePickerDialog(isShowTimePicker = isShowTimePicker, onTimeChange = onTimeChange)
     ShowCategoryBottomSheet(isShowCategorySheet, uiState, onCategoryChange)
+    ShowAccountsBottomSheet(isShowAccountsSheet, uiState, onAccountChange)
+
     ShowDeleteDialog(isShowDeleteDialog, onDelete)
 
     Column(
@@ -222,7 +231,7 @@ fun TransactionForm(
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        Account(uiState)
+        Account(uiState = uiState, onClick = { isShowAccountsSheet.value = true })
         FMDriver()
         Category(uiState = uiState, onClick = { isShowCategorySheet.value = true })
         FMDriver()
@@ -297,6 +306,24 @@ private fun ShowCategoryBottomSheet(
 }
 
 @Composable
+private fun ShowAccountsBottomSheet(
+    isShowAccountsSheet: MutableState<Boolean>,
+    uiState: TransactionUiState.Success,
+    onAccountChange: (AccountUi) -> Unit
+) {
+    if (isShowAccountsSheet.value) {
+        AccountsBottomSheet(
+            accounts = uiState.accounts,
+            onAccountsSelected = {
+                onAccountChange(it)
+            },
+            onDismissRequest = { isShowAccountsSheet.value = false }
+        )
+    }
+}
+
+
+@Composable
 private fun ShowDeleteDialog(isShowDeleteDialog: MutableState<Boolean>, onDelete: () -> Unit) {
     if (isShowDeleteDialog.value) {
         DeleteDialog(isShowDeleteDialog, onDelete)
@@ -304,15 +331,20 @@ private fun ShowDeleteDialog(isShowDeleteDialog: MutableState<Boolean>, onDelete
 }
 
 @Composable
-private fun Account(uiState: TransactionUiState.Success) {
+private fun Account(
+    uiState: TransactionUiState.Success,
+    onClick: () -> Unit
+) {
     ListItem(
         modifier = Modifier
             .height(70.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         content = { ContentTextListItem(stringResource(R.string.account)) },
         trail = {
-
-            ContentTextListItem(uiState.accountName)
+            ContentTextListItem(
+                uiState.accounts.find { it.id == uiState.transaction.accountId }?.name ?: ""
+            )
             Spacer(modifier = Modifier.width(16.dp))
             Icon(
                 imageVector = Icons.Filled.Arrow,
@@ -366,6 +398,61 @@ fun CategoryBottomSheet(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AccountsBottomSheet(
+    accounts: List<AccountUi>,
+    onAccountsSelected: (AccountUi) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismissRequest,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        AccountSheetContent(accounts, onAccountsSelected, onDismissRequest)
+    }
+}
+
+
+@Composable
+private fun AccountSheetContent(
+    accounts: List<AccountUi>,
+    onAccountSelected: (AccountUi) -> Unit,
+    onDismissRequest: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Text(
+            text = stringResource(R.string.select_category),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+
+        LazyColumn {
+            items(accounts) { account ->
+                ListItem(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onAccountSelected(account)
+                            onDismissRequest()
+                        }, content = {
+                        Text(
+                            text = account.name + " " + account.balance,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    })
+                FMDriver()
+
+            }
+        }
+    }
+}
+
 @Composable
 private fun CategorySheetContent(
     categories: List<UiCategory>,
@@ -377,7 +464,7 @@ private fun CategorySheetContent(
             .fillMaxWidth()
     ) {
         Text(
-            text = stringResource(soft.divan.financemanager.feature.transaction.transaction_impl.R.string.select_category),
+            text = stringResource(R.string.select_category),
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
