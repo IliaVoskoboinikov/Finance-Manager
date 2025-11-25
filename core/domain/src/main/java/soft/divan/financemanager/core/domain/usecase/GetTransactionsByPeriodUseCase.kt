@@ -6,7 +6,7 @@ import soft.divan.financemanager.core.domain.model.CurrencyCode
 import soft.divan.financemanager.core.domain.model.Transaction
 import java.time.LocalDate
 
-interface GetTransactionByPeriodUseCase {
+interface GetTransactionsByPeriodUseCase {
     operator fun invoke(
         isIncome: Boolean,
         startDate: LocalDate,
