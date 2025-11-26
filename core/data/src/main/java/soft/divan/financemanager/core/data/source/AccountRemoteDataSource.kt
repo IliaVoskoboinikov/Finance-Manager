@@ -4,11 +4,13 @@ import retrofit2.Response
 import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
-import soft.divan.financemanager.core.domain.model.AccountBrief
+import soft.divan.financemanager.core.data.dto.UpdateAccountRequestDto
 
 
 interface AccountRemoteDataSource {
     suspend fun getAccounts(): Response<List<AccountDto>>
     suspend fun createAccount(createAccountRequestDto: CreateAccountRequestDto): Response<AccountDto>
-    suspend fun updateAccount(accountBrief: AccountBrief): Response<AccountWithStatsDto>
+    suspend fun updateAccount(id: Int, account: UpdateAccountRequestDto): Response<AccountWithStatsDto>
+    suspend fun delete(id: Int): Response<Unit>
+    suspend fun getById(id: Int): Response<AccountWithStatsDto>
 }

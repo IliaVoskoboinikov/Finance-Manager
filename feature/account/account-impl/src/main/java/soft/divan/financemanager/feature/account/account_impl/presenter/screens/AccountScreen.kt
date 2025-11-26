@@ -1,6 +1,7 @@
 package soft.divan.financemanager.feature.account.account_impl.presenter.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -65,6 +66,7 @@ fun AccountScreenPreview() {
                     )
                 )
             ),
+            onNavigateToUpdateAccount = {},
             onNavigateToCreateAccount = {},
         )
     }
@@ -73,6 +75,7 @@ fun AccountScreenPreview() {
 @Composable
 fun AccountScreen(
     modifier: Modifier = Modifier,
+    onNavigateToUpdateAccount: (idAccount: Int) -> Unit,
     onNavigateToCreateAccount: () -> Unit,
     viewModel: AccountViewModel = hiltViewModel()
 ) {
@@ -80,6 +83,7 @@ fun AccountScreen(
     AccountContent(
         modifier = modifier,
         uiState = uiState,
+        onNavigateToUpdateAccount = onNavigateToUpdateAccount,
         onNavigateToCreateAccount = onNavigateToCreateAccount,
     )
 }
@@ -89,6 +93,7 @@ fun AccountScreen(
 fun AccountContent(
     modifier: Modifier = Modifier,
     uiState: AccountUiState,
+    onNavigateToUpdateAccount: (idAccount: Int) -> Unit,
     onNavigateToCreateAccount: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
@@ -105,7 +110,10 @@ fun AccountContent(
                     message = uiState.message,
                 )
 
-                is AccountUiState.Success -> Accounts(uiState.accounts)
+                is AccountUiState.Success -> Accounts(
+                    accounts = uiState.accounts,
+                    onNavigateToUpdateAccount = onNavigateToUpdateAccount
+                )
             }
         }
     }
@@ -115,12 +123,14 @@ fun AccountContent(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun Accounts(
     accounts: List<AccountUiModel>,
+    onNavigateToUpdateAccount: (idAccount: Int) -> Unit,
 ) {
     LazyColumn {
-        items(accounts) { item ->
+        items(accounts) { account ->
             ListItem(
                 modifier = Modifier
-                    .height(56.dp),
+                    .height(56.dp)
+                    .clickable { onNavigateToUpdateAccount(account.id) },
                 lead = {
                     Box(
                         modifier = Modifier
@@ -132,9 +142,9 @@ private fun Accounts(
                         Text(text = "\uD83D\uDCB0", textAlign = TextAlign.Center)
                     }
                 },
-                content = { ContentTextListItem(item.name) },
+                content = { ContentTextListItem(account.name) },
                 trail = {
-                    ContentTextListItem(item.balance)
+                    ContentTextListItem(account.balance)
                     Spacer(modifier = Modifier.width(16.dp))
                     Icon(
                         imageVector = Icons.Filled.Arrow,

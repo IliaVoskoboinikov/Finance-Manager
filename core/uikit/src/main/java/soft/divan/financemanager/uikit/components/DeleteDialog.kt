@@ -27,7 +27,7 @@ fun DeleteDialog(isShowDeleteDialog: MutableState<Boolean>, onDelete: () -> Unit
                 Text(stringResource(R.string.cancel), color = colorScheme.onSecondaryContainer)
             }
         },
-        title = { Text(stringResource(R.string.delete_transaction) + "?") },
+        title = { Text(stringResource(R.string.delete) + "?") },
         text = { Text(stringResource(R.string.this_action_cannot_be_undone)) }
     )
 }

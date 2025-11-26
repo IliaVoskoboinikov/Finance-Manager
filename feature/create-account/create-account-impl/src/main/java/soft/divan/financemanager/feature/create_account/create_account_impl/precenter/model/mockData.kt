@@ -7,6 +7,7 @@ val mockCreateAccountUiStateLoading = CreateAccountUiState.Loading
 
 val mockCreateAccountUiStateSuccess = CreateAccountUiState.Success(
     AccountUiModel(
+        id = 1,
         name = "счет1",
         balance = "1000",
         currency = "Rub"

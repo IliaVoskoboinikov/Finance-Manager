@@ -4,5 +4,6 @@ import androidx.annotation.StringRes
 
 sealed interface CreateAccountEvent {
     data object Saved : CreateAccountEvent
+    data object Deleted : CreateAccountEvent
     data class ShowError(@field:StringRes val messageRes: Int) : CreateAccountEvent
 }

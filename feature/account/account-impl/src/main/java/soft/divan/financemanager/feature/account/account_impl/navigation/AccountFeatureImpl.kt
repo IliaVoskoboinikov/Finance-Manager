@@ -27,7 +27,14 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
         navGraphBuilder.composable(route) {
             AccountScreen(
                 modifier = modifier,
-                onNavigateToCreateAccount = { navController.navigate(createAccountFeatureApi.route) }
+                onNavigateToUpdateAccount = { idAccount ->
+                    navController.navigate(
+                        createAccountFeatureApi.accountRouteWithArgs(
+                            idAccount
+                        )
+                    )
+                },
+                onNavigateToCreateAccount = { navController.navigate(createAccountFeatureApi.accountRouteWithArgs()) }
             )
         }
 

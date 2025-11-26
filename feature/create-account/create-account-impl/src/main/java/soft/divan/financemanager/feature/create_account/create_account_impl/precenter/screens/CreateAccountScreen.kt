@@ -50,6 +50,7 @@ import soft.divan.financemanager.feature.create_account.create_account_impl.prec
 import soft.divan.financemanager.feature.create_account.create_account_impl.precenter.model.mockCreateAccountUiStateSuccess
 import soft.divan.financemanager.feature.create_account.create_account_impl.precenter.viewModel.CreateAccountViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
+import soft.divan.financemanager.uikit.components.DeleteButton
 import soft.divan.financemanager.uikit.components.ErrorContent
 import soft.divan.financemanager.uikit.components.FMDriver
 import soft.divan.financemanager.uikit.components.ListItem
@@ -73,11 +74,13 @@ fun CreateAccountScreenPreview() {
     FinanceManagerTheme {
         CreateAccountContent(
             uiState = mockCreateAccountUiStateSuccess,
+            accountId = null,
             onNavigateBack = { },
             onUpdateName = {},
             onUpdateBalance = {},
             onUpdateCurrency = {},
             onSave = { },
+            onDelete = { },
             snackbarHostState = remember { SnackbarHostState() }
         )
     }
@@ -94,12 +97,17 @@ fun PreviewCurrencySheet() {
 @Composable
 fun CreateAccountScreenScreen(
     modifier: Modifier = Modifier,
+    accountId: Int?,
     onNavigateBack: () -> Unit,
     viewModel: CreateAccountViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    /*   LaunchedEffect(accountId) {
+           viewModel.loadAccount(accountId)
+       }*/
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
@@ -109,6 +117,8 @@ fun CreateAccountScreenScreen(
                     message = context.getString(event.messageRes),
                     withDismissAction = true
                 )
+
+                CreateAccountEvent.Deleted -> onNavigateBack()
             }
         }
     }
@@ -116,11 +126,13 @@ fun CreateAccountScreenScreen(
     CreateAccountContent(
         modifier = modifier,
         uiState = uiState,
+        accountId = accountId,
         onNavigateBack = onNavigateBack,
         onUpdateName = viewModel::updateName,
         onUpdateBalance = viewModel::updateBalance,
         onUpdateCurrency = viewModel::updateCurrency,
         onSave = viewModel::createAccount,
+        onDelete = viewModel::deleteAccount,
         snackbarHostState = snackbarHostState
     )
 }
@@ -129,18 +141,20 @@ fun CreateAccountScreenScreen(
 fun CreateAccountContent(
     modifier: Modifier = Modifier,
     uiState: CreateAccountUiState,
+    accountId: Int?,
     onNavigateBack: () -> Unit,
     onUpdateName: (String) -> Unit,
     onUpdateBalance: (String) -> Unit,
     onUpdateCurrency: (String) -> Unit,
     onSave: () -> Unit,
+    onDelete: () -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
         topBar = {
             TopBar(
                 topBar = TopBarModel(
-                    title = R.string.create_account,
+                    title = if (accountId == null) R.string.create_account else R.string.edit_account,
                     navigationIcon = Icons.Filled.Cross,
                     navigationIconClick = onNavigateBack,
                     actionIcon = Icons.Filled.ArrowConfirm,
@@ -156,10 +170,12 @@ fun CreateAccountContent(
                 is CreateAccountUiState.Loading -> LoadingProgressBar()
                 is CreateAccountUiState.Success -> CreateAccountForm(
                     uiState = uiState,
+                    accountId = accountId,
                     onUpdateName = onUpdateName,
                     onUpdateBalance = onUpdateBalance,
                     onUpdateCurrency = onUpdateCurrency,
-                    onSave = onSave
+                    onSave = onSave,
+                    onDelete = onDelete
                 )
             }
         }
@@ -171,10 +187,12 @@ fun CreateAccountContent(
 @Composable
 fun CreateAccountForm(
     uiState: CreateAccountUiState.Success,
+    accountId: Int?,
     onUpdateName: (String) -> Unit,
     onUpdateBalance: (String) -> Unit,
     onUpdateCurrency: (String) -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val currencySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isCurrencySheetOpen = remember { mutableStateOf(false) }
@@ -196,7 +214,10 @@ fun CreateAccountForm(
         )
         FMDriver()
         Spacer(modifier = Modifier.height(24.dp))
-        SaveButton(onSave)
+        if (accountId == null)
+            SaveButton(onSave)
+        else
+            DeleteButton(onDelete)
     }
 }
 
