@@ -16,4 +16,20 @@ class AccountLocalDataSourceImpl @Inject constructor(
     override suspend fun insertAccounts(accounts: List<AccountEntity>) {
         return accountDao.insertAccounts(accounts)
     }
+
+    override suspend fun deleteAccount(id: Int) {
+        return accountDao.delete(id)
+    }
+
+    override suspend fun getAccount(id: Int): AccountEntity? {
+        return accountDao.getById(id)
+    }
+
+    override suspend fun updateAccount(account: AccountEntity) {
+        return accountDao.update(account)
+    }
+
+    override suspend fun saveAccount(account: AccountEntity) {
+        return accountDao.insert(account)
+    }
 }

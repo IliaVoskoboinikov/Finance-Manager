@@ -7,6 +7,7 @@ import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.AccountBrief
 import soft.divan.financemanager.core.domain.model.CreateAccountRequest
+import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.finansemanager.core.database.entity.AccountEntity
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -20,6 +21,26 @@ fun AccountDto.toEntity(): AccountEntity = AccountEntity(
     currency = this.currency,
     createdAt = this.createdAt,
     updatedAt = this.updatedAt
+)
+
+fun AccountWithStatsDto.toDomain(): Account = Account(
+    id = this.id,
+    userId = this.id,
+    name = this.name,
+    balance = this.balance.toBigDecimal(),
+    currency = this.currency,
+    createdAt = LocalDateTime.parse(this.createdAt, formatter),
+    updatedAt = LocalDateTime.parse(this.updatedAt, formatter)
+)
+
+fun Account.toEntity(): AccountEntity = AccountEntity(
+    id = id,
+    userId = id,
+    name = name,
+    balance = balance.toString(),
+    currency = currency,
+    createdAt = DateHelper.dataTimeForApi(createdAt),
+    updatedAt = DateHelper.dataTimeForApi(updatedAt),
 )
 
 private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
@@ -45,4 +66,14 @@ fun CreateAccountRequest.toDto(): CreateAccountRequestDto = CreateAccountRequest
     name = this.name,
     balance = this.balance.toString(),
     currency = this.currency
+)
+
+fun AccountWithStatsDto.toEntity(): AccountEntity = AccountEntity(
+    id = id,
+    userId = id,
+    name = name,
+    balance = balance,
+    currency = currency,
+    createdAt = createdAt,
+    updatedAt = updatedAt
 )

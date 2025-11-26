@@ -40,6 +40,6 @@ fun DeleteButton(onClick: () -> Unit) {
             modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text(stringResource(R.string.delete_transaction))
+        Text(stringResource(R.string.delete))
     }
 }
