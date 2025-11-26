@@ -7,7 +7,6 @@ import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.data.dto.UpdateAccountRequestDto
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
-import soft.divan.financemanager.core.domain.model.AccountBrief
 import javax.inject.Inject
 
 class AccountRemoteDataSourceImpl @Inject constructor(
@@ -22,14 +21,20 @@ class AccountRemoteDataSourceImpl @Inject constructor(
         return accountApiService.createAccount(createAccountRequestDto)
     }
 
-    override suspend fun updateAccount(accountBrief: AccountBrief): Response<AccountWithStatsDto> {
-        val requestDto = UpdateAccountRequestDto(
-            name = accountBrief.name,
-            balance = accountBrief.balance.toPlainString(),
-            currency = accountBrief.currency
-        )
-
-        val accountId = accountBrief.id
-        return accountApiService.updateAccount(accountId, requestDto)
+    override suspend fun updateAccount(
+        id: Int,
+        account: UpdateAccountRequestDto
+    ): Response<AccountWithStatsDto> {
+        return accountApiService.updateAccount(id, account)
     }
+
+    override suspend fun delete(id: Int): Response<Unit> {
+        return accountApiService.delete(id)
+    }
+
+    override suspend fun getById(id: Int): Response<AccountWithStatsDto> {
+        return accountApiService.getById(id)
+    }
+
+
 }

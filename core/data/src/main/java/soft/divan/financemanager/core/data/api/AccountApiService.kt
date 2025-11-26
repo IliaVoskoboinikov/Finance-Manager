@@ -2,6 +2,7 @@ package soft.divan.financemanager.core.data.api
 
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -17,7 +18,7 @@ interface AccountApiService {
     suspend fun getAccounts(): Response<List<AccountDto>>
 
     @GET("v1/accounts/{id}")
-    suspend fun getAccountById(
+    suspend fun getById(
         @Path("id") id: Int
     ): Response<AccountWithStatsDto>
 
@@ -31,5 +32,10 @@ interface AccountApiService {
         @Path("id") accountId: Int,
         @Body request: UpdateAccountRequestDto
     ): Response<AccountWithStatsDto>
+
+    @DELETE("v1/accounts/{id}")
+    suspend fun delete(
+        @Path("id") id: Int,
+    ): Response<Unit>
 
 }
