@@ -7,6 +7,7 @@ data class UiTransaction(
     val id: Int,
     val accountId: Int,
     val category: UiCategory,
+    val currencyCode: String,
     val amount: BigDecimal,
     val amountFormatted: String,
     val transactionDate: LocalDateTime,

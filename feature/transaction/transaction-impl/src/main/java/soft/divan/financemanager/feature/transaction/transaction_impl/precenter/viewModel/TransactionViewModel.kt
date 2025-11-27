@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.Category
-import soft.divan.financemanager.core.domain.model.CurrencyCode
+import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
@@ -110,6 +110,7 @@ class TransactionViewModel @Inject constructor(
                 comment = "",
                 createdAt = now,
                 updatedAt = now,
+                currencyCode = CurrencySymbol.RUB.code,
                 amountFormatted = BigDecimal.ZERO.toString(),
             ),
             categories = categoriesResult.map {
@@ -132,7 +133,6 @@ class TransactionViewModel @Inject constructor(
                 TransactionUiState.Success(
                     //todo
                     transaction = transaction.toUi(
-                        currency = CurrencyCode("RUB"),
                         category = categoriesResult.find { it.id == transaction.categoryId }!!
                     ),
                     categories = categoriesResult.map { it.toUi() },
@@ -236,7 +236,8 @@ class TransactionViewModel @Inject constructor(
                 _uiState.update {
                     currentState.copy(
                         transaction = currentState.transaction.copy(
-                            accountId = account.id
+                            accountId = account.id,
+                            currencyCode = account.currency
                         )
                     )
                 }

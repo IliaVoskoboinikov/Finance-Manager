@@ -1,7 +1,5 @@
 package soft.divan.financemanager.core.domain.model
 
-import java.math.BigDecimal
-
 enum class CurrencySymbol(val code: String, val symbol: String) {
     USD("USD", "$"),
     EUR("EUR", "€"),
@@ -17,18 +15,3 @@ enum class CurrencySymbol(val code: String, val symbol: String) {
         }
     }
 }
-
-@JvmInline
-value class CurrencyCode(val code: String) {
-    init {
-        require(code in CurrencySymbol.entries.map { it.code }) { "Unsupported currency code" }
-    }
-
-    override fun toString(): String = code
-}
-
-fun CurrencyCode.symbol(): String =
-    CurrencySymbol.fromCode(this.code)
-
-fun BigDecimal.formatWith(currency: CurrencyCode): String =
-    "${this.stripTrailingZeros().toPlainString()} ${currency.symbol()}"
