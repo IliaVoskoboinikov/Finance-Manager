@@ -24,7 +24,7 @@ class AccountRemoteDataSourceImpl @Inject constructor(
     override suspend fun updateAccount(
         id: Int,
         account: UpdateAccountRequestDto
-    ): Response<AccountWithStatsDto> {
+    ): Response<AccountDto> {
         return accountApiService.updateAccount(id, account)
     }
 

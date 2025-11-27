@@ -31,7 +31,7 @@ interface AccountApiService {
     suspend fun updateAccount(
         @Path("id") accountId: Int,
         @Body request: UpdateAccountRequestDto
-    ): Response<AccountWithStatsDto>
+    ): Response<AccountDto>
 
     @DELETE("v1/accounts/{id}")
     suspend fun delete(
