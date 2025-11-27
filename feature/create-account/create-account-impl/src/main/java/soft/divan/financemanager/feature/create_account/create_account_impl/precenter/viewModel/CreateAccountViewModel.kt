@@ -118,7 +118,6 @@ class CreateAccountViewModel @Inject constructor(
                 _uiState.update { CreateAccountUiState.Loading }
                 if (currentState.account.id != 1) {
                     updateAccountUseCase(
-                        id = currentState.account.id,
                         account = currentState.account.toDomain()
                     )
                         .fold(
