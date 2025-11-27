@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
-import soft.divan.financemanager.core.domain.model.formatWith
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
 import soft.divan.financemanager.core.domain.util.DateHelper
@@ -59,7 +58,7 @@ class AnalysisViewModel @Inject constructor(
                 if (!data.first.isEmpty()) {
                     _uiState.update {
                         AnalysisUiState.Success(
-                            sumTransaction = sumTransactions.formatWith(data.second),
+                            sumTransaction = sumTransactions.toString() + " " + data.second.symbol,
                             categoryPieSlice = categoryPieSlice.toPieChartData()
                         )
                     }

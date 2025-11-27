@@ -19,7 +19,8 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     transactionDate = LocalDateTime.parse(this.transactionDate, formatter),
     comment = this.comment,
     createdAt = LocalDateTime.parse(this.createdAt, formatter),
-    updatedAt = LocalDateTime.parse(this.updatedAt, formatter)
+    updatedAt = LocalDateTime.parse(this.updatedAt, formatter),
+    currencyCode = currencyCode,
 )
 
 
@@ -41,5 +42,6 @@ fun Transaction.toEntity(): TransactionEntity = TransactionEntity(
     comment = this.comment.orEmpty(),
     createdAt = this.createdAt.atOffset(ZoneOffset.UTC).format(formatter),
     updatedAt = this.updatedAt.atOffset(ZoneOffset.UTC).format(formatter),
-    isSynced = true
+    isSynced = true,
+    currencyCode = currencyCode
 )

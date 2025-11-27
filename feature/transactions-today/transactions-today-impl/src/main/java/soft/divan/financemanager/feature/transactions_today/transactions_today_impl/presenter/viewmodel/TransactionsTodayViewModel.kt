@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
-import soft.divan.financemanager.core.domain.model.formatWith
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTodayTransactionsUseCase
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.mapper.toUi
@@ -47,7 +46,6 @@ class TransactionsTodayViewModel @Inject constructor(
             .onEach { data ->
                 val uiTransactions = data.first.map { transition ->
                     transition.toUi(
-                        data.second,
                         data.third.find { it.id == transition.categoryId }!!
                     )
                 }
@@ -55,7 +53,7 @@ class TransactionsTodayViewModel @Inject constructor(
                 _uiState.update {
                     TransactionsTodayUiState.Success(
                         transactions = uiTransactions,
-                        sumTransaction = sumTransactions.formatWith(data.second)
+                        sumTransaction = sumTransactions.toString() + " " + data.second.symbol
                     )
                 }
             }
