@@ -2,7 +2,6 @@ package soft.divan.financemanager.core.data.dto
 
 import com.google.gson.annotations.SerializedName
 
-
 data class AccountDto(
     @SerializedName("id")
     val id: Int,
@@ -18,5 +17,4 @@ data class AccountDto(
     val createdAt: String,
     @SerializedName("updatedAt")
     val updatedAt: String
-)// можно шарить один подмодуль фичи в другие фичи
-// раскидать по модулям можно
+)

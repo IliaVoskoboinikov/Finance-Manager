@@ -6,7 +6,6 @@ import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.AccountBrief
-import soft.divan.financemanager.core.domain.model.CreateAccountRequest
 import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.finansemanager.core.database.entity.AccountEntity
 import java.math.BigDecimal
@@ -62,7 +61,7 @@ fun AccountWithStatsDto.toAccountBriefDomain(): AccountBrief = AccountBrief(
     currency = this.currency
 )
 
-fun CreateAccountRequest.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
+fun AccountBrief.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
     name = this.name,
     balance = this.balance.toString(),
     currency = this.currency
