@@ -208,7 +208,7 @@ fun CreateAccountForm(
         FMDriver()
         Currency(
             isSheetOpen = isCurrencySheetOpen,
-            currency = uiState.account.currency,
+            currency = CurrencySymbol.fromCode(uiState.account.currency),
             sheetState = currencySheetState,
             updateCurrency = onUpdateCurrency
         )
@@ -396,15 +396,15 @@ fun CurrencyItem(icon: ImageVector, title: Int, symbol: String, onClick: () -> U
 @Composable
 fun CurrencySheetContent(onCancel: () -> Unit, updateCurrency: (String) -> Unit) {
     val currencies = listOf(
-        Triple(Icons.Filled.MdiRuble, R.string.rub, CurrencySymbol.RUB.symbol),
-        Triple(Icons.Filled.MdiDollar, R.string.usd, CurrencySymbol.USD.symbol),
-        Triple(Icons.Filled.MdiEuro, R.string.eur, CurrencySymbol.EUR.symbol)
+        Triple(Icons.Filled.MdiRuble, R.string.rub, CurrencySymbol.RUB),
+        Triple(Icons.Filled.MdiDollar, R.string.usd, CurrencySymbol.USD),
+        Triple(Icons.Filled.MdiEuro, R.string.eur, CurrencySymbol.EUR)
     )
 
     Column(modifier = Modifier.fillMaxWidth()) {
         currencies.forEach { (icon, name, symbol) ->
-            CurrencyItem(icon = icon, title = name, symbol, onClick = {
-                updateCurrency(symbol)
+            CurrencyItem(icon = icon, title = name, symbol.symbol, onClick = {
+                updateCurrency(symbol.code)
                 onCancel()
             })
             FMDriver()

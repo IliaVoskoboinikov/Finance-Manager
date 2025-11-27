@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import soft.divan.financemanager.core.domain.model.Category
-import soft.divan.financemanager.core.domain.model.CurrencyCode
+import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
@@ -24,7 +24,7 @@ class GetTodayTransactionsUseCaseImpl @Inject constructor(
     private val categoryRepository: CategoryRepository,
 
     ) : GetTodayTransactionsUseCase {
-    override operator fun invoke(isIncome: Boolean): Flow<Triple<List<Transaction>, CurrencyCode, List<Category>>> =
+    override operator fun invoke(isIncome: Boolean): Flow<Triple<List<Transaction>, CurrencySymbol, List<Category>>> =
         flow {
             // 1) Загружаем все аккаунты
             val allAccounts = accountRepository.getAccounts().first()

@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
-import soft.divan.financemanager.core.domain.model.formatWith
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
 import soft.divan.financemanager.core.domain.util.DateHelper
@@ -45,7 +44,6 @@ class HistoryViewModel @Inject constructor(
             .onEach { data ->
                 val uiTransactions = data.first.map { transaction ->
                     transaction.toUi(
-                        data.second,
                         data.third.find { it.id == transaction.categoryId }!!
                     )
                 }
@@ -53,7 +51,7 @@ class HistoryViewModel @Inject constructor(
                 _uiState.update {
                     HistoryUiState.Success(
                         transactions = uiTransactions,
-                        sumTransaction = sumTransactions.formatWith(data.second)
+                        sumTransaction = sumTransactions.toString() + " " + data.second.symbol
                     )
                 }
             }

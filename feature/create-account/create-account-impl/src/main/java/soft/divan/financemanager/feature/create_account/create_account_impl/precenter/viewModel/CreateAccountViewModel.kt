@@ -63,7 +63,7 @@ class CreateAccountViewModel @Inject constructor(
         _uiState.update {
             CreateAccountUiState.Success(
                 account = AccountUiModel(
-                    id = 0,
+                    id = -1,
                     name = "",
                     balance = "",
                     currency = CurrencySymbol.RUB.symbol
@@ -116,7 +116,7 @@ class CreateAccountViewModel @Inject constructor(
             val currentState = uiState.value
             if (currentState is CreateAccountUiState.Success) {
                 _uiState.update { CreateAccountUiState.Loading }
-                if (currentState.account.id != 1) {
+                if (currentState.account.id != -1) {
                     updateAccountUseCase(
                         account = currentState.account.toDomain()
                     )

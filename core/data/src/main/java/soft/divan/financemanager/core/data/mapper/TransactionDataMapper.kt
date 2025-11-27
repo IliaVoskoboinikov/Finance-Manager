@@ -15,7 +15,9 @@ fun TransactionDto.toEntity(): TransactionEntity = TransactionEntity(
     transactionDate = this.transactionDate,
     comment = this.comment,
     createdAt = this.createdAt,
-    updatedAt = this.updatedAt
+    updatedAt = this.updatedAt,
+    currencyCode = this.account.currency,
+    isSynced = false,
 )
 
 private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
@@ -29,4 +31,5 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     comment = this.comment,
     createdAt = LocalDateTime.parse(this.createdAt, formatter),
     updatedAt = LocalDateTime.parse(this.updatedAt, formatter),
+    currencyCode = currencyCode,
 )

@@ -50,7 +50,8 @@ val mockTransaction = UiTransaction(
     transactionDate = LocalDateTime.now().minusDays(1),
     comment = "Обед в кафе с коллегами",
     createdAt = LocalDateTime.now().minusDays(1).minusHours(2),
-    updatedAt = LocalDateTime.now()
+    updatedAt = LocalDateTime.now(),
+    currencyCode = CurrencySymbol.RUB.symbol
 )
 
 val mockTransactionUiStateSuccess = TransactionUiState.Success(

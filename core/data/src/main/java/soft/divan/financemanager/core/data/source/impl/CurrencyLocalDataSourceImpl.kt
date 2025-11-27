@@ -7,7 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import soft.divan.financemanager.core.data.source.CurrencyLocalDataSource
-import soft.divan.financemanager.core.domain.model.CurrencyCode
+import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import javax.inject.Inject
 
 class CurrencyLocalDataSourceImpl @Inject constructor(
@@ -16,14 +16,19 @@ class CurrencyLocalDataSourceImpl @Inject constructor(
 
     private val key = stringPreferencesKey("app_currency")
 
-    override fun getCurrency(): Flow<CurrencyCode> {
-        return dataStore.data.map { CurrencyCode(it[key] ?: "RUB") }
+    override fun getCurrency(): Flow<CurrencySymbol> {
+        return dataStore.data.map { prefs ->
+            prefs[key]?.toEnumOrNull<CurrencySymbol>() ?: CurrencySymbol.RUB
+        }
     }
 
-    override suspend fun updateCurrency(currency: CurrencyCode) {
+    override suspend fun updateCurrency(currency: CurrencySymbol) {
         dataStore.edit { prefs ->
             prefs[key] = currency.code
         }
     }
 
+    inline fun <reified T : Enum<T>> String.toEnumOrNull(): T? {
+        return enumValues<T>().firstOrNull { it.name.equals(this, ignoreCase = true) }
+    }
 }
