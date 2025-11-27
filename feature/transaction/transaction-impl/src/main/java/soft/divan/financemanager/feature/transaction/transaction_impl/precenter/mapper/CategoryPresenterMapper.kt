@@ -6,19 +6,11 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.
 
 fun Category.toUi(): UiCategory {
     return UiCategory(
-        id = this.id,
-        name = this.name,
-        emoji = this.emoji,
-        isIncome = this.isIncome
+        id = id,
+        name = name,
+        emoji = emoji,
+        isIncome = isIncome
     )
 }
 //todo
 
-fun UiCategory.toDomain(): Category {
-    return Category(
-        id = this.id,
-        name = this.name,
-        emoji = this.emoji,
-        isIncome = this.isIncome
-    )
-}

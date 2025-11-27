@@ -5,9 +5,9 @@ import soft.divan.financemanager.feature.transactions_today.transactions_today_i
 
 fun Category.toUi(): UiCategory {
     return UiCategory(
-        id = this.id,
-        name = this.name,
-        emoji = this.emoji,
-        isIncome = this.isIncome
+        id = id,
+        name = name,
+        emoji = emoji,
+        isIncome = isIncome
     )
 }

@@ -8,14 +8,14 @@ import soft.divan.financemanager.feature.transactions_today.transactions_today_i
 
 fun Transaction.toUi(category: Category): UiTransaction {
     return UiTransaction(
-        id = this.id,
-        accountId = this.accountId,
+        id = id,
+        accountId = accountId,
         category = category.toUi(),
-        amount = this.amount,
-        amountFormatted = this.amount.toString() + " " + CurrencySymbol.fromCode(currencyCode),
-        transactionDate = this.transactionDate,
-        comment = this.comment.toString(),
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt
+        amount = amount,
+        amountFormatted = amount.toString() + " " + CurrencySymbol.fromCode(currencyCode),
+        transactionDate = transactionDate,
+        comment = comment.toString(),
+        createdAt = createdAt,
+        updatedAt = updatedAt
     )
 }
