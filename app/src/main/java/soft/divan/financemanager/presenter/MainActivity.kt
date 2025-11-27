@@ -15,7 +15,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import dagger.hilt.android.AndroidEntryPoint
-import soft.divan.financemanager.feature.account.my_accounts_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.create_account.create_account_api.CreateAccountFeatureApi
@@ -25,6 +24,7 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.domain.useca
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetThemeModeUseCase
 import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.IsPinSetUseCase
 import soft.divan.financemanager.feature.security.security_impl.presenter.screen.PinLockScreen

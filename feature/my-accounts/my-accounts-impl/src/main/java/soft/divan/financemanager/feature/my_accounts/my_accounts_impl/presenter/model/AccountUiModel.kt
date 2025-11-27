@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.account.my_accounts_impl.presenter.model
+package soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.model
 
 data class AccountUiModel(
     val id: Int,
