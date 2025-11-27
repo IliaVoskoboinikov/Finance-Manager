@@ -7,7 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import soft.divan.financemanager.core.feature_api.register
-import soft.divan.financemanager.feature.account.account_impl.AccountFeatureApi
+import soft.divan.financemanager.feature.account.my_accounts_impl.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.create_account.create_account_api.CreateAccountFeatureApi
