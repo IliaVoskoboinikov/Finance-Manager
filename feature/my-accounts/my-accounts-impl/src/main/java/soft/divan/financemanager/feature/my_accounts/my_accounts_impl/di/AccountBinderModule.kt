@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.account.my_accounts_impl.di
+package soft.divan.financemanager.feature.my_accounts.my_accounts_impl.di
 
 import dagger.Binds
 import dagger.Module
@@ -8,10 +8,10 @@ import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.impl.GetAccountsUseCaseImpl
 import soft.divan.financemanager.core.domain.usecase.impl.GetSumTransactionsUseCaseImpl
-import soft.divan.financemanager.feature.account.my_accounts_impl.AccountFeatureApi
-import soft.divan.financemanager.feature.account.my_accounts_impl.domain.usecase.UpdateCurrencyUseCase
-import soft.divan.financemanager.feature.account.my_accounts_impl.domain.usecase.impl.UpdateCurrencyUseCaseIml
-import soft.divan.financemanager.feature.account.my_accounts_impl.navigation.AccountFeatureImpl
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.AccountFeatureApi
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.domain.usecase.UpdateCurrencyUseCase
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.domain.usecase.impl.UpdateCurrencyUseCaseIml
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.navigation.AccountFeatureImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
