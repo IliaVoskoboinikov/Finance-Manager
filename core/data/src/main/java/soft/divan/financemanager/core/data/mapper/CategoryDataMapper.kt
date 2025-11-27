@@ -6,15 +6,15 @@ import soft.divan.finansemanager.core.database.entity.CategoryEntity
 
 
 fun CategoryDto.toEntity(): CategoryEntity = CategoryEntity(
-    id = this.id,
-    name = this.name,
-    emoji = this.emoji,
-    isIncome = this.isIncome
+    id = id,
+    name = name,
+    emoji = emoji,
+    isIncome = isIncome
 )
 
 fun CategoryEntity.toDomain(): Category = Category(
-    id = this.id,
-    name = this.name,
-    emoji = this.emoji,
-    isIncome = this.isIncome
+    id = id,
+    name = name,
+    emoji = emoji,
+    isIncome = isIncome
 )
