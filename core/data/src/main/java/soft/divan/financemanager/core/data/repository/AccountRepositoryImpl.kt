@@ -13,7 +13,7 @@ import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.domain.model.Account
-import soft.divan.financemanager.core.domain.model.CreateAccountRequest
+import soft.divan.financemanager.core.domain.model.AccountBrief
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import javax.inject.Inject
 
@@ -40,21 +40,21 @@ class AccountRepositoryImpl @Inject constructor(
     }
 
     //todo добавить бд
-    override fun createAccount(createAccountRequest: CreateAccountRequest): Result<Unit> = runCatching {
+    override fun createAccount(account: AccountBrief): Result<Unit> = runCatching {
         applicationScope.launch(dispatcher + exceptionHandler) {
-            val response = accountRemoteDataSource.createAccount(createAccountRequest.toDto())
+            val response = accountRemoteDataSource.createAccount(account.toDto())
         }
         return Result.success(Unit)
     }
 
     //todo
-    override suspend fun updateAccount(id: Int, account: CreateAccountRequest): Result<Unit> =
+    override suspend fun updateAccount(account: AccountBrief): Result<Unit> =
         runCatching {
             // accountLocalDataSource.updateAccount(account.toEntity())
             applicationScope.launch(dispatcher + exceptionHandler) {
                 val response =
                     accountRemoteDataSource.updateAccount(
-                        id = id,
+                        id = account.id,
                         account = UpdateAccountRequestDto(
                             name = account.name,
                             balance = account.balance.toString(),
