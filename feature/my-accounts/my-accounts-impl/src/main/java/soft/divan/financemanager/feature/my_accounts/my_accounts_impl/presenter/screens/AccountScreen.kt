@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.account.my_accounts_impl.presenter.screens
+package soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,10 +31,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import soft.divan.financemanager.feature.account.my_accounts_impl.presenter.model.AccountUiModel
-import soft.divan.financemanager.feature.account.my_accounts_impl.presenter.model.AccountUiState
-import soft.divan.financemanager.feature.account.my_accounts_impl.presenter.viewmodel.AccountViewModel
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.R
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.model.AccountUiModel
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.model.AccountUiState
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.viewmodel.AccountViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.ErrorSnackbar
 import soft.divan.financemanager.uikit.components.FMDriver

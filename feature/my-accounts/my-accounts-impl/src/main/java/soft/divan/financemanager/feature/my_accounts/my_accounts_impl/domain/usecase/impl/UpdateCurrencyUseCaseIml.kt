@@ -1,8 +1,8 @@
-package soft.divan.financemanager.feature.account.my_accounts_impl.domain.usecase.impl
+package soft.divan.financemanager.feature.my_accounts.my_accounts_impl.domain.usecase.impl
 
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.repository.CurrencyRepository
-import soft.divan.financemanager.feature.account.my_accounts_impl.domain.usecase.UpdateCurrencyUseCase
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.domain.usecase.UpdateCurrencyUseCase
 import javax.inject.Inject
 
 class UpdateCurrencyUseCaseIml @Inject constructor(

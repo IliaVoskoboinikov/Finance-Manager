@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.account.my_accounts_impl.presenter.viewmodel
+package soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
-import soft.divan.financemanager.feature.account.my_accounts_impl.presenter.mapper.toUiModel
-import soft.divan.financemanager.feature.account.my_accounts_impl.presenter.model.AccountUiState
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.mapper.toUiModel
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.model.AccountUiState
 import javax.inject.Inject
 
 @HiltViewModel
