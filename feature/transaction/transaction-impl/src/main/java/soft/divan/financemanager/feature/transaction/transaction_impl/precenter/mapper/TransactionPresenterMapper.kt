@@ -8,29 +8,29 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.
 
 fun Transaction.toUi(category: Category): UiTransaction {
     return UiTransaction(
-        id = this.id,
-        accountId = this.accountId,
+        id = id,
+        accountId = accountId,
         category = category.toUi(),
-        amount = this.amount,
-        amountFormatted = this.amount.toString() + " " + CurrencySymbol.fromCode(currencyCode),
-        transactionDate = this.transactionDate,
-        comment = this.comment.toString(),
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt,
+        amount = amount,
+        amountFormatted = amount.toString() + " " + CurrencySymbol.fromCode(currencyCode),
+        transactionDate = transactionDate,
+        comment = comment.toString(),
+        createdAt = createdAt,
+        updatedAt = updatedAt,
         currencyCode = currencyCode,
     )
 }
 
 fun UiTransaction.toDomain(): Transaction {
     return Transaction(
-        id = this.id,
-        accountId = this.accountId,
-        categoryId = this.category.id,
-        amount = this.amount,
-        transactionDate = this.transactionDate,
-        comment = this.comment,
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt,
-        currencyCode = this.currencyCode,
+        id = id,
+        accountId = accountId,
+        categoryId = category.id,
+        amount = amount,
+        transactionDate = transactionDate,
+        comment = comment,
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        currencyCode = currencyCode,
     )
 }

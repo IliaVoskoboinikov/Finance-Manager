@@ -9,14 +9,14 @@ import soft.divan.financemanager.feature.history.history_impl.precenter.model.Ui
 //todo
 fun Transaction.toUi(category: Category): UiTransaction {
     return UiTransaction(
-        id = this.id,
-        accountId = this.accountId,
+        id = id,
+        accountId = accountId,
         category = category.toUi(),
-        amount = this.amount,
-        amountFormatted = this.amount.toString() + " " + CurrencySymbol.fromCode(currencyCode),
-        transactionDate = this.transactionDate,
-        comment = this.comment.toString(),
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt
+        amount = amount,
+        amountFormatted = amount.toString() + " " + CurrencySymbol.fromCode(currencyCode),
+        transactionDate = transactionDate,
+        comment = comment.toString(),
+        createdAt = createdAt,
+        updatedAt = updatedAt
     )
 }
