@@ -24,12 +24,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.R
+import soft.divan.financemanager.feature.account.account_api.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
-import soft.divan.financemanager.feature.create_account.create_account_api.CreateAccountFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
-import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.AccountFeatureApi
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.MyAccountsFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
@@ -66,7 +66,7 @@ fun MainScreen(
     designAppFeatureApi: DesignAppFeatureApi,
     analysisFeatureApi: AnalysisFeatureApi,
     historyFeatureApi: HistoryFeatureApi,
-    createAccountFeatureApi: CreateAccountFeatureApi
+    myAccountsFeatureApi: MyAccountsFeatureApi
 ) {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -120,7 +120,7 @@ fun MainScreen(
                 designAppFeatureApi = designAppFeatureApi,
                 analysisFeatureApi = analysisFeatureApi,
                 historyFeatureApi = historyFeatureApi,
-                createAccountFeatureApi = createAccountFeatureApi
+                myAccountsFeatureApi = myAccountsFeatureApi
             )
 
             SnackbarHost(

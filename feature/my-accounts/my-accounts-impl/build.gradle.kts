@@ -8,6 +8,6 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
     implementation(projects.core.data)
-    implementation(projects.feature.createAccount.createAccountApi)
+    implementation(projects.feature.account.accountApi)
 
 }
