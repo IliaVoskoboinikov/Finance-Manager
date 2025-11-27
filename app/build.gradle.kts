@@ -23,8 +23,8 @@ dependencies {
     implementation(projects.feature.settings.settingsApi)
     implementation(projects.feature.settings.settingsImpl)
 
-    implementation(projects.feature.account.accountApi)
-    implementation(projects.feature.account.accountImpl)
+    implementation(projects.feature.myAccounts.myAccountsApi)
+    implementation(projects.feature.myAccounts.myAccountsImpl)
 
     implementation(projects.feature.transactionsToday.transactionsTodayApi)
     implementation(projects.feature.transactionsToday.transactionsTodayImpl)
