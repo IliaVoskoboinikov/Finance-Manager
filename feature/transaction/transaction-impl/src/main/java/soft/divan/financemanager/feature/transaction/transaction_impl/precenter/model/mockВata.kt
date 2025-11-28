@@ -1,6 +1,8 @@
 package soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model
 
+
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
@@ -51,7 +53,8 @@ val mockTransaction = UiTransaction(
     comment = "Обед в кафе с коллегами",
     createdAt = LocalDateTime.now().minusDays(1).minusHours(2),
     updatedAt = LocalDateTime.now(),
-    currencyCode = CurrencySymbol.RUB.symbol
+    currencyCode = CurrencySymbol.RUB.symbol,
+    mode = TransactionMode.Create
 )
 
 val mockTransactionUiStateSuccess = TransactionUiState.Success(
@@ -63,5 +66,5 @@ val mockTransactionUiStateSuccess = TransactionUiState.Success(
 val mockTransactionUiStateLoading = TransactionUiState.Loading
 
 val mockTransactionUiStateError = TransactionUiState.Error(
-    message = "Ошибка загрузки данных. Проверьте подключение к интернету."
+    messageRes = R.string.error_load_transaction
 )
