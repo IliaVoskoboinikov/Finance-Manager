@@ -3,6 +3,7 @@ package soft.divan.financemanager.core.domain.util
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -110,6 +111,14 @@ object DateHelper {
         }
     }
 
+    fun parseDisplayDateTime(displayDateTimeString: String): LocalDateTime {
+        return try {
+            LocalDateTime.parse(displayDateTimeString, displayDateTimeFormatter)
+        } catch (e: Exception) {
+            LocalDateTime.now()
+        }
+    }
+
     /**
      * Парсит строку из API-даты с временем в формате UTC в [java.time.Instant].
      *
@@ -144,6 +153,10 @@ object DateHelper {
     /**
      * Форматирует [java.time.LocalTime] в строку (`HH:mm`).
      */
+    fun formatTimeForDisplay(time: LocalTime): String {
+        return time.format(displayTimeFormatter)
+    }
+
     fun formatTimeForDisplay(time: LocalDateTime): String {
         return time.format(displayTimeFormatter)
     }

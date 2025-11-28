@@ -45,7 +45,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
@@ -250,15 +249,15 @@ fun TransactionForm(
             category = uiState.transaction.category.emoji + " " + uiState.transaction.category.name,
             onClick = { isShowCategorySheet.value = true })
         FMDriver()
-        Amount(amount = uiState.transaction.amount.toString(), updateAmount = onAmountChange)
+        Amount(amount = uiState.transaction.amount, updateAmount = onAmountChange)
         FMDriver()
         Data(
-            transactionDate = DateHelper.formatDateForDisplay(uiState.transaction.transactionDate.toLocalDate()),
+            transactionDate = uiState.transaction.date,
             isShowStartDatePicker = isShowDatePicker
         )
         FMDriver()
         Time(
-            transactionDate = DateHelper.formatTimeForDisplay(uiState.transaction.transactionDate),
+            transactionDate = uiState.transaction.time,
             isShowTimePicker = isShowTimePicker
         )
         FMDriver()

@@ -2,8 +2,8 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.precenter
 
 
 import soft.divan.financemanager.core.domain.model.Category
-import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.Transaction
+import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiTransaction
 
@@ -12,12 +12,12 @@ fun Transaction.toUi(category: Category): UiTransaction {
         id = id,
         accountId = accountId,
         category = category.toUi(),
-        amount = amount,
-        amountFormatted = amount.toString() + " " + CurrencySymbol.fromCode(currencyCode),
-        transactionDate = transactionDate,
+        amount = amount.stripTrailingZeros().toPlainString(),
+        date = DateHelper.formatDateForDisplay(transactionDate.toLocalDate()),
+        time = DateHelper.formatTimeForDisplay(transactionDate),
         comment = comment.toString(),
-        createdAt = createdAt,
-        updatedAt = updatedAt,
+        createdAt = DateHelper.formatTimeForDisplay(createdAt),
+        updatedAt = DateHelper.formatTimeForDisplay(updatedAt),
         currencyCode = currencyCode,
         mode = TransactionMode.Edit(id)
     )
@@ -28,11 +28,11 @@ fun UiTransaction.toDomain(): Transaction {
         id = id ?: 0,
         accountId = accountId,
         categoryId = category.id,
-        amount = amount,
-        transactionDate = transactionDate,
+        amount = amount.toBigDecimal(),
+        transactionDate = DateHelper.parseDisplayDateTime("$date $time"),
         comment = comment,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
+        createdAt = DateHelper.parseDisplayDateTime(createdAt),
+        updatedAt = DateHelper.parseDisplayDateTime(updatedAt),
         currencyCode = currencyCode,
     )
 }

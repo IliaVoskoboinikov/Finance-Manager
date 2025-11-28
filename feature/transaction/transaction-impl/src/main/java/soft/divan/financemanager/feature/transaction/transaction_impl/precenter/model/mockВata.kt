@@ -3,8 +3,6 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.precenter
 
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 // --- MOCK DATA ---
 
@@ -47,14 +45,14 @@ val mockTransaction = UiTransaction(
     id = 1001,
     accountId = 1,
     category = mockCategories[0], // "Еда"
-    amount = BigDecimal("450.75"),
-    amountFormatted = "-450,75 ₽",
-    transactionDate = LocalDateTime.now().minusDays(1),
+    amount = "450.75",
     comment = "Обед в кафе с коллегами",
-    createdAt = LocalDateTime.now().minusDays(1).minusHours(2),
-    updatedAt = LocalDateTime.now(),
+    createdAt = "dd.MM.yyyy HH:mm ",
+    updatedAt = "dd.MM.yyyy HH:mm ",
     currencyCode = CurrencySymbol.RUB.symbol,
-    mode = TransactionMode.Create
+    mode = TransactionMode.Create,
+    date = "dd.MM.yyyy",
+    time = " HH:mm "
 )
 
 val mockTransactionUiStateSuccess = TransactionUiState.Success(

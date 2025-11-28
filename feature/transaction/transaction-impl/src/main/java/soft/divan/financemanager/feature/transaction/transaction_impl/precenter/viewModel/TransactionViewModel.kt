@@ -18,6 +18,7 @@ import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
+import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
@@ -34,7 +35,6 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiCategory
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiTransaction
-import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -95,11 +95,11 @@ class TransactionViewModel @Inject constructor(
             accountId = accounts.firstOrNull()?.id ?: 0,
             category = categories.firstOrNull()?.toUi()
                 ?: UiCategory(0, "Unknown", "", false),
-            amount = BigDecimal.ZERO,
-            amountFormatted = "0",
-            transactionDate = now,
-            createdAt = now,
-            updatedAt = now,
+            amount = "",
+            date = DateHelper.formatDateForDisplay(LocalDate.now()),
+            time = DateHelper.formatTimeForDisplay(LocalTime.now()),
+            createdAt = DateHelper.formatDateTimeForDisplay(now),
+            updatedAt = DateHelper.formatDateTimeForDisplay(now),
             currencyCode = accounts.firstOrNull()?.currency ?: CurrencySymbol.RUB.code,
             comment = "",
             mode = TransactionMode.Create
@@ -138,12 +138,14 @@ class TransactionViewModel @Inject constructor(
             val state = uiState.value
             if (state !is TransactionUiState.Success) return@launch
 
-            val domain = state.transaction.toDomain()
+            val transaction =
+                state.transaction.copy(updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now()))
+                    .toDomain()
 
             val result = if (mode == TransactionMode.Create) {
-                createTransactionUseCase(domain)
+                createTransactionUseCase(transaction)
             } else {
-                updateTransactionUseCase(domain)
+                updateTransactionUseCase(transaction)
             }
 
             result.fold(
@@ -167,21 +169,16 @@ class TransactionViewModel @Inject constructor(
                 )
             }
         }
-
     }
 
     fun updateDate(date: LocalDate) {
         val currentState = uiState.value
         if (currentState is TransactionUiState.Success) {
-            val oldTransaction = currentState.transaction
-            // сохраняем время, чтобы не сбрасывалось при смене даты
-            val newDateTime = LocalDateTime.of(date, oldTransaction.transactionDate.toLocalTime())
-
             _uiState.update {
                 currentState.copy(
-                    transaction = oldTransaction.copy(
-                        transactionDate = newDateTime,
-                        updatedAt = LocalDateTime.now()
+                    transaction = currentState.transaction.copy(
+                        date = DateHelper.formatDateForDisplay(date),
+                        updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now()),
                     )
                 )
             }
@@ -192,14 +189,11 @@ class TransactionViewModel @Inject constructor(
     fun updateTime(time: LocalTime) {
         val currentState = uiState.value
         if (currentState is TransactionUiState.Success) {
-            val oldTransaction = currentState.transaction
-            val newDateTime = LocalDateTime.of(oldTransaction.transactionDate.toLocalDate(), time)
-
             _uiState.update {
                 currentState.copy(
-                    transaction = oldTransaction.copy(
-                        transactionDate = newDateTime,
-                        updatedAt = LocalDateTime.now()
+                    transaction = currentState.transaction.copy(
+                        time = DateHelper.formatTimeForDisplay(time),
+                        updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now()),
                     )
                 )
             }
@@ -213,7 +207,7 @@ class TransactionViewModel @Inject constructor(
             _uiState.update {
                 currentState.copy(
                     transaction = currentState.transaction.copy(
-                        amount = amount.toBigDecimal()
+                        amount = amount
                     )
                 )
             }
