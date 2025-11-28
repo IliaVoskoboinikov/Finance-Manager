@@ -74,7 +74,7 @@ fun MainScreen(
 
     val bottomScreens = ScreenBottom.items(
         transactionsToday = transactionsTodayFeatureApi,
-        account = accountFeatureApi,
+        myAccounts = myAccountsFeatureApi,
         category = categoryFeatureApi,
         settings = settingsFeatureApi
     )
