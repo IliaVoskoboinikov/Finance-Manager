@@ -1,20 +1,15 @@
 package soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model
 
-import java.math.BigDecimal
-import java.time.LocalDateTime
-
-
 data class UiTransaction(
     val id: Int?,
     val accountId: Int,
     val category: UiCategory,
     val currencyCode: String,
-    val amount: BigDecimal,
-    val amountFormatted: String,
-    val transactionDate: LocalDateTime,
+    val amount: String,
+    val date: String,
+    val time: String,
     val comment: String,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime,
+    val createdAt: String,
+    val updatedAt: String,
     val mode: TransactionMode
 )
-//todo
