@@ -21,13 +21,13 @@ data class ScreenBottom(
         fun items(
             transactionsToday: TransactionsTodayFeatureApi,
 
-            account: FeatureApi,
+            myAccounts: FeatureApi,
             category: FeatureApi,
             settings: FeatureApi,
         ) = listOf(
             ScreenBottom(transactionsToday.route, R.string.expenses, Icons.Filled.Downtrend),
             ScreenBottom(transactionsToday.route2, R.string.income, Icons.Filled.Uptrend),
-            ScreenBottom(account.route, R.string.account, Icons.Filled.Calculator),
+            ScreenBottom(myAccounts.route, R.string.account, Icons.Filled.Calculator),
             ScreenBottom(category.route, R.string.category, Icons.Filled.Chart90),
             ScreenBottom(settings.route, R.string.settings, Icons.Filled.Settings),
         )
