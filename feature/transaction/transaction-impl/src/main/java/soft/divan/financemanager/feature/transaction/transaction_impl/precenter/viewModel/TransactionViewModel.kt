@@ -133,7 +133,6 @@ class TransactionViewModel @Inject constructor(
         )
     }
 
-
     fun save() {
         viewModelScope.launch {
             val state = uiState.value
@@ -158,101 +157,93 @@ class TransactionViewModel @Inject constructor(
     }
 
     fun updateComment(comment: String) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is TransactionUiState.Success) {
-                _uiState.update {
-                    currentState.copy(
-                        transaction = currentState.transaction.copy(
-                            comment = comment
-                        )
+        val currentState = uiState.value
+        if (currentState is TransactionUiState.Success) {
+            _uiState.update {
+                currentState.copy(
+                    transaction = currentState.transaction.copy(
+                        comment = comment
                     )
-                }
+                )
             }
         }
+
     }
 
     fun updateDate(date: LocalDate) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is TransactionUiState.Success) {
-                val oldTransaction = currentState.transaction
-                // сохраняем время, чтобы не сбрасывалось при смене даты
-                val newDateTime = LocalDateTime.of(date, oldTransaction.transactionDate.toLocalTime())
+        val currentState = uiState.value
+        if (currentState is TransactionUiState.Success) {
+            val oldTransaction = currentState.transaction
+            // сохраняем время, чтобы не сбрасывалось при смене даты
+            val newDateTime = LocalDateTime.of(date, oldTransaction.transactionDate.toLocalTime())
 
-                _uiState.update {
-                    currentState.copy(
-                        transaction = oldTransaction.copy(
-                            transactionDate = newDateTime,
-                            updatedAt = LocalDateTime.now()
-                        )
+            _uiState.update {
+                currentState.copy(
+                    transaction = oldTransaction.copy(
+                        transactionDate = newDateTime,
+                        updatedAt = LocalDateTime.now()
                     )
-                }
+                )
             }
         }
+
     }
 
     fun updateTime(time: LocalTime) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is TransactionUiState.Success) {
-                val oldTransaction = currentState.transaction
-                val newDateTime = LocalDateTime.of(oldTransaction.transactionDate.toLocalDate(), time)
+        val currentState = uiState.value
+        if (currentState is TransactionUiState.Success) {
+            val oldTransaction = currentState.transaction
+            val newDateTime = LocalDateTime.of(oldTransaction.transactionDate.toLocalDate(), time)
 
-                _uiState.update {
-                    currentState.copy(
-                        transaction = oldTransaction.copy(
-                            transactionDate = newDateTime,
-                            updatedAt = LocalDateTime.now()
-                        )
+            _uiState.update {
+                currentState.copy(
+                    transaction = oldTransaction.copy(
+                        transactionDate = newDateTime,
+                        updatedAt = LocalDateTime.now()
                     )
-                }
+                )
             }
         }
+
     }
 
     fun updateAmount(amount: String) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is TransactionUiState.Success) {
-                _uiState.update {
-                    currentState.copy(
-                        transaction = currentState.transaction.copy(
-                            amount = amount.toBigDecimal()
-                        )
+        val currentState = uiState.value
+        if (currentState is TransactionUiState.Success) {
+            _uiState.update {
+                currentState.copy(
+                    transaction = currentState.transaction.copy(
+                        amount = amount.toBigDecimal()
                     )
-                }
+                )
             }
         }
+
     }
 
     fun updateCategory(category: UiCategory) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is TransactionUiState.Success) {
-                _uiState.update {
-                    currentState.copy(
-                        transaction = currentState.transaction.copy(
-                            category = category
-                        )
+        val currentState = uiState.value
+        if (currentState is TransactionUiState.Success) {
+            _uiState.update {
+                currentState.copy(
+                    transaction = currentState.transaction.copy(
+                        category = category
                     )
-                }
+                )
             }
         }
     }
 
     fun updateAccount(account: AccountUi) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is TransactionUiState.Success) {
-                _uiState.update {
-                    currentState.copy(
-                        transaction = currentState.transaction.copy(
-                            accountId = account.id,
-                            currencyCode = account.currency
-                        )
+        val currentState = uiState.value
+        if (currentState is TransactionUiState.Success) {
+            _uiState.update {
+                currentState.copy(
+                    transaction = currentState.transaction.copy(
+                        accountId = account.id,
+                        currencyCode = account.currency
                     )
-                }
+                )
             }
         }
     }
