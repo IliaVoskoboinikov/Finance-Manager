@@ -4,6 +4,7 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.precenter
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.Transaction
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiTransaction
 
 fun Transaction.toUi(category: Category): UiTransaction {
@@ -18,12 +19,13 @@ fun Transaction.toUi(category: Category): UiTransaction {
         createdAt = createdAt,
         updatedAt = updatedAt,
         currencyCode = currencyCode,
+        mode = TransactionMode.Edit(id)
     )
 }
 
 fun UiTransaction.toDomain(): Transaction {
     return Transaction(
-        id = id,
+        id = id ?: 0,
         accountId = accountId,
         categoryId = category.id,
         amount = amount,

@@ -3,8 +3,9 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.precenter
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
+
 data class UiTransaction(
-    val id: Int,
+    val id: Int?,
     val accountId: Int,
     val category: UiCategory,
     val currencyCode: String,
@@ -13,6 +14,7 @@ data class UiTransaction(
     val transactionDate: LocalDateTime,
     val comment: String,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val updatedAt: LocalDateTime,
+    val mode: TransactionMode
 )
 //todo

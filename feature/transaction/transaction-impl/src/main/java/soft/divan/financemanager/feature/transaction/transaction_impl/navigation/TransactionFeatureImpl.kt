@@ -11,8 +11,8 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.
 import javax.inject.Inject
 
 
-private const val transactionIdKey: String = "transactionId"
-private const val isIncomeKey: String = "isIncome"
+const val TRANSACTION_ID_KEY: String = "transactionId"
+const val IS_INCOME_KEY: String = "isIncome"
 
 class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
 
@@ -29,24 +29,22 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
         modifier: Modifier
     ) {
         navGraphBuilder.composable(
-            route = "${route}/{$transactionIdKey}/{$isIncomeKey}",
+            route = "${route}/{$TRANSACTION_ID_KEY}/{$IS_INCOME_KEY}",
             arguments = listOf(
-                navArgument(transactionIdKey) {
+                navArgument(TRANSACTION_ID_KEY) {
                     type = NavType.IntType
                 },
-                navArgument(isIncomeKey) {
+                navArgument(IS_INCOME_KEY) {
                     type = NavType.BoolType
                     defaultValue = false
                 }
             )
         ) { backStackEntry ->
 
-            val transactionId = backStackEntry.arguments?.getInt(transactionIdKey)
-            val isIncome = backStackEntry.arguments?.getBoolean(isIncomeKey) ?: false
+            val isIncome = backStackEntry.arguments?.getBoolean(IS_INCOME_KEY) ?: false
 
             TransactionScreen(
                 modifier = modifier,
-                transactionId = transactionId,
                 isIncome = isIncome,
                 onNavigateBack = navController::popBackStack
             )
@@ -54,16 +52,16 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
         }
 
         navGraphBuilder.composable(
-            "${route}/{$isIncomeKey}",
+            "${route}/{$IS_INCOME_KEY}",
             arguments = listOf(
-                navArgument(isIncomeKey) {
+                navArgument(IS_INCOME_KEY) {
                     type = NavType.BoolType
                     defaultValue = false
                 }
             )
         ) { backStackEntry ->
 
-            val isIncome = backStackEntry.arguments?.getBoolean(isIncomeKey) ?: false
+            val isIncome = backStackEntry.arguments?.getBoolean(IS_INCOME_KEY) ?: false
 
             TransactionScreen(
                 modifier = modifier,

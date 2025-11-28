@@ -1,14 +1,17 @@
 package soft.divan.financemanager.feature.transaction.transaction_impl.precenter.viewModel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.model.Account
@@ -21,10 +24,13 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.domain.use
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.UpdateTransactionUseCase
+import soft.divan.financemanager.feature.transaction.transaction_impl.navigation.IS_INCOME_KEY
+import soft.divan.financemanager.feature.transaction.transaction_impl.navigation.TRANSACTION_ID_KEY
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toDomain
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiCategory
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiTransaction
@@ -38,110 +44,116 @@ import javax.inject.Inject
 class TransactionViewModel @Inject constructor(
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val getAccountsUseCase: GetAccountsUseCase,
-    private val getTransactionsUseCase: GetTransactionUseCase,
+    private val getTransactionUseCase: GetTransactionUseCase,
     private val getCategoriesUseCase: GetCategoriesByTypeUseCase,
     private val updateTransactionUseCase: UpdateTransactionUseCase,
-    private val deleteTransactionUseCase: DeleteTransactionUseCase
-
+    private val deleteTransactionUseCase: DeleteTransactionUseCase,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val transactionId: Int? = savedStateHandle.get<Int>(TRANSACTION_ID_KEY)
+    private val isIncome: Boolean = savedStateHandle.get<Boolean>(IS_INCOME_KEY) ?: false
+
     private val _uiState = MutableStateFlow<TransactionUiState>(TransactionUiState.Loading)
     val uiState: StateFlow<TransactionUiState> = _uiState.asStateFlow()
 
     private val _eventFlow = MutableSharedFlow<TransactionEvent>()
-    val eventFlow = _eventFlow.asSharedFlow()
+    val eventFlow = _eventFlow
+        .onStart { load() }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000L),
+            TransactionUiState.Loading
+        )
 
-    fun createTransaction() {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is TransactionUiState.Success) {
-                _uiState.update { TransactionUiState.Loading }
-                if (currentState.transaction.id != -1)
-                    updateTransactionUseCase(transaction = currentState.transaction.toDomain())
-                        .fold(
-                            onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
-                            onFailure = {
-                                _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
-                                _uiState.update { currentState }
-                            }
-                        )
-                else
-                    createTransactionUseCase(transaction = currentState.transaction.toDomain())
-                        .fold(
-                            onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
-                            onFailure = {
-                                _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
-                                _uiState.update { currentState }
-                            }
-                        )
-            }
-        }
-    }
+    private val mode =
+        if (transactionId == null) TransactionMode.Create else TransactionMode.Edit(transactionId)
 
-    fun load(transactionId: Int?, isIncome: Boolean) {
+
+    fun load() {
         viewModelScope.launch {
             _uiState.update { TransactionUiState.Loading }
 
-            val categoriesResult = getCategoriesUseCase(isIncome).first()
-            val accountsResult = getAccountsUseCase().first()
+            val categories = getCategoriesUseCase(isIncome).first()
+            val accounts = getAccountsUseCase().first()
 
-            if (transactionId == null) {
-                crateNewTransaction(accountsResult, categoriesResult)
-            } else {
-                loadOldTransaction(transactionId, categoriesResult, accountsResult)
+            when (mode) {
+                is TransactionMode.Create -> loadForCreate(accounts, categories)
+                is TransactionMode.Edit -> loadForEdit(mode.id, accounts, categories)
             }
         }
     }
 
-    private fun crateNewTransaction(
-        accountsResult: List<Account>,
-        categoriesResult: List<Category>
+    private fun loadForCreate(
+        accounts: List<Account>,
+        categories: List<Category>
     ) {
-        //todo !!!
-        val accountId = accountsResult.firstOrNull()?.id
-        val category = categoriesResult.firstOrNull()?.toUi() ?: UiCategory(1, "empyt", "empyt", false)
         val now = LocalDateTime.now()
+
+        val initialTransaction = UiTransaction(
+            id = null,
+            accountId = accounts.firstOrNull()?.id ?: 0,
+            category = categories.firstOrNull()?.toUi()
+                ?: UiCategory(0, "Unknown", "", false),
+            amount = BigDecimal.ZERO,
+            amountFormatted = "0",
+            transactionDate = now,
+            createdAt = now,
+            updatedAt = now,
+            currencyCode = accounts.firstOrNull()?.currency ?: CurrencySymbol.RUB.code,
+            comment = "",
+            mode = TransactionMode.Create
+        )
+
         _uiState.value = TransactionUiState.Success(
-            transaction = UiTransaction(
-                id = -1,
-                accountId = accountId ?: 1,
-                category = category,
-                amount = BigDecimal.ZERO,
-                transactionDate = now,
-                comment = "",
-                createdAt = now,
-                updatedAt = now,
-                currencyCode = CurrencySymbol.RUB.code,
-                amountFormatted = BigDecimal.ZERO.toString(),
-            ),
-            categories = categoriesResult.map {
-                it.toUi()
-            },
-            accounts = accountsResult.map { it.toUi() },
+            transaction = initialTransaction,
+            categories = categories.map { it.toUi() },
+            accounts = accounts.map { it.toUi() }
         )
     }
 
-    private suspend fun loadOldTransaction(
-        transactionId: Int,
-        categoriesResult: List<Category>,
-        accountsResult: List<Account>
+    private suspend fun loadForEdit(
+        id: Int,
+        accounts: List<Account>,
+        categories: List<Category>
     ) {
-        //todo fold
-        val result = getTransactionsUseCase(transactionId)
-        if (result.isSuccess) {
-            val transaction = result.getOrThrow()
-            _uiState.update {
-                TransactionUiState.Success(
-                    //todo
-                    transaction = transaction.toUi(
-                        category = categoriesResult.find { it.id == transaction.categoryId }!!
-                    ),
-                    categories = categoriesResult.map { it.toUi() },
-                    accounts = accountsResult.map { it.toUi() },
-                )
+        getTransactionUseCase(id).fold(
+            onSuccess = { transaction ->
+                _uiState.update {
+                    TransactionUiState.Success(
+                        transaction = transaction.toUi(
+                            category = categories.find { category -> category.id == transaction.categoryId }!!
+                        ),
+                        categories = categories.map { category -> category.toUi() },
+                        accounts = accounts.map { account -> account.toUi() },
+                    )
+                }
+            },
+            onFailure = { _uiState.value = TransactionUiState.Error(R.string.error_load_transaction) }
+        )
+    }
+
+
+    fun save() {
+        viewModelScope.launch {
+            val state = uiState.value
+            if (state !is TransactionUiState.Success) return@launch
+
+            val domain = state.transaction.toDomain()
+
+            val result = if (mode == TransactionMode.Create) {
+                createTransactionUseCase(domain)
+            } else {
+                updateTransactionUseCase(domain)
             }
-        } else {
-            //todo
-            _uiState.value = TransactionUiState.Error("Не удалось загрузить транзакцию")
+
+            result.fold(
+                onSuccess = { _eventFlow.emit(TransactionEvent.TransactionSaved) },
+                onFailure = {
+                    _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
+                    _uiState.update { state }
+                }
+            )
         }
     }
 
@@ -245,11 +257,11 @@ class TransactionViewModel @Inject constructor(
         }
     }
 
-    fun delete(idTransaction: Int?) {
+    fun delete() {
         viewModelScope.launch {
             val currentState = uiState.value
-            if (idTransaction != null && currentState is TransactionUiState.Success) {
-                deleteTransactionUseCase(idTransaction).fold(
+            if (currentState is TransactionUiState.Success && mode is TransactionMode.Edit) {
+                deleteTransactionUseCase(currentState.transaction.id!!).fold(
                     onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
                     onFailure = {
                         _eventFlow.emit(TransactionEvent.ShowError(R.string.fail_delete_transaction))

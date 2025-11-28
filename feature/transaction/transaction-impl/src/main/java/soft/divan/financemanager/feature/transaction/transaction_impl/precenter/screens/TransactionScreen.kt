@@ -49,6 +49,7 @@ import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiCategory
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockAccounts
@@ -115,7 +116,6 @@ fun AccountPreview() {
 fun TransactionScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
-    transactionId: Int? = null,
     isIncome: Boolean,
     viewModel: TransactionViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -123,10 +123,6 @@ fun TransactionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-
-    LaunchedEffect(transactionId) {
-        viewModel.load(transactionId, isIncome)
-    }
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
@@ -149,14 +145,14 @@ fun TransactionScreen(
         uiState = uiState,
         isIncome = isIncome,
         onNavigateBack = onNavigateBack,
-        onSave = viewModel::createTransaction,
+        onSave = viewModel::save,
         onAmountChange = viewModel::updateAmount,
         onCommentChange = viewModel::updateComment,
         onDateChange = viewModel::updateDate,
         onTimeChange = viewModel::updateTime,
         onCategoryChange = viewModel::updateCategory,
         onAccountChange = viewModel::updateAccount,
-        onDelete = { viewModel.delete(transactionId) },
+        onDelete = { viewModel.delete() },
         snackbarHostState = snackbarHostState
     )
 }
@@ -230,8 +226,16 @@ fun TransactionForm(
 
     ShowDataPickerDialog(isShowDatePicker = isShowDatePicker, onDateChange = onDateChange)
     ShowTimePickerDialog(isShowTimePicker = isShowTimePicker, onTimeChange = onTimeChange)
-    ShowCategoryBottomSheet(isShowCategorySheet, uiState, onCategoryChange)
-    ShowAccountsBottomSheet(isShowAccountsSheet, uiState, onAccountChange)
+    ShowCategoryBottomSheet(
+        isShowCategorySheet = isShowCategorySheet,
+        categories = uiState.categories,
+        onCategoryChange = onCategoryChange
+    )
+    ShowAccountsBottomSheet(
+        isShowAccountsSheet = isShowAccountsSheet,
+        accounts = uiState.accounts,
+        onAccountChange = onAccountChange
+    )
 
     ShowDeleteDialog(isShowDeleteDialog, onDelete)
 
@@ -242,13 +246,21 @@ fun TransactionForm(
     ) {
         Account(uiState = uiState, onClick = { isShowAccountsSheet.value = true })
         FMDriver()
-        Category(uiState = uiState, onClick = { isShowCategorySheet.value = true })
+        Category(
+            category = uiState.transaction.category.emoji + " " + uiState.transaction.category.name,
+            onClick = { isShowCategorySheet.value = true })
         FMDriver()
-        Amount(uiState, onAmountChange)
+        Amount(amount = uiState.transaction.amount.toString(), updateAmount = onAmountChange)
         FMDriver()
-        Data(isShowStartDatePicker = isShowDatePicker, uiState = uiState)
+        Data(
+            transactionDate = DateHelper.formatDateForDisplay(uiState.transaction.transactionDate.toLocalDate()),
+            isShowStartDatePicker = isShowDatePicker
+        )
         FMDriver()
-        Time(uiState, isShowTimePicker = isShowTimePicker)
+        Time(
+            transactionDate = DateHelper.formatTimeForDisplay(uiState.transaction.transactionDate),
+            isShowTimePicker = isShowTimePicker
+        )
         FMDriver()
         CommentInputField(
             value = uiState.transaction.comment,
@@ -258,7 +270,7 @@ fun TransactionForm(
         )
         FMDriver()
         Spacer(modifier = Modifier.height(24.dp))
-        if (uiState.transaction.id != -1)
+        if (uiState.transaction.mode is TransactionMode.Edit)
             DeleteButton({ isShowDeleteDialog.value = true })
     }
 }
@@ -300,12 +312,12 @@ private fun ShowTimePickerDialog(
 @Composable
 private fun ShowCategoryBottomSheet(
     isShowCategorySheet: MutableState<Boolean>,
-    uiState: TransactionUiState.Success,
+    categories: List<UiCategory>,
     onCategoryChange: (UiCategory) -> Unit
 ) {
     if (isShowCategorySheet.value) {
         CategoryBottomSheet(
-            categories = uiState.categories,
+            categories = categories,
             onCategorySelected = {
                 onCategoryChange(it)
             },
@@ -317,12 +329,12 @@ private fun ShowCategoryBottomSheet(
 @Composable
 private fun ShowAccountsBottomSheet(
     isShowAccountsSheet: MutableState<Boolean>,
-    uiState: TransactionUiState.Success,
+    accounts: List<AccountUi>,
     onAccountChange: (AccountUi) -> Unit
 ) {
     if (isShowAccountsSheet.value) {
         AccountsBottomSheet(
-            accounts = uiState.accounts,
+            accounts = accounts,
             onAccountsSelected = {
                 onAccountChange(it)
             },
@@ -367,7 +379,7 @@ private fun Account(
 
 @Composable
 private fun Category(
-    uiState: TransactionUiState.Success,
+    category: String,
     onClick: () -> Unit
 ) {
     ListItem(
@@ -378,7 +390,7 @@ private fun Category(
         content = { ContentTextListItem(stringResource(R.string.category)) },
         trail = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                ContentTextListItem(uiState.transaction.category.emoji + " " + uiState.transaction.category.name)
+                ContentTextListItem(category)
                 Spacer(modifier = Modifier.width(16.dp))
                 Icon(
                     imageVector = Icons.Filled.Arrow,
@@ -503,7 +515,7 @@ private fun CategorySheetContent(
 
 @Composable
 private fun Amount(
-    uiState: TransactionUiState.Success,
+    amount: String,
     updateAmount: (String) -> Unit
 ) {
     ListItem(
@@ -514,7 +526,7 @@ private fun Amount(
         trail = {
 // todo сделать что бы изначально фокус ставился в начало и пренисти во viewModel
             BasicTextField(
-                value = uiState.transaction.amount.toString(),
+                value = amount,
                 onValueChange = { newValue ->
                     val moneyRegex = Regex("^(0|[1-9]\\d*)(\\.\\d{0,2})?$")
 
@@ -523,15 +535,11 @@ private fun Amount(
                             updateAmount("0")
                         }
 
-                        uiState.transaction.amount.toString() == "0" &&
-                                newValue.length == 2 &&
-                                newValue.startsWith("0") &&
-                                newValue[1].isDigit() -> {
+                        amount == "0" && newValue.length == 2 && newValue[1].isDigit() -> {
                             updateAmount(newValue.last().toString())
                         }
 
                         newValue.matches(moneyRegex) -> {
-
                             updateAmount(newValue)
                         }
                     }
@@ -560,8 +568,8 @@ private fun Amount(
 
 @Composable
 private fun Data(
+    transactionDate: String,
     isShowStartDatePicker: MutableState<Boolean>,
-    uiState: TransactionUiState.Success,
 ) {
     ListItem(
         modifier = Modifier
@@ -569,19 +577,19 @@ private fun Data(
             .fillMaxWidth()
             .clickable { isShowStartDatePicker.value = true },
         content = { ContentTextListItem(stringResource(R.string.data)) },
-        trail = { ContentTextListItem(DateHelper.formatDateForDisplay(uiState.transaction.transactionDate.toLocalDate())) },
+        trail = { ContentTextListItem(transactionDate) },
     )
 }
 
 @Composable
-private fun Time(uiState: TransactionUiState.Success, isShowTimePicker: MutableState<Boolean>) {
+private fun Time(transactionDate: String, isShowTimePicker: MutableState<Boolean>) {
     ListItem(
         modifier = Modifier
             .height(70.dp)
             .fillMaxWidth()
             .clickable { isShowTimePicker.value = true },
         content = { ContentTextListItem(stringResource(R.string.time)) },
-        trail = { ContentTextListItem(DateHelper.formatTimeForDisplay(uiState.transaction.transactionDate)) },
+        trail = { ContentTextListItem(transactionDate) },
     )
 }
 

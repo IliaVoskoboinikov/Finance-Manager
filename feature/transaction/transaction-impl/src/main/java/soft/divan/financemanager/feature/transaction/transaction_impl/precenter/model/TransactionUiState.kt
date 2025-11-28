@@ -11,7 +11,7 @@ sealed interface TransactionUiState {
         val accounts: List<AccountUi>,
     ) : TransactionUiState
 
-    data class Error(val message: String) : TransactionUiState
+    data class Error(@field:StringRes val messageRes: Int) : TransactionUiState
 }
 
 sealed interface TransactionEvent {
