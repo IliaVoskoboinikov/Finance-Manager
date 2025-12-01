@@ -8,36 +8,40 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import jakarta.inject.Inject
 import soft.divan.financemanager.feature.account.account_api.AccountFeatureApi
-import soft.divan.financemanager.feature.create_account.create_account_impl.precenter.screens.CreateAccountScreenScreen
+import soft.divan.financemanager.feature.account.account_impl.precenter.screens.CreateAccountScreenScreen
 
 private const val baseRoute = "account"
-const val accountIdKey: String = "accountId"
+const val ACCOUNT_ID_KEY: String = "accountId"
 
 class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
 
     override val route: String = baseRoute
 
-    override fun accountRouteWithArgs(accountId: Int?) =
-        if (accountId == null) "$route/-1" else "$route/$accountId"
+    override fun accountRouteWithArgs(accountId: Int) = "$route/$accountId"
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
         modifier: Modifier
     ) {
+
+        navGraphBuilder.composable(route) {
+            CreateAccountScreenScreen(
+                modifier = modifier,
+                accountId = null,
+                onNavigateBack = navController::popBackStack
+            )
+        }
+
         navGraphBuilder.composable(
-            "${route}/{$accountIdKey}",
+            "${route}/{$ACCOUNT_ID_KEY}",
             arguments = listOf(
-                navArgument(accountIdKey) {
+                navArgument(ACCOUNT_ID_KEY) {
                     type = NavType.IntType
-                    defaultValue = -1
                 }
             )
         ) { backStackEntry ->
-            val rawId = backStackEntry.arguments?.getInt(accountIdKey)
-            val accountId = if (rawId == -1) null else rawId
-
-
+            val accountId = backStackEntry.arguments?.getInt(ACCOUNT_ID_KEY)
             CreateAccountScreenScreen(
                 modifier = modifier,
                 accountId = accountId,

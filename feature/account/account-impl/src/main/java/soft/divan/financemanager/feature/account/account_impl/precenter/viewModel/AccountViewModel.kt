@@ -19,10 +19,11 @@ import soft.divan.financemanager.feature.account.account_impl.domain.usecase.Cre
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.DeleteAccountUseCase
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.GetAccountByIdUseCase
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.UpdateAccountUseCase
-import soft.divan.financemanager.feature.account.account_impl.navigation.accountIdKey
+import soft.divan.financemanager.feature.account.account_impl.navigation.ACCOUNT_ID_KEY
 import soft.divan.financemanager.feature.account.account_impl.precenter.mapper.toDomain
 import soft.divan.financemanager.feature.account.account_impl.precenter.mapper.toUi
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountEvent
+import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountMode
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountUiModel
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountUiState
 import javax.inject.Inject
@@ -36,7 +37,7 @@ class AccountViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 
 ) : ViewModel() {
-    private val accountId: Int? = savedStateHandle.get<Int>(accountIdKey)
+    private val accountId: Int? = savedStateHandle.get<Int>(ACCOUNT_ID_KEY)
 
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState: StateFlow<AccountUiState> = _uiState
@@ -50,63 +51,63 @@ class AccountViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<AccountEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    private val mode =
+        if (accountId == null || accountId == -1) AccountMode.Create else AccountMode.Edit(accountId)
+
     fun loadAccount() {
         _uiState.update { AccountUiState.Loading }
-        if (accountId == null || accountId == -1) {
-            crateNewAccount()
-        } else {
-            loadOldAccount(accountId)
+
+        when (mode) {
+            is AccountMode.Create -> crateNewAccount()
+            is AccountMode.Edit -> loadAccount(mode.id)
         }
     }
 
     private fun crateNewAccount() {
+        val account = AccountUiModel(null, "", "", CurrencySymbol.RUB.symbol)
         _uiState.update {
             AccountUiState.Success(
-                account = AccountUiModel(
-                    id = -1,
-                    name = "",
-                    balance = "",
-                    currency = CurrencySymbol.RUB.symbol
-                )
+                account = account,
+                mode = mode
             )
         }
     }
 
-    private fun loadOldAccount(accountId: Int) {
+    private fun loadAccount(accountId: Int) {
         viewModelScope.launch {
-            getAccountByIdUseCase(accountId)
-                .fold(
-                    onSuccess = { account -> _uiState.update { AccountUiState.Success(account.toUi()) } },
-                    onFailure = { _uiState.update { AccountUiState.Error(R.string.error_save) } }
-                )
+            getAccountByIdUseCase(accountId).fold(
+                onSuccess = { account ->
+                    _uiState.update {
+                        AccountUiState.Success(
+                            account = account.toUi(),
+                            mode = mode
+                        )
+                    }
+                },
+                onFailure = { _uiState.update { AccountUiState.Error(R.string.error_save) } }
+            )
         }
     }
 
 
     fun updateName(name: String) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is AccountUiState.Success) {
-                _uiState.update { currentState.copy(account = currentState.account.copy(name = name)) }
-            }
+        val currentState = uiState.value
+        if (currentState is AccountUiState.Success) {
+            _uiState.update { currentState.copy(account = currentState.account.copy(name = name)) }
         }
     }
 
     fun updateBalance(balance: String) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is AccountUiState.Success) {
-                _uiState.update { currentState.copy(account = currentState.account.copy(balance = balance)) }
-            }
+        val currentState = uiState.value
+        if (currentState is AccountUiState.Success) {
+            _uiState.update { currentState.copy(account = currentState.account.copy(balance = balance)) }
         }
     }
 
     fun updateCurrency(currency: String) {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is AccountUiState.Success) {
-                _uiState.update { currentState.copy(account = currentState.account.copy(currency = currency)) }
-            }
+        val currentState = uiState.value
+        if (currentState is AccountUiState.Success) {
+            _uiState.update { currentState.copy(account = currentState.account.copy(currency = currency)) }
         }
     }
 
@@ -116,36 +117,30 @@ class AccountViewModel @Inject constructor(
             val currentState = uiState.value
             if (currentState is AccountUiState.Success) {
                 _uiState.update { AccountUiState.Loading }
-                if (currentState.account.id != -1) {
-                    updateAccountUseCase(
-                        account = currentState.account.toDomain()
-                    )
-                        .fold(
-                            onSuccess = { _eventFlow.emit(AccountEvent.Saved) },
-                            onFailure = {
-                                _eventFlow.emit(AccountEvent.ShowError(R.string.error_save))
-                                _uiState.update { currentState }
-                            }
-                        )
-                } else {
-                    createAccountUseCase(currentState.account.toDomain())
-                        .fold(
-                            onSuccess = { _eventFlow.emit(AccountEvent.Saved) },
-                            onFailure = {
-                                _eventFlow.emit(AccountEvent.ShowError(R.string.error_save))
-                                _uiState.update { currentState }
-                            }
-                        )
+
+                val account = currentState.account.toDomain()
+
+                val result = when (currentState.mode) {
+                    is AccountMode.Create -> createAccountUseCase(account)
+                    is AccountMode.Edit -> updateAccountUseCase(account)
                 }
+
+                result.fold(
+                    onSuccess = { _eventFlow.emit(AccountEvent.Saved) },
+                    onFailure = {
+                        _eventFlow.emit(AccountEvent.ShowError(R.string.error_save))
+                        _uiState.update { currentState }
+                    }
+                )
             }
         }
     }
 
-    fun deleteAccount() {
+    fun delete() {
         viewModelScope.launch {
             val currentState = uiState.value
-            if (currentState is AccountUiState.Success) {
-                deleteAccountUseCase(currentState.account.id).fold(
+            if (currentState is AccountUiState.Success && mode is AccountMode.Edit) {
+                deleteAccountUseCase(currentState.account.id!!).fold(
                     onSuccess = { _eventFlow.emit(AccountEvent.Deleted) },
                     onFailure = {
                         _eventFlow.emit(AccountEvent.ShowError(R.string.error_delete))

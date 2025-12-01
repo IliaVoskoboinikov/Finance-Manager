@@ -105,11 +105,13 @@ class TransactionViewModel @Inject constructor(
             mode = TransactionMode.Create
         )
 
-        _uiState.value = TransactionUiState.Success(
-            transaction = initialTransaction,
-            categories = categories.map { it.toUi() },
-            accounts = accounts.map { it.toUi() }
-        )
+        _uiState.update {
+            TransactionUiState.Success(
+                transaction = initialTransaction,
+                categories = categories.map { it.toUi() },
+                accounts = accounts.map { it.toUi() }
+            )
+        }
     }
 
     private suspend fun loadForEdit(
@@ -129,7 +131,7 @@ class TransactionViewModel @Inject constructor(
                     )
                 }
             },
-            onFailure = { _uiState.value = TransactionUiState.Error(R.string.error_load_transaction) }
+            onFailure = { _uiState.update { TransactionUiState.Error(R.string.error_load_transaction) } }
         )
     }
 
@@ -137,6 +139,8 @@ class TransactionViewModel @Inject constructor(
         viewModelScope.launch {
             val state = uiState.value
             if (state !is TransactionUiState.Success) return@launch
+
+            _uiState.update { TransactionUiState.Loading }
 
             val transaction =
                 state.transaction.copy(updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now()))
