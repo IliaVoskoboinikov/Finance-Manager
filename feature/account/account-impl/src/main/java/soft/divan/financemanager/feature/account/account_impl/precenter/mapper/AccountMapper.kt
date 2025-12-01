@@ -6,7 +6,7 @@ import soft.divan.financemanager.feature.account.account_impl.precenter.model.Ac
 
 fun AccountUiModel.toDomain(): AccountBrief {
     return AccountBrief(
-        id = id,
+        id = id ?: -1,
         name = name,
         balance = balance.toBigDecimal(),
         currency = currency,

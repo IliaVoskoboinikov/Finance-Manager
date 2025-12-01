@@ -33,7 +33,7 @@ class MyAccountsFeatureImpl @Inject constructor() : MyAccountsFeatureApi {
                         )
                     )
                 },
-                onNavigateToCreateAccount = { navController.navigate(accountFeatureApi.accountRouteWithArgs()) }
+                onNavigateToCreateAccount = { navController.navigate(accountFeatureApi.route) }
             )
         }
 
