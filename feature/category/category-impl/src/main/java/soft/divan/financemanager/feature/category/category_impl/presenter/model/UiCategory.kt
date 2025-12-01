@@ -6,4 +6,3 @@ data class UiCategory(
     val emoji: String,
     val isIncome: Boolean
 )
-//todo

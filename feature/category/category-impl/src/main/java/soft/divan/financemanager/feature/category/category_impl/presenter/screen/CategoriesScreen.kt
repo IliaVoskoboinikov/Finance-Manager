@@ -1,6 +1,5 @@
 package soft.divan.financemanager.feature.category.category_impl.presenter.screen
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +16,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -34,11 +34,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import soft.divan.financemanager.feature.category.category_impl.R
 import soft.divan.financemanager.feature.category.category_impl.presenter.model.CategoriesUiState
 import soft.divan.financemanager.feature.category.category_impl.presenter.model.UiCategory
+import soft.divan.financemanager.feature.category.category_impl.presenter.model.mockCategoriesUiStateSuccess
 import soft.divan.financemanager.feature.category.category_impl.presenter.viewmodel.CategoriesViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.EmojiCircle
@@ -56,18 +55,21 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @Composable
 fun CategoriesScreenPreview() {
     FinanceManagerTheme {
-        CategoriesScreen(navController = rememberNavController())
+        CategoriesContent(
+            uiState = mockCategoriesUiStateSuccess,
+            onSearch = {},
+            onRetry = {},
+        )
     }
 }
 
 @Composable
 fun CategoriesScreen(
     modifier: Modifier = Modifier,
-    navController: NavController,
     viewModel: CategoriesViewModel = hiltViewModel()
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     CategoriesContent(
         modifier = modifier,
         uiState = uiState,
@@ -78,64 +80,75 @@ fun CategoriesScreen(
 
 @Composable
 private fun CategoriesContent(
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
     uiState: CategoriesUiState,
     onSearch: (String) -> Unit,
     onRetry: () -> Unit
 ) {
     var query by remember { mutableStateOf("") }
-    Column(modifier = modifier) {
 
-        TopBar(
-            topBar = TopBarModel(
-                title = R.string.my_articles
+    Scaffold(
+        topBar = {
+            TopBar(topBar = TopBarModel(title = R.string.my_articles))
+        },
+    ) { paddingValues ->
+        Column(modifier = modifier.padding(paddingValues)) {
+            SearchBar(
+                query = query,
+                onQueryChange = {
+                    query = it
+                    onSearch(it)
+                },
+                onSearchClick = { onSearch(query) }
             )
-        )
-
-
-        SearchBar(
-            query = query,
-            onQueryChange = {
-                query = it
-                onSearch(it)
-            },
-            onSearchClick = { onSearch(query) }
-        )
-        FMDriver()
-        when (uiState) {
-            is CategoriesUiState.Loading -> {
-                LoadingProgressBar()
-            }
-
-            is CategoriesUiState.Error -> {
-                ErrorContent(onRetry = { onRetry() })
-            }
-
-            is CategoriesUiState.Success -> {
-                val categories = uiState.sortedCategories
-                if (categories.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.it_seems_nothing_found),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                    )
-                } else {
-                    LazyColumn {
-                        items(categories) {
-                            RenderArticleListItem(it)
-                            FMDriver()
-                        }
-                    }
-                }
+            FMDriver()
+            when (uiState) {
+                is CategoriesUiState.Loading -> LoadingProgressBar()
+                is CategoriesUiState.Error -> ErrorContent(onRetry = { onRetry() })
+                is CategoriesUiState.Success -> CategoriesSuccessUiState(uiState)
             }
         }
     }
 }
 
 @Composable
-fun RenderArticleListItem(categoryUiModel: UiCategory) {
+private fun CategoriesSuccessUiState(uiState: CategoriesUiState.Success) {
+    val categories = uiState.filteredCategories
+    if (categories.isEmpty()) {
+        EmptyCategoriesMessage()
+    } else {
+        CategoriesList(categories)
+    }
+}
+
+
+@Composable
+private fun EmptyCategoriesMessage() {
+    Text(
+        text = stringResource(R.string.it_seems_nothing_found),
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    )
+}
+
+@Composable
+private fun CategoriesList(categories: List<UiCategory>) {
+    LazyColumn {
+        items(
+            items = categories,
+            key = { it.id }
+        ) { category ->
+            CategoryListItem(categoryUiModel = category)
+            FMDriver()
+        }
+    }
+}
+
+
+@Composable
+fun CategoryListItem(categoryUiModel: UiCategory) {
     ListItem(
         modifier = Modifier.height(70.dp),
         lead = {
