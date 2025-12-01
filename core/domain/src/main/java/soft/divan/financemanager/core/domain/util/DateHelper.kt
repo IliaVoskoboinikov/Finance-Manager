@@ -67,10 +67,24 @@ object DateHelper {
     }
 
     /**
+     * Возвращает LocalDate с первым числом текущего месяца.
+     */
+    fun getCurrentMonthStart(): LocalDate {
+        return LocalDate.now().withDayOfMonth(1)
+    }
+
+    /**
      * Возвращает сегодняшнюю дату в формате отображения (`dd.MM.yyyy`).
      */
     fun getTodayDisplayFormat(): String {
         return LocalDate.now().format(displayDateFormatter)
+    }
+
+    /**
+     * Возвращает сегодняшнюю дату LocalDate.
+     */
+    fun getToday(): LocalDate {
+        return LocalDate.now()
     }
 
     /**
@@ -150,6 +164,7 @@ object DateHelper {
     fun dataTimeForApi(dateTime: LocalDateTime): String {
         return dateTime.format(apiDateTimeFormatter)
     }
+
     /**
      * Форматирует [java.time.LocalTime] в строку (`HH:mm`).
      */
