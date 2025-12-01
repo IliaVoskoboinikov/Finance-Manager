@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import soft.divan.financemanager.feature.account.account_api.AccountFeatureApi
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.MyAccountsFeatureApi
-import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.screens.AccountScreen
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.screens.MyAccountsScreen
 import javax.inject.Inject
 
 private const val baseRoute = "my_accounts"
@@ -24,7 +24,7 @@ class MyAccountsFeatureImpl @Inject constructor() : MyAccountsFeatureApi {
         modifier: Modifier
     ) {
         navGraphBuilder.composable(route) {
-            AccountScreen(
+            MyAccountsScreen(
                 modifier = modifier,
                 onNavigateToUpdateAccount = { idAccount ->
                     navController.navigate(
