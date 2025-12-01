@@ -6,10 +6,7 @@ import soft.divan.financemanager.feature.history.history_impl.precenter.model.Ui
 
 fun Category.toUi(): UiCategory {
     return UiCategory(
-        id = id,
         name = name,
         emoji = emoji,
-        isIncome = isIncome
     )
 }
-//todo

@@ -99,7 +99,7 @@ fun AnalysisScreen(
 }
 
 @Composable
-fun AnalysisContent(
+private fun AnalysisContent(
     modifier: Modifier = Modifier,
     uiState: AnalysisUiState,
     startDate: LocalDate,
@@ -111,11 +111,10 @@ fun AnalysisContent(
 
     ) {
     Scaffold(
-        topBar = { AnalysisTopBar(onNavigateBack) },
+        topBar = { AnalysisTopBar(onNavigateBack = onNavigateBack) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Column(modifier = modifier.padding(paddingValues)) {
-
             PeriodSelector(
                 startDate = startDate,
                 endDate = endDate,
@@ -123,7 +122,7 @@ fun AnalysisContent(
                 onUpdateEndDate = onUpdateEndDate
             )
 
-            AnalysisStatefulContent(uiState)
+            AnalysisStatefulContent(uiState = uiState)
         }
     }
 }
@@ -140,7 +139,7 @@ private fun AnalysisTopBar(onNavigateBack: () -> Unit) {
 }
 
 @Composable
-fun PeriodSelector(
+private fun PeriodSelector(
     startDate: LocalDate,
     endDate: LocalDate,
     onUpdateStartDate: (LocalDate) -> Unit,
@@ -210,16 +209,16 @@ private fun AnalysisStatefulContent(uiState: AnalysisUiState) {
     when (uiState) {
         is AnalysisUiState.Loading -> LoadingProgressBar()
         is AnalysisUiState.Error -> ErrorContent(onRetry = {}) // TODO
-        is AnalysisUiState.Success -> AnalysisSuccessContent(uiState)
+        is AnalysisUiState.Success -> AnalysisSuccessContent(uiState = uiState)
     }
 }
 
 @Composable
-fun AnalysisSuccessContent(uiState: AnalysisUiState.Success) {
+private fun AnalysisSuccessContent(uiState: AnalysisUiState.Success) {
     Column {
         SummaryItem(sum = uiState.sumTransaction)
         FMDriver()
-        CategoryDiagram(uiState.categoryPieSlice)
+        CategoryDiagram(data = uiState.categoryPieSlice)
     }
 }
 
@@ -235,7 +234,7 @@ private fun SummaryItem(sum: String) {
 
 
 @Composable
-fun CategoryDiagram(data: PieChartData) {
+private fun CategoryDiagram(data: PieChartData) {
     val config = PieChartConfig(
         showSliceLabels = false,
         backgroundColor = colorScheme.background,
@@ -246,7 +245,7 @@ fun CategoryDiagram(data: PieChartData) {
     var selectedSlice by rememberSaveable { mutableStateOf<String?>(null) }
 
     Column {
-        PieChartLegends(data)
+        PieChartLegends(data = data)
         FMDriver()
         PieChartWithCenterLabel(
             data = data,
