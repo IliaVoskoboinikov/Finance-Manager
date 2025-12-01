@@ -1,12 +1,16 @@
 package soft.divan.financemanager.feature.category.category_impl.presenter.model
 
+import androidx.annotation.StringRes
+import androidx.compose.runtime.Immutable
+
+@Immutable
 sealed interface CategoriesUiState {
     data object Loading : CategoriesUiState
-    data class Error(val message: String) : CategoriesUiState
+
     data class Success(
         val categories: List<UiCategory>,
-        val sortedCategories: List<UiCategory>
+        val filteredCategories: List<UiCategory>,
     ) : CategoriesUiState
 
+    data class Error(@field:StringRes val message: Int) : CategoriesUiState
 }
-//todo
