@@ -4,5 +4,6 @@
     <string name="start">Начало</string>
     <string name="all">Всего</string>
     <string name="end">Конец</string>
+    <string name="error_loading">Ошибка загрузки</string>
 
 </resources>

@@ -12,12 +12,12 @@ import soft.divan.financemanager.feature.history.history_impl.precenter.screens.
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import javax.inject.Inject
 
-
-private const val isIncomeKey: String = "isIncome"
+private const val baseRoute = "history"
+const val IS_INCOME_KEY: String = "isIncome"
 
 class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
 
-    override val route: String = "history"
+    override val route: String = baseRoute
 
     @Inject
     lateinit var transactionFeatureApi: TransactionFeatureApi
@@ -33,20 +33,19 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
         modifier: Modifier
     ) {
         navGraphBuilder.composable(
-            "${route}/{$isIncomeKey}",
+            "${route}/{$IS_INCOME_KEY}",
             arguments = listOf(
-                navArgument(isIncomeKey) {
+                navArgument(IS_INCOME_KEY) {
                     type = NavType.BoolType
                     defaultValue = false
                 }
             )
         ) { backStackEntry ->
 
-            val isIncome = backStackEntry.arguments?.getBoolean(isIncomeKey) ?: false
+            val isIncome = backStackEntry.arguments?.getBoolean(IS_INCOME_KEY) ?: false
 
             HistoryScreen(
                 modifier = modifier,
-                isIncome = isIncome,
                 onNavigateBack = navController::popBackStack,
                 onNavigateToTransaction = { transitionId ->
                     navController.navigate(

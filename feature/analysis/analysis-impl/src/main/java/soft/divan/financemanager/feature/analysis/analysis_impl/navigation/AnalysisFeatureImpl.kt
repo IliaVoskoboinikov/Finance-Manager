@@ -10,12 +10,12 @@ import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureAp
 import soft.divan.financemanager.feature.analysis.analysis_impl.precenter.screen.AnalysisScreen
 import javax.inject.Inject
 
-
+private const val baseRoute = "analysis"
 const val IS_INCOME_KEY: String = "isIncome"
 
 class AnalysisFeatureImpl @Inject constructor() : AnalysisFeatureApi {
 
-    override val route: String = "analysis"
+    override val route: String = baseRoute
 
     override fun analysisRouteWithArgs(isIncome: Boolean): String {
         val income = isIncome.toString()
