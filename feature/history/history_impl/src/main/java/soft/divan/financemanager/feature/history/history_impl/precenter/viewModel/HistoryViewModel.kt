@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
+import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.history.history_impl.R
 import soft.divan.financemanager.feature.history.history_impl.navigation.IS_INCOME_KEY
 import soft.divan.financemanager.feature.history.history_impl.precenter.mapper.toUi
@@ -38,10 +39,10 @@ class HistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<HistoryUiState>(HistoryUiState.Loading)
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()
 
-    private val _startDate = MutableStateFlow(LocalDate.now().withDayOfMonth(1))
+    private val _startDate = MutableStateFlow(DateHelper.getCurrentMonthStart())
     val startDate: StateFlow<LocalDate> = _startDate.asStateFlow()
 
-    private val _endDate = MutableStateFlow(LocalDate.now())
+    private val _endDate = MutableStateFlow(DateHelper.getToday())
     val endDate: StateFlow<LocalDate> = _endDate.asStateFlow()
 
     init {

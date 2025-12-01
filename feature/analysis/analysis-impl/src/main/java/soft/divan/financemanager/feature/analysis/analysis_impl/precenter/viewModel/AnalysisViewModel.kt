@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
+import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.analysis.analysis_impl.R
 import soft.divan.financemanager.feature.analysis.analysis_impl.domain.usecase.GetCategoryPieChartDataUseCase
 import soft.divan.financemanager.feature.analysis.analysis_impl.navigation.IS_INCOME_KEY
@@ -40,10 +41,10 @@ class AnalysisViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Loading)
     val uiState: StateFlow<AnalysisUiState> = _uiState.asStateFlow()
 
-    private val _startDate = MutableStateFlow(LocalDate.now().withDayOfMonth(1))
+    private val _startDate = MutableStateFlow(DateHelper.getCurrentMonthStart())
     val startDate: StateFlow<LocalDate> = _startDate.asStateFlow()
 
-    private val _endDate = MutableStateFlow(LocalDate.now())
+    private val _endDate = MutableStateFlow(DateHelper.getToday())
     val endDate: StateFlow<LocalDate> = _endDate.asStateFlow()
 
     init {
