@@ -11,7 +11,7 @@ import soft.divan.financemanager.feature.analysis.analysis_impl.precenter.screen
 import javax.inject.Inject
 
 
-private const val isIncomeKey: String = "isIncome"
+const val IS_INCOME_KEY: String = "isIncome"
 
 class AnalysisFeatureImpl @Inject constructor() : AnalysisFeatureApi {
 
@@ -28,23 +28,17 @@ class AnalysisFeatureImpl @Inject constructor() : AnalysisFeatureApi {
         modifier: Modifier
     ) {
         navGraphBuilder.composable(
-            route = "${route}/{$isIncomeKey}",
+            route = "${route}/{$IS_INCOME_KEY}",
             arguments = listOf(
-                navArgument(isIncomeKey) {
+                navArgument(IS_INCOME_KEY) {
                     type = NavType.BoolType
                 }
             )
-        ) { backStackEntry ->
-            val isIncome = backStackEntry.arguments?.getBoolean(isIncomeKey) ?: false
+        ) {
             AnalysisScreen(
                 modifier = modifier,
-                isIncome = isIncome,
                 onNavigateBack = navController::popBackStack
             )
-
         }
-
     }
-
-
 }

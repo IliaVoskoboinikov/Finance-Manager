@@ -18,7 +18,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +40,7 @@ import co.yml.charts.ui.piechart.charts.PieChart
 import co.yml.charts.ui.piechart.models.PieChartConfig
 import co.yml.charts.ui.piechart.models.PieChartData
 import soft.divan.financemanager.core.domain.util.DateHelper
+import soft.divan.financemanager.core.domain.util.pretty
 import soft.divan.financemanager.feature.analysis.analysis_impl.R
 import soft.divan.financemanager.feature.analysis.analysis_impl.precenter.model.AnalysisUiState
 import soft.divan.financemanager.feature.analysis.analysis_impl.precenter.model.mockTransactionUiStateSuccess
@@ -62,10 +62,6 @@ import java.time.LocalDate
 @Composable
 fun AnalysisScreenPreview() {
     val today = remember { LocalDate.now() }
-    val firstDayOfMonth = remember { today.withDayOfMonth(1) }
-
-    val startDate = remember { mutableStateOf(firstDayOfMonth) }
-    val endDate = remember { mutableStateOf(today) }
     FinanceManagerTheme {
         AnalysisContent(
             uiState = mockTransactionUiStateSuccess,
@@ -73,9 +69,8 @@ fun AnalysisScreenPreview() {
             snackbarHostState = remember { SnackbarHostState() },
             onUpdateStartDate = {},
             onUpdateEndDate = {},
-            onLoadHistory = { date: LocalDate, date1: LocalDate -> },
-            startDate = startDate,
-            endDate = endDate
+            startDate = today,
+            endDate = today
         )
     }
 }
@@ -83,37 +78,23 @@ fun AnalysisScreenPreview() {
 @Composable
 fun AnalysisScreen(
     modifier: Modifier = Modifier,
-    isIncome: Boolean = false,
     onNavigateBack: () -> Unit,
     viewModel: AnalysisViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    val today = remember { LocalDate.now() }
-    val firstDayOfMonth = remember { today.withDayOfMonth(1) }
-
-    val startDate = remember { mutableStateOf(firstDayOfMonth) }
-    val endDate = remember { mutableStateOf(today) }
-
-    LaunchedEffect(isIncome) {
-        viewModel.setIsIncome(isIncome)
-        viewModel.load(
-            startDate = startDate.value,
-            endDate = endDate.value
-        )
-    }
+    val startDate by viewModel.startDate.collectAsStateWithLifecycle()
+    val endDate by viewModel.endDate.collectAsStateWithLifecycle()
 
     AnalysisContent(
         modifier = modifier,
         uiState = uiState,
+        startDate = startDate,
+        endDate = endDate,
         onNavigateBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
         onUpdateStartDate = viewModel::updateStartDate,
         onUpdateEndDate = viewModel::updateEndDate,
-        onLoadHistory = viewModel::load,
-        startDate = startDate,
-        endDate = endDate
     )
 }
 
@@ -121,188 +102,215 @@ fun AnalysisScreen(
 fun AnalysisContent(
     modifier: Modifier = Modifier,
     uiState: AnalysisUiState,
+    startDate: LocalDate,
+    endDate: LocalDate,
     onNavigateBack: () -> Unit,
     onUpdateStartDate: (LocalDate) -> Unit,
     onUpdateEndDate: (LocalDate) -> Unit,
-    onLoadHistory: (startDate: LocalDate, endDate: LocalDate) -> Unit,
     snackbarHostState: SnackbarHostState,
-    startDate: MutableState<LocalDate>,
-    endDate: MutableState<LocalDate>
-) {
+
+    ) {
     Scaffold(
-        topBar = {
-            TopBar(
-                topBar = TopBarModel(
-                    title = R.string.analysis,
-                    navigationIcon = Icons.Filled.ArrowBack,
-                    navigationIconClick = onNavigateBack,
-                )
-            )
-        },
+        topBar = { AnalysisTopBar(onNavigateBack) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
-            when (uiState) {
-                is AnalysisUiState.Loading -> LoadingProgressBar()
-                is AnalysisUiState.Error -> {
-//todo
-                    ErrorContent({})
-                }
+        Column(modifier = modifier.padding(paddingValues)) {
 
-                is AnalysisUiState.Success ->
-                    AnalysisForm(
-                        uiState = uiState,
-                        onUpdateStartDate = onUpdateStartDate,
-                        onUpdateEndDate = onUpdateEndDate,
-                        onLoadHistory = onLoadHistory,
-                        startDate = startDate,
-                        endDate = endDate,
-                    )
-            }
+            PeriodSelector(
+                startDate = startDate,
+                endDate = endDate,
+                onUpdateStartDate = onUpdateStartDate,
+                onUpdateEndDate = onUpdateEndDate
+            )
+
+            AnalysisStatefulContent(uiState)
         }
     }
 }
 
 @Composable
-fun AnalysisForm(
-    uiState: AnalysisUiState.Success,
-    onUpdateStartDate: (LocalDate) -> Unit,
-    onUpdateEndDate: (LocalDate) -> Unit,
-    onLoadHistory: (startDate: LocalDate, endDate: LocalDate) -> Unit,
-    startDate: MutableState<LocalDate>,
-    endDate: MutableState<LocalDate>,
-) {
-
-    val showStartDatePicker = remember { mutableStateOf(false) }
-    val showEndDatePicker = remember { mutableStateOf(false) }
-
-    if (showStartDatePicker.value) {
-        FMDatePickerDialog(
-            initialDate = startDate.value,
-            onDateSelected = {
-                startDate.value = it
-                showStartDatePicker.value = false
-                onUpdateStartDate(startDate.value)
-                onLoadHistory(startDate.value, endDate.value)
-            },
-            onDismissRequest = { showStartDatePicker.value = false }
+private fun AnalysisTopBar(onNavigateBack: () -> Unit) {
+    TopBar(
+        topBar = TopBarModel(
+            title = R.string.analysis,
+            navigationIcon = Icons.Filled.ArrowBack,
+            navigationIconClick = onNavigateBack
         )
-    }
-
-    if (showEndDatePicker.value) {
-        FMDatePickerDialog(
-            initialDate = endDate.value,
-            onDateSelected = {
-                endDate.value = it
-                showEndDatePicker.value = false
-                onUpdateEndDate(endDate.value)
-                onLoadHistory(startDate.value, endDate.value)
-            },
-            onDismissRequest = { showEndDatePicker.value = false }
-        )
-    }
-
-    Column() {
-        ListItem(
-            modifier = Modifier
-                .height(56.dp)
-                .clickable(onClick = { showStartDatePicker.value = true }),
-            content = { ContentTextListItem(stringResource(R.string.period_start)) },
-            trail = { ContentTextListItem(DateHelper.formatDateForDisplay(startDate.value)) },
-            containerColor = colorScheme.secondaryContainer
-        )
-        FMDriver()
-        ListItem(
-            modifier = Modifier
-                .height(56.dp)
-                .clickable(onClick = { showEndDatePicker.value = true }),
-            content = { ContentTextListItem(stringResource(R.string.period_end)) },
-            trail = { ContentTextListItem(DateHelper.formatDateForDisplay(endDate.value)) },
-            containerColor = colorScheme.secondaryContainer
-        )
-        FMDriver()
-        ListItem(
-            modifier = Modifier.height(56.dp),
-            content = { ContentTextListItem(stringResource(R.string.summ)) },
-            trail = { ContentTextListItem(uiState.sumTransaction) },
-            containerColor = colorScheme.secondaryContainer
-        )
-        FMDriver()
-
-        Diagram(uiState.categoryPieSlice)
-
-    }
-
+    )
 }
 
-
 @Composable
-fun Diagram(categoryPieSlice: PieChartData) {
+fun PeriodSelector(
+    startDate: LocalDate,
+    endDate: LocalDate,
+    onUpdateStartDate: (LocalDate) -> Unit,
+    onUpdateEndDate: (LocalDate) -> Unit
+) {
+    val showStartPicker = remember { mutableStateOf(false) }
+    val showEndPicker = remember { mutableStateOf(false) }
 
-    val donutChartConfig =
-        PieChartConfig(
-            showSliceLabels = false,
-            backgroundColor = MaterialTheme.colorScheme.background,
-            isClickOnSliceEnabled = true,
-            isAnimationEnable = true,
-        )
-
-    var selectedSliceLabel by rememberSaveable { mutableStateOf<String?>(null) }
+    DatePicker(showStartPicker, startDate, onUpdateStartDate)
+    DatePicker(showEndPicker, endDate, onUpdateEndDate)
 
     Column {
-        Legends(
-            modifier = Modifier.heightIn(max = 136.dp),
-            legendsConfig = getLegendsConfigFromPieChartData(
-                categoryPieSlice,
-                2
-            )
+        DateItem(
+            label = stringResource(R.string.period_start),
+            value = DateHelper.formatDateForDisplay(startDate),
+            onClick = { showStartPicker.value = true }
         )
+
         FMDriver()
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
 
-            PieChart(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)
-                    .wrapContentWidth()
-                    .padding(8.dp),
-                pieChartData = categoryPieSlice,
-                pieChartConfig = donutChartConfig,
-                onSliceClick = { slice ->
+        DateItem(
+            label = stringResource(R.string.period_end),
+            value = DateHelper.formatDateForDisplay(endDate),
+            onClick = { showEndPicker.value = true }
+        )
 
-                    val newLabel = "${slice.label} ${slice.value.pretty()}%"
-
-                    selectedSliceLabel =
-                        if (selectedSliceLabel == newLabel) null else newLabel
-
-                }
-            )
-
-            selectedSliceLabel?.let { label ->
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontSize = 12.sp,
-                )
-            }
-        }
+        FMDriver()
     }
 }
 
-private fun getLegendsConfigFromPieChartData(
-    categoryPieSlice: PieChartData,
-    gridSize: Int
-): LegendsConfig {
-    val legendsList = mutableListOf<LegendLabel>()
-    categoryPieSlice.slices.forEach { slice ->
-        legendsList.add(LegendLabel(slice.color, slice.label + " " + slice.value.pretty() + "%"))
+@Composable
+private fun DatePicker(
+    state: MutableState<Boolean>,
+    currentDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    if (state.value) {
+        FMDatePickerDialog(
+            initialDate = currentDate,
+            onDateSelected = {
+                state.value = false
+                onDateSelected(it)
+            },
+            onDismissRequest = { state.value = false }
+        )
     }
+}
+
+@Composable
+private fun DateItem(
+    label: String,
+    value: String,
+    onClick: () -> Unit
+) {
+    ListItem(
+        modifier = Modifier
+            .height(56.dp)
+            .clickable(onClick = onClick),
+        content = { ContentTextListItem(label) },
+        trail = { ContentTextListItem(value) },
+        containerColor = colorScheme.secondaryContainer
+    )
+}
+
+@Composable
+private fun AnalysisStatefulContent(uiState: AnalysisUiState) {
+    when (uiState) {
+        is AnalysisUiState.Loading -> LoadingProgressBar()
+        is AnalysisUiState.Error -> ErrorContent(onRetry = {}) // TODO
+        is AnalysisUiState.Success -> AnalysisSuccessContent(uiState)
+    }
+}
+
+@Composable
+fun AnalysisSuccessContent(uiState: AnalysisUiState.Success) {
+    Column {
+        SummaryItem(sum = uiState.sumTransaction)
+        FMDriver()
+        CategoryDiagram(uiState.categoryPieSlice)
+    }
+}
+
+@Composable
+private fun SummaryItem(sum: String) {
+    ListItem(
+        modifier = Modifier.height(56.dp),
+        content = { ContentTextListItem(stringResource(R.string.summ)) },
+        trail = { ContentTextListItem(sum) },
+        containerColor = colorScheme.secondaryContainer
+    )
+}
+
+
+@Composable
+fun CategoryDiagram(data: PieChartData) {
+    val config = PieChartConfig(
+        showSliceLabels = false,
+        backgroundColor = colorScheme.background,
+        isClickOnSliceEnabled = true,
+        isAnimationEnable = true,
+    )
+
+    var selectedSlice by rememberSaveable { mutableStateOf<String?>(null) }
+
+    Column {
+        PieChartLegends(data)
+        FMDriver()
+        PieChartWithCenterLabel(
+            data = data,
+            config = config,
+            selectedSliceLabel = selectedSlice,
+            onSliceClick = { slice ->
+                val label = "${slice.label} ${slice.value.pretty()}%"
+                selectedSlice = if (selectedSlice == label) null else label
+            }
+        )
+    }
+}
+
+@Composable
+private fun PieChartLegends(data: PieChartData) {
+    Legends(
+        modifier = Modifier.heightIn(max = 136.dp),
+        legendsConfig = buildLegendsConfig(data)
+    )
+}
+
+private fun buildLegendsConfig(data: PieChartData): LegendsConfig {
+    val labels = data.slices.map { slice ->
+        LegendLabel(
+            color = slice.color,
+            name = "${slice.label} ${slice.value.pretty()}%",
+        )
+    }
+
     return LegendsConfig(
-        legendLabelList = legendsList,
-        gridColumnCount = gridSize,
+        legendLabelList = labels,
+        gridColumnCount = 2,
         legendsArrangement = Arrangement.Start,
         textStyle = TextStyle()
     )
 }
 
-fun Float.pretty(): String =
-    if ((this % 1).toDouble() == 0.0) this.toInt().toString() else this.toString()
+@Composable
+private fun PieChartWithCenterLabel(
+    data: PieChartData,
+    config: PieChartConfig,
+    selectedSliceLabel: String?,
+    onSliceClick: (PieChartData.Slice) -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        PieChart(
+            modifier = Modifier
+                .background(colorScheme.background)
+                .wrapContentWidth()
+                .padding(8.dp),
+            pieChartData = data,
+            pieChartConfig = config,
+            onSliceClick = onSliceClick
+        )
+
+        selectedSliceLabel?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodyMedium,
+                fontSize = 12.sp
+            )
+        }
+    }
+}
