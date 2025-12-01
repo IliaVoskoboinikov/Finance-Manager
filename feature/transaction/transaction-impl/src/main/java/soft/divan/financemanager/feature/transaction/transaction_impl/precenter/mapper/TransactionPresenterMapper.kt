@@ -25,7 +25,7 @@ fun Transaction.toUi(category: Category): UiTransaction {
 
 fun UiTransaction.toDomain(): Transaction {
     return Transaction(
-        id = id ?: 0,
+        id = id ?: -1,
         accountId = accountId,
         categoryId = category.id,
         amount = amount.toBigDecimal(),

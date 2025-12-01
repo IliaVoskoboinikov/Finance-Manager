@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.create_account.create_account_impl.precenter.screens
+package soft.divan.financemanager.feature.account.account_impl.precenter.screens
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.feature.account.account_impl.R
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountEvent
+import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountMode
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountUiState
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.mockAccountUiStateSuccess
 import soft.divan.financemanager.feature.account.account_impl.precenter.viewModel.AccountViewModel
@@ -105,10 +106,6 @@ fun CreateAccountScreenScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    /*   LaunchedEffect(accountId) {
-           viewModel.loadAccount(accountId)
-       }*/
-
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
@@ -132,7 +129,7 @@ fun CreateAccountScreenScreen(
         onUpdateBalance = viewModel::updateBalance,
         onUpdateCurrency = viewModel::updateCurrency,
         onSave = viewModel::createAccount,
-        onDelete = viewModel::deleteAccount,
+        onDelete = viewModel::delete,
         snackbarHostState = snackbarHostState
     )
 }
@@ -170,7 +167,6 @@ fun CreateAccountContent(
                 is AccountUiState.Loading -> LoadingProgressBar()
                 is AccountUiState.Success -> CreateAccountForm(
                     uiState = uiState,
-                    accountId = accountId,
                     onUpdateName = onUpdateName,
                     onUpdateBalance = onUpdateBalance,
                     onUpdateCurrency = onUpdateCurrency,
@@ -182,12 +178,10 @@ fun CreateAccountContent(
     }
 }
 
-//todo
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateAccountForm(
     uiState: AccountUiState.Success,
-    accountId: Int?,
     onUpdateName: (String) -> Unit,
     onUpdateBalance: (String) -> Unit,
     onUpdateCurrency: (String) -> Unit,
@@ -214,7 +208,7 @@ fun CreateAccountForm(
         )
         FMDriver()
         Spacer(modifier = Modifier.height(24.dp))
-        if (accountId == null)
+        if (uiState.mode is AccountMode.Create)
             SaveButton(onSave)
         else
             DeleteButton(onDelete)
@@ -242,8 +236,8 @@ private fun Balance(
                         newValue.isEmpty() -> {
                             onUpdateBalance("0")
                         }
-
-                        uiState.account.balance.toString() == "0" &&
+//todo to viewModel
+                        uiState.account.balance == "0" &&
                                 newValue.length == 2 &&
                                 newValue.startsWith("0") &&
                                 newValue[1].isDigit() -> {
@@ -251,7 +245,6 @@ private fun Balance(
                         }
 
                         newValue.matches(moneyRegex) -> {
-
                             onUpdateBalance(newValue)
                         }
                     }
