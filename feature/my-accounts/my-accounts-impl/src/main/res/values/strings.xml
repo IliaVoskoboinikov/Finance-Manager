@@ -9,4 +9,6 @@
     <string name="rub">Российский рубль</string>
     <string name="usd">Американский доллар</string>
     <string name="eur">Евро</string>
+    <string name="error_loading">Ошибка загрузки</string>
+
 </resources>

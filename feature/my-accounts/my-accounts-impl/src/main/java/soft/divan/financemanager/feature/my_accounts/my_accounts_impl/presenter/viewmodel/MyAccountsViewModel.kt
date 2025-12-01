@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.R
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.mapper.toUiModel
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.model.MyAccountsUiState
 import javax.inject.Inject
@@ -40,8 +41,8 @@ class MyAccountsViewModel @Inject constructor(
             .onEach { data ->
                 _uiState.update { MyAccountsUiState.Success(data.map { it.toUiModel() }) }
             }
-            .catch { exception ->
-                _uiState.update { MyAccountsUiState.Error(exception.message.toString()) }
+            .catch {
+                _uiState.update { MyAccountsUiState.Error(R.string.error_loading) }
             }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)

@@ -34,9 +34,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.R
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.model.MyAccountsUiModel
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.model.MyAccountsUiState
+import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.model.mockMyAccountsUiStateSuccess
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.viewmodel.MyAccountsViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
-import soft.divan.financemanager.uikit.components.ErrorSnackbar
+import soft.divan.financemanager.uikit.components.ErrorContent
 import soft.divan.financemanager.uikit.components.FMDriver
 import soft.divan.financemanager.uikit.components.FloatingButton
 import soft.divan.financemanager.uikit.components.ListItem
@@ -50,22 +51,8 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @Composable
 fun AccountScreenPreview() {
     FinanceManagerTheme {
-        AccountContent(
-            uiState = MyAccountsUiState.Success(
-                accounts = listOf(
-                    MyAccountsUiModel(
-                        id = 1,
-                        name = "основной счет",
-                        balance = "1000000$",
-                        currency = "$",
-                    ), MyAccountsUiModel(
-                        id = 2,
-                        name = "основной счет2",
-                        balance = "1000000$",
-                        currency = "$",
-                    )
-                )
-            ),
+        MyAccounts(
+            uiState = mockMyAccountsUiStateSuccess,
             onNavigateToUpdateAccount = {},
             onNavigateToCreateAccount = {},
         )
@@ -73,14 +60,15 @@ fun AccountScreenPreview() {
 }
 
 @Composable
-fun AccountScreen(
+fun MyAccountsScreen(
     modifier: Modifier = Modifier,
     onNavigateToUpdateAccount: (idAccount: Int) -> Unit,
     onNavigateToCreateAccount: () -> Unit,
     viewModel: MyAccountsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    AccountContent(
+
+    MyAccounts(
         modifier = modifier,
         uiState = uiState,
         onNavigateToUpdateAccount = onNavigateToUpdateAccount,
@@ -90,7 +78,7 @@ fun AccountScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountContent(
+fun MyAccounts(
     modifier: Modifier = Modifier,
     uiState: MyAccountsUiState,
     onNavigateToUpdateAccount: (idAccount: Int) -> Unit,
@@ -98,63 +86,85 @@ fun AccountContent(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
-        topBar = { TopBar(topBar = TopBarModel(title = R.string.my_accounts)) },
+        topBar = { AccountTopBar() },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = { FloatingButton(onClick = onNavigateToCreateAccount) }
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
-            when (uiState) {
-                is MyAccountsUiState.Loading -> LoadingProgressBar()
-                is MyAccountsUiState.Error -> ErrorSnackbar(
-                    snackbarHostState = snackbarHostState,
-                    message = uiState.message,
-                )
-
-                is MyAccountsUiState.Success -> Accounts(
-                    accounts = uiState.accounts,
-                    onNavigateToUpdateAccount = onNavigateToUpdateAccount
-                )
-            }
+            MyAccountsStatefulContent(
+                uiState = uiState,
+                onNavigateToUpdateAccount = onNavigateToUpdateAccount
+            )
         }
     }
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun Accounts(
+private fun AccountTopBar() {
+    TopBar(topBar = TopBarModel(title = R.string.my_accounts))
+}
+
+@Composable
+private fun MyAccountsStatefulContent(
+    uiState: MyAccountsUiState,
+    onNavigateToUpdateAccount: (Int) -> Unit
+) {
+    when (uiState) {
+        is MyAccountsUiState.Loading -> LoadingProgressBar()
+        is MyAccountsUiState.Error -> ErrorContent(onRetry = {}) // TODO
+        is MyAccountsUiState.Success -> AccountsSuccessContent(
+            accounts = uiState.accounts,
+            onNavigateToUpdateAccount = onNavigateToUpdateAccount
+        )
+    }
+}
+
+@Composable
+fun AccountsSuccessContent(
     accounts: List<MyAccountsUiModel>,
-    onNavigateToUpdateAccount: (idAccount: Int) -> Unit,
+    onNavigateToUpdateAccount: (idAccount: Int) -> Unit
 ) {
     LazyColumn {
-        items(accounts) { account ->
-            ListItem(
-                modifier = Modifier
-                    .height(56.dp)
-                    .clickable { onNavigateToUpdateAccount(account.id) },
-                lead = {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "\uD83D\uDCB0", textAlign = TextAlign.Center)
-                    }
-                },
-                content = { ContentTextListItem(account.name) },
-                trail = {
-                    ContentTextListItem(account.balance)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Icon(
-                        imageVector = Icons.Filled.Arrow,
-                        contentDescription = "arrow",
-                        tint = colorScheme.onSurfaceVariant
-                    )
-                },
-                containerColor = colorScheme.secondaryContainer
-            )
-            FMDriver()
+        items(
+            items = accounts,
+            key = { it.id }
+        ) { account ->
+            ItemAccount(onNavigateToUpdateAccount, account)
         }
     }
+}
+
+@Composable
+private fun ItemAccount(
+    onNavigateToUpdateAccount: (Int) -> Unit,
+    account: MyAccountsUiModel
+) {
+    ListItem(
+        modifier = Modifier
+            .height(56.dp)
+            .clickable { onNavigateToUpdateAccount(account.id) },
+        lead = {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = "\uD83D\uDCB0", textAlign = TextAlign.Center)
+            }
+        },
+        content = { ContentTextListItem(account.name) },
+        trail = {
+            ContentTextListItem(account.balance)
+            Spacer(modifier = Modifier.width(16.dp))
+            Icon(
+                imageVector = Icons.Filled.Arrow,
+                contentDescription = "arrow",
+                tint = colorScheme.onSurfaceVariant
+            )
+        },
+        containerColor = colorScheme.secondaryContainer
+    )
+    FMDriver()
 }
