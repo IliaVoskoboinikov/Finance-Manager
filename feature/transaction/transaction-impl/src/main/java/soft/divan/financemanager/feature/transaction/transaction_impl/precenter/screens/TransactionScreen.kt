@@ -192,6 +192,7 @@ fun TransactionContent(
                 is TransactionUiState.Loading -> LoadingProgressBar()
                 is TransactionUiState.Error -> ErrorContent(onRetry = onSave)
                 is TransactionUiState.Success -> TransactionForm(
+                    modifier = modifier,
                     uiState = uiState,
                     onAmountChange = onAmountChange,
                     onCommentChange = onCommentChange,
@@ -208,6 +209,7 @@ fun TransactionContent(
 
 @Composable
 fun TransactionForm(
+    modifier: Modifier = Modifier,
     uiState: TransactionUiState.Success,
     onAmountChange: (String) -> Unit,
     onCommentChange: (String) -> Unit,
@@ -239,7 +241,7 @@ fun TransactionForm(
     ShowDeleteDialog(isShowDeleteDialog, onDelete)
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
@@ -453,7 +455,10 @@ private fun AccountSheetContent(
         HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 
         LazyColumn {
-            items(accounts) { account ->
+            items(
+                items = accounts,
+                key = { it.id }
+            ) { account ->
                 ListItem(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -491,7 +496,10 @@ private fun CategorySheetContent(
         HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 
         LazyColumn {
-            items(categories) { category ->
+            items(
+                items = categories,
+                key = { it.id }
+            ) { category ->
                 ListItem(
                     modifier = Modifier
                         .fillMaxWidth()

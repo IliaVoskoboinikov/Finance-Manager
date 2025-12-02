@@ -29,5 +29,5 @@ val mockTransactionUiStateSuccess = AnalysisUiState.Success(
 val mockTransactionUiStateLoading = AnalysisUiState.Loading
 
 val mockTransactionUiStateError = AnalysisUiState.Error(
-    message = R.string.error_loading
+    messageRes = R.string.error_loading
 )

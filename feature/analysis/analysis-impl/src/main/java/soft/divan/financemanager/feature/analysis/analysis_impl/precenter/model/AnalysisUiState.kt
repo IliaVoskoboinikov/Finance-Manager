@@ -15,5 +15,5 @@ sealed interface AnalysisUiState {
         val endDate: String = DateHelper.getTodayDisplayFormat(),
     ) : AnalysisUiState
 
-    data class Error(@field:StringRes val message: Int) : AnalysisUiState
+    data class Error(@field:StringRes val messageRes: Int) : AnalysisUiState
 }
