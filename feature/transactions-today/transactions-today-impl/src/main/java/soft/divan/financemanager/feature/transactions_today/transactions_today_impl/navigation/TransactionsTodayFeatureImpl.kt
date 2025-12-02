@@ -12,14 +12,13 @@ import soft.divan.financemanager.feature.transactions_today.transactions_today_a
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.screen.TransactionsTodayScreen
 import javax.inject.Inject
 
-private const val baseRoute = "transactionsToday"
-private const val isIncomeKey: String = "isIncome"
+private const val BASE_ROURE = "transactionsToday"
+private const val IS_INCOME_KEY: String = "isIncome"
 
 class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeatureApi {
 
-    override val route: String = baseRoute
-    override val route2: String = baseRoute + "2"
-
+    override val route: String = BASE_ROURE
+    override val route2: String = BASE_ROURE + "2"
 
     @Inject
     lateinit var transactionFeatureApi: TransactionFeatureApi
@@ -35,13 +34,13 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
         modifier: Modifier
     ) {
         navGraphBuilder.composable(
-            route = "${route}/{$isIncomeKey}",
-            arguments = listOf(navArgument(isIncomeKey) {
+            route = "${route}/{$IS_INCOME_KEY}",
+            arguments = listOf(navArgument(IS_INCOME_KEY) {
                 type = NavType.BoolType
                 defaultValue = false
             })
         ) { backStackEntry ->
-            val isIncome = backStackEntry.arguments?.getBoolean(isIncomeKey) ?: false
+            val isIncome = backStackEntry.arguments?.getBoolean(IS_INCOME_KEY) ?: false
 
             TransactionsTodayScreen(
                 modifier = modifier,
