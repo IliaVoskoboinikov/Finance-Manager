@@ -5,24 +5,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import kotlinx.coroutines.delay
 import soft.divan.financemanager.feature.splash_screen.splash_screen_impl.R
+import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+fun AboutTheProgramScreenPreview() {
+    FinanceManagerTheme {
+        SplashContent()
+    }
+}
 
 @Composable
 fun SplashScreen(
     onNavigateToExpenses: () -> Unit,
 ) {
-    SplashContent()
     LaunchedEffect(true) {
         delay(1000)
         onNavigateToExpenses()
-
     }
+
+    SplashContent()
 }
 
 @Composable

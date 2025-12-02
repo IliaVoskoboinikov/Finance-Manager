@@ -9,9 +9,12 @@ import soft.divan.financemanager.feature.splash_screen.splash_screen_impl.screen
 import soft.divan.financemanager.feature.transactions_today.transactions_today_api.TransactionsTodayFeatureApi
 import javax.inject.Inject
 
+
+private const val BASE_ROUTE = "splash-screen"
+
 class SplashScreenFeatureImpl @Inject constructor() : SplashScreenFeatureApi {
 
-    override val route: String = "splash-screen"
+    override val route: String = BASE_ROUTE
 
     @Inject
     lateinit var transactionsTodayFeatureApi: TransactionsTodayFeatureApi
