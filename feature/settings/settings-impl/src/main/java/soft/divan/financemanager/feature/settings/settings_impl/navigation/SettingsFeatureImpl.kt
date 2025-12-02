@@ -9,19 +9,19 @@ import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeat
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
-import soft.divan.financemanager.feature.settings.settings_impl.screens.AboutTheProgramScreen
-import soft.divan.financemanager.feature.settings.settings_impl.screens.SettingsScreen
+import soft.divan.financemanager.feature.settings.settings_impl.presenter.screens.AboutTheProgramScreen
+import soft.divan.financemanager.feature.settings.settings_impl.presenter.screens.SettingsScreen
 import javax.inject.Inject
 
-private const val baseRoute = "settings"
-private const val scenarioSettingsRoute = "${baseRoute}/scenario"
-private const val screenSettingsColorRoute = "$scenarioSettingsRoute/color"
+private const val BASE_ROUTE = "settings"
+private const val scenarioSettingsRoute = "${BASE_ROUTE}/scenario"
+
 private const val screenSettingsAboutTheProgramScreenRoute = "$scenarioSettingsRoute/about"
 
 
 class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
 
-    override val route: String = baseRoute
+    override val route: String = BASE_ROUTE
 
     @Inject
     lateinit var securityFeatureApi: SecurityFeatureApi
@@ -37,10 +37,6 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
         navGraphBuilder.composable(route) {
             SettingsScreen(
                 modifier = modifier,
-                navController = navController,
-                onNavigateToColor = {
-                    navController.navigate(screenSettingsColorRoute)
-                },
                 onNavigateToAboutTheProgram = {
                     navController.navigate(screenSettingsAboutTheProgramScreenRoute)
                 },
@@ -57,14 +53,13 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
         /* Nested graph for internal scenario */
         navGraphBuilder.navigation(
             route = scenarioSettingsRoute,
-            startDestination = screenSettingsColorRoute
+            startDestination = screenSettingsAboutTheProgramScreenRoute
         ) {
 
 
         composable(route = screenSettingsAboutTheProgramScreenRoute) {
                 AboutTheProgramScreen(
                     modifier = modifier,
-                    navController = navController
                 )
             }
 
