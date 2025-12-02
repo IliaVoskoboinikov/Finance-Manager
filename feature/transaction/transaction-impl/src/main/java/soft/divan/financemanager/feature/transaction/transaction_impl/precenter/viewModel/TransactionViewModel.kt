@@ -95,7 +95,7 @@ class TransactionViewModel @Inject constructor(
             accountId = accounts.firstOrNull()?.id ?: 0,
             category = categories.firstOrNull()?.toUi()
                 ?: UiCategory(0, "Unknown", "", false),
-            amount = "",
+            amount = "0",
             date = DateHelper.formatDateForDisplay(LocalDate.now()),
             time = DateHelper.formatTimeForDisplay(LocalTime.now()),
             createdAt = DateHelper.formatDateTimeForDisplay(now),

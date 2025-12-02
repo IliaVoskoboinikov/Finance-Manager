@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
+import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.R
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTodayTransactionsUseCase
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.mapper.toUi
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.model.TransactionsTodayUiState
@@ -23,20 +24,10 @@ import javax.inject.Inject
 class TransactionsTodayViewModel @Inject constructor(
     private val getTodayTransactionsUseCase: GetTodayTransactionsUseCase,
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
-    //savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-
-    //private val isIncome: Boolean = savedStateHandle["isIncome"] ?: false
 
     private val _uiState = MutableStateFlow<TransactionsTodayUiState>(TransactionsTodayUiState.Loading)
     val uiState: StateFlow<TransactionsTodayUiState> = _uiState.asStateFlow()
-    /* .onStart { loadTodayExpenses() }
-     .stateIn(
-         viewModelScope,
-         SharingStarted.WhileSubscribed(5000L),
-         ExpensesUiState.Loading
-     )*/
-
 
     fun loadTodayTransactions(isIncome: Boolean) {
         getTodayTransactionsUseCase(isIncome)
@@ -57,12 +48,10 @@ class TransactionsTodayViewModel @Inject constructor(
                     )
                 }
             }
-            .catch { exception ->
-                _uiState.update { TransactionsTodayUiState.Error(exception.message.toString()) }
+            .catch {
+                _uiState.update { TransactionsTodayUiState.Error(R.string.error_loading) }
             }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
     }
-
-
 }
