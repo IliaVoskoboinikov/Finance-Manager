@@ -5,15 +5,15 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
-import soft.divan.financemanager.feature.design_app.design_app_impl.precenter.DesignAppScreen
+import soft.divan.financemanager.feature.design_app.design_app_impl.precenter.screen.DesignAppScreen
 
 import javax.inject.Inject
 
-private const val baseRoute = "design_app"
+private const val BASE_ROUTE = "design_app"
 
 class DesignAppFeatureImpl @Inject constructor() : DesignAppFeatureApi {
 
-    override val route: String = baseRoute
+    override val route: String = BASE_ROUTE
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
@@ -23,8 +23,7 @@ class DesignAppFeatureImpl @Inject constructor() : DesignAppFeatureApi {
 
         navGraphBuilder.composable(route) {
             DesignAppScreen(
-                modifier,
-                navController = navController
+                modifier = modifier,
             )
         }
     }
