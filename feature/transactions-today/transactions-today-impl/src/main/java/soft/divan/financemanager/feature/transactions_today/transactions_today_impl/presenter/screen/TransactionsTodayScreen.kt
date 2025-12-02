@@ -105,30 +105,32 @@ fun TransactionsTodayScreen(
                         )
                         FMDriver()
 
-                        val items = state.transactions
-                        LazyColumn() {
-                            items(items) { item ->
+                        LazyColumn {
+                            items(
+                                items = state.transactions,
+                                key = { it.id }
+                            ) { transaction ->
                                 ListItem(
                                     modifier = Modifier
                                         .height(70.dp)
                                         .clickable {
-                                            onNavigateToOldTransaction(item.id)
+                                            onNavigateToOldTransaction(transaction.id)
                                         },
                                     lead = {
-                                        EmojiCircle(emoji = item.category.emoji)
+                                        EmojiCircle(emoji = transaction.category.emoji)
 
                                     },
                                     content = {
                                         Column {
-                                            ContentTextListItem(item.category.name)
-                                            if (!item.comment.isNullOrEmpty()) {
-                                                SubContentTextListItem(item.comment)
+                                            ContentTextListItem(transaction.category.name)
+                                            if (!transaction.comment.isNullOrEmpty()) {
+                                                SubContentTextListItem(transaction.comment)
                                             }
                                         }
                                     },
                                     trail = {
 
-                                        ContentTextListItem(item.amountFormatted)
+                                        ContentTextListItem(transaction.amountFormatted)
                                         Spacer(modifier = Modifier.width(16.dp))
                                         Icon(
                                             imageVector = Icons.Filled.Arrow,
