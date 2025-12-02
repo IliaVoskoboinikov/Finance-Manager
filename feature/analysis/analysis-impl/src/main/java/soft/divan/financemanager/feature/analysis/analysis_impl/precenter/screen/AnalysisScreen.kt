@@ -145,17 +145,17 @@ private fun PeriodSelector(
     onUpdateStartDate: (LocalDate) -> Unit,
     onUpdateEndDate: (LocalDate) -> Unit
 ) {
-    val showStartPicker = remember { mutableStateOf(false) }
-    val showEndPicker = remember { mutableStateOf(false) }
+    val isShowStartPicker = remember { mutableStateOf(false) }
+    val isShowEndPicker = remember { mutableStateOf(false) }
 
-    DatePicker(showStartPicker, startDate, onUpdateStartDate)
-    DatePicker(showEndPicker, endDate, onUpdateEndDate)
+    DatePicker(isShowStartPicker, startDate, onUpdateStartDate)
+    DatePicker(isShowEndPicker, endDate, onUpdateEndDate)
 
     Column {
         DateItem(
             label = stringResource(R.string.period_start),
             value = DateHelper.formatDateForDisplay(startDate),
-            onClick = { showStartPicker.value = true }
+            onClick = { isShowStartPicker.value = true }
         )
 
         FMDriver()
@@ -163,7 +163,7 @@ private fun PeriodSelector(
         DateItem(
             label = stringResource(R.string.period_end),
             value = DateHelper.formatDateForDisplay(endDate),
-            onClick = { showEndPicker.value = true }
+            onClick = { isShowEndPicker.value = true }
         )
 
         FMDriver()

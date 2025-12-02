@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
 import soft.divan.financemanager.core.domain.util.DateHelper
@@ -75,7 +76,7 @@ class AnalysisViewModel @Inject constructor(
                     )
                 }
             }
-            .catch { _uiState.value = AnalysisUiState.Error(R.string.error_loading) }
+            .catch { _uiState.update { AnalysisUiState.Error(R.string.error_loading) } }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
     }
