@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.security.security_impl.presenter.data
+package soft.divan.financemanager.feature.security.security_impl.presenter.model
 
 sealed class CreatePinScreenState {
 
