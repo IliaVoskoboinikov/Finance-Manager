@@ -12,19 +12,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.feature.security.security_impl.R
+import soft.divan.financemanager.feature.security.security_impl.presenter.model.SecurityUiState
 import soft.divan.financemanager.feature.security.security_impl.presenter.viewmodel.SecurityViewModel
+import soft.divan.financemanager.uikit.components.ErrorContent
+import soft.divan.financemanager.uikit.components.LoadingProgressBar
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun PreviewPinLockScreen() {
-    PinLockScreen({})
+    PinLockScreenContent(pin = "1234", onPinCorrect = { }, null)
 }
 
 @Composable
-fun PinLockScreen(onPinCorrect: () -> Unit, viewModel: SecurityViewModel = hiltViewModel()) {
-    var errorMessage by remember { mutableStateOf("") }
+fun PinLockScreen(
+    onPinCorrect: () -> Unit,
+    viewModel: SecurityViewModel = hiltViewModel()
+) {
 
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val authenticationCallback =
         @RequiresApi(Build.VERSION_CODES.P)
         object : BiometricPrompt.AuthenticationCallback() {
@@ -41,13 +47,32 @@ fun PinLockScreen(onPinCorrect: () -> Unit, viewModel: SecurityViewModel = hiltV
             }
         }
 
-    val password = viewModel.pin.collectAsStateWithLifecycle().value
+    when (uiState) {
+        is SecurityUiState.Error -> ErrorContent(onRetry = {})
+        is SecurityUiState.Loading -> LoadingProgressBar()
+        is SecurityUiState.Success -> PinLockScreenContent(
+            pin = (uiState as SecurityUiState.Success).pin,
+            onPinCorrect = onPinCorrect,
+            authenticationCallback = authenticationCallback
+        )
+    }
+    
+}
+
+@Composable
+fun PinLockScreenContent(
+    pin: String,
+    onPinCorrect: () -> Unit,
+    authenticationCallback: BiometricPrompt.AuthenticationCallback? = null
+) {
+
+    var errorMessage by remember { mutableStateOf("") }
     PinEntryCommonScreen(
         titleId = R.string.input_password,
         errorMessage = errorMessage,
         showBiometricButton = true,
         onPinEntered = { enteredPin ->
-            if (enteredPin == password) {
+            if (enteredPin == pin) {
                 errorMessage = ""
                 onPinCorrect()
             } else {

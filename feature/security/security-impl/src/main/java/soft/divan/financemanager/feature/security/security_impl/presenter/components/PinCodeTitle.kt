@@ -2,6 +2,7 @@ package soft.divan.financemanager.feature.security.security_impl.presenter.compo
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,6 +20,7 @@ fun PinCodeScreenHeader(text: String) {
         textAlign = TextAlign.Center,
         modifier = Modifier
             .wrapContentSize()
-            .padding(horizontal = 16.dp, vertical = 0.dp)
+            .padding(horizontal = 16.dp, vertical = 0.dp),
+        color = MaterialTheme.colorScheme.onBackground
     )
 }

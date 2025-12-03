@@ -10,7 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.feature.security.security_impl.R
-import soft.divan.financemanager.feature.security.security_impl.presenter.data.CreatePinScreenState
+import soft.divan.financemanager.feature.security.security_impl.presenter.model.CreatePinScreenState
 import soft.divan.financemanager.feature.security.security_impl.presenter.viewmodel.CreatePinViewModel
 
 

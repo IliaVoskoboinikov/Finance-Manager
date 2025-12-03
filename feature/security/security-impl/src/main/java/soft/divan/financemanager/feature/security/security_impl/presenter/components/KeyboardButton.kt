@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import soft.divan.financemanager.feature.security.security_impl.presenter.util.Dimens
@@ -39,7 +41,8 @@ fun NumberButton(
         ) {
             Text(
                 text = number,
-                style = TextStyle(fontSize = Dimens.keyBoardButtonFontSize)
+                style = TextStyle(fontSize = Dimens.keyBoardButtonFontSize),
+                color = MaterialTheme.colorScheme.onBackground,
             )
         }
 
@@ -68,6 +71,7 @@ fun IconButton(
             contentAlignment = Alignment.Center
         ) {
             Image(
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
                 imageVector = icon,
                 contentDescription = null
             )

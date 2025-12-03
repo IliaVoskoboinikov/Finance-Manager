@@ -10,13 +10,13 @@ import soft.divan.financemanager.feature.security.security_impl.presenter.screen
 import soft.divan.financemanager.feature.security.security_impl.presenter.screen.SecurityScreen
 import javax.inject.Inject
 
-private const val baseRoute = "security"
-private const val scenarioSecurityRoute = "${baseRoute}/scenario"
+private const val BASE_ROUTE = "security"
+private const val scenarioSecurityRoute = "${BASE_ROUTE}/scenario"
 private const val screenScreenCreateRoute = "$scenarioSecurityRoute/create_pin"
 
 class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
 
-    override val route: String = baseRoute
+    override val route: String = BASE_ROUTE
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,

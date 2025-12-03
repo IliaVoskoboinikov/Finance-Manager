@@ -174,17 +174,7 @@ fun TransactionContent(
 ) {
 
     Scaffold(
-        topBar = {
-            TopBar(
-                topBar = TopBarModel(
-                    title = if (isIncome) R.string.my_income else R.string.my_expenses,
-                    navigationIcon = Icons.Filled.Cross,
-                    navigationIconClick = onNavigateBack,
-                    actionIcon = Icons.Filled.ArrowConfirm,
-                    actionIconClick = onSave
-                )
-            )
-        },
+        topBar = { TopBarTransaction(isIncome, onNavigateBack, onSave) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
@@ -205,6 +195,23 @@ fun TransactionContent(
             }
         }
     }
+}
+
+@Composable
+private fun TopBarTransaction(
+    isIncome: Boolean,
+    onNavigateBack: () -> Unit,
+    onSave: () -> Unit
+) {
+    TopBar(
+        topBar = TopBarModel(
+            title = if (isIncome) R.string.my_income else R.string.my_expenses,
+            navigationIcon = Icons.Filled.Cross,
+            navigationIconClick = onNavigateBack,
+            actionIcon = Icons.Filled.ArrowConfirm,
+            actionIconClick = onSave
+        )
+    )
 }
 
 @Composable
