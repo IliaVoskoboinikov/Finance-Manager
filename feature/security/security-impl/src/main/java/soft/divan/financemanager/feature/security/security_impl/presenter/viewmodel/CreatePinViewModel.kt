@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.SavePinUseCase
-import soft.divan.financemanager.feature.security.security_impl.presenter.data.CreatePinScreenState
+import soft.divan.financemanager.feature.security.security_impl.presenter.model.CreatePinScreenState
 import javax.inject.Inject
 
 @HiltViewModel

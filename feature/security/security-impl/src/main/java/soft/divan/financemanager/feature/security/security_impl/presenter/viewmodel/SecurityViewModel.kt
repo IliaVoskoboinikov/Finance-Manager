@@ -12,33 +12,38 @@ import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.DeletePinUseCase
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.GetSavedPinUseCase
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.IsPinSetUseCase
-import soft.divan.financemanager.feature.security.security_impl.domain.usecase.SavePinUseCase
+import soft.divan.financemanager.feature.security.security_impl.presenter.model.SecurityUiState
 import javax.inject.Inject
 
 @HiltViewModel
 open class SecurityViewModel @Inject constructor(
     private val getSavedPinUseCase: GetSavedPinUseCase,
     private val isPinSetUseCase: IsPinSetUseCase,
-    private val savePinUseCase: SavePinUseCase,
     private val deletePinUseCase: DeletePinUseCase
 ) : ViewModel() {
 
-    private val _pin = MutableStateFlow<String>("")
-    val pin: StateFlow<String> = _pin
+    private val _uiState = MutableStateFlow<SecurityUiState>(SecurityUiState.Loading)
+    val uiState: StateFlow<SecurityUiState> = _uiState
         .onStart { loadPin() }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000L),
-            ""
+            SecurityUiState.Loading
         )
 
     fun loadPin() {
-        _pin.update { getSavedPinUseCase() ?: "" }
+        val savedPin = getSavedPinUseCase() ?: ""
+        _uiState.update {
+            SecurityUiState.Success(pin = savedPin, hasPin = isPinSetUseCase())
+        }
     }
 
     fun deletePin() {
-        deletePinUseCase()
-        _pin.value = ""
+        val currentState = uiState.value
+        if (currentState is SecurityUiState.Success) {
+            deletePinUseCase()
+            _uiState.update { SecurityUiState.Success(pin = "", hasPin = false) }
+        }
     }
 
 }

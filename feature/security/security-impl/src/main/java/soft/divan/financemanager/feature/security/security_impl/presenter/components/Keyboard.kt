@@ -80,7 +80,7 @@ fun Keyboard(
 
             IconButton(
                 icon = Icons.AutoMirrored.Filled.Backspace,
-                onClick = onBackspaceClick
+                onClick = onBackspaceClick,
             )
         }
     }
