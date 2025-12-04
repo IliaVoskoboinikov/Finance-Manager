@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -55,16 +55,16 @@ class TransactionViewModel @Inject constructor(
     private val isIncome: Boolean = savedStateHandle.get<Boolean>(IS_INCOME_KEY) ?: false
 
     private val _uiState = MutableStateFlow<TransactionUiState>(TransactionUiState.Loading)
-    val uiState: StateFlow<TransactionUiState> = _uiState.asStateFlow()
-
-    private val _eventFlow = MutableSharedFlow<TransactionEvent>()
-    val eventFlow = _eventFlow
-        .onStart { load() }
+    val uiState: StateFlow<TransactionUiState> = _uiState.onStart { load() }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000L),
             TransactionUiState.Loading
         )
+
+    private val _eventFlow = MutableSharedFlow<TransactionEvent>()
+    val eventFlow = _eventFlow.asSharedFlow()
+
 
     private val mode =
         if (transactionId == null) TransactionMode.Create else TransactionMode.Edit(transactionId)
