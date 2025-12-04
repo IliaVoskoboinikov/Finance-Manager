@@ -65,18 +65,14 @@ class TransactionViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<TransactionEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-
     private val mode =
         if (transactionId == null) TransactionMode.Create else TransactionMode.Edit(transactionId)
-
 
     fun load() {
         viewModelScope.launch {
             _uiState.update { TransactionUiState.Loading }
-
             val categories = getCategoriesUseCase(isIncome).first()
             val accounts = getAccountsUseCase().first()
-
             when (mode) {
                 is TransactionMode.Create -> loadForCreate(accounts, categories)
                 is TransactionMode.Edit -> loadForEdit(mode.id, accounts, categories)
