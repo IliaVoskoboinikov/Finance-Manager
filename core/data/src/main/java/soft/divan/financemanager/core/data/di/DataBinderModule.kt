@@ -7,7 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.core.data.repository.AccountRepositoryImpl
 import soft.divan.financemanager.core.data.repository.CategoryRepositoryImpl
 import soft.divan.financemanager.core.data.repository.CurrencyRepositoryImpl
-import soft.divan.financemanager.core.data.repository.TransactionRepositoryImp
+import soft.divan.financemanager.core.data.repository.TransactionRepositoryImpl
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
@@ -48,7 +48,7 @@ interface DataBinderModule {
 
     @Binds
     @Singleton
-    fun bindTransactionRepository(impl: TransactionRepositoryImp): TransactionRepository
+    fun bindTransactionRepository(impl: TransactionRepositoryImpl): TransactionRepository
 
     @Binds
     @Singleton

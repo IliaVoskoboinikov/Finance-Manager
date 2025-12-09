@@ -15,9 +15,7 @@ import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
 class CategoryRepositoryImpl @Inject constructor(
     private val categoryRemoteDataSource: CategoryRemoteDataSource,
     private val categoryLocalDataSource: CategoryLocalDataSource,

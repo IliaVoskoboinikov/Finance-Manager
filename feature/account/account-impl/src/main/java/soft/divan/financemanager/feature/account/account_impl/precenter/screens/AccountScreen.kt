@@ -98,7 +98,7 @@ fun PreviewCurrencySheet() {
 @Composable
 fun CreateAccountScreenScreen(
     modifier: Modifier = Modifier,
-    accountId: Int?,
+    accountId: String?,
     onNavigateBack: () -> Unit,
     viewModel: AccountViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -138,7 +138,7 @@ fun CreateAccountScreenScreen(
 fun CreateAccountContent(
     modifier: Modifier = Modifier,
     uiState: AccountUiState,
-    accountId: Int?,
+    accountId: String?,
     onNavigateBack: () -> Unit,
     onUpdateName: (String) -> Unit,
     onUpdateBalance: (String) -> Unit,

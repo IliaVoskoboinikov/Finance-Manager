@@ -4,8 +4,8 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 data class Transaction(
-    val id: Int,
-    val accountId: Int,
+    val idServer: Int,
+    val accountId: String,
     val currencyCode: String,
     val categoryId: Int,
     val amount: BigDecimal,

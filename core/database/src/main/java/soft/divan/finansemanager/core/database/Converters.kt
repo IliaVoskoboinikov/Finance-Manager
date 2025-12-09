@@ -2,6 +2,7 @@ package soft.divan.finansemanager.core.database
 
 import android.icu.math.BigDecimal
 import androidx.room.TypeConverter
+import soft.divan.finansemanager.core.database.model.SyncStatus
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -27,4 +28,14 @@ class Converters {
 
     @TypeConverter
     fun toUUID(uuid: String): UUID = UUID.fromString(uuid)
+
+    @TypeConverter
+    fun fromSyncStatus(status: SyncStatus): String {
+        return status.name
+    }
+
+    @TypeConverter
+    fun toSyncStatus(value: String): SyncStatus {
+        return SyncStatus.valueOf(value)
+    }
 }

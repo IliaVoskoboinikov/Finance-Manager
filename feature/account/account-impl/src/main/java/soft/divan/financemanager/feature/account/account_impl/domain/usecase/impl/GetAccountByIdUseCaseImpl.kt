@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetAccountByIdUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : GetAccountByIdUseCase {
-    override suspend fun invoke(id: Int): Result<Account> {
+    override suspend fun invoke(id: String): Result<Account?> {
         return accountRepository.getAccountById(id)
     }
 }

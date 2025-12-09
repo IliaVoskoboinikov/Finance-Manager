@@ -16,6 +16,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import soft.divan.financemanager.core.data.Synchronizer
+import soft.divan.financemanager.core.data.repository.AccountRepositoryImpl
 import soft.divan.financemanager.core.data.repository.CategoryRepositoryImpl
 import soft.divan.financemanager.sync.init.SyncConstraints
 import soft.divan.financemanager.sync.init.syncForegroundInfo
@@ -26,6 +27,7 @@ internal class SyncWorker @AssistedInject constructor(
     @Assisted private val appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val categoryRepositoryImpl: CategoryRepositoryImpl,
+    private val accountRepositoryImpl: AccountRepositoryImpl,
     private val ioDispatcher: CoroutineDispatcher,
 ) : CoroutineWorker(appContext, workerParams), Synchronizer {
 
@@ -39,6 +41,7 @@ internal class SyncWorker @AssistedInject constructor(
 
             val syncedSuccessfully = awaitAll(
                 async { categoryRepositoryImpl.sync() },
+                async { accountRepositoryImpl.sync() },
             ).all { it }
 
             if (syncedSuccessfully) {

@@ -17,7 +17,7 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
 
     override val route: String = baseRoute
 
-    override fun accountRouteWithArgs(accountId: Int) = "$route/$accountId"
+    override fun accountRouteWithArgs(accountId: String) = "$route/$accountId"
 
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
@@ -37,11 +37,11 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
             "${route}/{$ACCOUNT_ID_KEY}",
             arguments = listOf(
                 navArgument(ACCOUNT_ID_KEY) {
-                    type = NavType.IntType
+                    type = NavType.StringType
                 }
             )
         ) { backStackEntry ->
-            val accountId = backStackEntry.arguments?.getInt(ACCOUNT_ID_KEY)
+            val accountId = backStackEntry.arguments?.getString(ACCOUNT_ID_KEY)
             CreateAccountScreenScreen(
                 modifier = modifier,
                 accountId = accountId,

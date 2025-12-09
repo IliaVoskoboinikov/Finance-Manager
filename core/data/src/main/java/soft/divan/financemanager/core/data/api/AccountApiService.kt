@@ -10,7 +10,6 @@ import retrofit2.http.Path
 import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
-import soft.divan.financemanager.core.data.dto.UpdateAccountRequestDto
 
 interface AccountApiService {
 
@@ -30,7 +29,7 @@ interface AccountApiService {
     @PUT("v1/accounts/{id}")
     suspend fun updateAccount(
         @Path("id") accountId: Int,
-        @Body request: UpdateAccountRequestDto
+        @Body request: CreateAccountRequestDto
     ): Response<AccountDto>
 
     @DELETE("v1/accounts/{id}")

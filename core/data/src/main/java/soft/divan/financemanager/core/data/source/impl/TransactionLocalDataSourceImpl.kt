@@ -15,10 +15,16 @@ class TransactionLocalDataSourceImpl @Inject constructor(
     }
 
     override suspend fun getTransactionsByAccountAndPeriod(
-        accountId: Int,
+        accountId: String,
         startDate: String,
         endDate: String
     ): Flow<List<TransactionEntity>> {
         return transactionDao.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
     }
+
+    override suspend fun getByAccountId(accountId: String): List<TransactionEntity> {
+        return transactionDao.getByAccountId(accountId)
+    }
+
+
 }

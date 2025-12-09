@@ -7,10 +7,12 @@ val mockAccountUiStateLoading = AccountUiState.Loading
 
 val mockAccountUiStateSuccess = AccountUiState.Success(
     account = AccountUiModel(
-        id = 1,
+        id = "1",
         name = "счет1",
         balance = "1000",
         currency = "Rub",
+        createdAt = "dd.MM.yyyy HH:mm ",
+        updatedAt = "dd.MM.yyyy HH:mm ",
     ),
     mode = AccountMode.Create
 )

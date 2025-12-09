@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import soft.divan.finansemanager.core.database.entity.AccountEntity
+import soft.divan.finansemanager.core.database.model.SyncStatus
 
 @Dao
 interface AccountDao {
@@ -19,12 +20,26 @@ interface AccountDao {
     @Query("SELECT * FROM account")
     fun getAccounts(): Flow<List<AccountEntity>>
 
-    @Query("SELECT * FROM account WHERE id = :id")
-    suspend fun getById(id: Int): AccountEntity
+    @Query("SELECT * FROM account WHERE localId = :id")
+    suspend fun getById(id: String): AccountEntity?
 
-    @Query("DELETE FROM account WHERE id = :id")
-    suspend fun delete(id: Int)
+    @Query("SELECT * FROM account WHERE serverId = :id")
+    suspend fun getByServerId(id: Int): AccountEntity?
+
+    @Query("DELETE FROM account WHERE localId = :id")
+    suspend fun delete(id: String)
 
     @Update
     suspend fun update(account: AccountEntity)
+
+    @Query("SELECT * FROM account WHERE syncStatus != 'SYNCED'")
+    suspend fun getPendingSync(): List<AccountEntity>
+
+    @Query("UPDATE account SET serverId = :serverId, syncStatus = :syncStatus, updatedAt = :updatedAt WHERE localId = :localId")
+    suspend fun updateServerId(
+        localId: String,
+        serverId: Int,
+        syncStatus: SyncStatus,
+        updatedAt: String
+    )
 }
