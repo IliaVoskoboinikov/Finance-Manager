@@ -19,22 +19,16 @@ interface TransactionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(transactions: List<TransactionEntity>)
 
-    /*@Query("SELECT * FROM transactions WHERE isSynced = 0")
-    suspend fun getPending(): List<TransactionEntity>
-
-    @Query("UPDATE transactions SET isSynced = 1, remoteId = :remoteId WHERE localId = :localId")
-    suspend fun markAsSynced(localId: String, remoteId: String)
-*/
     @Query(
         """
     SELECT * FROM transactions
-    WHERE accountId = :accountId
+    WHERE accountIdLocal = :accountId
       AND date(transactionDate) BETWEEN date(:startDate) AND date(:endDate)
     ORDER BY transactionDate ASC
 """
     )
     fun getTransactionsByAccountAndPeriod(
-        accountId: Int,
+        accountId: String,
         startDate: String, // "2025-10-24"
         endDate: String    // "2025-10-24"
     ): Flow<List<TransactionEntity>>
@@ -56,4 +50,7 @@ interface TransactionDao {
 
     @Update
     suspend fun updateTransaction(transaction: TransactionEntity)
+
+    @Query("SELECT * FROM transactions WHERE accountIdLocal = :accountId ORDER BY transactionDate DESC")
+    suspend fun getByAccountId(accountId: String): List<TransactionEntity>
 }

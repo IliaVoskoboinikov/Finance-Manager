@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.account.account_impl.R
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.CreateAccountUseCase
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.DeleteAccountUseCase
@@ -26,6 +27,8 @@ import soft.divan.financemanager.feature.account.account_impl.precenter.model.Ac
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountMode
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountUiModel
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountUiState
+import java.time.LocalDateTime
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -37,7 +40,7 @@ class AccountViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 
 ) : ViewModel() {
-    private val accountId: Int? = savedStateHandle.get<Int>(ACCOUNT_ID_KEY)
+    private val accountId: String? = savedStateHandle.get<String>(ACCOUNT_ID_KEY)
 
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState: StateFlow<AccountUiState> = _uiState
@@ -52,7 +55,7 @@ class AccountViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     private val mode =
-        if (accountId == null || accountId == -1) AccountMode.Create else AccountMode.Edit(accountId)
+        if (accountId == null) AccountMode.Create else AccountMode.Edit(accountId)
 
     fun loadAccount() {
         _uiState.update { AccountUiState.Loading }
@@ -64,7 +67,12 @@ class AccountViewModel @Inject constructor(
     }
 
     private fun crateNewAccount() {
-        val account = AccountUiModel(null, "", "", CurrencySymbol.RUB.symbol)
+        val now = LocalDateTime.now()
+        val account = AccountUiModel(
+            UUID.randomUUID().toString(), "", "", CurrencySymbol.RUB.symbol,
+            createdAt = DateHelper.formatDateTimeForDisplay(now),
+            updatedAt = DateHelper.formatDateTimeForDisplay(now),
+        )
         _uiState.update {
             AccountUiState.Success(
                 account = account,
@@ -73,13 +81,14 @@ class AccountViewModel @Inject constructor(
         }
     }
 
-    private fun loadAccount(accountId: Int) {
+    private fun loadAccount(accountId: String) {
         viewModelScope.launch {
+            _uiState.update { AccountUiState.Loading }
             getAccountByIdUseCase(accountId).fold(
-                onSuccess = { account ->
+                onSuccess = { data ->
                     _uiState.update {
                         AccountUiState.Success(
-                            account = account.toUi(),
+                            account = data!!.toUi(),
                             mode = mode
                         )
                     }
@@ -140,7 +149,7 @@ class AccountViewModel @Inject constructor(
         viewModelScope.launch {
             val currentState = uiState.value
             if (currentState is AccountUiState.Success && mode is AccountMode.Edit) {
-                deleteAccountUseCase(currentState.account.id!!).fold(
+                deleteAccountUseCase(currentState.account.id).fold(
                     onSuccess = { _eventFlow.emit(AccountEvent.Deleted) },
                     onFailure = {
                         _eventFlow.emit(AccountEvent.ShowError(R.string.error_delete))

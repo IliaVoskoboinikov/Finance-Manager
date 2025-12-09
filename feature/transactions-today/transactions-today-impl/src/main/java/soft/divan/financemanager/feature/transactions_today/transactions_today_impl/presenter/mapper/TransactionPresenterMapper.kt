@@ -8,7 +8,7 @@ import soft.divan.financemanager.feature.transactions_today.transactions_today_i
 
 fun Transaction.toUi(category: Category): TransactionUi {
     return TransactionUi(
-        id = id,
+        id = idServer,
         category = category.toUi(),
         amountFormatted = amount.stripTrailingZeros().toPlainString() + " " + CurrencySymbol.fromCode(
             currencyCode

@@ -12,8 +12,8 @@ import java.time.format.DateTimeFormatter
 private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
 fun TransactionEntity.toDomain(): Transaction = Transaction(
-    id = id,
-    accountId = accountId,
+    idServer = id,
+    accountId = accountIdLocal,
     categoryId = categoryId,
     amount = amount.toBigDecimal(),
     transactionDate = LocalDateTime.parse(transactionDate, formatter),
@@ -24,8 +24,8 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
 )
 
 
-fun Transaction.toDto(): TransactionRequestDto = TransactionRequestDto(
-    accountId = accountId,
+fun Transaction.toDto(accountIdServer: Int): TransactionRequestDto = TransactionRequestDto(
+    accountId = accountIdServer,
     categoryId = categoryId,
     amount = amount.toString(),
     transactionDate = dataTimeForApi(transactionDate),
@@ -33,8 +33,9 @@ fun Transaction.toDto(): TransactionRequestDto = TransactionRequestDto(
 )
 
 fun Transaction.toEntity(): TransactionEntity = TransactionEntity(
-    id = id,
-    accountId = accountId,
+    id = idServer,
+    accountIdLocal = accountId,
+    accountIdServer = null,
     categoryId = categoryId,
     amount = amount.toPlainString(),
     //todo время унифицировать
@@ -43,5 +44,5 @@ fun Transaction.toEntity(): TransactionEntity = TransactionEntity(
     createdAt = createdAt.atOffset(ZoneOffset.UTC).format(formatter),
     updatedAt = updatedAt.atOffset(ZoneOffset.UTC).format(formatter),
     isSynced = true,
-    currencyCode = currencyCode
+    currencyCode = currencyCode,
 )

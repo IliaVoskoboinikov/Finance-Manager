@@ -4,12 +4,12 @@ import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.finansemanager.core.database.entity.TransactionEntity
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 
-fun TransactionDto.toEntity(): TransactionEntity = TransactionEntity(
+fun TransactionDto.toEntity(accountIdLocal: String): TransactionEntity = TransactionEntity(
     id = id,
-    accountId = account.id,
+    accountIdLocal = accountIdLocal,
+    accountIdServer = account.id,
     categoryId = category.id,
     amount = amount,
     transactionDate = transactionDate,
@@ -20,11 +20,10 @@ fun TransactionDto.toEntity(): TransactionEntity = TransactionEntity(
     isSynced = false,
 )
 
-private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
 fun TransactionEntity.toDomain(): Transaction = Transaction(
-    id = id,
-    accountId = accountId,
+    idServer = id,
+    accountId = accountIdLocal,
     categoryId = categoryId,
     amount = amount.toBigDecimal(),
     transactionDate = LocalDateTime.parse(transactionDate, formatter),

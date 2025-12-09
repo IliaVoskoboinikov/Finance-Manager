@@ -9,8 +9,10 @@ interface TransactionLocalDataSource {
     suspend fun insertTransactions(transactions: List<TransactionEntity>)
 
     suspend fun getTransactionsByAccountAndPeriod(
-        accountId: Int,
+        accountId: String,
         startDate: String,
         endDate: String
     ): Flow<List<TransactionEntity>>
+
+    suspend fun getByAccountId(accountId: String): List<TransactionEntity>
 }

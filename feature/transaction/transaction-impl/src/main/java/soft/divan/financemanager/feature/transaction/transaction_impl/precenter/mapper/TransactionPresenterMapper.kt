@@ -9,7 +9,7 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.
 
 fun Transaction.toUi(category: Category): UiTransaction {
     return UiTransaction(
-        id = id,
+        id = idServer,
         accountId = accountId,
         category = category.toUi(),
         amount = amount.stripTrailingZeros().toPlainString(),
@@ -19,13 +19,14 @@ fun Transaction.toUi(category: Category): UiTransaction {
         createdAt = DateHelper.formatTimeForDisplay(createdAt),
         updatedAt = DateHelper.formatTimeForDisplay(updatedAt),
         currencyCode = currencyCode,
-        mode = TransactionMode.Edit(id)
+        mode = TransactionMode.Edit(idServer)
     )
 }
 
 fun UiTransaction.toDomain(): Transaction {
     return Transaction(
-        id = id ?: -1,
+        //todo
+        idServer = id ?: -1,
         accountId = accountId,
         categoryId = category.id,
         amount = amount.toBigDecimal(),

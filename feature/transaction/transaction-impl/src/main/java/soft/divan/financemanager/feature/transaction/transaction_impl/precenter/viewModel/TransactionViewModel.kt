@@ -88,7 +88,7 @@ class TransactionViewModel @Inject constructor(
 
         val initialTransaction = UiTransaction(
             id = null,
-            accountId = accounts.firstOrNull()?.id ?: 0,
+            accountId = accounts.firstOrNull()?.id!!,
             category = categories.firstOrNull()?.toUi()
                 ?: UiCategory(0, "Unknown", "", false),
             amount = "0",

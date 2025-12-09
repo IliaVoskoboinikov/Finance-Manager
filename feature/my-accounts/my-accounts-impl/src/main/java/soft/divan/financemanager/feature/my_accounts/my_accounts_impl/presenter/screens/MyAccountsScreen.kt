@@ -62,7 +62,7 @@ fun AccountScreenPreview() {
 @Composable
 fun MyAccountsScreen(
     modifier: Modifier = Modifier,
-    onNavigateToUpdateAccount: (idAccount: Int) -> Unit,
+    onNavigateToUpdateAccount: (idAccount: String) -> Unit,
     onNavigateToCreateAccount: () -> Unit,
     viewModel: MyAccountsViewModel = hiltViewModel()
 ) {
@@ -81,7 +81,7 @@ fun MyAccountsScreen(
 fun MyAccounts(
     modifier: Modifier = Modifier,
     uiState: MyAccountsUiState,
-    onNavigateToUpdateAccount: (idAccount: Int) -> Unit,
+    onNavigateToUpdateAccount: (idAccount: String) -> Unit,
     onNavigateToCreateAccount: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
@@ -107,7 +107,7 @@ private fun AccountTopBar() {
 @Composable
 private fun MyAccountsStatefulContent(
     uiState: MyAccountsUiState,
-    onNavigateToUpdateAccount: (Int) -> Unit
+    onNavigateToUpdateAccount: (String) -> Unit
 ) {
     when (uiState) {
         is MyAccountsUiState.Loading -> LoadingProgressBar()
@@ -122,21 +122,21 @@ private fun MyAccountsStatefulContent(
 @Composable
 fun AccountsSuccessContent(
     accounts: List<MyAccountsUiModel>,
-    onNavigateToUpdateAccount: (idAccount: Int) -> Unit
+    onNavigateToUpdateAccount: (idAccount: String) -> Unit
 ) {
     LazyColumn {
         items(
             items = accounts,
             key = { it.id }
         ) { account ->
-            ItemAccount(onNavigateToUpdateAccount, account)
+            ItemAccount(onNavigateToUpdateAccount = onNavigateToUpdateAccount, account = account)
         }
     }
 }
 
 @Composable
 private fun ItemAccount(
-    onNavigateToUpdateAccount: (Int) -> Unit,
+    onNavigateToUpdateAccount: (String) -> Unit,
     account: MyAccountsUiModel
 ) {
     ListItem(
