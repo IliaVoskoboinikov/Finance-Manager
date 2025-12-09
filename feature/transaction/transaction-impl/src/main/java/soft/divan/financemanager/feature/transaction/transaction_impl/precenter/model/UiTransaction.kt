@@ -2,7 +2,7 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.precenter
 
 data class UiTransaction(
     val id: Int?,
-    val accountId: Int,
+    val accountId: String,
     val category: UiCategory,
     val currencyCode: String,
     val amount: String,

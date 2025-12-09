@@ -7,7 +7,7 @@ import javax.inject.Inject
 class DeleteAccountUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : DeleteAccountUseCase {
-    override suspend fun invoke(id: Int): Result<Unit> {
+    override suspend fun invoke(id: String): Result<Unit> {
         return accountRepository.deleteAccount(id)
     }
 }

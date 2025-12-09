@@ -5,12 +5,12 @@ import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.R
 
 val mockAccountsUi = listOf(
     MyAccountsUiModel(
-        id = 1,
+        id = "1",
         name = "основной счет",
         balance = "1000000$",
         currency = "$",
     ), MyAccountsUiModel(
-        id = 2,
+        id = "2",
         name = "основной счет2",
         balance = "1000000$",
         currency = "$",

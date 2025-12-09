@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.mapper.toEntity
+import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.datasourse.TransactionLocalDataSource
 import soft.divan.financemanager.feature.transaction.transaction_impl.data.datasourse.TransactionRemoteDataSource
@@ -14,18 +15,20 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.data.mappe
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.repository.TransactionRepository
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 import javax.inject.Inject
 
 class TransactionRepositoryImpl @Inject constructor(
     private val transactionRemoteDataSource: TransactionRemoteDataSource,
     private val transactionLocalDataSource: TransactionLocalDataSource,
+    private val accountLocalDataSource: AccountLocalDataSource,
     private val applicationScope: CoroutineScope,
     private val dispatcher: CoroutineDispatcher,
     private val exceptionHandler: CoroutineExceptionHandler
 ) : TransactionRepository {
 
     //todo
-    override suspend fun getTransactions(id: Int): Result<Transaction> = runCatching {
+    override suspend fun getTransaction(id: Int): Result<Transaction> = runCatching {
 
         // Пытаемся сначала получить транзакцию из локальной БД
         val localTransaction = transactionLocalDataSource.getTransactionById(id)?.toDomain()
@@ -34,7 +37,8 @@ class TransactionRepositoryImpl @Inject constructor(
             applicationScope.launch(dispatcher + exceptionHandler) {
                 val response = transactionRemoteDataSource.getTransaction(id)
                 if (response.isSuccessful) {
-                    val updatedTransaction = response.body()?.toEntity()
+                    val updatedTransaction =
+                        response.body()?.toEntity(accountIdLocal = localTransaction.accountId)
                     if (updatedTransaction != null) {
                         transactionLocalDataSource.updateTransaction(updatedTransaction)
                     }
@@ -48,7 +52,8 @@ class TransactionRepositoryImpl @Inject constructor(
         val response = transactionRemoteDataSource.getTransaction(id)
         if (response.isSuccessful) {
             val transactionDto = response.body() ?: throw IllegalStateException("Response body is null")
-            val transaction = transactionDto.toEntity().toDomain()
+            val transaction =
+                transactionDto.toEntity(accountIdLocal = UUID.randomUUID().toString()).toDomain()
 
             // Сохраняем в локальную базу для кеширования
             transactionLocalDataSource.saveTransaction(transaction.toEntity())
@@ -65,8 +70,9 @@ class TransactionRepositoryImpl @Inject constructor(
         transactionLocalDataSource.saveTransaction(transaction.toEntity())
 
         applicationScope.launch(dispatcher + exceptionHandler) {
+            val accountEntity = accountLocalDataSource.getAccountByLocalId(transaction.accountId)!!
             val response =
-                transactionRemoteDataSource.createTransaction(transaction.toDto())
+                transactionRemoteDataSource.createTransaction(transaction.toDto(accountIdServer = accountEntity.serverId!!))
             if (response.isSuccessful) {
                 val serverTransaction = response.body()!!
                 transactionLocalDataSource.updateTransactionId(
@@ -83,10 +89,11 @@ class TransactionRepositoryImpl @Inject constructor(
     override suspend fun updateTransaction(transaction: Transaction): Result<Unit> {
         transactionLocalDataSource.saveTransaction(transaction.toEntity())
         applicationScope.launch(dispatcher + exceptionHandler) {
+            val account = accountLocalDataSource.getAccountByLocalId(transaction.accountId)!!
             val response =
                 transactionRemoteDataSource.updateTransaction(
-                    id = transaction.id,
-                    transaction = transaction.toDto()
+                    id = transaction.idServer,
+                    transaction = transaction.toDto(accountIdServer = account.serverId!!)
                 )
             if (response.isSuccessful) {
                 val serverTransaction = response.body()!!

@@ -7,7 +7,8 @@ import androidx.room.PrimaryKey
 data class TransactionEntity(
     @PrimaryKey
     val id: Int = 0,
-    val accountId: Int,
+    val accountIdLocal: String,
+    val accountIdServer: Int?,
     val categoryId: Int,
     val currencyCode: String,
     val amount: String,

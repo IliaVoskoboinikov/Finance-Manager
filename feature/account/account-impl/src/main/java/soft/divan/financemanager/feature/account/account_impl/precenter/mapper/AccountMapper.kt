@@ -1,15 +1,17 @@
 package soft.divan.financemanager.feature.account.account_impl.precenter.mapper
 
 import soft.divan.financemanager.core.domain.model.Account
-import soft.divan.financemanager.core.domain.model.AccountBrief
+import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountUiModel
 
-fun AccountUiModel.toDomain(): AccountBrief {
-    return AccountBrief(
-        id = id ?: -1,
+fun AccountUiModel.toDomain(): Account {
+    return Account(
+        id = id,
         name = name,
         balance = balance.toBigDecimal(),
         currency = currency,
+        createdAt = DateHelper.parseDisplayDateTime(createdAt),
+        updatedAt = DateHelper.parseDisplayDateTime(createdAt),
     )
 }
 
@@ -19,5 +21,7 @@ fun Account.toUi(): AccountUiModel {
         name = name,
         balance = balance.toString(),
         currency = currency,
+        createdAt = DateHelper.formatTimeForDisplay(createdAt),
+        updatedAt = DateHelper.formatTimeForDisplay(updatedAt),
     )
 }

@@ -1,40 +1,41 @@
 package soft.divan.financemanager.core.data.mapper
 
-//toddo data mapper
 import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.domain.model.Account
-import soft.divan.financemanager.core.domain.model.AccountBrief
 import soft.divan.finansemanager.core.database.entity.AccountEntity
+import soft.divan.finansemanager.core.database.model.SyncStatus
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-fun AccountDto.toEntity(): AccountEntity = AccountEntity(
-    id = id,
-    userId = userId,
+fun AccountDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity = AccountEntity(
+    localId = localId,
+    serverId = id,
     name = name,
     balance = balance,
     currency = currency,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    syncStatus = syncStatus
 )
 
-fun AccountWithStatsDto.toDomain(): Account = Account(
-    id = id,
-    userId = id,
+fun Account.toEntity(serverId: Int?, syncStatus: SyncStatus): AccountEntity = AccountEntity(
+    localId = id,
+    serverId = serverId,
     name = name,
-    balance = balance.toBigDecimal(),
+    balance = balance.toString(),
     currency = currency,
-    createdAt = LocalDateTime.parse(createdAt, formatter),
-    updatedAt = LocalDateTime.parse(updatedAt, formatter)
+    createdAt = createdAt.atOffset(ZoneOffset.UTC).format(formatter),
+    updatedAt = updatedAt.atOffset(ZoneOffset.UTC).format(formatter),
+    syncStatus = syncStatus
 )
 
-private val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
+val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
 fun AccountEntity.toDomain(): Account = Account(
-    id = id,
-    userId = userId,
+    id = localId,
     name = name,
     balance = balance.toBigDecimal(),
     currency = currency,
@@ -42,19 +43,25 @@ fun AccountEntity.toDomain(): Account = Account(
     updatedAt = LocalDateTime.parse(updatedAt, formatter)
 )
 
-
-fun AccountBrief.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
+fun Account.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
     name = name,
     balance = balance.toString(),
     currency = currency
 )
 
-fun AccountWithStatsDto.toEntity(): AccountEntity = AccountEntity(
-    id = id,
-    userId = id,
+fun AccountEntity.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
+    name = name,
+    balance = balance,
+    currency = currency
+)
+
+fun AccountWithStatsDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity = AccountEntity(
+    localId = localId,
+    serverId = id,
     name = name,
     balance = balance,
     currency = currency,
     createdAt = createdAt,
-    updatedAt = updatedAt
+    updatedAt = updatedAt,
+    syncStatus = syncStatus
 )
