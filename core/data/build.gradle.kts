@@ -4,6 +4,7 @@ plugins {
 }
 
 dependencies {
+    implementation(projects.core.logging)
     implementation(projects.core.database)
     implementation(projects.core.domain)
     implementation(projects.core.network)
