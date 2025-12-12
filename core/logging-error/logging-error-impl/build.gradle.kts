@@ -5,7 +5,7 @@ plugins {
 }
 
 dependencies {
-    implementation(projects.core.logging)
+    implementation(projects.core.loggingError.loggingErrorApi)
     implementation(platform(libs.bom))
     implementation(libs.crashlytics)
 
