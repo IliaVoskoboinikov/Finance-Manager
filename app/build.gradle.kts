@@ -16,6 +16,8 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
     implementation(projects.core.data)
+    implementation(projects.core.logging)
+    implementation(projects.core.loggingFirebase)
 
     implementation(projects.feature.category.categoryApi)
     implementation(projects.feature.category.categoryImpl)
