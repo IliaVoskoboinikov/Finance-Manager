@@ -10,5 +10,7 @@ plugins {
     alias(libs.plugins.graph) apply false
     alias(libs.plugins.build.time.tracker) apply false
     alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.gms) apply false
+    alias(libs.plugins.firebase.crashlytics) apply false
 
 }
