@@ -59,9 +59,14 @@ gradlePlugin {
             implementationClass = "DetektConventionPlugin"
         }
 
-        register("BuildTimeTrackerConventionPlugin") {
+        register("buildTimeTrackerConventionPlugin") {
             id = libs.plugins.soft.divan.build.time.tracker.get().pluginId
             implementationClass = "BuildTimeTrackerConventionPlugin"
+        }
+
+        register("androidAppFirebaseConventionPlugin") {
+            id = libs.plugins.soft.divan.firebase.get().pluginId
+            implementationClass = "AndroidAppFirebaseConventionPlugin"
         }
     }
 }
