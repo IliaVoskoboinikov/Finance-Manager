@@ -49,6 +49,11 @@ loggingInterceptor = "3.9.0"
 detekt = "1.23.6"
 detektCompose = "0.3.0"
 
+#Firebase
+gmsPlugin = "4.4.4"
+firebaseBom = "33.7.0"
+firebaseCrashlyticsPlugin = "3.0.6"
+
 
 
 ##############################################
@@ -112,6 +117,9 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 detekt-gradle = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 detekt-compose = { module = "io.nlopez.compose.rules:detekt", version.ref = "detektCompose" }
 
+#Firebase
+bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 
 
 ##############################################
@@ -137,6 +145,10 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 graph = { id = "com.jraska.module.graph.assertion", version.ref = "graphPlugin" }
 build-time-tracker = { id = "com.asarkar.gradle.build-time-tracker", version.ref = "buildTimeTracker" }
 
+#Firebase
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
+gms = { id = "com.google.gms.google-services", version.ref = "gmsPlugin" }
+
 # Custom Plugins
 soft-divan-android-base = { id = "soft.divan.android.base" }
 soft-divan-android-app = { id = "soft.divan.android.app" }
@@ -147,3 +159,5 @@ soft-divan-jvm-library = { id = "soft.divan.jvm.library" }
 soft-divan-hilt = { id = "soft.divan.hilt" }
 soft-divan-detect = { id = "soft.divan.detekt" }
 soft-divan-build-time-tracker = { id = "soft.divan.build.time.tracker" }
+soft-divan-firebase = { id = "soft.divan.firebase" }
+

@@ -14,6 +14,7 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             applyPlugin("android-application")
             applyPlugin("kotlin-compose")
             applyPlugin("soft-divan-hilt")
+            applyPlugin("soft-divan-firebase")
 
             applyPlugin("graph")
             applyPlugin("soft-divan-detect")
