@@ -14,6 +14,7 @@ import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.util.DateHelper
+import soft.divan.financemanager.core.domain.util.DomainResult
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTodayTransactionsUseCase
 import javax.inject.Inject
 
@@ -30,7 +31,7 @@ class GetTodayTransactionsUseCaseImpl @Inject constructor(
             val allAccounts = accountRepository.getAccounts().first()
 
             // 2) Загружаем категории и формируем map
-            val categories = categoryRepository.getCategories().first()
+            val categories = categoryRepository.getCategories().firstOrError()
             val categoriesMap = categories.associateBy { it.id }
 
             // 3) Загружаем валюту
@@ -65,4 +66,12 @@ class GetTodayTransactionsUseCaseImpl @Inject constructor(
             // 8) Эмитим итог
             emit(Triple(sorted, currency, categories))
         }
+}
+
+//todo удалить и перейти к  Flow<DomainResul...
+suspend fun <T> Flow<DomainResult<T>>.firstOrError(): T {
+    return when (val result = this.first()) {
+        is DomainResult.Success -> result.data
+        is DomainResult.Failure -> throw RuntimeException("Domain error: ${result.message}")
+    }
 }
