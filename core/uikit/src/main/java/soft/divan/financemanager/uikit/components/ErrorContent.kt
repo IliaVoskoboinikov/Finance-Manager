@@ -25,13 +25,19 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @Composable
 fun TransactionScreenPreview() {
     FinanceManagerTheme {
-        ErrorContent({})
+        ErrorContent(
+            messageResId = R.string.error_occurred,
+            textBtnResId = R.string.try_again,
+            onClick = {}
+        )
     }
 }
 
 @Composable
 fun ErrorContent(
-    onRetry: () -> Unit,
+    messageResId: Int = R.string.error_occurred,
+    textBtnResId: Int = R.string.try_again,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -49,14 +55,14 @@ fun ErrorContent(
         )
 
         Text(
-            text = stringResource(R.string.error_occurred),
+            text = stringResource(messageResId),
             color = MaterialTheme.colorScheme.error,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
 
         Button(
-            onClick = onRetry,
+            onClick = onClick,
         ) {
             Text(text = stringResource(R.string.try_again))
         }

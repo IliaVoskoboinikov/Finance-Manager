@@ -5,4 +5,5 @@
 
     <string name="it_seems_nothing_found">Кажется ни чего не нашлось</string>
     <string name="error_loading">Ошибка загрузки данных</string>
+    <string name="empty_data">Упс, кажется ни чего не удалось найти</string>
 </resources>

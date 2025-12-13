@@ -6,12 +6,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
+import soft.divan.financemanager.core.domain.util.DomainResult
+import soft.divan.financemanager.core.domain.util.ErrorType
 import soft.divan.financemanager.feature.category.category_impl.R
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.SearchCategoryUseCase
 import soft.divan.financemanager.feature.category.category_impl.presenter.mapper.toDomain
@@ -34,29 +37,36 @@ class CategoriesViewModel @Inject constructor(
             CategoriesUiState.Loading
         )
 
-    private fun loadCategories() {
+    fun loadCategories() {
         viewModelScope.launch {
             getCategoriesUseCase()
                 .onStart {
                     _uiState.update { CategoriesUiState.Loading }
                 }
-                .catch {
-                    _uiState.update { CategoriesUiState.Error(R.string.error_loading) }
-                }
-                .collect { data ->
-                    val categories = data.map { it.toUi() }
-                    _uiState.update {
-                        CategoriesUiState.Success(
-                            categories = categories,
-                            filteredCategories = categories
-                        )
-                    }
-                }
-        }
-    }
+                .onEach { data ->
+                    when (data) {
+                        is DomainResult.Failure -> {
+                            if (data.reason == ErrorType.NoData) {
+                                _uiState.update { CategoriesUiState.EmptyData }
+                            }
+                            _uiState.update { CategoriesUiState.Error(R.string.error_loading) }
+                        }
 
-    fun retry() {
-        loadCategories()
+                        is DomainResult.Success -> {
+                            val categories = data.data.map { it.toUi() }
+                            if (categories.isEmpty()) {
+                                _uiState.update { CategoriesUiState.EmptyData }
+                            }
+                            _uiState.update {
+                                CategoriesUiState.Success(
+                                    categories = categories,
+                                    filteredCategories = categories
+                                )
+                            }
+                        }
+                    }
+                }.collect()
+        }
     }
 
     fun search(query: String) {

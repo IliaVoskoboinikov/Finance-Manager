@@ -212,7 +212,7 @@ private fun DateItem(
 private fun HistoryStatefulContent(uiState: HistoryUiState, onNavigateToTransaction: (Int) -> Unit) {
     when (uiState) {
         is HistoryUiState.Loading -> LoadingProgressBar()
-        is HistoryUiState.Error -> ErrorContent(onRetry = {}) // TODO
+        is HistoryUiState.Error -> ErrorContent(onClick = {}) // TODO
         is HistoryUiState.Success -> HistorySuccessContent(
             sumTransaction = uiState.sumTransaction,
             transactions = uiState.transactions,

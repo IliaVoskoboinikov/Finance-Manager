@@ -72,7 +72,7 @@ fun SecurityContent(
     ) { paddingValues ->
         Column(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
-                is SecurityUiState.Error -> ErrorContent(onRetry = {})
+                is SecurityUiState.Error -> ErrorContent(onClick = {})
                 is SecurityUiState.Loading -> LoadingProgressBar()
                 is SecurityUiState.Success -> SecuritySucsessState(
                     uiState = uiState,

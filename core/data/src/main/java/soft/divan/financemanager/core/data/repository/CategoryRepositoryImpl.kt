@@ -12,8 +12,13 @@ import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
+import soft.divan.financemanager.core.data.util.safeApiCall
+import soft.divan.financemanager.core.data.util.safeDbCall
+import soft.divan.financemanager.core.data.util.safeDbFlow
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
+import soft.divan.financemanager.core.domain.util.DomainResult
+import soft.divan.financemanager.core.logging_error.logging_error_api.ErrorLogger
 import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(
@@ -21,20 +26,20 @@ class CategoryRepositoryImpl @Inject constructor(
     private val categoryLocalDataSource: CategoryLocalDataSource,
     private val applicationScope: CoroutineScope,
     private val dispatcher: CoroutineDispatcher,
-    private val exceptionHandler: CoroutineExceptionHandler
+    private val exceptionHandler: CoroutineExceptionHandler,
+    private val errorLogger: ErrorLogger
 ) : CategoryRepository, Syncable {
 
-    //todo возвращает пустой список при сетевой ошибке
-    override suspend fun getCategories(): Flow<List<Category>> {
+    override suspend fun getCategories(): Flow<DomainResult<List<Category>>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
-            val response = categoryRemoteDataSource.getCategories()
-            val categoriesDto = response.body().orEmpty()
-            val categoriesDtoEntity = categoriesDto.map { it.toEntity() }
-            categoryLocalDataSource.insertCategories(categoriesDtoEntity)
+            val result = safeApiCall(errorLogger) { categoryRemoteDataSource.getCategories() }
+            if (result is DomainResult.Success) {
+                safeDbCall(errorLogger) { categoryLocalDataSource.insertCategories(result.data.map { it.toEntity() }) }
+            }
         }
-        val categoriesFlow =
+        return safeDbFlow(errorLogger) {
             categoryLocalDataSource.getCategories().map { list -> list.map { it.toDomain() } }
-        return categoriesFlow
+        }
     }
 
     override suspend fun getCategoriesByType(isIncome: Boolean): Flow<List<Category>> {

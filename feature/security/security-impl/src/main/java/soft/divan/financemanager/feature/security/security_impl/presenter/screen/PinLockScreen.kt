@@ -48,7 +48,7 @@ fun PinLockScreen(
         }
 
     when (uiState) {
-        is SecurityUiState.Error -> ErrorContent(onRetry = {})
+        is SecurityUiState.Error -> ErrorContent(onClick = {})
         is SecurityUiState.Loading -> LoadingProgressBar()
         is SecurityUiState.Success -> PinLockScreenContent(
             pin = (uiState as SecurityUiState.Success).pin,

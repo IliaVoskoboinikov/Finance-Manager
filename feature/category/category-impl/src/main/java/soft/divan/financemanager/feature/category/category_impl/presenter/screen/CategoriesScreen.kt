@@ -58,7 +58,7 @@ fun CategoriesScreenPreview() {
         CategoriesContent(
             uiState = mockCategoriesUiStateSuccess,
             onSearch = {},
-            onRetry = {},
+            loadCategories = {},
         )
     }
 }
@@ -74,7 +74,7 @@ fun CategoriesScreen(
         modifier = modifier,
         uiState = uiState,
         onSearch = viewModel::search,
-        onRetry = viewModel::retry
+        loadCategories = viewModel::loadCategories
     )
 }
 
@@ -83,7 +83,7 @@ private fun CategoriesContent(
     modifier: Modifier = Modifier,
     uiState: CategoriesUiState,
     onSearch: (String) -> Unit,
-    onRetry: () -> Unit
+    loadCategories: () -> Unit
 ) {
     var query by remember { mutableStateOf("") }
 
@@ -104,8 +104,14 @@ private fun CategoriesContent(
             FMDriver()
             when (uiState) {
                 is CategoriesUiState.Loading -> LoadingProgressBar()
-                is CategoriesUiState.Error -> ErrorContent(onRetry = { onRetry() })
+                is CategoriesUiState.Error -> ErrorContent(
+                    messageResId = uiState.message,
+                    onClick = { loadCategories() })
+
                 is CategoriesUiState.Success -> CategoriesSuccessUiState(uiState)
+                is CategoriesUiState.EmptyData -> ErrorContent(
+                    messageResId = R.string.empty_data,
+                    onClick = { loadCategories() })
             }
         }
     }

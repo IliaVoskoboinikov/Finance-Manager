@@ -208,7 +208,7 @@ private fun DateItem(
 private fun AnalysisStatefulContent(uiState: AnalysisUiState) {
     when (uiState) {
         is AnalysisUiState.Loading -> LoadingProgressBar()
-        is AnalysisUiState.Error -> ErrorContent(onRetry = {}) // TODO
+        is AnalysisUiState.Error -> ErrorContent(onClick = {}) // TODO
         is AnalysisUiState.Success -> AnalysisSuccessContent(uiState = uiState)
     }
 }

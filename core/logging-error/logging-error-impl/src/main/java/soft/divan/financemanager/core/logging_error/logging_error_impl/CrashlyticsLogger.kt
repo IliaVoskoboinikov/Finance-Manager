@@ -8,7 +8,7 @@ class CrashlyticsLogger @Inject constructor() : ErrorLogger {
 
     private val crashlytics = FirebaseCrashlytics.getInstance()
 
-    override fun recordError(message: String) {
+    override fun recordError(message: String?) {
         crashlytics.recordException(Exception(message))
     }
 }

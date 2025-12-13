@@ -13,4 +13,7 @@ sealed interface CategoriesUiState {
     ) : CategoriesUiState
 
     data class Error(@field:StringRes val message: Int) : CategoriesUiState
+
+    data object EmptyData : CategoriesUiState
+
 }
