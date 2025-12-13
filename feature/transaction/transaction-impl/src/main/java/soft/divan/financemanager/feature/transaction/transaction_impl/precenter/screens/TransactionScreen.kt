@@ -181,7 +181,7 @@ fun TransactionContent(
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is TransactionUiState.Loading -> LoadingProgressBar()
-                is TransactionUiState.Error -> ErrorContent(onRetry = onSave) //TODO
+                is TransactionUiState.Error -> ErrorContent(onClick = onSave) //TODO
                 is TransactionUiState.Success -> TransactionForm(
                     modifier = modifier,
                     uiState = uiState,

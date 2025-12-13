@@ -114,7 +114,7 @@ fun TransactionsTodayContent(
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is TransactionsTodayUiState.Loading -> LoadingProgressBar()
-                is TransactionsTodayUiState.Error -> ErrorContent(onRetry = {}) // TODO
+                is TransactionsTodayUiState.Error -> ErrorContent(onClick = {}) // TODO
                 is TransactionsTodayUiState.Success -> TransactionsList(
                     modifier = modifier,
                     uiState = uiState,

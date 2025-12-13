@@ -15,6 +15,7 @@ import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
 import soft.divan.financemanager.core.domain.util.DateHelper
+import soft.divan.financemanager.core.domain.util.DomainResult
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -35,7 +36,8 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
         val allAccounts = accountRepository.getAccounts().first()
 
         // 2) Загружаем категории и подготавливаем map
-        val categories = categoryRepository.getCategories().first()
+        val categories = (categoryRepository.getCategories().first() as DomainResult.Success).data
+
         val categoriesMap = categories.associateBy { it.id }
 
         // 3) Загружаем валюту (если она у всех общая)

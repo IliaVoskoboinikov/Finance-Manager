@@ -111,7 +111,7 @@ private fun MyAccountsStatefulContent(
 ) {
     when (uiState) {
         is MyAccountsUiState.Loading -> LoadingProgressBar()
-        is MyAccountsUiState.Error -> ErrorContent(onRetry = {}) // TODO
+        is MyAccountsUiState.Error -> ErrorContent(onClick = {}) // TODO
         is MyAccountsUiState.Success -> AccountsSuccessContent(
             accounts = uiState.accounts,
             onNavigateToUpdateAccount = onNavigateToUpdateAccount

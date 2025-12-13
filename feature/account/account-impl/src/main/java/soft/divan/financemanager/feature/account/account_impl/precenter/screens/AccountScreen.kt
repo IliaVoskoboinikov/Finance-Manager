@@ -163,7 +163,7 @@ fun CreateAccountContent(
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
-                is AccountUiState.Error -> ErrorContent(onRetry = onSave)
+                is AccountUiState.Error -> ErrorContent(onClick = onSave)
                 is AccountUiState.Loading -> LoadingProgressBar()
                 is AccountUiState.Success -> CreateAccountForm(
                     uiState = uiState,

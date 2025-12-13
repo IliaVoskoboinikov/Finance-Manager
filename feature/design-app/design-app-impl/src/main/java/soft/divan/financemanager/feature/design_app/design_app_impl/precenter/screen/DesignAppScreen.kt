@@ -102,7 +102,7 @@ fun DesignAppContent(
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
-                is DesignUiState.Error -> ErrorContent(onRetry = {}) //todo
+                is DesignUiState.Error -> ErrorContent(onClick = {}) //todo
                 is DesignUiState.Loading -> LoadingProgressBar()
                 is DesignUiState.Success -> DesignAppForm(
                     modifier = modifier,
