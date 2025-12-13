@@ -1,5 +1,7 @@
+import com.android.build.api.dsl.ApplicationExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import soft.divan.finansemanager.Conf
 import soft.divan.finansemanager.applyPlugin
@@ -16,6 +18,12 @@ class AndroidAppFirebaseConventionPlugin : Plugin<Project> {
                 val bom = libs.findLibrary("bom").get()
                 add(Conf.IMPLEMENTATION, platform(bom))
                 add(Conf.IMPLEMENTATION, lib("crashlytics"))
+            }
+            extensions.configure<ApplicationExtension> {
+                buildTypes {
+                    debug { manifestPlaceholders["crashlyticsCollectionEnabled"] = "false" }
+                    release { manifestPlaceholders["crashlyticsCollectionEnabled"] = "true" }
+                }
             }
         }
     }

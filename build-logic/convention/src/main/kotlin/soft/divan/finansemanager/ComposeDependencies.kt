@@ -8,7 +8,7 @@ fun Project.addDefaultComposeDependencies() {
         add(Conf.IMPLEMENTATION, lib("androidx-core-ktx"))
         add(Conf.IMPLEMENTATION, lib("androidx-appcompat"))
         add(Conf.IMPLEMENTATION, lib("androidx-compose-bom"))
-        add(Conf.IMPLEMENTATION, lib("androidx-ui-tooling-preview"))
+        add(Conf.DEBUG_IMPLEMENTATION, lib("androidx-ui-tooling-preview"))
         add(Conf.IMPLEMENTATION, lib("androidx-material3"))
         add(Conf.IMPLEMENTATION, lib("hilt-navigation-compose"))
     }
