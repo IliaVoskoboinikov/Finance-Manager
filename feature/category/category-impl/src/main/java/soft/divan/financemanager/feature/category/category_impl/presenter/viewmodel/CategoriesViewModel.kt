@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import soft.divan.financemanager.core.domain.error.DomainError
+import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
-import soft.divan.financemanager.core.domain.util.DomainResult
-import soft.divan.financemanager.core.domain.util.ErrorType
 import soft.divan.financemanager.feature.category.category_impl.R
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.SearchCategoryUseCase
 import soft.divan.financemanager.feature.category.category_impl.presenter.mapper.toDomain
@@ -46,7 +46,7 @@ class CategoriesViewModel @Inject constructor(
                 .onEach { data ->
                     when (data) {
                         is DomainResult.Failure -> {
-                            if (data.reason == ErrorType.NoData) {
+                            if (data.error == DomainError.NoData) {
                                 _uiState.update { CategoriesUiState.EmptyData }
                             }
                             _uiState.update { CategoriesUiState.Error(R.string.error_loading) }

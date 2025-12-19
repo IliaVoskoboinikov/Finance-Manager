@@ -1,7 +1,7 @@
 package soft.divan.financemanager.feature.account.account_impl.precenter.mapper
 
+import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Account
-import soft.divan.financemanager.core.domain.util.DateHelper
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountUiModel
 
 fun AccountUiModel.toDomain(): Account {

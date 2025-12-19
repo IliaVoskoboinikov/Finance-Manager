@@ -6,6 +6,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.Transaction
@@ -13,8 +14,7 @@ import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
-import soft.divan.financemanager.core.domain.util.DateHelper
-import soft.divan.financemanager.core.domain.util.DomainResult
+import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTodayTransactionsUseCase
 import javax.inject.Inject
 
@@ -72,6 +72,6 @@ class GetTodayTransactionsUseCaseImpl @Inject constructor(
 suspend fun <T> Flow<DomainResult<T>>.firstOrError(): T {
     return when (val result = this.first()) {
         is DomainResult.Success -> result.data
-        is DomainResult.Failure -> throw RuntimeException("Domain error: ${result.message}")
+        is DomainResult.Failure -> throw RuntimeException("Domain error:")
     }
 }
