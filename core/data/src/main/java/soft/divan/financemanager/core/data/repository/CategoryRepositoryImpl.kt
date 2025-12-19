@@ -32,10 +32,7 @@ class CategoryRepositoryImpl @Inject constructor(
 
     override suspend fun getCategories(): Flow<DomainResult<List<Category>>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
-            val result = safeApiCall(errorLogger) { categoryRemoteDataSource.getCategories() }
-            if (result is DomainResult.Success) {
-                safeDbCall(errorLogger) { categoryLocalDataSource.insertCategories(result.data.map { it.toEntity() }) }
-            }
+            pullServerData()
         }
         return safeDbFlow(errorLogger) {
             categoryLocalDataSource.getCategories().map { list -> list.map { it.toDomain() } }
@@ -57,12 +54,14 @@ class CategoryRepositoryImpl @Inject constructor(
 
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
         return runCatching {
-            val response = categoryRemoteDataSource.getCategories()
-            val categoriesDto = response.body().orEmpty()
-            val categoriesDtoEntity = categoriesDto.map { it.toEntity() }
-            categoryLocalDataSource.insertCategories(categoriesDtoEntity)
+            pullServerData()
         }.isSuccess
     }
 
-
+    private suspend fun pullServerData() {
+        val result = safeApiCall(errorLogger) { categoryRemoteDataSource.getCategories() }
+        if (result is DomainResult.Success) {
+            safeDbCall(errorLogger) { categoryLocalDataSource.insertCategories(result.data.map { it.toEntity() }) }
+        }
+    }
 }
