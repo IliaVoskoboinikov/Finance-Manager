@@ -3,8 +3,8 @@ package soft.divan.financemanager.core.domain.usecase.impl
 import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
+import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
-import soft.divan.financemanager.core.domain.util.DomainResult
 import javax.inject.Inject
 
 class GetCategoriesUseCaseImpl @Inject constructor(

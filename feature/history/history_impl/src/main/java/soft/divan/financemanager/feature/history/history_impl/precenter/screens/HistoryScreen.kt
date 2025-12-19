@@ -26,7 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import soft.divan.financemanager.core.domain.util.DateHelper
+import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.feature.history.history_impl.R
 import soft.divan.financemanager.feature.history.history_impl.precenter.model.HistoryUiState
 import soft.divan.financemanager.feature.history.history_impl.precenter.model.UiTransaction
