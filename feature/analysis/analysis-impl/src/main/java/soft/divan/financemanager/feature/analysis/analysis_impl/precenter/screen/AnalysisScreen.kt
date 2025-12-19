@@ -39,8 +39,8 @@ import co.yml.charts.common.model.LegendsConfig
 import co.yml.charts.ui.piechart.charts.PieChart
 import co.yml.charts.ui.piechart.models.PieChartConfig
 import co.yml.charts.ui.piechart.models.PieChartData
-import soft.divan.financemanager.core.domain.util.DateHelper
-import soft.divan.financemanager.core.domain.util.pretty
+import soft.divan.financemanager.core.domain.data.DateHelper
+import soft.divan.financemanager.core.domain.extension.pretty
 import soft.divan.financemanager.feature.analysis.analysis_impl.R
 import soft.divan.financemanager.feature.analysis.analysis_impl.precenter.model.AnalysisUiState
 import soft.divan.financemanager.feature.analysis.analysis_impl.precenter.model.mockTransactionUiStateSuccess

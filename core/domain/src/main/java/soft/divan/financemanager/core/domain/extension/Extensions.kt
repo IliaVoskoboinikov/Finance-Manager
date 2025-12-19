@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.domain.util
+package soft.divan.financemanager.core.domain.extension
 
 
 fun Float.pretty(): String =

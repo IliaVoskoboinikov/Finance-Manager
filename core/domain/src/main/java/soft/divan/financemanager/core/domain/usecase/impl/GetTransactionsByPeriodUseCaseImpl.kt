@@ -6,6 +6,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
+import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.Transaction
@@ -13,9 +14,8 @@ import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
+import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
-import soft.divan.financemanager.core.domain.util.DateHelper
-import soft.divan.financemanager.core.domain.util.DomainResult
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -36,7 +36,8 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
         val allAccounts = accountRepository.getAccounts().first()
 
         // 2) Загружаем категории и подготавливаем map
-        val categories = (categoryRepository.getCategories().first() as DomainResult.Success).data
+        val categories = (categoryRepository.getCategories().first() as DomainResult.Success).data //todo
+        // возвращать ошибку и мапить в UI если ошибка
 
         val categoriesMap = categories.associateBy { it.id }
 

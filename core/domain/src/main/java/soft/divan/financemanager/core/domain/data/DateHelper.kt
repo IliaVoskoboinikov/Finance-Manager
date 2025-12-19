@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.domain.util
+package soft.divan.financemanager.core.domain.data
 
 import java.time.Instant
 import java.time.LocalDate
@@ -155,7 +155,7 @@ object DateHelper {
     }
 
     /**
-     * Форматирует [java.time.LocalDateTime] в строку для отображения (`dd.MM.yyyy HH:mm`).
+     * Форматирует [LocalDateTime] в строку для отображения (`dd.MM.yyyy HH:mm`).
      */
     fun formatDateTimeForDisplay(dateTime: LocalDateTime): String {
         return dateTime.format(displayDateTimeFormatter)
