@@ -89,7 +89,7 @@ class AccountViewModel @Inject constructor(
                 onSuccess = { data ->
                     _uiState.update {
                         AccountUiState.Success(
-                            account = data!!.toUi(),
+                            account = data.toUi(),
                             mode = mode
                         )
                     }
