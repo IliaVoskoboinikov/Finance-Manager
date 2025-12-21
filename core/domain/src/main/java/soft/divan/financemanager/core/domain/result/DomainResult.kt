@@ -14,3 +14,21 @@ inline fun <T, R> DomainResult<T>.fold(
     is DomainResult.Success -> onSuccess(data)
     is DomainResult.Failure -> onFailure(error)
 }
+
+inline fun <T> DomainResult<T>.onSuccess(
+    action: (T) -> Unit
+): DomainResult<T> {
+    if (this is DomainResult.Success) {
+        action(data)
+    }
+    return this
+}
+
+inline fun <T> DomainResult<T>.onFailure(
+    action: (DomainError) -> Unit
+): DomainResult<T> {
+    if (this is DomainResult.Failure) {
+        action(error)
+    }
+    return this
+}

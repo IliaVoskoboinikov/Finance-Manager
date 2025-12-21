@@ -26,16 +26,12 @@ import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.logging_error.logging_error_api.ErrorLogger
 import soft.divan.finansemanager.core.database.entity.AccountEntity
 import soft.divan.finansemanager.core.database.model.SyncStatus
 import javax.inject.Inject
-
-//todo почему при создании сугщyсности сервер создает дату и время обновления и создания?
-// Если на одном устройстве сначала была создлана транзакция
-// а устройство было без сети и на другом утсройстве после этого была создана у которого была сеть то
-// потом у первого утройства появилаьсь сеть то транзакция которапя была реально раньше окажется созданной позже!!!!
-// как буто дата создания и обновыления должны быть истинными на устройтсве а не на сервере
 
 class AccountRepositoryImpl @Inject constructor(
     private val accountRemoteDataSource: AccountRemoteDataSource,
@@ -71,101 +67,118 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
+    /**  Хелпер для получения локального аккаунта*/
+    private suspend fun getLocalAccountOrFail(id: String): DomainResult<AccountEntity> {
+        return safeDbCall(errorLogger) {
+            accountLocalDataSource.getAccountByLocalId(id)
+        }.fold(
+            onSuccess = { entity ->
+                entity?.let { DomainResult.Success(it) }
+                    ?: DomainResult.Failure(DataError.NotFound.toDomainError())
+            },
+            onFailure = { error ->
+                DomainResult.Failure(error)
+            }
+        )
+    }
+
     /** Вытаскиваем из бд аккаунт(так как только в БД храним serverId)  обновляем локальный аккаунт и запускаем синхронизацию
      * если аккаунт не синхронизирован с сервером то создаем на сервере и обновляем локально, иначе просто обновляем на сервере */
     override suspend fun updateAccount(account: Account): DomainResult<Unit> {
-        val resultDb = safeDbCall(errorLogger) { accountLocalDataSource.getAccountByLocalId(account.id) }
-        if (resultDb is DomainResult.Success && resultDb.data != null) {
-            applicationScope.launch(dispatcher + exceptionHandler) {
-                val serverId = resultDb.data!!.serverId
-                if (serverId != null) {
-                    syncUpdate(account.toEntity(serverId, SyncStatus.PENDING_UPDATE))
-                } else {
-                    /** если аккаунт не синхронизирован с сервером (нету serverId) то создать на сервере и обновить локально*/
-                    syncCreate(accountDto = account.toDto(), localId = account.id)
-                }
-            }
-            return safeDbCall(errorLogger) {
-                accountLocalDataSource.updateAccount(
-                    resultDb.data!!.copy(
-                        name = account.name,
-                        balance = account.balance.toPlainString(),
-                        currency = account.currency,
-                        createdAt = DateHelper.dataTimeForApi(account.createdAt),
-                        updatedAt = DateHelper.dataTimeForApi(account.updatedAt),
-                        syncStatus = if (resultDb.data!!.serverId != null) SyncStatus.PENDING_UPDATE else SyncStatus.PENDING_CREATE
+        val resultDb = getLocalAccountOrFail(account.id)
+        if (resultDb is DomainResult.Failure) return resultDb
+
+        val accountEntity = (resultDb as DomainResult.Success).data
+
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            if (accountEntity.serverId == null) {
+                /** если аккаунт не синхронизирован с сервером (нету serverId) то создать на сервере и обновить локально*/
+                syncCreate(accountDto = account.toDto(), localId = account.id)
+            } else {
+                syncUpdate(
+                    account.toEntity(
+                        serverId = accountEntity.serverId,
+                        syncStatus = SyncStatus.PENDING_UPDATE
                     )
                 )
             }
-
-        } else if (resultDb is DomainResult.Success && resultDb.data == null) {
-            return DomainResult.Failure(DataError.NotFound.toDomainError())
-        } else {
-            return resultDb as DomainResult.Failure
         }
 
+        return safeDbCall(errorLogger) {
+            accountLocalDataSource.updateAccount(
+                accountEntity.copy(
+                    name = account.name,
+                    balance = account.balance.toPlainString(),
+                    currency = account.currency,
+                    createdAt = DateHelper.dataTimeForApi(account.createdAt),
+                    updatedAt = DateHelper.dataTimeForApi(account.updatedAt),
+                    syncStatus = if (accountEntity.serverId == null) SyncStatus.PENDING_CREATE else SyncStatus.PENDING_UPDATE
+                )
+            )
+        }
     }
 
     /** Получаем аккаунт из БД и и проверяем есть ли у него транзакции если нет то помечаем в БД как удаленный и запускаем синхронизацию удаления,
      * если на сервере аккаунта нету то просто удалем, если есть то удаляем на сервере и локально */
     override suspend fun deleteAccount(id: String): DomainResult<Unit> {
-        val resultDb = safeDbCall(errorLogger) { accountLocalDataSource.getAccountByLocalId(id) }
-        if (resultDb is DomainResult.Success && resultDb.data != null) {
-            val result =
-                safeDbCall(errorLogger) { transactionLocalDataSource.getByAccountId(id).isNotEmpty() }
-            if (result is DomainResult.Failure || result is DomainResult.Success && result.data) {
-                //todo доработать, по серверной логике нельзя удалять счет если на нем есть операции
-                return DomainResult.Failure(
-                    DataError.LocalDb(Throwable("Account has transactions")).toDomainError()
-                )
-            }
+        val localResult = getLocalAccountOrFail(id)
 
-            applicationScope.launch(dispatcher + exceptionHandler) {
-                val serverId = resultDb.data!!.serverId
-                if (serverId == null) {
-                    safeDbCall(errorLogger) { accountLocalDataSource.deleteAccount(id) }
-                } else {
-                    syncDelete(resultDb.data!!)
-                }
-            }
+        if (localResult is DomainResult.Failure) return localResult
 
-            return safeDbCall(errorLogger) {
-                accountLocalDataSource.updateAccount(resultDb.data!!.copy(syncStatus = SyncStatus.PENDING_DELETE))
+        val accountEntity = (localResult as DomainResult.Success).data
+
+        val hasTransactions = safeDbCall(errorLogger) {
+            transactionLocalDataSource.getByAccountId(id).isNotEmpty()
+        }
+        //todo доработать, по серверной логике нельзя удалять счет если на нем есть операции
+        if (hasTransactions is DomainResult.Success && hasTransactions.data) {
+            return DomainResult.Failure(
+                DataError.LocalDb(Throwable("Account has transactions")).toDomainError()
+            )
+        }
+
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            if (accountEntity.serverId == null) {
+                safeDbCall(errorLogger) { accountLocalDataSource.deleteAccount(id) }
+            } else {
+                syncDelete(accountEntity)
             }
-        } else if (resultDb is DomainResult.Success && resultDb.data == null) {
-            return DomainResult.Failure(DataError.NotFound.toDomainError())
-        } else {
-            return resultDb as DomainResult.Failure
+        }
+
+        return safeDbCall(errorLogger) {
+            accountLocalDataSource.updateAccount(
+                accountEntity.copy(syncStatus = SyncStatus.PENDING_DELETE)
+            )
         }
     }
 
     /** Сразу возворащаем аккаунт из БД и пытаемся синхронизировать его с сервером */
-    override suspend fun getAccountById(id: String): DomainResult<Account?> {
+    override suspend fun getAccountById(id: String): DomainResult<Account> {
+        val localResult = getLocalAccountOrFail(id)
+        if (localResult is DomainResult.Failure) return localResult
+
+        val accountEntity = (localResult as DomainResult.Success).data
+
         applicationScope.launch(dispatcher + exceptionHandler) {
-            val resultDb = safeDbCall(errorLogger) { accountLocalDataSource.getAccountByLocalId(id) }
-            if (resultDb is DomainResult.Success && resultDb.data != null) {
-                val serverId = resultDb.data!!.serverId
-                if (serverId != null) {
-                    val resultApi =
-                        safeApiCall(errorLogger) { accountRemoteDataSource.getById(serverId) }
-                    if (resultApi is DomainResult.Success) {
-                        safeDbCall(errorLogger) {
-                            accountLocalDataSource.updateAccount(
-                                resultApi.data.toEntity(
-                                    localId = resultDb.data!!.localId,
-                                    syncStatus = SyncStatus.SYNCED
-                                )
+            val serverId = accountEntity.serverId
+            if (serverId != null) {
+                safeApiCall(errorLogger) { accountRemoteDataSource.getById(serverId) }.onSuccess { accountDto ->
+                    safeDbCall(errorLogger) {
+                        accountLocalDataSource.updateAccount(
+                            accountDto.toEntity(
+                                localId = accountEntity.localId,
+                                syncStatus = SyncStatus.SYNCED
                             )
-                        }
+                        )
                     }
-                } else {
-                    /** аккаунт не синхронизирован с сервером то создаем на сервере*/
-                    syncCreate(accountDto = resultDb.data!!.toDto(), localId = id)
                 }
+            } else {
+                /** аккаунт не синхронизирован с сервером то создаем на сервере*/
+                syncCreate(accountDto = accountEntity.toDto(), localId = id)
             }
         }
 
-        return safeDbCall(errorLogger) { accountLocalDataSource.getAccountByLocalId(id)?.toDomain() }
+        return DomainResult.Success(accountEntity.toDomain())
     }
 
 
@@ -183,29 +196,26 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Получаем данные с сервера и обновляем локальную БД разрешая конфликты */
     private suspend fun pullServerData() {
-        val resultApi = safeApiCall(errorLogger) { accountRemoteDataSource.getAccounts() }
-        if (resultApi is DomainResult.Success) {
-            resultApi.data.let { accountsDto ->
-                accountsDto.forEach { accountDto ->
-                    val resultDb =
-                        safeDbCall(errorLogger) { accountLocalDataSource.getAccountByServerId(accountDto.id) }
-                    if (resultDb is DomainResult.Success && resultDb.data == null) {
-                        /** новаый аккаунт на сервере → создаем его локально*/
-                        safeDbCall(errorLogger) {
-                            accountLocalDataSource.createAccount(
-                                accountDto.toEntity(
-                                    localId = generateUUID(),
-                                    syncStatus = SyncStatus.SYNCED
-                                )
+        safeApiCall(errorLogger) { accountRemoteDataSource.getAccounts() }.onSuccess { accountDtos ->
+            accountDtos.forEach { accountDto ->
+                val resultDb =
+                    safeDbCall(errorLogger) { accountLocalDataSource.getAccountByServerId(accountDto.id) }
+                if (resultDb is DomainResult.Success && resultDb.data == null) {
+                    /** новаый аккаунт на сервере → создаем его локально*/
+                    safeDbCall(errorLogger) {
+                        accountLocalDataSource.createAccount(
+                            accountDto.toEntity(
+                                localId = generateUUID(),
+                                syncStatus = SyncStatus.SYNCED
                             )
-                        }
-                        /** если конфликт то сравниваем по времени обновления, побеждает тот кто поослдений был обновлен */
-                    } else if (resultDb is DomainResult.Success && accountDto.updatedAt > resultDb.data!!.updatedAt) {
-                        updateLocalFromRemote(
-                            accountDto = accountDto,
-                            localId = resultDb.data!!.localId
                         )
                     }
+                    /** если конфликт то сравниваем по времени обновления, побеждает тот кто поослдений был обновлен */
+                } else if (resultDb is DomainResult.Success && accountDto.updatedAt > resultDb.data!!.updatedAt) {
+                    updateLocalFromRemote(
+                        accountDto = accountDto,
+                        localId = resultDb.data!!.localId
+                    )
                 }
             }
         }
@@ -225,9 +235,8 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Получаем все локальные данныве которые ожидают синхронизацю и запускаем синхронизацию */
     private suspend fun pushLocalChanges() {
-        val resultDb = safeDbCall(errorLogger) { accountLocalDataSource.getPendingSync() }
-        if (resultDb is DomainResult.Success) {
-            resultDb.data.forEach { accountEntity ->
+        safeDbCall(errorLogger) { accountLocalDataSource.getPendingSync() }.onSuccess { accountEntities ->
+            accountEntities.forEach { accountEntity ->
                 when (accountEntity.syncStatus) {
                     SyncStatus.SYNCED -> Unit
                     SyncStatus.PENDING_CREATE -> syncCreate(
@@ -244,29 +253,30 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Создаем на серевер и обновляем локальную БД */
     private suspend fun syncCreate(accountDto: CreateAccountRequestDto, localId: String) {
-        val resultApi = safeApiCall(errorLogger) { accountRemoteDataSource.createAccount(accountDto) }
-        if (resultApi is DomainResult.Success) {
-            updateLocalFromRemote(resultApi.data, localId)
+        safeApiCall(errorLogger) { accountRemoteDataSource.createAccount(accountDto) }.onSuccess { accountDto ->
+            updateLocalFromRemote(accountDto = accountDto, localId = localId)
         }
     }
 
     /** Обновляем на сервере и обновляем локальную БД */
     private suspend fun syncUpdate(accountEntity: AccountEntity) {
         accountEntity.serverId?.let { idAccount ->
-            val resultApi = safeApiCall(errorLogger) {
-                accountRemoteDataSource.updateAccount(id = idAccount, account = accountEntity.toDto())
+            safeApiCall(errorLogger) {
+                accountRemoteDataSource.updateAccount(
+                    id = idAccount,
+                    account = accountEntity.toDto()
+                )
+            }.onSuccess { accountDto ->
+                updateLocalFromRemote(accountDto = accountDto, localId = accountEntity.localId)
             }
-            if (resultApi is DomainResult.Success) {
-                updateLocalFromRemote(accountDto = resultApi.data, localId = accountEntity.localId)
-            }
+
         }
     }
 
     /** Удаляем на сервере и удалем локально из БД */
     private suspend fun syncDelete(accountEntity: AccountEntity) {
         accountEntity.serverId?.let { idAccount ->
-            val resultApi = safeApiCall(errorLogger) { accountRemoteDataSource.delete(idAccount) }
-            if (resultApi is DomainResult.Success) {
+            safeApiCall(errorLogger) { accountRemoteDataSource.delete(idAccount) }.onSuccess {
                 safeDbCall(errorLogger) { accountLocalDataSource.deleteAccount(accountEntity.localId) }
             }
         }

@@ -9,6 +9,6 @@ interface AccountRepository {
     suspend fun createAccount(account: Account): DomainResult<Unit>
     suspend fun updateAccount(account: Account): DomainResult<Unit>
     suspend fun deleteAccount(id: String): DomainResult<Unit>
-    suspend fun getAccountById(id: String): DomainResult<Account?>
+    suspend fun getAccountById(id: String): DomainResult<Account>
 
 }
