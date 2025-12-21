@@ -53,6 +53,7 @@ fun AccountScreenPreview() {
     FinanceManagerTheme {
         MyAccounts(
             uiState = mockMyAccountsUiStateSuccess,
+            loadAccounts = {},
             onNavigateToUpdateAccount = {},
             onNavigateToCreateAccount = {},
         )
@@ -71,6 +72,7 @@ fun MyAccountsScreen(
     MyAccounts(
         modifier = modifier,
         uiState = uiState,
+        loadAccounts = viewModel::loadAccount,
         onNavigateToUpdateAccount = onNavigateToUpdateAccount,
         onNavigateToCreateAccount = onNavigateToCreateAccount,
     )
@@ -81,6 +83,7 @@ fun MyAccountsScreen(
 fun MyAccounts(
     modifier: Modifier = Modifier,
     uiState: MyAccountsUiState,
+    loadAccounts: () -> Unit,
     onNavigateToUpdateAccount: (idAccount: String) -> Unit,
     onNavigateToCreateAccount: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -93,7 +96,8 @@ fun MyAccounts(
         Box(modifier = modifier.padding(paddingValues)) {
             MyAccountsStatefulContent(
                 uiState = uiState,
-                onNavigateToUpdateAccount = onNavigateToUpdateAccount
+                loadAccounts = loadAccounts,
+                onNavigateToUpdateAccount = onNavigateToUpdateAccount,
             )
         }
     }
@@ -107,6 +111,7 @@ private fun AccountTopBar() {
 @Composable
 private fun MyAccountsStatefulContent(
     uiState: MyAccountsUiState,
+    loadAccounts: () -> Unit,
     onNavigateToUpdateAccount: (String) -> Unit
 ) {
     when (uiState) {
@@ -116,6 +121,10 @@ private fun MyAccountsStatefulContent(
             accounts = uiState.accounts,
             onNavigateToUpdateAccount = onNavigateToUpdateAccount
         )
+
+        is MyAccountsUiState.EmptyData -> ErrorContent(
+            messageResId = R.string.empty_data,
+            onClick = { loadAccounts() })
     }
 }
 

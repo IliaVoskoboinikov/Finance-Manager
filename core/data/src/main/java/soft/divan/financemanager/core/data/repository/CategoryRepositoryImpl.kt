@@ -39,17 +39,19 @@ class CategoryRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getCategoriesByType(isIncome: Boolean): Flow<List<Category>> {
+    override suspend fun getCategoriesByType(isIncome: Boolean): Flow<DomainResult<List<Category>>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
-            val response = categoryRemoteDataSource.getCategoriesByType(isIncome)
-            val categoriesDto = response.body().orEmpty()
-            val categoriesDtoEntity = categoriesDto.map { it.toEntity() }
-            categoryLocalDataSource.insertCategories(categoriesDtoEntity)
+            val resultApi =
+                safeApiCall(errorLogger) { categoryRemoteDataSource.getCategoriesByType(isIncome) }
+            if (resultApi is DomainResult.Success) {
+                safeDbCall(errorLogger) { categoryLocalDataSource.insertCategories(resultApi.data.map { it.toEntity() }) }
+            }
         }
-        val categoriesFlow =
+
+        return safeDbFlow(errorLogger) {
             categoryLocalDataSource.getCategoriesByType(isIncome)
                 .map { list -> list.map { it.toDomain() } }
-        return categoriesFlow
+        }
     }
 
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
@@ -59,9 +61,9 @@ class CategoryRepositoryImpl @Inject constructor(
     }
 
     private suspend fun pullServerData() {
-        val result = safeApiCall(errorLogger) { categoryRemoteDataSource.getCategories() }
-        if (result is DomainResult.Success) {
-            safeDbCall(errorLogger) { categoryLocalDataSource.insertCategories(result.data.map { it.toEntity() }) }
+        val resultApi = safeApiCall(errorLogger) { categoryRemoteDataSource.getCategories() }
+        if (resultApi is DomainResult.Success) {
+            safeDbCall(errorLogger) { categoryLocalDataSource.insertCategories(resultApi.data.map { it.toEntity() }) }
         }
     }
 }

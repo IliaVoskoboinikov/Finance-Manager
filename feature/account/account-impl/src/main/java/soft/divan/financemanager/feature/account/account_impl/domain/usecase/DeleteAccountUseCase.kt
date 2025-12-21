@@ -1,5 +1,7 @@
 package soft.divan.financemanager.feature.account.account_impl.domain.usecase
 
+import soft.divan.financemanager.core.domain.result.DomainResult
+
 interface DeleteAccountUseCase {
-    suspend operator fun invoke(id: String): Result<Unit>
+    suspend operator fun invoke(id: String): DomainResult<Unit>
 }

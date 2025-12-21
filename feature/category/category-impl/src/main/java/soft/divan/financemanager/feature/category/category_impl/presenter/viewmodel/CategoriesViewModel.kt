@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.error.DomainError
-import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
 import soft.divan.financemanager.feature.category.category_impl.R
 import soft.divan.financemanager.feature.category.category_impl.domain.usecase.SearchCategoryUseCase
@@ -40,31 +40,29 @@ class CategoriesViewModel @Inject constructor(
     fun loadCategories() {
         viewModelScope.launch {
             getCategoriesUseCase()
-                .onStart {
-                    _uiState.update { CategoriesUiState.Loading }
-                }
-                .onEach { data ->
-                    when (data) {
-                        is DomainResult.Failure -> {
-                            if (data.error == DomainError.NoData) {
+                .onStart { _uiState.update { CategoriesUiState.Loading } }
+                .onEach { result ->
+                    result.fold(
+                        onSuccess = { categories ->
+                            val categories = categories.map { it.toUi() }
+                            if (categories.isEmpty()) {
+                                _uiState.update { CategoriesUiState.EmptyData }
+                            } else {
+                                _uiState.update {
+                                    CategoriesUiState.Success(
+                                        categories = categories,
+                                        filteredCategories = categories
+                                    )
+                                }
+                            }
+                        },
+                        onFailure = { error ->
+                            if (error == DomainError.NoData) {
                                 _uiState.update { CategoriesUiState.EmptyData }
                             }
                             _uiState.update { CategoriesUiState.Error(R.string.error_loading) }
                         }
-
-                        is DomainResult.Success -> {
-                            val categories = data.data.map { it.toUi() }
-                            if (categories.isEmpty()) {
-                                _uiState.update { CategoriesUiState.EmptyData }
-                            }
-                            _uiState.update {
-                                CategoriesUiState.Success(
-                                    categories = categories,
-                                    filteredCategories = categories
-                                )
-                            }
-                        }
-                    }
+                    )
                 }.collect()
         }
     }

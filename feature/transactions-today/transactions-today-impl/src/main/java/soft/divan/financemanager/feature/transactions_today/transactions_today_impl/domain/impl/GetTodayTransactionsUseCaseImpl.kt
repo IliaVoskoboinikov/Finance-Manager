@@ -28,7 +28,7 @@ class GetTodayTransactionsUseCaseImpl @Inject constructor(
     override operator fun invoke(isIncome: Boolean): Flow<Triple<List<Transaction>, CurrencySymbol, List<Category>>> =
         flow {
             // 1) Загружаем все аккаунты
-            val allAccounts = accountRepository.getAccounts().first()
+            val allAccounts = accountRepository.getAccounts().firstOrError()
 
             // 2) Загружаем категории и формируем map
             val categories = categoryRepository.getCategories().firstOrError()
