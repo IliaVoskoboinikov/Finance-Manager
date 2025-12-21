@@ -18,6 +18,7 @@ import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
@@ -73,10 +74,12 @@ class TransactionViewModel @Inject constructor(
             _uiState.update { TransactionUiState.Loading }
             val categories = getCategoriesUseCase(isIncome).first()
             val accounts = getAccountsUseCase().first()
-            when (mode) {
-                is TransactionMode.Create -> loadForCreate(accounts, categories)
-                is TransactionMode.Edit -> loadForEdit(mode.id, accounts, categories)
-            }
+            if (accounts is DomainResult.Success && categories is DomainResult.Success) {
+                when (mode) {
+                    is TransactionMode.Create -> loadForCreate(accounts.data, categories.data)
+                    is TransactionMode.Edit -> loadForEdit(mode.id, accounts.data, categories.data)
+                }
+            } else _uiState.update { TransactionUiState.Error(R.string.error_load_transaction) }
         }
     }
 

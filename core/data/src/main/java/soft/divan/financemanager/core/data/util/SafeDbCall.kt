@@ -30,7 +30,7 @@ fun <T : Any> safeDbFlow(
             }
     }.flowOn(ctx)
 
-suspend fun <T : Any> safeDbCall(
+suspend fun <T : Any?> safeDbCall(
     errorLogger: ErrorLogger,
     ctx: CoroutineContext = Dispatchers.IO,
     call: suspend () -> T

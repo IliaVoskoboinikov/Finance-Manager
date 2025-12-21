@@ -2,13 +2,14 @@ package soft.divan.financemanager.feature.account.account_impl.domain.usecase.im
 
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.repository.AccountRepository
+import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.UpdateAccountUseCase
 import javax.inject.Inject
 
 class UpdateAccountUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : UpdateAccountUseCase {
-    override suspend fun invoke(account: Account): Result<Unit> {
+    override suspend fun invoke(account: Account): DomainResult<Unit> {
         return accountRepository.updateAccount(account)
     }
 }
