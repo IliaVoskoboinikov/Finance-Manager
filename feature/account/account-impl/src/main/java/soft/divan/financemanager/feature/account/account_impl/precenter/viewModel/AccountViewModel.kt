@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.feature.account.account_impl.R
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.CreateAccountUseCase
 import soft.divan.financemanager.feature.account.account_impl.domain.usecase.DeleteAccountUseCase

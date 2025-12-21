@@ -33,7 +33,7 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
 
 
         // 1) Загружаем все аккаунты
-        val allAccounts = accountRepository.getAccounts().first()
+        val allAccounts = (accountRepository.getAccounts().first() as DomainResult.Success).data //todo
 
         // 2) Загружаем категории и подготавливаем map
         val categories = (categoryRepository.getCategories().first() as DomainResult.Success).data //todo
