@@ -26,5 +26,26 @@ class TransactionLocalDataSourceImpl @Inject constructor(
         return transactionDao.getByAccountId(accountId)
     }
 
+    override suspend fun saveTransaction(transaction: TransactionEntity) {
+        transactionDao.insert(transaction)
+    }
+
+    override suspend fun updateTransactionId(createdAt: String, newId: Int) {
+        transactionDao.updateTransactionId(createdAt, newId)
+    }
+
+    override suspend fun deleteTransaction(transactionId: Int) {
+        transactionDao.deleteTransaction(transactionId)
+    }
+
+    override suspend fun getTransactionById(transactionId: Int): TransactionEntity? {
+        return transactionDao.getTransactionById(transactionId)
+    }
+
+    override suspend fun updateTransaction(transaction: TransactionEntity) {
+        return transactionDao.updateTransaction(transaction)
+    }
+
+
 
 }

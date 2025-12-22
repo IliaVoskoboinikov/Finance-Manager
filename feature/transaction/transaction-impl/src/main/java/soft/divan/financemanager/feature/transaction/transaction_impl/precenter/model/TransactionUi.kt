@@ -1,9 +1,9 @@
 package soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model
 
-data class UiTransaction(
+data class TransactionUi(
     val id: Int?,
     val accountId: String,
-    val category: UiCategory,
+    val category: CategoryUi,
     val currencyCode: String,
     val amount: String,
     val date: String,

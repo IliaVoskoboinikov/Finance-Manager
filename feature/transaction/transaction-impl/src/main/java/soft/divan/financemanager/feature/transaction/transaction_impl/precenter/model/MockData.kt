@@ -7,41 +7,36 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.R
 // --- MOCK DATA ---
 
 val mockCategories = listOf(
-    UiCategory(
+    CategoryUi(
         id = 1,
         name = "Еда",
         emoji = "🍔",
-        isIncome = false
     ),
-    UiCategory(
+    CategoryUi(
         id = 2,
         name = "Зарплата",
         emoji = "💰",
-        isIncome = true
     ),
-    UiCategory(
+    CategoryUi(
         id = 3,
         name = "Транспорт",
         emoji = "🚌",
-        isIncome = false
     ),
-    UiCategory(
+    CategoryUi(
         id = 4,
         name = "Подарки",
         emoji = "🎁",
-        isIncome = false
     ),
-    UiCategory(
+    CategoryUi(
         id = 5,
         name = "Инвестиции",
         emoji = "📈",
-        isIncome = true
     )
 )
 
 val mockAccounts = listOf(AccountUi("1", "Основной счёт", "1000", CurrencySymbol.RUB.symbol))
 
-val mockTransaction = UiTransaction(
+val mockTransaction = TransactionUi(
     id = 1001,
     accountId = "1",
     category = mockCategories[0], // "Еда"

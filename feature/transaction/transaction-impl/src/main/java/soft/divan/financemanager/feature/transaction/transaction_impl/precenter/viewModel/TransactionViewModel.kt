@@ -15,9 +15,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.data.DateHelper
-import soft.divan.financemanager.core.domain.model.Account
-import soft.divan.financemanager.core.domain.model.Category
-import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
@@ -31,11 +28,11 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.navigation
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toDomain
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.mapper.toUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.AccountUi
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.CategoryUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionMode
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
-import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiCategory
-import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiTransaction
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -66,69 +63,75 @@ class TransactionViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<TransactionEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    private var transaction: TransactionUi? = null
+    private var categories: List<CategoryUi> = emptyList()
+    private var accounts: List<AccountUi> = emptyList()
+
     private val mode =
         if (transactionId == null) TransactionMode.Create else TransactionMode.Edit(transactionId)
+
+    private fun publishSuccess() {
+        val currentTransaction = transaction ?: return
+        _uiState.update {
+            TransactionUiState.Success(
+                transaction = currentTransaction,
+                categories = categories,
+                accounts = accounts
+            )
+        }
+    }
 
     fun load() {
         viewModelScope.launch {
             _uiState.update { TransactionUiState.Loading }
-            val categories = getCategoriesUseCase(isIncome).first()
-            val accounts = getAccountsUseCase().first()
-            if (accounts is DomainResult.Success && categories is DomainResult.Success) {
-                when (mode) {
-                    is TransactionMode.Create -> loadForCreate(accounts.data, categories.data)
-                    is TransactionMode.Edit -> loadForEdit(mode.id, accounts.data, categories.data)
-                }
-            } else _uiState.update { TransactionUiState.Error(R.string.error_load_transaction) }
+            val categoriesResult = getCategoriesUseCase(isIncome).first()
+            val accountsResult = getAccountsUseCase().first()
+
+            if (categoriesResult !is DomainResult.Success || accountsResult !is DomainResult.Success) {
+                _uiState.update { TransactionUiState.Error(R.string.error_load_transaction) }
+                return@launch
+            }
+
+            categories = categoriesResult.data.map { it.toUi() }
+            accounts = accountsResult.data.map { it.toUi() }
+
+            when (mode) {
+                is TransactionMode.Create -> initForCreate()
+                is TransactionMode.Edit -> initForEdit(mode.id)
+            }
         }
     }
 
-    private fun loadForCreate(
-        accounts: List<Account>,
-        categories: List<Category>
-    ) {
+    private fun initForCreate() {
         val now = LocalDateTime.now()
+        val account = accounts.firstOrNull() ?: return
+        val category = categories.firstOrNull() ?: return
 
-        val initialTransaction = UiTransaction(
+        transaction = TransactionUi(
             id = null,
-            accountId = accounts.firstOrNull()?.id!!,
-            category = categories.firstOrNull()?.toUi()
-                ?: UiCategory(0, "Unknown", "", false),
+            accountId = account.id,
+            category = category,
             amount = "0",
             date = DateHelper.formatDateForDisplay(LocalDate.now()),
             time = DateHelper.formatTimeForDisplay(LocalTime.now()),
             createdAt = DateHelper.formatDateTimeForDisplay(now),
             updatedAt = DateHelper.formatDateTimeForDisplay(now),
-            currencyCode = accounts.firstOrNull()?.currency ?: CurrencySymbol.RUB.code,
+            currencyCode = account.currency,
             comment = "",
             mode = TransactionMode.Create
         )
 
-        _uiState.update {
-            TransactionUiState.Success(
-                transaction = initialTransaction,
-                categories = categories.map { it.toUi() },
-                accounts = accounts.map { it.toUi() }
-            )
-        }
+        publishSuccess()
     }
 
-    private suspend fun loadForEdit(
-        id: Int,
-        accounts: List<Account>,
-        categories: List<Category>
-    ) {
+    private suspend fun initForEdit(id: Int) {
         getTransactionUseCase(id).fold(
-            onSuccess = { transaction ->
-                _uiState.update {
-                    TransactionUiState.Success(
-                        transaction = transaction.toUi(
-                            category = categories.find { category -> category.id == transaction.categoryId }!!
-                        ),
-                        categories = categories.map { category -> category.toUi() },
-                        accounts = accounts.map { account -> account.toUi() },
-                    )
-                }
+            onSuccess = { domainTransaction ->
+                val category = categories.firstOrNull { it.id == domainTransaction.categoryId }
+                    ?: return@fold
+
+                transaction = domainTransaction.toUi(category)
+                publishSuccess()
             },
             onFailure = { _uiState.update { TransactionUiState.Error(R.string.error_load_transaction) } }
         )
@@ -136,127 +139,74 @@ class TransactionViewModel @Inject constructor(
 
     fun save() {
         viewModelScope.launch {
-            val state = uiState.value
-            if (state !is TransactionUiState.Success) return@launch
+            val current = transaction ?: return@launch
 
             _uiState.update { TransactionUiState.Loading }
 
-            val transaction =
-                state.transaction.copy(updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now()))
-                    .toDomain()
+            val updated = current.copy(
+                updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now())
+            ).toDomain()
 
-            val result = if (mode == TransactionMode.Create) {
-                createTransactionUseCase(transaction)
-            } else {
-                updateTransactionUseCase(transaction)
+            val result = when (mode) {
+                is TransactionMode.Create -> createTransactionUseCase(updated)
+                is TransactionMode.Edit -> updateTransactionUseCase(updated)
             }
 
             result.fold(
                 onSuccess = { _eventFlow.emit(TransactionEvent.TransactionSaved) },
                 onFailure = {
                     _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
-                    _uiState.update { state }
+                    publishSuccess()
                 }
             )
         }
     }
 
     fun updateComment(comment: String) {
-        val currentState = uiState.value
-        if (currentState is TransactionUiState.Success) {
-            _uiState.update {
-                currentState.copy(
-                    transaction = currentState.transaction.copy(
-                        comment = comment
-                    )
-                )
-            }
-        }
+        transaction = transaction?.copy(comment = comment)
+        publishSuccess()
     }
 
     fun updateDate(date: LocalDate) {
-        val currentState = uiState.value
-        if (currentState is TransactionUiState.Success) {
-            _uiState.update {
-                currentState.copy(
-                    transaction = currentState.transaction.copy(
-                        date = DateHelper.formatDateForDisplay(date),
-                        updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now()),
-                    )
-                )
-            }
-        }
-
+        transaction = transaction?.copy(date = DateHelper.formatDateForDisplay(date))
+        publishSuccess()
     }
 
     fun updateTime(time: LocalTime) {
-        val currentState = uiState.value
-        if (currentState is TransactionUiState.Success) {
-            _uiState.update {
-                currentState.copy(
-                    transaction = currentState.transaction.copy(
-                        time = DateHelper.formatTimeForDisplay(time),
-                        updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now()),
-                    )
-                )
-            }
-        }
-
+        transaction = transaction?.copy(time = DateHelper.formatTimeForDisplay(time))
+        publishSuccess()
     }
 
     fun updateAmount(amount: String) {
-        val currentState = uiState.value
-        if (currentState is TransactionUiState.Success) {
-            _uiState.update {
-                currentState.copy(
-                    transaction = currentState.transaction.copy(
-                        amount = amount
-                    )
-                )
-            }
-        }
-
+        transaction = transaction?.copy(amount = amount)
+        publishSuccess()
     }
 
-    fun updateCategory(category: UiCategory) {
-        val currentState = uiState.value
-        if (currentState is TransactionUiState.Success) {
-            _uiState.update {
-                currentState.copy(
-                    transaction = currentState.transaction.copy(
-                        category = category
-                    )
-                )
-            }
-        }
+    fun updateCategory(category: CategoryUi) {
+        transaction = transaction?.copy(category = category)
+        publishSuccess()
     }
 
     fun updateAccount(account: AccountUi) {
-        val currentState = uiState.value
-        if (currentState is TransactionUiState.Success) {
-            _uiState.update {
-                currentState.copy(
-                    transaction = currentState.transaction.copy(
-                        accountId = account.id,
-                        currencyCode = account.currency
-                    )
-                )
-            }
-        }
+        transaction = transaction?.copy(
+            accountId = account.id,
+            currencyCode = account.currency
+        )
+        publishSuccess()
     }
 
     fun delete() {
         viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState is TransactionUiState.Success && mode is TransactionMode.Edit) {
-                deleteTransactionUseCase(currentState.transaction.id!!).fold(
-                    onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
-                    onFailure = {
-                        _eventFlow.emit(TransactionEvent.ShowError(R.string.fail_delete_transaction))
-                        _uiState.update { currentState }
-                    }
-                )
-            }
+            val id = transaction?.id ?: return@launch
+            if (mode !is TransactionMode.Edit) return@launch
+
+            deleteTransactionUseCase(id).fold(
+                onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
+                onFailure = {
+                    _eventFlow.emit(TransactionEvent.ShowError(R.string.fail_delete_transaction))
+                    publishSuccess()
+                }
+            )
         }
     }
 }

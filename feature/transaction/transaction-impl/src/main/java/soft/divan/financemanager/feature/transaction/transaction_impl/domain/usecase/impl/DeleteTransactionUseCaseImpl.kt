@@ -1,6 +1,6 @@
 package soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.impl
 
-import soft.divan.financemanager.feature.transaction.transaction_impl.domain.repository.TransactionRepository
+import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
 import javax.inject.Inject
 
