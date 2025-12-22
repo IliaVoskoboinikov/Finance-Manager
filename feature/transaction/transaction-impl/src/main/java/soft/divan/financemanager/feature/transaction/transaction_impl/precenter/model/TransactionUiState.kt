@@ -7,8 +7,8 @@ import androidx.compose.runtime.Immutable
 sealed interface TransactionUiState {
     data object Loading : TransactionUiState
     data class Success(
-        val transaction: UiTransaction,
-        val categories: List<UiCategory>,
+        val transaction: TransactionUi,
+        val categories: List<CategoryUi>,
         val accounts: List<AccountUi>,
     ) : TransactionUiState
 

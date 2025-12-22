@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.transaction.transaction_impl.data.dto
+package soft.divan.financemanager.core.data.dto
 
 import com.google.gson.annotations.SerializedName
 

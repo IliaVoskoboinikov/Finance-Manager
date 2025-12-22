@@ -47,10 +47,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.AccountUi
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.CategoryUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUiState
-import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiCategory
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockAccounts
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockCategories
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.mockTransactionUiStateSuccess
@@ -168,7 +168,7 @@ fun TransactionContent(
     onCommentChange: (String) -> Unit,
     onDateChange: (LocalDate) -> Unit,
     onTimeChange: (LocalTime) -> Unit,
-    onCategoryChange: (UiCategory) -> Unit,
+    onCategoryChange: (CategoryUi) -> Unit,
     onAccountChange: (AccountUi) -> Unit,
     onDelete: () -> Unit,
     snackbarHostState: SnackbarHostState
@@ -223,7 +223,7 @@ fun TransactionForm(
     onCommentChange: (String) -> Unit,
     onDateChange: (LocalDate) -> Unit,
     onTimeChange: (LocalTime) -> Unit,
-    onCategoryChange: (UiCategory) -> Unit,
+    onCategoryChange: (CategoryUi) -> Unit,
     onAccountChange: (AccountUi) -> Unit,
     onDelete: () -> Unit
 ) {
@@ -321,8 +321,8 @@ private fun ShowTimePickerDialog(
 @Composable
 private fun ShowCategoryBottomSheet(
     isShowCategorySheet: MutableState<Boolean>,
-    categories: List<UiCategory>,
-    onCategoryChange: (UiCategory) -> Unit
+    categories: List<CategoryUi>,
+    onCategoryChange: (CategoryUi) -> Unit
 ) {
     if (isShowCategorySheet.value) {
         CategoryBottomSheet(
@@ -415,8 +415,8 @@ private fun Category(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CategoryBottomSheet(
-    categories: List<UiCategory>,
-    onCategorySelected: (UiCategory) -> Unit,
+    categories: List<CategoryUi>,
+    onCategorySelected: (CategoryUi) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     ModalBottomSheet(
@@ -488,8 +488,8 @@ private fun AccountSheetContent(
 
 @Composable
 private fun CategorySheetContent(
-    categories: List<UiCategory>,
-    onCategorySelected: (UiCategory) -> Unit,
+    categories: List<CategoryUi>,
+    onCategorySelected: (CategoryUi) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     Column(

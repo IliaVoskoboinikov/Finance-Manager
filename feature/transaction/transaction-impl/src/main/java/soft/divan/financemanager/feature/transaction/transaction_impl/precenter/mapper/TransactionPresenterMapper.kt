@@ -2,16 +2,16 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.precenter
 
 
 import soft.divan.financemanager.core.domain.data.DateHelper
-import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.Transaction
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.CategoryUi
 import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionMode
-import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.UiTransaction
+import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.model.TransactionUi
 
-fun Transaction.toUi(category: Category): UiTransaction {
-    return UiTransaction(
+fun Transaction.toUi(category: CategoryUi): TransactionUi {
+    return TransactionUi(
         id = idServer,
         accountId = accountId,
-        category = category.toUi(),
+        category = category,
         amount = amount.stripTrailingZeros().toPlainString(),
         date = DateHelper.formatDateForDisplay(transactionDate.toLocalDate()),
         time = DateHelper.formatTimeForDisplay(transactionDate),
@@ -23,7 +23,7 @@ fun Transaction.toUi(category: Category): UiTransaction {
     )
 }
 
-fun UiTransaction.toDomain(): Transaction {
+fun TransactionUi.toDomain(): Transaction {
     return Transaction(
         //todo
         idServer = id ?: -1,
