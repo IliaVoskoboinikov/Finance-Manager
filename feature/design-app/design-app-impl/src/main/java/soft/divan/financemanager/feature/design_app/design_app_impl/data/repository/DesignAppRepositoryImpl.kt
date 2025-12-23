@@ -1,5 +1,4 @@
-package soft.divan.financemanager.feature.design_app.design_app_impl.data
-
+package soft.divan.financemanager.feature.design_app.design_app_impl.data.repository
 
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.flow.Flow
@@ -8,7 +7,6 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.repositiry.DesignAppRepository
 import soft.divan.financemanager.uikit.theme.AccentColor
 import javax.inject.Inject
-
 
 class DesignAppRepositoryImpl @Inject constructor(
     private val designAppLocalSource: DesignAppLocalSource
