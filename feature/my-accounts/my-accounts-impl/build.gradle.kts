@@ -9,6 +9,6 @@ dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.data)
     implementation(projects.feature.account.accountApi)
-    implementation(projects.feature.haptic.hapticApi)
+    implementation(projects.feature.haptics.hapticsApi)
 
 }

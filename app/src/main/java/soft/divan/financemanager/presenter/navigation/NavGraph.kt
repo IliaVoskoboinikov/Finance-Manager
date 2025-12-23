@@ -11,7 +11,7 @@ import soft.divan.financemanager.feature.account.account_api.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.analysis_api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.category_api.CategoryFeatureApi
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
-import soft.divan.financemanager.feature.haptic.haptic_api.HapticFeatureApi
+import soft.divan.financemanager.feature.haptics.haptics_api.HapticsFeatureApi
 import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.MyAccountsFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
@@ -36,7 +36,7 @@ fun NavGraph(
     analysisFeatureApi: AnalysisFeatureApi,
     historyFeatureApi: HistoryFeatureApi,
     myAccountsFeatureApi: MyAccountsFeatureApi,
-    hapticFeatureApi: HapticFeatureApi,
+    hapticsFeatureApi: HapticsFeatureApi,
     soundsFeatureApi: SoundsFeatureApi
 ) {
     NavHost(
@@ -65,7 +65,7 @@ fun NavGraph(
         register(
             featureApi = myAccountsFeatureApi, navController = navController, modifier = modifier
         )
-        register(featureApi = hapticFeatureApi, navController = navController, modifier = modifier)
+        register(featureApi = hapticsFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = soundsFeatureApi, navController = navController, modifier = modifier)
 
     }

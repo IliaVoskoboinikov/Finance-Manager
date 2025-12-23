@@ -52,8 +52,8 @@ dependencies {
     implementation(projects.feature.account.accountApi)
     implementation(projects.feature.account.accountImpl)
 
-    implementation(projects.feature.haptic.hapticApi)
-    implementation(projects.feature.haptic.hapticImpl)
+    implementation(projects.feature.haptics.hapticsApi)
+    implementation(projects.feature.haptics.hapticsImpl)
 
     implementation(projects.feature.sounds.soundsApi)
     implementation(projects.feature.sounds.soundsImpl)

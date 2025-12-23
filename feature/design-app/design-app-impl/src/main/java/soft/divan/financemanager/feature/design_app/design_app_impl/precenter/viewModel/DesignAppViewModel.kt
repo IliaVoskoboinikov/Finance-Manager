@@ -22,8 +22,8 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.domain.useca
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.SetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.SetThemeModeUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.precenter.model.DesignUiState
-import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticManager
-import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticType
+import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticType
+import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticsManager
 import soft.divan.financemanager.uikit.theme.AccentColor
 import javax.inject.Inject
 
@@ -34,7 +34,7 @@ class DesignAppViewModel @Inject constructor(
     private val getAccentColorUseCase: GetAccentColorUseCase,
     private val setAccentColorUseCase: SetAccentColorUseCase,
     private val setCustomAccentColorUseCase: SetCustomAccentColorUseCase,
-    private val hapticManager: HapticManager,
+    private val hapticsManager: HapticsManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DesignUiState>(DesignUiState.Loading)
@@ -60,21 +60,21 @@ class DesignAppViewModel @Inject constructor(
     }
 
     fun setAccentColor(accentColor: AccentColor) {
-        hapticManager.perform(HapticType.CLICK)
+        hapticsManager.perform(HapticType.CLICK)
         viewModelScope.launch {
             setAccentColorUseCase(accentColor)
         }
     }
 
     fun onThemeSelected(mode: ThemeMode) {
-        hapticManager.perform(HapticType.CLICK)
+        hapticsManager.perform(HapticType.CLICK)
         viewModelScope.launch {
             setThemeModeUseCase(mode)
         }
     }
 
     fun setCustomColor(color: Color) {
-        hapticManager.perform(HapticType.CLICK)
+        hapticsManager.perform(HapticType.CLICK)
         viewModelScope.launch {
             setCustomAccentColorUseCase(color)
             setAccentColor(AccentColor.CUSTOM)
