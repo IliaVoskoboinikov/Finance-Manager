@@ -54,6 +54,7 @@ fun TransactionsTodayPreview() {
             onNavigateToHistory = {},
             onNavigateToNewTransaction = {},
             onNavigateToOldTransaction = {},
+            hapticNavigation = {},
             snackbarHostState = remember { SnackbarHostState() }
         )
     }
@@ -83,6 +84,7 @@ fun TransactionsTodayScreen(
         onNavigateToHistory = onNavigateToHistory,
         onNavigateToNewTransaction = onNavigateToNewTransaction,
         onNavigateToOldTransaction = onNavigateToOldTransaction,
+        hapticNavigation = viewModel::hapticNavigation,
         snackbarHostState = snackbarHostState
     )
 }
@@ -94,6 +96,7 @@ fun TransactionsTodayContent(
     uiState: TransactionsTodayUiState,
     onNavigateToHistory: () -> Unit,
     onNavigateToNewTransaction: () -> Unit,
+    hapticNavigation: () -> Unit,
     onNavigateToOldTransaction: (idTransaction: Int) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
@@ -108,7 +111,12 @@ fun TransactionsTodayContent(
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        floatingActionButton = { FloatingButton(onClick = onNavigateToNewTransaction) }
+        floatingActionButton = {
+            FloatingButton(onClick = {
+                onNavigateToNewTransaction()
+                hapticNavigation()
+            })
+        }
     ) { paddingValues ->
 
         Box(modifier = modifier.padding(paddingValues)) {

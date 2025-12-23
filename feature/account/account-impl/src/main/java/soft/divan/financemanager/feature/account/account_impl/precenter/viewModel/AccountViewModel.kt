@@ -28,6 +28,8 @@ import soft.divan.financemanager.feature.account.account_impl.precenter.model.Ac
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountMode
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountUiModel
 import soft.divan.financemanager.feature.account.account_impl.precenter.model.AccountUiState
+import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticManager
+import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticType
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
@@ -38,6 +40,7 @@ class AccountViewModel @Inject constructor(
     private val updateAccountUseCase: UpdateAccountUseCase,
     private val getAccountByIdUseCase: GetAccountByIdUseCase,
     private val deleteAccountUseCase: DeleteAccountUseCase,
+    private val hapticManager: HapticManager,
     savedStateHandle: SavedStateHandle
 
 ) : ViewModel() {
@@ -121,7 +124,6 @@ class AccountViewModel @Inject constructor(
         }
     }
 
-
     fun createAccount() {
         viewModelScope.launch {
             val currentState = uiState.value
@@ -136,8 +138,12 @@ class AccountViewModel @Inject constructor(
                 }
 
                 result.fold(
-                    onSuccess = { _eventFlow.emit(AccountEvent.Saved) },
+                    onSuccess = {
+                        hapticManager.perform(HapticType.SUCCESS)
+                        _eventFlow.emit(AccountEvent.Saved)
+                    },
                     onFailure = {
+                        hapticManager.perform(HapticType.ERROR)
                         _eventFlow.emit(AccountEvent.ShowError(R.string.error_save))
                         _uiState.update { currentState }
                     }
@@ -151,8 +157,12 @@ class AccountViewModel @Inject constructor(
             val currentState = uiState.value
             if (currentState is AccountUiState.Success && mode is AccountMode.Edit) {
                 deleteAccountUseCase(currentState.account.id).fold(
-                    onSuccess = { _eventFlow.emit(AccountEvent.Deleted) },
+                    onSuccess = {
+                        hapticManager.perform(HapticType.SUCCESS)
+                        _eventFlow.emit(AccountEvent.Deleted)
+                    },
                     onFailure = {
+                        hapticManager.perform(HapticType.ERROR)
                         _eventFlow.emit(AccountEvent.ShowError(R.string.error_delete))
                         _uiState.update { currentState }
                     }

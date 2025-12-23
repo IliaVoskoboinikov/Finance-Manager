@@ -17,6 +17,8 @@ import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
+import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticManager
+import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticType
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
@@ -46,6 +48,7 @@ class TransactionViewModel @Inject constructor(
     private val getCategoriesUseCase: GetCategoriesByTypeUseCase,
     private val updateTransactionUseCase: UpdateTransactionUseCase,
     private val deleteTransactionUseCase: DeleteTransactionUseCase,
+    private val hapticManager: HapticManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -153,8 +156,12 @@ class TransactionViewModel @Inject constructor(
             }
 
             result.fold(
-                onSuccess = { _eventFlow.emit(TransactionEvent.TransactionSaved) },
+                onSuccess = {
+                    hapticManager.perform(HapticType.SUCCESS)
+                    _eventFlow.emit(TransactionEvent.TransactionSaved)
+                },
                 onFailure = {
+                    hapticManager.perform(HapticType.ERROR)
                     _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
                     publishSuccess()
                 }
@@ -201,8 +208,12 @@ class TransactionViewModel @Inject constructor(
             if (mode !is TransactionMode.Edit) return@launch
 
             deleteTransactionUseCase(id).fold(
-                onSuccess = { _eventFlow.emit(TransactionEvent.TransactionDeleted) },
+                onSuccess = {
+                    hapticManager.perform(HapticType.SUCCESS)
+                    _eventFlow.emit(TransactionEvent.TransactionDeleted)
+                },
                 onFailure = {
+                    hapticManager.perform(HapticType.ERROR)
                     _eventFlow.emit(TransactionEvent.ShowError(R.string.fail_delete_transaction))
                     publishSuccess()
                 }
