@@ -17,8 +17,8 @@ import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
-import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticManager
-import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticType
+import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticType
+import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticsManager
 import soft.divan.financemanager.feature.sounds.sounds_api.domain.SoundType
 import soft.divan.financemanager.feature.sounds.sounds_api.domain.SoundsPlayer
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
@@ -50,7 +50,7 @@ class TransactionViewModel @Inject constructor(
     private val getCategoriesUseCase: GetCategoriesByTypeUseCase,
     private val updateTransactionUseCase: UpdateTransactionUseCase,
     private val deleteTransactionUseCase: DeleteTransactionUseCase,
-    private val hapticManager: HapticManager,
+    private val hapticsManager: HapticsManager,
     private val soundPlayer: SoundsPlayer,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -160,12 +160,12 @@ class TransactionViewModel @Inject constructor(
 
             result.fold(
                 onSuccess = {
-                    hapticManager.perform(HapticType.SUCCESS)
+                    hapticsManager.perform(HapticType.SUCCESS)
                     soundPlayer.play(SoundType.COIN)
                     _eventFlow.emit(TransactionEvent.TransactionSaved)
                 },
                 onFailure = {
-                    hapticManager.perform(HapticType.ERROR)
+                    hapticsManager.perform(HapticType.ERROR)
                     _eventFlow.emit(TransactionEvent.ShowError(R.string.error_save))
                     publishSuccess()
                 }
@@ -213,11 +213,11 @@ class TransactionViewModel @Inject constructor(
 
             deleteTransactionUseCase(id).fold(
                 onSuccess = {
-                    hapticManager.perform(HapticType.SUCCESS)
+                    hapticsManager.perform(HapticType.SUCCESS)
                     _eventFlow.emit(TransactionEvent.TransactionDeleted)
                 },
                 onFailure = {
-                    hapticManager.perform(HapticType.ERROR)
+                    hapticsManager.perform(HapticType.ERROR)
                     _eventFlow.emit(TransactionEvent.ShowError(R.string.fail_delete_transaction))
                     publishSuccess()
                 }
