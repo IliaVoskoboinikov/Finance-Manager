@@ -12,14 +12,15 @@ fun BottomNavigationBar(
     modifier: Modifier,
     navController: NavHostController,
     screens: List<ScreenBottom>,
-    currentRoute: String?
+    currentRoute: String?,
+    hapticToggleMenu: () -> Unit
 ) {
     NavigationBar(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surfaceContainer
     ) {
         screens.forEach { screen ->
-            FMNavigationBarItem(currentRoute, screen, navController)
+            FMNavigationBarItem(currentRoute, screen, navController, hapticToggleMenu)
         }
     }
 }

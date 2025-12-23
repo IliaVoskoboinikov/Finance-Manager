@@ -5,6 +5,7 @@ plugins {
 dependencies {
     implementation(projects.feature.designApp.designAppApi)
     implementation(projects.core.uikit)
+    implementation(projects.feature.haptic.hapticApi)
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.colorpicker.compose)

@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
+import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticManager
+import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticType
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.R
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.domain.GetTodayTransactionsUseCase
 import soft.divan.financemanager.feature.transactions_today.transactions_today_impl.presenter.mapper.toUi
@@ -24,6 +26,7 @@ import javax.inject.Inject
 class TransactionsTodayViewModel @Inject constructor(
     private val getTodayTransactionsUseCase: GetTodayTransactionsUseCase,
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
+    private val hapticManager: HapticManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<TransactionsTodayUiState>(TransactionsTodayUiState.Loading)
@@ -53,5 +56,9 @@ class TransactionsTodayViewModel @Inject constructor(
             }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
+    }
+
+    fun hapticNavigation() {
+        hapticManager.perform(HapticType.CLICK)
     }
 }
