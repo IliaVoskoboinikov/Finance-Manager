@@ -37,6 +37,7 @@ fun HapticScreenPreview() {
         HapticContent(
             uiState = HapticUiState.Success(true),
             loadData = {},
+            onNavigateBack = {},
             setHapticEnabled = {}
         )
     }
@@ -53,6 +54,7 @@ fun HapticScreen(
     HapticContent(
         modifier = modifier,
         uiState = uiState,
+        onNavigateBack = onNavigateBack,
         loadData = viewModel::load,
         setHapticEnabled = viewModel::setHapticEnabled
     )
@@ -61,7 +63,7 @@ fun HapticScreen(
 @Composable
 fun HapticContent(
     modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit = {},
+    onNavigateBack: () -> Unit,
     uiState: HapticUiState,
     loadData: () -> Unit,
     setHapticEnabled: (Boolean) -> Unit
