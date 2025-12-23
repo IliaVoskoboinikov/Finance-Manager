@@ -55,5 +55,8 @@ dependencies {
     implementation(projects.feature.haptic.hapticApi)
     implementation(projects.feature.haptic.hapticImpl)
 
+    implementation(projects.feature.sounds.soundsApi)
+    implementation(projects.feature.sounds.soundsImpl)
+
     implementation(libs.androidx.lifecycle.process)
 }

@@ -19,6 +19,8 @@ import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticManager
 import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticType
+import soft.divan.financemanager.feature.sounds.sounds_api.domain.SoundType
+import soft.divan.financemanager.feature.sounds.sounds_api.domain.SoundsPlayer
 import soft.divan.financemanager.feature.transaction.transaction_impl.R
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.DeleteTransactionUseCase
@@ -49,6 +51,7 @@ class TransactionViewModel @Inject constructor(
     private val updateTransactionUseCase: UpdateTransactionUseCase,
     private val deleteTransactionUseCase: DeleteTransactionUseCase,
     private val hapticManager: HapticManager,
+    private val soundPlayer: SoundsPlayer,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -158,6 +161,7 @@ class TransactionViewModel @Inject constructor(
             result.fold(
                 onSuccess = {
                     hapticManager.perform(HapticType.SUCCESS)
+                    soundPlayer.play(SoundType.COIN)
                     _eventFlow.emit(TransactionEvent.TransactionSaved)
                 },
                 onFailure = {

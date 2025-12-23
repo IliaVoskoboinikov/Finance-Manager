@@ -36,7 +36,8 @@ fun SettingsScreenPreview() {
             onNavigateToAboutTheProgram = {},
             onNavigateToSecurity = {},
             onNavigateToDesignApp = {},
-            onNavigateToHaptic = {}
+            onNavigateToHaptic = {},
+            onNavigateToSounds = {}
         )
     }
 }
@@ -48,13 +49,15 @@ fun SettingsScreen(
     onNavigateToSecurity: () -> Unit,
     onNavigateToDesignApp: () -> Unit,
     onNavigateToHaptic: () -> Unit,
+    onNavigateToSounds: () -> Unit,
 ) {
     val settingsItems = remember {
         provideSettings(
             onNavigateToAboutTheProgram = onNavigateToAboutTheProgram,
             onNavigateToSecurity = onNavigateToSecurity,
             onNavigateToDesignApp = onNavigateToDesignApp,
-            onNavigateToHaptic = onNavigateToHaptic
+            onNavigateToHaptic = onNavigateToHaptic,
+            onNavigateToSounds = onNavigateToSounds
         )
     }
 
@@ -74,7 +77,7 @@ fun SettingsScreen(
 }
 
 @Composable
-fun SettingsItem(model: SettingsModel) {
+private fun SettingsItem(model: SettingsModel) {
     ListItem(
         modifier = Modifier
             .height(56.dp)
@@ -95,15 +98,16 @@ fun SettingsItem(model: SettingsModel) {
 }
 
 
-fun provideSettings(
+private fun provideSettings(
     onNavigateToAboutTheProgram: () -> Unit,
     onNavigateToSecurity: () -> Unit,
     onNavigateToDesignApp: () -> Unit,
     onNavigateToHaptic: () -> Unit,
+    onNavigateToSounds: () -> Unit
 ): List<SettingsModel> {
     return listOf(
         SettingsModel(R.string.design) { onNavigateToDesignApp() },
-        SettingsModel(R.string.sounds) {},
+        SettingsModel(R.string.sounds) { onNavigateToSounds() },
         SettingsModel(R.string.haptics) { onNavigateToHaptic() },
         SettingsModel(R.string.passcode) { onNavigateToSecurity() },
         SettingsModel(R.string.synchronization) {},

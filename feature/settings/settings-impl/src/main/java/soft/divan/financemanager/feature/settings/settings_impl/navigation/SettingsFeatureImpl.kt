@@ -12,6 +12,7 @@ import soft.divan.financemanager.feature.security.security_api.SecurityFeatureAp
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.settings.settings_impl.presenter.screens.AboutTheProgramScreen
 import soft.divan.financemanager.feature.settings.settings_impl.presenter.screens.SettingsScreen
+import soft.divan.financemanager.feature.sounds.sounds_api.SoundsFeatureApi
 import javax.inject.Inject
 
 private const val BASE_ROUTE = "settings"
@@ -33,6 +34,9 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
     @Inject
     lateinit var hapticFeatureApi: HapticFeatureApi
 
+    @Inject
+    lateinit var soundsFeatureApi: SoundsFeatureApi
+
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
@@ -44,16 +48,10 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
                 onNavigateToAboutTheProgram = {
                     navController.navigate(screenSettingsAboutTheProgramScreenRoute)
                 },
-                onNavigateToSecurity = {
-                    navController.navigate(securityFeatureApi.route)
-                },
-                onNavigateToDesignApp = {
-                    navController.navigate(designAppFeatureApi.route)
-
-                },
-                onNavigateToHaptic = {
-                    navController.navigate(hapticFeatureApi.route)
-                }
+                onNavigateToSecurity = { navController.navigate(securityFeatureApi.route) },
+                onNavigateToDesignApp = { navController.navigate(designAppFeatureApi.route) },
+                onNavigateToHaptic = { navController.navigate(hapticFeatureApi.route) },
+                onNavigateToSounds = { navController.navigate(soundsFeatureApi.route) }
             )
         }
 
