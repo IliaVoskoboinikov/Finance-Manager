@@ -4,10 +4,8 @@ plugins {
 
 dependencies {
     implementation(projects.feature.settings.settingsApi)
+    implementation(projects.core.uikit)
     implementation(projects.feature.security.securityApi)
     implementation(projects.feature.designApp.designAppApi)
-    implementation(projects.core.uikit)
-
-    implementation(libs.androidx.datastore.preferences)
-    implementation(libs.androidx.datastore.core)
+    implementation(projects.feature.haptic.hapticApi)
 }

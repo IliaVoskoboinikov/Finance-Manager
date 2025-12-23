@@ -21,6 +21,7 @@ private val KEY_CUSTOM_COLOR = stringPreferencesKey("app_custom_accent_hex")
 class DesignAppLocalSourceImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) : DesignAppLocalSource {
+
     override fun getThemeMode(): Flow<ThemeMode> {
         return dataStore.data.map { prefs ->
             prefs[KEY_THEME_MODE]?.toEnumOrNull<ThemeMode>() ?: ThemeMode.SYSTEM

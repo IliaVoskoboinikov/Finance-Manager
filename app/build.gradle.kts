@@ -52,5 +52,8 @@ dependencies {
     implementation(projects.feature.account.accountApi)
     implementation(projects.feature.account.accountImpl)
 
+    implementation(projects.feature.haptic.hapticApi)
+    implementation(projects.feature.haptic.hapticImpl)
+
     implementation(libs.androidx.lifecycle.process)
 }
