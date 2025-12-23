@@ -13,8 +13,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import soft.divan.financemanager.feature.sounds.sounds_api.domain.SoundsPlayer
-import soft.divan.financemanager.feature.sounds.sounds_impl.data.sound.SoundsPlayerImpl
-import soft.divan.financemanager.feature.sounds.sounds_impl.data.sound.SoundsPoolHolder
+import soft.divan.financemanager.feature.sounds.sounds_impl.data.sounds.SoundsPlayerImpl
+import soft.divan.financemanager.feature.sounds.sounds_impl.data.sounds.SoundsPoolHolder
 import soft.divan.financemanager.feature.sounds.sounds_impl.data.sourсe.SoundsLocalSource
 import soft.divan.financemanager.feature.sounds.sounds_impl.data.sourсe.impl.SoundsLocalSourceImpl
 import soft.divan.financemanager.feature.sounds.sounds_impl.domain.usecase.ObserveSoundsEnabledUseCase
