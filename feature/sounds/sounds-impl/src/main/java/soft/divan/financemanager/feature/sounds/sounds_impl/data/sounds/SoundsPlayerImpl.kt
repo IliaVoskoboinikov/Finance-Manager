@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.sounds.sounds_impl.data.sound
+package soft.divan.financemanager.feature.sounds.sounds_impl.data.sounds
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn

@@ -6,14 +6,14 @@ import soft.divan.financemanager.feature.sounds.sounds_impl.domain.repository.So
 import javax.inject.Inject
 
 class SoundsRepositoryImpl @Inject constructor(
-    private val soundLocalSource: SoundsLocalSource
+    private val soundsLocalSource: SoundsLocalSource
 ) : SoundsRepository {
 
     override fun observeSoundsEnabled(): Flow<Boolean> {
-        return soundLocalSource.getSoundEnabled()
+        return soundsLocalSource.getSoundEnabled()
     }
 
     override suspend fun setSoundsEnabled(isEnabled: Boolean) {
-        soundLocalSource.setSoundEnabled(isEnabled)
+        soundsLocalSource.setSoundEnabled(isEnabled)
     }
 }
