@@ -8,4 +8,5 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.core.uikit)
     implementation(projects.feature.haptic.hapticApi)
+    implementation(projects.feature.sounds.soundsApi)
 }

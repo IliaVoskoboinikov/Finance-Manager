@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.haptic.haptic_impl.domain
+package soft.divan.financemanager.feature.haptic.haptic_impl.data.haptic
 
 import android.os.VibrationEffect
 import android.os.Vibrator
