@@ -56,6 +56,7 @@ fun AccountScreenPreview() {
             loadAccounts = {},
             onNavigateToUpdateAccount = {},
             onNavigateToCreateAccount = {},
+            hapticNavigation = {},
         )
     }
 }
@@ -75,6 +76,7 @@ fun MyAccountsScreen(
         loadAccounts = viewModel::loadAccount,
         onNavigateToUpdateAccount = onNavigateToUpdateAccount,
         onNavigateToCreateAccount = onNavigateToCreateAccount,
+        hapticNavigation = viewModel::hapticNavigation,
     )
 }
 
@@ -86,12 +88,18 @@ fun MyAccounts(
     loadAccounts: () -> Unit,
     onNavigateToUpdateAccount: (idAccount: String) -> Unit,
     onNavigateToCreateAccount: () -> Unit,
+    hapticNavigation: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
         topBar = { AccountTopBar() },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        floatingActionButton = { FloatingButton(onClick = onNavigateToCreateAccount) }
+        floatingActionButton = {
+            FloatingButton(onClick = {
+                onNavigateToCreateAccount()
+                hapticNavigation()
+            })
+        }
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             MyAccountsStatefulContent(

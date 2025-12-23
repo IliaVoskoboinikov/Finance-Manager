@@ -18,7 +18,8 @@ import soft.divan.financemanager.presenter.navigation.ScreenBottom
 fun RowScope.FMNavigationBarItem(
     currentRoute: String?,
     screenBottom: ScreenBottom,
-    navController: NavHostController
+    navController: NavHostController,
+    hapticToggleMenu: () -> Unit
 ) {
 
     val selected = currentRoute == screenBottom.route
@@ -28,6 +29,7 @@ fun RowScope.FMNavigationBarItem(
             .copy(selectedIconColor = MaterialTheme.colorScheme.primary),
         selected = selected,
         onClick = {
+            hapticToggleMenu()
             if (!selected) {
                 navController.navigate(screenBottom.route) {
                     popUpTo(navController.graph.startDestinationId) {

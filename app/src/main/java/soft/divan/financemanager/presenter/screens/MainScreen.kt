@@ -139,7 +139,8 @@ fun MainScreen(
                 modifier = Modifier,
                 navController = navController,
                 screens = bottomScreens,
-                currentRoute = selectedBottomRoute.value
+                currentRoute = selectedBottomRoute.value,
+                hapticToggleMenu = viewModel::hapticToggleMenu
             )
         }
     }

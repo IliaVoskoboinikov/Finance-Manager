@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
+import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticManager
+import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticType
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.R
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.mapper.toUiModel
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter.model.MyAccountsUiState
@@ -22,6 +24,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MyAccountsViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
+    private val hapticManager: HapticManager,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MyAccountsUiState>(MyAccountsUiState.Loading)
     val uiState: StateFlow<MyAccountsUiState> = _uiState
@@ -50,6 +53,10 @@ class MyAccountsViewModel @Inject constructor(
                     )
                 }.collect()
         }
+    }
+
+    fun hapticNavigation() {
+        hapticManager.perform(HapticType.CLICK)
     }
 
 }

@@ -9,4 +9,5 @@ dependencies {
     implementation(projects.core.domain)
     implementation(projects.feature.transaction.transactionApi)
     implementation(projects.feature.history.historyApi)
+    implementation(projects.feature.haptic.hapticApi)
 }
