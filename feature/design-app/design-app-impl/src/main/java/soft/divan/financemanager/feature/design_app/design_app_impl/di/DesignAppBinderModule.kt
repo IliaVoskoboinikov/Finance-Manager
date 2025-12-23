@@ -5,7 +5,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
-import soft.divan.financemanager.feature.design_app.design_app_impl.data.DesignAppRepositoryImpl
+import soft.divan.financemanager.feature.design_app.design_app_impl.data.repository.DesignAppRepositoryImpl
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.repositiry.DesignAppRepository
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetCustomAccentColorUseCase

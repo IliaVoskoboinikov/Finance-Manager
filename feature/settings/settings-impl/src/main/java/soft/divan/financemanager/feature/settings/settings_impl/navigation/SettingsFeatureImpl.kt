@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
+import soft.divan.financemanager.feature.haptic.haptic_api.HapticFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
@@ -29,6 +30,9 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
     @Inject
     lateinit var designAppFeatureApi: DesignAppFeatureApi
 
+    @Inject
+    lateinit var hapticFeatureApi: HapticFeatureApi
+
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
@@ -46,6 +50,9 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
                 onNavigateToDesignApp = {
                     navController.navigate(designAppFeatureApi.route)
 
+                },
+                onNavigateToHaptic = {
+                    navController.navigate(hapticFeatureApi.route)
                 }
             )
         }
@@ -57,7 +64,7 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
         ) {
 
 
-        composable(route = screenSettingsAboutTheProgramScreenRoute) {
+            composable(route = screenSettingsAboutTheProgramScreenRoute) {
                 AboutTheProgramScreen(
                     modifier = modifier,
                 )
