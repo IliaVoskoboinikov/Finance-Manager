@@ -23,7 +23,7 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.domain.model
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetThemeModeUseCase
-import soft.divan.financemanager.feature.haptic.haptic_api.HapticFeatureApi
+import soft.divan.financemanager.feature.haptics.haptics_api.HapticsFeatureApi
 import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.MyAccountsFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
     lateinit var designAppFeatureApi: DesignAppFeatureApi
 
     @Inject
-    lateinit var hapticFeatureApi: HapticFeatureApi
+    lateinit var hapticsFeatureApi: HapticsFeatureApi
 
     @Inject
     lateinit var soundsFeatureApi: SoundsFeatureApi
@@ -155,7 +155,7 @@ class MainActivity : ComponentActivity() {
                         analysisFeatureApi = analysisFeatureApi,
                         historyFeatureApi = historyFeatureApi,
                         myAccountsFeatureApi = myAccountsFeatureApi,
-                        hapticFeatureApi = hapticFeatureApi,
+                        hapticsFeatureApi = hapticsFeatureApi,
                         soundsFeatureApi = soundsFeatureApi,
                     )
                 }

@@ -9,14 +9,14 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import soft.divan.financemanager.core.network.util.NetworkMonitor
-import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticManager
-import soft.divan.financemanager.feature.haptic.haptic_api.domain.HapticType
+import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticType
+import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticsManager
 import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
     networkMonitor: NetworkMonitor,
-    private val hapticManager: HapticManager
+    private val hapticsManager: HapticsManager
 ) : ViewModel() {
 
     val isOffline = networkMonitor.isOnline
@@ -29,6 +29,6 @@ class MainViewModel @Inject constructor(
         )
 
     fun hapticToggleMenu() {
-        hapticManager.perform(HapticType.TOGGLE)
+        hapticsManager.perform(HapticType.TOGGLE)
     }
 }
