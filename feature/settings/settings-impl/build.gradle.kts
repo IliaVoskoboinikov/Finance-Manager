@@ -8,4 +8,5 @@ dependencies {
     implementation(projects.feature.security.securityApi)
     implementation(projects.feature.designApp.designAppApi)
     implementation(projects.feature.haptic.hapticApi)
+    implementation(projects.feature.sounds.soundsApi)
 }
