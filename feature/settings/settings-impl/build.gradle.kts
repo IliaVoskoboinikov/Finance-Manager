@@ -9,4 +9,5 @@ dependencies {
     implementation(projects.feature.designApp.designAppApi)
     implementation(projects.feature.haptics.hapticsApi)
     implementation(projects.feature.sounds.soundsApi)
+    implementation(projects.feature.languages.languagesApi)
 }

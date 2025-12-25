@@ -37,7 +37,8 @@ fun SettingsScreenPreview() {
             onNavigateToSecurity = {},
             onNavigateToDesignApp = {},
             onNavigateToHaptic = {},
-            onNavigateToSounds = {}
+            onNavigateToSounds = {},
+            onNavigateToLanguages = {}
         )
     }
 }
@@ -50,6 +51,7 @@ fun SettingsScreen(
     onNavigateToDesignApp: () -> Unit,
     onNavigateToHaptic: () -> Unit,
     onNavigateToSounds: () -> Unit,
+    onNavigateToLanguages: () -> Unit,
 ) {
     val settingsItems = remember {
         provideSettings(
@@ -57,7 +59,8 @@ fun SettingsScreen(
             onNavigateToSecurity = onNavigateToSecurity,
             onNavigateToDesignApp = onNavigateToDesignApp,
             onNavigateToHaptic = onNavigateToHaptic,
-            onNavigateToSounds = onNavigateToSounds
+            onNavigateToSounds = onNavigateToSounds,
+            onNavigateToLanguages = onNavigateToLanguages
         )
     }
 
@@ -103,7 +106,8 @@ private fun provideSettings(
     onNavigateToSecurity: () -> Unit,
     onNavigateToDesignApp: () -> Unit,
     onNavigateToHaptic: () -> Unit,
-    onNavigateToSounds: () -> Unit
+    onNavigateToSounds: () -> Unit,
+    onNavigateToLanguages: () -> Unit,
 ): List<SettingsModel> {
     return listOf(
         SettingsModel(R.string.design) { onNavigateToDesignApp() },
@@ -111,7 +115,7 @@ private fun provideSettings(
         SettingsModel(R.string.haptics) { onNavigateToHaptic() },
         SettingsModel(R.string.passcode) { onNavigateToSecurity() },
         SettingsModel(R.string.synchronization) {},
-        SettingsModel(R.string.language) {},
+        SettingsModel(R.string.language) { onNavigateToLanguages() },
         SettingsModel(R.string.program_notes) { onNavigateToAboutTheProgram() }
     )
 }

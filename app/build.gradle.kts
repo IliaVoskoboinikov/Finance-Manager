@@ -58,5 +58,8 @@ dependencies {
     implementation(projects.feature.sounds.soundsApi)
     implementation(projects.feature.sounds.soundsImpl)
 
+    implementation(projects.feature.languages.languagesApi)
+    implementation(projects.feature.languages.languagesImpl)
+
     implementation(libs.androidx.lifecycle.process)
 }

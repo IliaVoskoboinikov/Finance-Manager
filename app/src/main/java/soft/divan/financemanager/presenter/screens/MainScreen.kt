@@ -30,6 +30,7 @@ import soft.divan.financemanager.feature.category.category_api.CategoryFeatureAp
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.haptics.haptics_api.HapticsFeatureApi
 import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
+import soft.divan.financemanager.feature.languages.languages_api.LanguagesFeatureApi
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.MyAccountsFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
@@ -71,6 +72,7 @@ fun MainScreen(
     myAccountsFeatureApi: MyAccountsFeatureApi,
     hapticsFeatureApi: HapticsFeatureApi,
     soundsFeatureApi: SoundsFeatureApi,
+    languagesFeatureApi: LanguagesFeatureApi,
 ) {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -127,6 +129,7 @@ fun MainScreen(
                 myAccountsFeatureApi = myAccountsFeatureApi,
                 hapticsFeatureApi = hapticsFeatureApi,
                 soundsFeatureApi = soundsFeatureApi,
+                languagesFeatureApi = languagesFeatureApi,
             )
 
             SnackbarHost(

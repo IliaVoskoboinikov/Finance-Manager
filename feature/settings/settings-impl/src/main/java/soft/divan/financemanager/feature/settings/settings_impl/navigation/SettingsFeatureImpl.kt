@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.haptics.haptics_api.HapticsFeatureApi
+import soft.divan.financemanager.feature.languages.languages_api.LanguagesFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
@@ -37,6 +38,9 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
     @Inject
     lateinit var soundsFeatureApi: SoundsFeatureApi
 
+    @Inject
+    lateinit var languagesFeatureApi: LanguagesFeatureApi
+
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
@@ -51,7 +55,8 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
                 onNavigateToSecurity = { navController.navigate(securityFeatureApi.route) },
                 onNavigateToDesignApp = { navController.navigate(designAppFeatureApi.route) },
                 onNavigateToHaptic = { navController.navigate(hapticsFeatureApi.route) },
-                onNavigateToSounds = { navController.navigate(soundsFeatureApi.route) }
+                onNavigateToSounds = { navController.navigate(soundsFeatureApi.route) },
+                onNavigateToLanguages = { navController.navigate(languagesFeatureApi.route) },
             )
         }
 

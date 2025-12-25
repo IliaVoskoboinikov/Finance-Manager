@@ -25,6 +25,7 @@ import soft.divan.financemanager.feature.design_app.design_app_impl.domain.useca
 import soft.divan.financemanager.feature.design_app.design_app_impl.domain.usecase.GetThemeModeUseCase
 import soft.divan.financemanager.feature.haptics.haptics_api.HapticsFeatureApi
 import soft.divan.financemanager.feature.history.history_api.HistoryFeatureApi
+import soft.divan.financemanager.feature.languages.languages_api.LanguagesFeatureApi
 import soft.divan.financemanager.feature.my_accounts.my_accounts_impl.MyAccountsFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.IsPinSetUseCase
@@ -80,6 +81,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var soundsFeatureApi: SoundsFeatureApi
+
+    @Inject
+    lateinit var languagesFeatureApi: LanguagesFeatureApi
 
     @Inject
     lateinit var getThemeModeUseCase: GetThemeModeUseCase
@@ -157,6 +161,7 @@ class MainActivity : ComponentActivity() {
                         myAccountsFeatureApi = myAccountsFeatureApi,
                         hapticsFeatureApi = hapticsFeatureApi,
                         soundsFeatureApi = soundsFeatureApi,
+                        languagesFeatureApi = languagesFeatureApi
                     )
                 }
             }
