@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="sounds">Звуки в приложении</string>
-    <string name="error">Упс произошла ошибка</string>
+    <string name="sounds">Sounds in the application</string>
+    <string name="error">Oops there was an error</string>
 </resources>

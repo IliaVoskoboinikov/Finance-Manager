@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="my_expenses">Мои расходы</string>
-    <string name="my_income">Мои доходы</string>
-    <string name="select_category">Выберите категорию</string>
-    <string name="select_account">Выберите счет</string>
-    <string name="account">Счет</string>
-    <string name="category">Статьи</string>
-    <string name="sum">Сумма</string>
-    <string name="data">Дата</string>
-    <string name="time">Время</string>
-    <string name="comment">Комментрарий</string>
-    <string name="error_save">Ошибка сохранения</string>
-    <string name="fail_delete_transaction">Не удалось удалить транзакцию</string>
-    <string name="error_load_transaction">Не удалось загрузить транзакцию</string>
+    <string name="my_expenses">My expenses</string>
+    <string name="my_income">My income</string>
+    <string name="select_category">Select category</string>
+    <string name="select_account">Select account</string>
+    <string name="account">Account</string>
+    <string name="category">Category</string>
+    <string name="sum">Sum</string>
+    <string name="data">Data</string>
+    <string name="time">Time</string>
+    <string name="comment">Comment</string>
+    <string name="error_save">Save error</string>
+    <string name="fail_delete_transaction">Failed to delete transaction</string>
+    <string name="error_load_transaction">Failed to load transaction</string>
 </resources>

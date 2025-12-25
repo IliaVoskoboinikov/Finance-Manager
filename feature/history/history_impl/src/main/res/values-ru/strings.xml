@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="my_history">Моя История</string>
+    <string name="start">Начало</string>
+    <string name="all">Всего</string>
+    <string name="end">Конец</string>
+    <string name="error_loading">Ошибка загрузки</string>
+</resources>
