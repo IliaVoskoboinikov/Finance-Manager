@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error">Oops, there was an error</string>
+    <string name="english">English</string>
+    <string name="russian">Russian</string>
+    <string name="language_selection">Language selection</string>
+    <string name="languages">Languages</string>
+</resources>
