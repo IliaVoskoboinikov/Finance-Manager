@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="settings">Настройки</string>
-    <string name="dark_theme">Тёмная тема</string>
-    <string name="design">Оформление</string>
-    <string name="sounds">Звуки</string>
-    <string name="haptics">Хаптики</string>
-    <string name="passcode">Код пароль</string>
-    <string name="synchronization">Cинхронизация</string>
-    <string name="language">Язык</string>
-    <string name="program_notes">О программе</string>
-    <string name="primary_color">Цвет приложения</string>
+    <string name="settings">Settings</string>
+    <string name="design">Decor</string>
+    <string name="sounds">Sounds</string>
+    <string name="haptics">Haptics</string>
+    <string name="passcode">Code password</string>
+    <string name="synchronization">Synchronization</string>
+    <string name="language">Language</string>
+    <string name="program_notes">About the program</string>
+    <string name="primary_color">Application color</string>
     <string name="about_the_program">About the program</string>
-
 </resources>
