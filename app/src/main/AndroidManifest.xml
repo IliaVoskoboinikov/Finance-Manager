@@ -12,6 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FinanceManager"
+        android:localeConfig="@xml/locales_config"
         tools:targetApi="31">
         <meta-data
             android:name="firebase_crashlytics_collection_enabled"
