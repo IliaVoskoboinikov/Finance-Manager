@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="my_history">Моя История</string>
-    <string name="start">Начало</string>
-    <string name="all">Всего</string>
-    <string name="end">Конец</string>
-    <string name="error_loading">Ошибка загрузки</string>
-
+    <string name="my_history">My Story</string>
+    <string name="start">Start</string>
+    <string name="all">All</string>
+    <string name="end">End</string>
+    <string name="error_loading">Loading error</string>
 </resources>

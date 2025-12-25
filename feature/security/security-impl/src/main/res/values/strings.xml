@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="authorization">Авторизация</string>
-    <string name="use_biometry">Используйте биометрию для авторизации</string>
-    <string name="confirm_identity">Подтвердите свою личность\n</string>
-    <string name="cancel_action">Отмена</string>
-    <string name="repeat_pin">повторите пин</string>
-    <string name="сome_up_with_pin">придумайте пин</string>
-    <string name="input_password">Введите пароль</string>
-    <string name="create_pin">создать пин-код</string>
-    <string name="delete_pin">удалитьпин-код</string>
-    <string name="security">Безопасность</string>
-    <string name="pin_codes_do_not_match">PIN-коды не совпадают</string>
+    <string name="authorization">Authorization</string>
+    <string name="use_biometry">Use biometrics for authorization</string>
+    <string name="confirm_identity">Confirm your identity\n</string>
+    <string name="cancel_action">Cancel</string>
+    <string name="repeat_pin">repeat pin</string>
+    <string name="сome_up_with_pin">come up with a pin</string>
+    <string name="input_password">Enter your password</string>
+    <string name="create_pin">create a pin code</string>
+    <string name="delete_pin">remove pin code</string>
+    <string name="security">Security</string>
+    <string name="pin_codes_do_not_match">PIN codes do not match</string>
 
 </resources>
