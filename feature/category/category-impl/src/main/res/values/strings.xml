@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="my_articles">Мои статьи</string>
-    <string name="find_article">Найти статью</string>
-
-    <string name="it_seems_nothing_found">Кажется ни чего не нашлось</string>
-    <string name="error_loading">Ошибка загрузки данных</string>
-    <string name="empty_data">Упс, кажется ни чего не удалось найти</string>
+    <string name="my_articles">My categories</string>
+    <string name="find_article">Find a category</string>
+    <string name="it_seems_nothing_found">It seems that nothing was found</string>
+    <string name="error_loading">Data upload error</string>
+    <string name="empty_data">Oops, it seems that nothing could be found</string>
 </resources>

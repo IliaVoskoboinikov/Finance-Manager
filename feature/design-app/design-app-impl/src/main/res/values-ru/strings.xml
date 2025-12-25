@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="design">Оформление</string>
+    <string name="more">Еще</string>
+    <string name="choice_theme">Выбор темы</string>
+    <string name="light">Светлая</string>
+    <string name="dark">Тёмная</string>
+    <string name="system">Системная</string>
+    <string name="dynamic_color">Dynamic (Material You)</string>
+    <string name="color_palette">Цветовая палитра</string>
+    <string name="error">ошибка</string>
+    <string name="choose">Выбрать</string>
+    <string name="сancel">Отмена</string>
+    <string name="choose_color">Выберите цвет</string>
+</resources>

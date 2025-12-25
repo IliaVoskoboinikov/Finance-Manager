@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">Finance Manager</string>
-    <string name="expenses">Расходы</string>
-    <string name="income">Доходы</string>
-    <string name="settings">Настройки</string>
-    <string name="account">Счет</string>
-    <string name="category">Статьи</string>
-    <string name="not_connected">⚠️ Отсутствует подключение к интернету</string>
+    <string name="expenses">Expenses</string>
+    <string name="income">Income</string>
+    <string name="settings">Settings</string>
+    <string name="account">Account</string>
+    <string name="category">Category</string>
+    <string name="not_connected">⚠️ No internet connection</string>
 
 </resources>
