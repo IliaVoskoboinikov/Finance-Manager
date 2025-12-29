@@ -61,5 +61,8 @@ dependencies {
     implementation(projects.feature.languages.languagesApi)
     implementation(projects.feature.languages.languagesImpl)
 
+    implementation(projects.feature.synchronization.synchronizationApi)
+    implementation(projects.feature.synchronization.synchronizationImpl)
+
     implementation(libs.androidx.lifecycle.process)
 }

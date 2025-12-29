@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error">Oops, there was an error</string>
+    <string name="synchronization">Synchronization</string>
+    <plurals name="sync_every_interval_hours">
+        <item quantity="one">Sync every %d hour</item>
+        <item quantity="other">Sync every %d hours</item>
+    </plurals>
+    <string name="last_sync">Time of last sync: %s</string>
+    <string name="data_not_synced">Data has not yet been synced</string>
+
+</resources>
