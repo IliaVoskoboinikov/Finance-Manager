@@ -10,4 +10,5 @@ dependencies {
     implementation(projects.feature.haptics.hapticsApi)
     implementation(projects.feature.sounds.soundsApi)
     implementation(projects.feature.languages.languagesApi)
+    implementation(projects.feature.synchronization.synchronizationApi)
 }
