@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class ConnectivityManagerNetworkMonitor @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context,
 ) : NetworkMonitor {
     override val isOnline: Flow<Boolean> = callbackFlow {
         trace("NetworkMonitor.callbackFlow") {
