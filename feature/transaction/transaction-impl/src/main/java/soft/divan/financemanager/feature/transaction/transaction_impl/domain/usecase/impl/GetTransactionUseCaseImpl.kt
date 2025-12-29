@@ -2,13 +2,14 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.domain.us
 
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
+import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.feature.transaction.transaction_impl.domain.usecase.GetTransactionUseCase
 import javax.inject.Inject
 
 class GetTransactionUseCaseImpl @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) : GetTransactionUseCase {
-    override suspend fun invoke(id: Int): Result<Transaction> {
+    override suspend fun invoke(id: Int): DomainResult<Transaction> {
         return transactionRepository.getTransaction(id)
     }
 }

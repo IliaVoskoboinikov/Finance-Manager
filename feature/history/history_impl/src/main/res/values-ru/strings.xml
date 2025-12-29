@@ -5,4 +5,6 @@
     <string name="all">Всего</string>
     <string name="end">Конец</string>
     <string name="error_loading">Ошибка загрузки</string>
+    <string name="empty">Пустой список</string>
+
 </resources>

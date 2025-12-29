@@ -9,15 +9,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.data.DateHelper
+import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
 import soft.divan.financemanager.feature.history.history_impl.R
@@ -52,7 +52,7 @@ class HistoryViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeDateChanges() {
         combine(startDate, endDate) { start, end -> start to end }
-            .onStart { _uiState.value = HistoryUiState.Loading }
+            .onStart { _uiState.update { HistoryUiState.Loading } }
             .flatMapLatest { (start, end) ->
                 getTransactionsByPeriodUseCase(
                     isIncome = isIncome,
@@ -60,21 +60,29 @@ class HistoryViewModel @Inject constructor(
                     endDate = end
                 )
             }
-            .map { data ->
-                val sumTransactions = getSumTransactionsUseCase(data.first)
-                val uiTransactions = data.first.map { transaction ->
-                    transaction.toUi(
-                        data.third.find { it.id == transaction.categoryId }!!
-                    )
-                }
-                _uiState.update {
-                    HistoryUiState.Success(
-                        transactions = uiTransactions,
-                        sumTransaction = sumTransactions.toString() + " " + data.second.symbol
-                    )
-                }
+
+            .onEach { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        val sumTransactions = getSumTransactionsUseCase(data.first)
+                        val uiTransactions = data.first.map { transaction ->
+                            transaction.toUi(data.third.find { it.id == transaction.categoryId }!!)
+                        }
+
+                        if (data.first.isEmpty()) {
+                            _uiState.update { HistoryUiState.Error(R.string.empty) }
+                        } else {
+                            _uiState.update {
+                                HistoryUiState.Success(
+                                    transactions = uiTransactions,
+                                    sumTransaction = sumTransactions.toString() + " " + data.second.symbol
+                                )
+                            }
+                        }
+                    },
+                    onFailure = { _uiState.update { HistoryUiState.Error(R.string.error_loading) } }
+                )
             }
-            .catch { _uiState.value = HistoryUiState.Error(R.string.error_loading) }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
     }

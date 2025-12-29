@@ -5,6 +5,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.feature.security.security_impl.domain.usecase.SavePinUseCase
 import soft.divan.financemanager.feature.security.security_impl.presenter.model.CreatePinScreenState
 import javax.inject.Inject
@@ -17,7 +18,7 @@ class CreatePinViewModel @Inject constructor(
     val uiState: StateFlow<CreatePinScreenState> = _uiState.asStateFlow()
 
     fun changeState(state: CreatePinScreenState) {
-        _uiState.value = state
+        _uiState.update { state }
     }
 
     fun savePinCode(pin: String) {

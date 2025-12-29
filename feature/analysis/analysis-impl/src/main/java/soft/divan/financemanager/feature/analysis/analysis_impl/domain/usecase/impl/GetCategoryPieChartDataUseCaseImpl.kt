@@ -13,6 +13,7 @@ class GetCategoryPieChartDataUseCaseImpl @Inject constructor() : GetCategoryPieC
         transactions: List<Transaction>,
         category: List<Category>
     ): List<CategoryPieSlice> {
+
         if (transactions.isEmpty()) return emptyList()
 
 
