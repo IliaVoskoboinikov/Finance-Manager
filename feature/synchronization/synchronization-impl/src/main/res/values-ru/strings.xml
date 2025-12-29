@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error">Упс произошла ошибка</string>
+    <string name="synchronization">Синхронизация</string>
+    <plurals name="sync_every_interval_hours">
+        <item quantity="one">Синхронизация каждый %d час</item>
+        <item quantity="few">Синхронизация каждые %d часа</item>
+        <item quantity="many">Синхронизация каждые %d часов</item>
+    </plurals>
+    <string name="last_sync">Время последней синхронизации: %s</string>
+    <string name="data_not_synced">Данные еще не синхронизировались</string>
+
+</resources>

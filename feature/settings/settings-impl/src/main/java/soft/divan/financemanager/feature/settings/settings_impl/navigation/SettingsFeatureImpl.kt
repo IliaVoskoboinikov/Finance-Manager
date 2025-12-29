@@ -9,11 +9,11 @@ import soft.divan.financemanager.feature.design_app.design_app_api.DesignAppFeat
 import soft.divan.financemanager.feature.haptics.haptics_api.HapticsFeatureApi
 import soft.divan.financemanager.feature.languages.languages_api.LanguagesFeatureApi
 import soft.divan.financemanager.feature.security.security_api.SecurityFeatureApi
-
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.settings.settings_impl.presenter.screens.AboutTheProgramScreen
 import soft.divan.financemanager.feature.settings.settings_impl.presenter.screens.SettingsScreen
 import soft.divan.financemanager.feature.sounds.sounds_api.SoundsFeatureApi
+import soft.divan.financemanager.feature.synchronization.synchronization_api.SynchronizationFeatureApi
 import javax.inject.Inject
 
 private const val BASE_ROUTE = "settings"
@@ -41,6 +41,9 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
     @Inject
     lateinit var languagesFeatureApi: LanguagesFeatureApi
 
+    @Inject
+    lateinit var synchronizationFeatureApi: SynchronizationFeatureApi
+
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
@@ -57,6 +60,7 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
                 onNavigateToHaptic = { navController.navigate(hapticsFeatureApi.route) },
                 onNavigateToSounds = { navController.navigate(soundsFeatureApi.route) },
                 onNavigateToLanguages = { navController.navigate(languagesFeatureApi.route) },
+                onNavigateToSynchronization = { navController.navigate(synchronizationFeatureApi.route) }
             )
         }
 

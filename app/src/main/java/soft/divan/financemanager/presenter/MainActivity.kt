@@ -33,6 +33,7 @@ import soft.divan.financemanager.feature.security.security_impl.presenter.screen
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.sounds.sounds_api.SoundsFeatureApi
 import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
+import soft.divan.financemanager.feature.synchronization.synchronization_api.SynchronizationFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transactions_today.transactions_today_api.TransactionsTodayFeatureApi
 import soft.divan.financemanager.presenter.screens.MainScreen
@@ -84,6 +85,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var languagesFeatureApi: LanguagesFeatureApi
+
+    @Inject
+    lateinit var synchronizationFeatureApi: SynchronizationFeatureApi
 
     @Inject
     lateinit var getThemeModeUseCase: GetThemeModeUseCase
@@ -161,7 +165,8 @@ class MainActivity : ComponentActivity() {
                         myAccountsFeatureApi = myAccountsFeatureApi,
                         hapticsFeatureApi = hapticsFeatureApi,
                         soundsFeatureApi = soundsFeatureApi,
-                        languagesFeatureApi = languagesFeatureApi
+                        languagesFeatureApi = languagesFeatureApi,
+                        synchronizationFeatureApi = synchronizationFeatureApi
                     )
                 }
             }

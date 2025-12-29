@@ -3,8 +3,10 @@ package soft.divan.financemanager
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import soft.divan.financemanager.sync.init.Sync
+import kotlinx.coroutines.launch
+import soft.divan.financemanager.sync.initializers.SyncInitializer
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -13,9 +15,14 @@ class App: Application() {
     @Inject
     lateinit var applicationScope: CoroutineScope
 
+    @Inject
+    lateinit var syncInitializer: SyncInitializer
+
     override fun onCreate() {
         super.onCreate()
-        Sync.initialize(context = this)
+        CoroutineScope(Dispatchers.Default).launch {
+            syncInitializer.initialize()
+        }
     }
 
     override fun onTerminate() {

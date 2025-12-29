@@ -193,4 +193,12 @@ object DateHelper {
     fun LocalDate.toDate(): Date {
         return Date.from(this.atStartOfDay(ZoneId.systemDefault()).toInstant())
     }
+
+    fun Long.toDateTimeString(
+        formatter: DateTimeFormatter = displayDateTimeFormatter,
+        zoneId: ZoneId = ZoneId.systemDefault()
+    ): String =
+        Instant.ofEpochMilli(this)
+            .atZone(zoneId)
+            .format(formatter)
 }

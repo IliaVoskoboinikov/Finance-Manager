@@ -36,6 +36,7 @@ import soft.divan.financemanager.feature.security.security_api.SecurityFeatureAp
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.sounds.sounds_api.SoundsFeatureApi
 import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
+import soft.divan.financemanager.feature.synchronization.synchronization_api.SynchronizationFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transactions_today.transactions_today_api.TransactionsTodayFeatureApi
 import soft.divan.financemanager.presenter.MainViewModel
@@ -73,6 +74,7 @@ fun MainScreen(
     hapticsFeatureApi: HapticsFeatureApi,
     soundsFeatureApi: SoundsFeatureApi,
     languagesFeatureApi: LanguagesFeatureApi,
+    synchronizationFeatureApi: SynchronizationFeatureApi
 ) {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
@@ -130,6 +132,7 @@ fun MainScreen(
                 hapticsFeatureApi = hapticsFeatureApi,
                 soundsFeatureApi = soundsFeatureApi,
                 languagesFeatureApi = languagesFeatureApi,
+                synchronizationFeatureApi = synchronizationFeatureApi
             )
 
             SnackbarHost(

@@ -10,4 +10,6 @@ dependencies {
     implementation(libs.androidx.tracing.ktx)
     implementation(libs.hilt.ext.work)
     implementation(libs.androidx.work.ktx)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore.core)
 }

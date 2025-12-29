@@ -19,6 +19,7 @@ import soft.divan.financemanager.feature.security.security_api.SecurityFeatureAp
 import soft.divan.financemanager.feature.settings.settings_api.SettingsFeatureApi
 import soft.divan.financemanager.feature.sounds.sounds_api.SoundsFeatureApi
 import soft.divan.financemanager.feature.splash_screen.splash_screen_api.SplashScreenFeatureApi
+import soft.divan.financemanager.feature.synchronization.synchronization_api.SynchronizationFeatureApi
 import soft.divan.financemanager.feature.transaction.transaction_api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transactions_today.transactions_today_api.TransactionsTodayFeatureApi
 
@@ -40,6 +41,7 @@ fun NavGraph(
     hapticsFeatureApi: HapticsFeatureApi,
     soundsFeatureApi: SoundsFeatureApi,
     languagesFeatureApi: LanguagesFeatureApi,
+    synchronizationFeatureApi: SynchronizationFeatureApi
 ) {
     NavHost(
         navController = navController,
@@ -70,6 +72,11 @@ fun NavGraph(
         register(featureApi = hapticsFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = soundsFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = languagesFeatureApi, navController = navController, modifier = modifier)
+        register(
+            featureApi = synchronizationFeatureApi,
+            navController = navController,
+            modifier = modifier
+        )
 
     }
 }
