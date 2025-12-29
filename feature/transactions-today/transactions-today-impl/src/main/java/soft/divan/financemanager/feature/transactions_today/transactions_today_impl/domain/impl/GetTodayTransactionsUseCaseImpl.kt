@@ -23,26 +23,35 @@ class GetTodayTransactionsUseCaseImpl @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val currencyRepository: CurrencyRepository,
     private val categoryRepository: CategoryRepository,
+) : GetTodayTransactionsUseCase {
 
-    ) : GetTodayTransactionsUseCase {
-    override operator fun invoke(isIncome: Boolean): Flow<Triple<List<Transaction>, CurrencySymbol, List<Category>>> =
+    override operator fun invoke(isIncome: Boolean): Flow<DomainResult<Triple<List<Transaction>, CurrencySymbol, List<Category>>>> =
         flow {
-            // 1) Загружаем все аккаунты
-            val allAccounts = accountRepository.getAccounts().firstOrError()
+            // 1. Аккаунты
+            val accountsResult = accountRepository.getAccounts().first()
+            if (accountsResult is DomainResult.Failure) {
+                emit(accountsResult)
+                return@flow
+            }
+            val accounts = (accountsResult as DomainResult.Success).data
 
-            // 2) Загружаем категории и формируем map
-            val categories = categoryRepository.getCategories().firstOrError()
+            // 2. Категории
+            val categoriesResult = categoryRepository.getCategories().first()
+            if (categoriesResult is DomainResult.Failure) {
+                emit(categoriesResult)
+                return@flow
+            }
+            val categories = (categoriesResult as DomainResult.Success).data
             val categoriesMap = categories.associateBy { it.id }
 
-            // 3) Загружаем валюту
+            // 3. Валюта
             val currency = currencyRepository.getCurrency().first()
 
-            // 4) Получаем сегодняшнюю дату
             val todayDate = DateHelper.getTodayApiFormat()
 
-            // 5) Загружаем транзакции по всем аккаунтам ПАРАЛЛЕЛЬНО
-            val allTransactions = coroutineScope {
-                allAccounts.map { account ->
+            // 4. Транзакции по всем аккаунтам (параллельно)
+            val allTransactionsResult = coroutineScope {
+                accounts.map { account ->
                     async {
                         transactionRepository
                             .getTransactionsByAccountAndPeriod(
@@ -52,26 +61,38 @@ class GetTodayTransactionsUseCaseImpl @Inject constructor(
                             )
                             .first()
                     }
-                }.awaitAll().flatten()
+                }.awaitAll()
             }
 
-            // 6) Фильтруем по типу доход / расход
-            val filtered = allTransactions.filter { tx ->
-                categoriesMap[tx.categoryId]?.isIncome == isIncome
+            // 5. Проверка на первую ошибку
+            val failure = allTransactionsResult.firstOrNull { it is DomainResult.Failure }
+            if (failure != null) {
+                emit(failure as DomainResult.Failure)
+                return@flow
             }
 
-            // 7) Сортируем по дате
-            val sorted = filtered.sortedByDescending { it.transactionDate }
+            val allTransactions = allTransactionsResult
+                .filterIsInstance<DomainResult.Success<List<Transaction>>>()
+                .flatMap { it.data }
 
-            // 8) Эмитим итог
-            emit(Triple(sorted, currency, categories))
+            // 6. Фильтрация по типу
+            val filteredTransactions = allTransactions.filter { transaction ->
+                categoriesMap[transaction.categoryId]?.isIncome == isIncome
+            }
+
+            // 7. Сортировка
+            val sortedTransactions = filteredTransactions
+                .sortedByDescending { it.transactionDate }
+
+            // 8. Успех
+            emit(
+                DomainResult.Success(
+                    Triple(
+                        sortedTransactions,
+                        currency,
+                        categories
+                    )
+                )
+            )
         }
-}
-
-//todo удалить и перейти к  Flow<DomainResul...
-suspend fun <T> Flow<DomainResult<T>>.firstOrError(): T {
-    return when (val result = this.first()) {
-        is DomainResult.Success -> result.data
-        is DomainResult.Failure -> throw RuntimeException("Domain error:")
-    }
 }

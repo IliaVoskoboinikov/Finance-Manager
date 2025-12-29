@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticType
 import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticsManager

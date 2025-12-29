@@ -10,8 +10,7 @@ class SearchCategoryUseCaseImpl @Inject constructor(
         query: String,
         categories: List<Category>
     ): List<Category> {
-        return categories.filter {
-            it.name.contains(query, ignoreCase = true)
-        }
+
+        return categories.filter { it.name.contains(query, ignoreCase = true) }
     }
 }
