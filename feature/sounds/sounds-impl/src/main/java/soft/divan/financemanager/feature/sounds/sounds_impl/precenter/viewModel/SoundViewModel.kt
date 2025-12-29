@@ -31,7 +31,7 @@ class SoundViewModel @Inject constructor(
 
     fun load() {
         viewModelScope.launch {
-            observeSoundsEnabledUseCase.invoke()
+            observeSoundsEnabledUseCase()
                 .onStart { _uiState.update { SoundsUiState.Loading } }
                 .catch { _uiState.update { SoundsUiState.Error(R.string.error) } }
                 .collect { isEnabled ->

@@ -31,7 +31,7 @@ class HapticsViewModel @Inject constructor(
 
     fun load() {
         viewModelScope.launch {
-            observeHapticsEnabledUseCase.invoke()
+            observeHapticsEnabledUseCase()
                 .onStart { _uiState.update { HapticsUiState.Loading } }
                 .catch { _uiState.update { HapticsUiState.Error(R.string.error) } }
                 .collect { isEnabled ->

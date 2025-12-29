@@ -12,8 +12,12 @@ import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
+import soft.divan.financemanager.core.data.util.safeDbCall
+import soft.divan.financemanager.core.data.util.safeDbFlow
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
+import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.logging_error.logging_error_api.ErrorLogger
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -25,14 +29,15 @@ class TransactionRepositoryImpl @Inject constructor(
     private val accountLocalDataSource: AccountLocalDataSource,
     private val applicationScope: CoroutineScope,
     private val dispatcher: CoroutineDispatcher,
-    private val exceptionHandler: CoroutineExceptionHandler
+    private val exceptionHandler: CoroutineExceptionHandler,
+    private val errorLogger: ErrorLogger
 ) : TransactionRepository {
 
     override suspend fun getTransactionsByAccountAndPeriod(
         accountId: String,
         startDate: String,
         endDate: String
-    ): Flow<List<Transaction>> {
+    ): Flow<DomainResult<List<Transaction>>> {
 
         applicationScope.launch(dispatcher + exceptionHandler) {
             val serverId = accountLocalDataSource.getAccountByLocalId(accountId)
@@ -45,15 +50,14 @@ class TransactionRepositoryImpl @Inject constructor(
             transactionLocalDataSource.insertTransactions(transactionsByAccountAndPeriodEntity)
         }
 
-        val transactionsByAccountAndPeriodFlow =
+        return safeDbFlow(errorLogger) {
             transactionLocalDataSource.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
                 .map { list -> list.map { it.toDomain() } }
-
-        return transactionsByAccountAndPeriodFlow
+        }
     }
 
     //todo
-    override suspend fun getTransaction(id: Int): Result<Transaction> = runCatching {
+    override suspend fun getTransaction(id: Int): DomainResult<Transaction> {
 
         // Пытаемся сначала получить транзакцию из локальной БД
         val localTransaction = transactionLocalDataSource.getTransactionById(id)?.toDomain()
@@ -69,7 +73,7 @@ class TransactionRepositoryImpl @Inject constructor(
                     }
                 }
             }
-            return Result.success(localTransaction)
+            return DomainResult.Success(localTransaction)
         }
 
 
@@ -83,14 +87,14 @@ class TransactionRepositoryImpl @Inject constructor(
             // Сохраняем в локальную базу для кеширования
             transactionLocalDataSource.saveTransaction(transaction.toEntity())
 
-            return Result.success(transaction)
+            return DomainResult.Success(transaction)
         } else {
             throw Exception("Failed to fetch transaction: ${response.code()} ${response.message()}")
         }
     }
 
     //todo баг с измененим транзакции
-    override suspend fun createTransaction(transaction: Transaction): Result<Unit> = runCatching {
+    override suspend fun createTransaction(transaction: Transaction): DomainResult<Unit> {
 
         transactionLocalDataSource.saveTransaction(transaction.toEntity())
 
@@ -108,10 +112,10 @@ class TransactionRepositoryImpl @Inject constructor(
                 )
             }
         }
-        return Result.success(Unit)
+        return DomainResult.Success(Unit)
     }
 
-    override suspend fun updateTransaction(transaction: Transaction): Result<Unit> {
+    override suspend fun updateTransaction(transaction: Transaction): DomainResult<Unit> {
         transactionLocalDataSource.saveTransaction(transaction.toEntity())
         applicationScope.launch(dispatcher + exceptionHandler) {
             val account = accountLocalDataSource.getAccountByLocalId(transaction.accountId)!!
@@ -130,13 +134,11 @@ class TransactionRepositoryImpl @Inject constructor(
                 )
             }
         }
-        return Result.success(Unit)
+        return DomainResult.Success(Unit)
     }
 
     //todo
-    override suspend fun deleteTransaction(transactionId: Int): Result<Unit> = runCatching {
-        transactionLocalDataSource.deleteTransaction(transactionId)
-
+    override suspend fun deleteTransaction(transactionId: Int): DomainResult<Unit> {
         // Асинхронно пытаемся удалить на сервере
         applicationScope.launch(dispatcher + exceptionHandler) {
             val response = transactionRemoteDataSource.deleteTransaction(transactionId)
@@ -145,6 +147,9 @@ class TransactionRepositoryImpl @Inject constructor(
                 // Например, логирование или флаг "требует синхронизации"
                 // syncManager.markForDeletion(transactionId)
             }
+        }
+        return safeDbCall(errorLogger) {
+            transactionLocalDataSource.deleteTransaction(transactionId)
         }
     }
 

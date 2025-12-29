@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.feature.languages.languages_impl.R
 import soft.divan.financemanager.feature.languages.languages_impl.domain.usecase.ObserveLanguagesUseCase
@@ -35,8 +36,8 @@ class LanguagesViewModel @Inject constructor(
     fun observe() {
         viewModelScope.launch {
             observeLanguagesUseCase()
-                .onEach { _uiState.value = LanguageUiState.Success(it.toUi()) }
-                .catch { _uiState.value = LanguageUiState.Error(R.string.error) }
+                .onEach { data -> _uiState.update { LanguageUiState.Success(data.toUi()) } }
+                .catch { _uiState.update { LanguageUiState.Error(R.string.error) } }
                 .launchIn(viewModelScope)
         }
     }
