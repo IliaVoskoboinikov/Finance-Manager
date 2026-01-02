@@ -118,7 +118,8 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    /** Получаем аккаунт из БД и и проверяем есть ли у него транзакции если нет то помечаем в БД как удаленный и запускаем синхронизацию удаления,
+    /** Получаем аккаунт из БД и и проверяем есть ли у него транзакции если нет то помечаем в БД как удаленный
+     *  и запускаем синхронизацию удаления,
      * если на сервере аккаунта нету то просто удалем, если есть то удаляем на сервере и локально */
     override suspend fun deleteAccount(id: String): DomainResult<Unit> {
         val localResult = getLocalAccountOrFail(id)
@@ -138,11 +139,7 @@ class AccountRepositoryImpl @Inject constructor(
         }
 
         applicationScope.launch(dispatcher + exceptionHandler) {
-            if (accountEntity.serverId == null) {
-                safeDbCall(errorLogger) { accountLocalDataSource.deleteAccount(id) }
-            } else {
-                syncDelete(accountEntity)
-            }
+            syncDelete(accountEntity)
         }
 
         return safeDbCall(errorLogger) {
@@ -152,7 +149,14 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    /** Сразу возворащаем аккаунт из БД и пытаемся синхронизировать его с сервером */
+
+    /**
+     * 1. Получаем аккаунт из локальной БД (источник истины)
+     * 2. Возвращаем его сразу (offline-first)
+     * 3. В фоне:
+     *    - если есть serverId → обновляем с сервера
+     *    - если нет → пытаемся создать на сервере
+     */
     override suspend fun getAccountById(id: String): DomainResult<Account> {
         val localResult = getLocalAccountOrFail(id)
         if (localResult is DomainResult.Failure) return localResult
@@ -275,8 +279,11 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Удаляем на сервере и удалем локально из БД */
     private suspend fun syncDelete(accountEntity: AccountEntity) {
-        accountEntity.serverId?.let { idAccount ->
-            safeApiCall(errorLogger) { accountRemoteDataSource.delete(idAccount) }.onSuccess {
+        // todo улучшить нейминг удаления по локал айди
+        if (accountEntity.serverId == null) {
+            safeDbCall(errorLogger) { accountLocalDataSource.deleteAccount(accountEntity.localId) }
+        } else {
+            safeApiCall(errorLogger) { accountRemoteDataSource.delete(accountEntity.serverId!!) }.onSuccess {
                 safeDbCall(errorLogger) { accountLocalDataSource.deleteAccount(accountEntity.localId) }
             }
         }
