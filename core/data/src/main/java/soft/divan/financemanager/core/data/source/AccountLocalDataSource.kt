@@ -7,7 +7,7 @@ interface AccountLocalDataSource {
     suspend fun getAccounts(): Flow<List<AccountEntity>>
     suspend fun insertAccounts(accounts: List<AccountEntity>)
     suspend fun deleteAccount(id: String)
-    suspend fun getAccountByLocalId(id: String): AccountEntity?
+    suspend fun getByLocalId(id: String): AccountEntity?
     suspend fun getAccountByServerId(id: Int): AccountEntity?
     suspend fun updateAccount(account: AccountEntity)
     suspend fun createAccount(account: AccountEntity)

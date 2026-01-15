@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.Syncable
@@ -44,8 +45,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
     /** Создаем транзакцию в БД и сразу запускаем синхронизацию */
     override suspend fun createTransaction(transaction: Transaction): DomainResult<Unit> {
-        val accountServerId =
-            accountLocalDataSource.getAccountByLocalId(transaction.accountLocalId)?.serverId
+        val accountServerId = accountLocalDataSource.getByLocalId(transaction.accountLocalId)?.serverId
 
         val transactionEntity = transaction.toEntity(
             serverId = null,
@@ -81,10 +81,9 @@ class TransactionRepositoryImpl @Inject constructor(
                 accountId = accountId,
                 startDate = startDate,
                 endDate = endDate
-            )
-                .map { list ->
-                    list.filter { it.syncStatus != SyncStatus.PENDING_DELETE }.map { it.toDomain() }
-                }
+            ).map { list ->
+                list.filter { it.syncStatus != SyncStatus.PENDING_DELETE }.map { it.toDomain() }
+            }
         }
     }
 
@@ -104,16 +103,16 @@ class TransactionRepositoryImpl @Inject constructor(
         applicationScope.launch(dispatcher + exceptionHandler) {
             val serverId = transactionEntity.serverId
             if (serverId != null) {
-                safeApiCall(errorLogger) { transactionRemoteDataSource.getTransaction(serverId) }.onSuccess { transactionDto ->
-                    safeDbCall(errorLogger) {
-                        transactionLocalDataSource.updateTransaction(
-                            transactionDto.toEntity(
-                                localId = transactionEntity.localId,
-                                accountLocalId = transactionEntity.accountLocalId,
-                                syncStatus = SyncStatus.SYNCED
-                            )
+                safeApiCall(errorLogger) {
+                    transactionRemoteDataSource.getTransaction(serverId)
+                }.onSuccess { transactionDto ->
+                    updateLocalTransaction(
+                        transactionDto.toEntity(
+                            localId = transactionEntity.localId,
+                            accountLocalId = transactionEntity.accountLocalId,
+                            syncStatus = SyncStatus.SYNCED
                         )
-                    }
+                    )
                 }
             } else {
                 /** транзакция не синхронизирована с сервером то создаем на сервере*/
@@ -133,9 +132,6 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (resultDb as DomainResult.Success).data
 
-        val accountServerId =
-            accountLocalDataSource.getAccountByLocalId(transaction.accountLocalId)?.serverId
-
         applicationScope.launch(dispatcher + exceptionHandler) {
             if (transactionEntity.serverId == null) {
                 createTransactionOnRemote(
@@ -146,15 +142,13 @@ class TransactionRepositoryImpl @Inject constructor(
                     )
                 )
             } else {
-                accountServerId?.let {
-                    updateTransactionOnRemote(
-                        transaction.toEntity(
-                            serverId = transactionEntity.serverId,
-                            accountServerId = accountServerId,
-                            syncStatus = SyncStatus.PENDING_UPDATE
-                        )
+                updateTransactionOnRemote(
+                    transaction.toEntity(
+                        serverId = transactionEntity.serverId,
+                        accountServerId = transactionEntity.accountServerId,
+                        syncStatus = SyncStatus.PENDING_UPDATE
                     )
-                }
+                )
             }
         }
 
@@ -220,14 +214,12 @@ class TransactionRepositoryImpl @Inject constructor(
 
     /** Получаем все локальные акаунты и тянем с сервера все транзакции с момента создания аккаунта и до сегодняшнего дня */
     private suspend fun pullTransactionsFromRemoteForAllAccounts() {
-        accountLocalDataSource.getAccounts().collect { accounts ->
-            accounts.forEach { account ->
-                pullTransactionsFromRemoteForAccount(
-                    accountLocalId = account.localId,
-                    startDate = account.createdAt,
-                    endDate = DateHelper.dateToApiFormat(DateHelper.getToday())
-                )
-            }
+        accountLocalDataSource.getAccounts().first().forEach { account ->
+            pullTransactionsFromRemoteForAccount(
+                accountLocalId = account.localId,
+                startDate = DateHelper.formatApiDate(account.createdAt),
+                endDate = DateHelper.dateToApiFormat(DateHelper.getToday())
+            )
         }
     }
 
@@ -255,7 +247,7 @@ class TransactionRepositoryImpl @Inject constructor(
             safeApiCall(errorLogger) {
                 transactionRemoteDataSource.createTransaction(transactionEntity.toDto(accountServerId))
             }.onSuccess { transactionRequestDto ->
-                updateLocalFromRemote(
+                updateLocalTransaction(
                     transactionRequestDto.toEntity(
                         localId = transactionEntity.localId,
                         accountLocalId = transactionEntity.accountLocalId,
@@ -277,7 +269,7 @@ class TransactionRepositoryImpl @Inject constructor(
                         transaction = transactionEntity.toDto(accountServerId)
                     )
                 }.onSuccess { transactionDto ->
-                    updateLocalFromRemote(
+                    updateLocalTransaction(
                         transactionDto.toEntity(
                             localId = transactionEntity.localId,
                             accountLocalId = transactionEntity.accountLocalId,
@@ -292,19 +284,27 @@ class TransactionRepositoryImpl @Inject constructor(
     /** Удаляем на сервере и удалем локально из БД */
     private suspend fun deleteTransactionOnRemote(transactionEntity: TransactionEntity) {
         if (transactionEntity.serverId == null) {
-            safeDbCall(errorLogger) { transactionLocalDataSource.deleteTransaction(transactionEntity.localId) }
+            deleteLocalTransaction(transactionEntity.localId)
         } else {
-            safeApiCall(errorLogger) { transactionRemoteDataSource.deleteTransaction(transactionEntity.serverId!!) }.onSuccess {
-                safeDbCall(errorLogger) {
-                    transactionLocalDataSource.deleteTransaction(transactionEntity.localId)
-                }
+            safeApiCall(errorLogger) {
+                transactionRemoteDataSource.delete(transactionEntity.serverId!!)
+            }.onSuccess {
+                deleteLocalTransaction(transactionEntity.localId)
             }
         }
     }
 
-    /** Унифицируем обновление локального аккаунта после ответа сервера */
-    private suspend fun updateLocalFromRemote(transactionEntity: TransactionEntity) {
-        safeDbCall(errorLogger) { transactionLocalDataSource.updateTransaction(transactionEntity) }
+    private suspend fun deleteLocalTransaction(localId: String) {
+        safeDbCall(errorLogger) {
+            transactionLocalDataSource.deleteTransaction(localId)
+        }
+    }
+
+    /** Унифицируем обновление локальной транзакции */
+    private suspend fun updateLocalTransaction(transactionEntity: TransactionEntity) {
+        safeDbCall(errorLogger) {
+            transactionLocalDataSource.updateTransaction(transactionEntity)
+        }
     }
 
     private suspend fun pullTransactionsFromRemoteForAccount(
@@ -312,8 +312,8 @@ class TransactionRepositoryImpl @Inject constructor(
         startDate: String,
         endDate: String
     ) {
-        val serverAccountId = getServerAccountIdByLocalId(accountLocalId) ?: return
         // если аккаунт ещё не синхронизирован — транзакции с сервера не тянем
+        val serverAccountId = getServerAccountIdByLocalId(accountLocalId) ?: return
 
         safeApiCall(errorLogger) {
             transactionRemoteDataSource.getTransactionsByAccountAndPeriod(
@@ -322,13 +322,19 @@ class TransactionRepositoryImpl @Inject constructor(
                 endDate
             )
         }.onSuccess { transactionDtos ->
-            transactionDtos.forEach { transactionDto ->
-                val localResult = safeDbCall(errorLogger) {
-                    transactionLocalDataSource.getTransactionByServerId(transactionDto.id)
-                }
+            val serverIds = transactionDtos.map { it.id }
 
-                if (localResult is DomainResult.Success && localResult.data == null) {
-                    /** 1. Локальной транзакции нет → создаём */
+            val localTransactions = safeDbCall(errorLogger) {
+                transactionLocalDataSource.getTransactionsByServerIds(serverIds)
+            }.getOrNull().orEmpty()
+
+            val localMap = localTransactions.associateBy { it.serverId }
+
+            transactionDtos.forEach { transactionDto ->
+                val localTransaction = localMap[transactionDto.id]
+
+                if (localTransaction == null) {
+                    /**  Локальной транзакции нет → создаём */
                     safeDbCall(errorLogger) {
                         transactionLocalDataSource.createTransaction(
                             transactionDto.toEntity(
@@ -338,11 +344,12 @@ class TransactionRepositoryImpl @Inject constructor(
                             )
                         )
                     }
-                } else if (localResult is DomainResult.Success && transactionDto.updatedAt > localResult.data!!.updatedAt) {
-                    updateLocalFromRemote(
+                } else if (transactionDto.updatedAt > localTransaction.updatedAt) {
+                    /** Если есть то разрешаем конфликт, побежадает, так которая менялась позже  */
+                    updateLocalTransaction(
                         transactionDto.toEntity(
-                            localId = localResult.data!!.localId,
-                            accountLocalId = localResult.data!!.accountLocalId,
+                            localId = localTransaction.localId,
+                            accountLocalId = localTransaction.accountLocalId,
                             syncStatus = SyncStatus.SYNCED
                         )
                     )
@@ -353,7 +360,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
     private suspend fun getServerAccountIdByLocalId(id: String): Int? {
         return safeDbCall(errorLogger) {
-            accountLocalDataSource.getAccountByLocalId(id)
+            accountLocalDataSource.getByLocalId(id)
         }.getOrNull()?.serverId
     }
 }
