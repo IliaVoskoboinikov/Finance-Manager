@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.Syncable
 import soft.divan.financemanager.core.data.Synchronizer
-import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toDomainError
@@ -43,14 +42,38 @@ class TransactionRepositoryImpl @Inject constructor(
     private val errorLogger: ErrorLogger
 ) : TransactionRepository, Syncable {
 
-    /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию */
+    /** Создаем транзакцию в БД и сразу запускаем синхронизацию */
+    override suspend fun createTransaction(transaction: Transaction): DomainResult<Unit> {
+        val accountServerId =
+            accountLocalDataSource.getAccountByLocalId(transaction.accountLocalId)?.serverId
+
+        val transactionEntity = transaction.toEntity(
+            serverId = null,
+            accountServerId = accountServerId,
+            syncStatus = SyncStatus.PENDING_CREATE
+        )
+
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            createTransactionOnRemote(transactionEntity)
+        }
+
+        return safeDbCall(errorLogger) {
+            transactionLocalDataSource.createTransaction(transactionEntity)
+        }
+    }
+
+    /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию на получение этих данныъ с сервера */
     override suspend fun getTransactionsByAccountAndPeriod(
         accountId: String,
         startDate: String,
         endDate: String
     ): Flow<DomainResult<List<Transaction>>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
-            pullServerData(accountLocalId = accountId, startDate = startDate, endDate = endDate)
+            pullTransactionsFromRemoteForAccount(
+                accountLocalId = accountId,
+                startDate = startDate,
+                endDate = endDate
+            )
         }
 
         return safeDbFlow(errorLogger) {
@@ -94,45 +117,11 @@ class TransactionRepositoryImpl @Inject constructor(
                 }
             } else {
                 /** транзакция не синхронизирована с сервером то создаем на сервере*/
-                syncCreate(transactionEntity)
+                createTransactionOnRemote(transactionEntity)
             }
         }
 
         return DomainResult.Success(transactionEntity.toDomain())
-    }
-
-    /**  Хелпер для получения локальной транзакции*/
-    private suspend fun getLocalTransactionOrFail(id: String): DomainResult<TransactionEntity> {
-        return safeDbCall(errorLogger) {
-            transactionLocalDataSource.getTransactionByLocalId(id)
-        }.fold(
-            onSuccess = { entity ->
-                entity?.let { DomainResult.Success(it) }
-                    ?: DomainResult.Failure(DataError.NotFound.toDomainError())
-            },
-            onFailure = { error ->
-                DomainResult.Failure(error)
-            }
-        )
-    }
-
-    override suspend fun createTransaction(transaction: Transaction): DomainResult<Unit> {
-        val accountServerId =
-            accountLocalDataSource.getAccountByLocalId(transaction.accountLocalId)?.serverId
-
-        val transactionEntity = transaction.toEntity(
-            serverId = null,
-            accountServerId = accountServerId,
-            syncStatus = SyncStatus.PENDING_CREATE
-        )
-
-        applicationScope.launch(dispatcher + exceptionHandler) {
-            syncCreate(transactionEntity)
-        }
-
-        return safeDbCall(errorLogger) {
-            transactionLocalDataSource.createTransaction(transactionEntity)
-        }
     }
 
     /** Вытаскиваем из бд транзакцию(так как только в БД храним serverId) обновляем локальныую трнакцию и запускаем синхронизацию
@@ -149,7 +138,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         applicationScope.launch(dispatcher + exceptionHandler) {
             if (transactionEntity.serverId == null) {
-                syncCreate(
+                createTransactionOnRemote(
                     transaction.toEntity(
                         serverId = null,
                         accountServerId = transactionEntity.accountServerId,
@@ -158,7 +147,7 @@ class TransactionRepositoryImpl @Inject constructor(
                 )
             } else {
                 accountServerId?.let {
-                    syncUpdate(
+                    updateTransactionOnRemote(
                         transaction.toEntity(
                             serverId = transactionEntity.serverId,
                             accountServerId = accountServerId,
@@ -192,7 +181,7 @@ class TransactionRepositoryImpl @Inject constructor(
         val transactionEntity = (localResult as DomainResult.Success).data
 
         applicationScope.launch(dispatcher + exceptionHandler) {
-            syncDelete(transactionEntity)
+            deleteTransactionOnRemote(transactionEntity)
         }
 
         return safeDbCall(errorLogger) {
@@ -202,22 +191,38 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    /**  Хелпер для получения локальной транзакции*/
+    private suspend fun getLocalTransactionOrFail(id: String): DomainResult<TransactionEntity> {
+        return safeDbCall(errorLogger) {
+            transactionLocalDataSource.getTransactionByLocalId(id)
+        }.fold(
+            onSuccess = { entity ->
+                entity?.let { DomainResult.Success(it) }
+                    ?: DomainResult.Failure(DataError.NotFound.toDomainError())
+            },
+            onFailure = { error ->
+                DomainResult.Failure(error)
+            }
+        )
+    }
+
 
     ////////////////// Sync //////////////////
 
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
-        return runCatching { sync() }.isSuccess
+        return runCatching { performFullSync() }.isSuccess
     }
 
-    private suspend fun sync() {
-        pullServerDataAll()
-        pushLocalChanges()
+    private suspend fun performFullSync() {
+        pullTransactionsFromRemoteForAllAccounts()
+        pushPendingLocalTransactions()
     }
 
-    private suspend fun pullServerDataAll() {
+    /** Получаем все локальные акаунты и тянем с сервера все транзакции с момента создания аккаунта и до сегодняшнего дня */
+    private suspend fun pullTransactionsFromRemoteForAllAccounts() {
         accountLocalDataSource.getAccounts().collect { accounts ->
             accounts.forEach { account ->
-                pullServerData(
+                pullTransactionsFromRemoteForAccount(
                     accountLocalId = account.localId,
                     startDate = account.createdAt,
                     endDate = DateHelper.dateToApiFormat(DateHelper.getToday())
@@ -227,23 +232,23 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     /** Получаем все локальные данныве которые ожидают синхронизацю и запускаем синхронизацию */
-    private suspend fun pushLocalChanges() {
+    private suspend fun pushPendingLocalTransactions() {
         safeDbCall(errorLogger) {
             transactionLocalDataSource.getPendingSync()
         }.onSuccess { transactionEntities ->
             transactionEntities.forEach { transactionEntity ->
                 when (transactionEntity.syncStatus) {
-                    SyncStatus.PENDING_CREATE -> syncCreate(transactionEntity)
-                    SyncStatus.PENDING_UPDATE -> syncUpdate(transactionEntity)
-                    SyncStatus.PENDING_DELETE -> syncDelete(transactionEntity)
+                    SyncStatus.PENDING_CREATE -> createTransactionOnRemote(transactionEntity)
+                    SyncStatus.PENDING_UPDATE -> updateTransactionOnRemote(transactionEntity)
+                    SyncStatus.PENDING_DELETE -> deleteTransactionOnRemote(transactionEntity)
                     SyncStatus.SYNCED -> Unit
                 }
             }
         }
     }
 
-    /** Создаем на серевер и обновляем локальную БД */
-    private suspend fun syncCreate(
+    /** Создаем на серевер транзакцию и обновляем локальную БД */
+    private suspend fun createTransactionOnRemote(
         transactionEntity: TransactionEntity
     ) {
         transactionEntity.accountServerId?.let { accountServerId ->
@@ -262,7 +267,8 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun syncUpdate(transactionEntity: TransactionEntity) {
+    /** Обновляем на сервере и обновляем локальную БД */
+    private suspend fun updateTransactionOnRemote(transactionEntity: TransactionEntity) {
         transactionEntity.serverId?.let { serverId ->
             transactionEntity.accountServerId?.let { accountServerId ->
                 safeApiCall(errorLogger) {
@@ -272,39 +278,19 @@ class TransactionRepositoryImpl @Inject constructor(
                     )
                 }.onSuccess { transactionDto ->
                     updateLocalFromRemote(
-                        transactionRequestDto = transactionDto,
-                        localId = transactionEntity.localId,
-                        accountLocalId = transactionEntity.accountLocalId
+                        transactionDto.toEntity(
+                            localId = transactionEntity.localId,
+                            accountLocalId = transactionEntity.accountLocalId,
+                            syncStatus = SyncStatus.SYNCED
+                        )
                     )
                 }
             }
-
         }
-    }
-
-    /** Унифицируем обновление локального аккаунта после ответа сервера */
-    private suspend fun updateLocalFromRemote(
-        transactionRequestDto: TransactionDto,
-        localId: String,
-        accountLocalId: String
-    ) {
-        safeDbCall(errorLogger) {
-            transactionLocalDataSource.updateTransaction(
-                transactionRequestDto.toEntity(
-                    localId = localId,
-                    accountLocalId = accountLocalId,
-                    syncStatus = SyncStatus.SYNCED
-                )
-            )
-        }
-    }
-
-    private suspend fun updateLocalFromRemote(transactionEntity: TransactionEntity) {
-        safeDbCall(errorLogger) { transactionLocalDataSource.updateTransaction(transactionEntity) }
     }
 
     /** Удаляем на сервере и удалем локально из БД */
-    private suspend fun syncDelete(transactionEntity: TransactionEntity) {
+    private suspend fun deleteTransactionOnRemote(transactionEntity: TransactionEntity) {
         if (transactionEntity.serverId == null) {
             safeDbCall(errorLogger) { transactionLocalDataSource.deleteTransaction(transactionEntity.localId) }
         } else {
@@ -316,18 +302,17 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-    private suspend fun getServerAccountId(accountLocalId: String): Int? {
-        return safeDbCall(errorLogger) {
-            accountLocalDataSource.getAccountByLocalId(accountLocalId)
-        }.getOrNull()?.serverId
+    /** Унифицируем обновление локального аккаунта после ответа сервера */
+    private suspend fun updateLocalFromRemote(transactionEntity: TransactionEntity) {
+        safeDbCall(errorLogger) { transactionLocalDataSource.updateTransaction(transactionEntity) }
     }
 
-    private suspend fun pullServerData(
+    private suspend fun pullTransactionsFromRemoteForAccount(
         accountLocalId: String,
         startDate: String,
         endDate: String
     ) {
-        val serverAccountId = getServerAccountId(accountLocalId) ?: return
+        val serverAccountId = getServerAccountIdByLocalId(accountLocalId) ?: return
         // если аккаунт ещё не синхронизирован — транзакции с сервера не тянем
 
         safeApiCall(errorLogger) {
@@ -366,5 +351,9 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
-
+    private suspend fun getServerAccountIdByLocalId(id: String): Int? {
+        return safeDbCall(errorLogger) {
+            accountLocalDataSource.getAccountByLocalId(id)
+        }.getOrNull()?.serverId
+    }
 }
