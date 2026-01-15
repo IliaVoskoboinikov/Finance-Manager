@@ -18,7 +18,7 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
 
     override val route: String = "transaction"
 
-    override fun transactionRouteWithArgs(transactionId: Int, isIncome: Boolean) =
+    override fun transactionRouteWithArgs(transactionId: String, isIncome: Boolean) =
         "$route/$transactionId/$isIncome"
 
     override fun transactionRouteWithArgs(isIncome: Boolean) = "$route/$isIncome"
@@ -32,7 +32,7 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
             route = "${route}/{$TRANSACTION_ID_KEY}/{$IS_INCOME_KEY}",
             arguments = listOf(
                 navArgument(TRANSACTION_ID_KEY) {
-                    type = NavType.IntType
+                    type = NavType.StringType
                 },
                 navArgument(IS_INCOME_KEY) {
                     type = NavType.BoolType

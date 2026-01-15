@@ -2,5 +2,5 @@ package soft.divan.financemanager.feature.transaction.transaction_impl.precenter
 
 sealed interface TransactionMode {
     data object Create : TransactionMode
-    data class Edit(val id: Int) : TransactionMode
+    data class Edit(val id: String) : TransactionMode
 }

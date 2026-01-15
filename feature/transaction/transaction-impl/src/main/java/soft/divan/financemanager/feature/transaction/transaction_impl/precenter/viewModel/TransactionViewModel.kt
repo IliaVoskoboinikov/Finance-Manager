@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
@@ -56,7 +57,7 @@ class TransactionViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val transactionId: Int? = savedStateHandle.get<Int>(TRANSACTION_ID_KEY)
+    private val transactionId: String? = savedStateHandle.get<String>(TRANSACTION_ID_KEY)
     private val isIncome: Boolean = savedStateHandle.get<Boolean>(IS_INCOME_KEY) ?: false
 
     private val _uiState = MutableStateFlow<TransactionUiState>(TransactionUiState.Loading)
@@ -115,7 +116,7 @@ class TransactionViewModel @Inject constructor(
         val category = categories.firstOrNull() ?: return
 
         transaction = TransactionUi(
-            id = null,
+            id = generateUUID(),
             accountId = account.id,
             category = category,
             amount = "0",
@@ -131,7 +132,7 @@ class TransactionViewModel @Inject constructor(
         publishSuccess()
     }
 
-    private suspend fun initForEdit(id: Int) {
+    private suspend fun initForEdit(id: String) {
         getTransactionUseCase(id).fold(
             onSuccess = { domainTransaction ->
                 val category = categories.firstOrNull { it.id == domainTransaction.categoryId }

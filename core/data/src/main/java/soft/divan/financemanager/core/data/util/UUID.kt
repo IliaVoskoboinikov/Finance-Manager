@@ -1,5 +1,5 @@
 package soft.divan.financemanager.core.data.util
 
-import java.util.UUID.randomUUID
+import java.util.UUID
 
-fun generateUUID() = randomUUID().toString()
+fun generateUUID() = UUID.randomUUID().toString()

@@ -66,7 +66,7 @@ fun TransactionsTodayScreen(
     isIncome: Boolean = false,
     onNavigateToHistory: () -> Unit,
     onNavigateToNewTransaction: () -> Unit,
-    onNavigateToOldTransaction: (idTransaction: Int) -> Unit,
+    onNavigateToOldTransaction: (idTransaction: String) -> Unit,
     viewModel: TransactionsTodayViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 
@@ -97,7 +97,7 @@ fun TransactionsTodayContent(
     onNavigateToHistory: () -> Unit,
     onNavigateToNewTransaction: () -> Unit,
     hapticNavigation: () -> Unit,
-    onNavigateToOldTransaction: (idTransaction: Int) -> Unit,
+    onNavigateToOldTransaction: (idTransaction: String) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -137,7 +137,7 @@ fun TransactionsTodayContent(
 fun TransactionsList(
     modifier: Modifier = Modifier,
     uiState: TransactionsTodayUiState.Success,
-    onNavigateToOldTransaction: (idTransaction: Int) -> Unit,
+    onNavigateToOldTransaction: (idTransaction: String) -> Unit,
 ) {
     Column(modifier = modifier) {
         SummaryItem(sum = uiState.sumTransaction)
