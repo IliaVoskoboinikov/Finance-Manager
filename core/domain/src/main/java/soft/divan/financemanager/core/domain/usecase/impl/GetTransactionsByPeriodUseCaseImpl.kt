@@ -56,6 +56,7 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
             // 4) Загружаем транзакции для каждого аккаунта ПАРАЛЛЕЛЬНО
             // 4. Транзакции по всем аккаунтам (параллельно)
             val allTransactionsResult = coroutineScope {
+                //todo может перенести загрузку аккаунтов в репозиторий
                 accounts.map { account ->
                     async {
                         transactionRepository

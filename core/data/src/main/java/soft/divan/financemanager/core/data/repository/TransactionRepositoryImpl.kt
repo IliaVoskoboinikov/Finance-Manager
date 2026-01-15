@@ -6,21 +6,31 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import soft.divan.financemanager.core.data.Syncable
+import soft.divan.financemanager.core.data.Synchronizer
+import soft.divan.financemanager.core.data.dto.TransactionDto
+import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.toDomain
+import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.data.mapper.toDto
 import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
+import soft.divan.financemanager.core.data.util.generateUUID
+import soft.divan.financemanager.core.data.util.safeApiCall
 import soft.divan.financemanager.core.data.util.safeDbCall
 import soft.divan.financemanager.core.data.util.safeDbFlow
+import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.core.domain.result.getOrNull
+import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.logging_error.logging_error_api.ErrorLogger
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.util.UUID
+import soft.divan.finansemanager.core.database.entity.TransactionEntity
+import soft.divan.finansemanager.core.database.model.SyncStatus
 import javax.inject.Inject
 
 class TransactionRepositoryImpl @Inject constructor(
@@ -31,126 +41,330 @@ class TransactionRepositoryImpl @Inject constructor(
     private val dispatcher: CoroutineDispatcher,
     private val exceptionHandler: CoroutineExceptionHandler,
     private val errorLogger: ErrorLogger
-) : TransactionRepository {
+) : TransactionRepository, Syncable {
 
+    /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию */
     override suspend fun getTransactionsByAccountAndPeriod(
         accountId: String,
         startDate: String,
         endDate: String
     ): Flow<DomainResult<List<Transaction>>> {
-
         applicationScope.launch(dispatcher + exceptionHandler) {
-            val serverId = accountLocalDataSource.getAccountByLocalId(accountId)
-            val response = transactionRemoteDataSource.getTransactionsByAccountAndPeriod(
-                serverId?.serverId!!, startDate, endDate
-            )
-            val transactionsByAccountAndPeriodDto = response.body().orEmpty()
-            val transactionsByAccountAndPeriodEntity =
-                transactionsByAccountAndPeriodDto.map { it.toEntity(accountIdLocal = serverId.localId) }
-            transactionLocalDataSource.insertTransactions(transactionsByAccountAndPeriodEntity)
+            pullServerData(accountLocalId = accountId, startDate = startDate, endDate = endDate)
         }
 
         return safeDbFlow(errorLogger) {
-            transactionLocalDataSource.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
-                .map { list -> list.map { it.toDomain() } }
+            transactionLocalDataSource.getTransactionsByAccountAndPeriod(
+                accountId = accountId,
+                startDate = startDate,
+                endDate = endDate
+            )
+                .map { list ->
+                    list.filter { it.syncStatus != SyncStatus.PENDING_DELETE }.map { it.toDomain() }
+                }
         }
     }
 
-    //todo
-    override suspend fun getTransaction(id: Int): DomainResult<Transaction> {
+    /**
+     * 1. Получаем транзакцию из локальной БД (источник истины)
+     * 2. Возвращаем ее сразу (offline-first)
+     * 3. В фоне:
+     *    - если есть serverId → обновляем с сервера
+     *    - если нет → пытаемся создать на сервере
+     */
+    override suspend fun getTransactionById(localId: String): DomainResult<Transaction> {
+        val resultDb = getLocalTransactionOrFail(localId)
+        if (resultDb is DomainResult.Failure) return resultDb
 
-        // Пытаемся сначала получить транзакцию из локальной БД
-        val localTransaction = transactionLocalDataSource.getTransactionById(id)?.toDomain()
-        if (localTransaction != null) {
-            // Асинхронно обновляем данные с сервера
-            applicationScope.launch(dispatcher + exceptionHandler) {
-                val response = transactionRemoteDataSource.getTransaction(id)
-                if (response.isSuccessful) {
-                    val updatedTransaction =
-                        response.body()?.toEntity(accountIdLocal = localTransaction.accountId)
-                    if (updatedTransaction != null) {
-                        transactionLocalDataSource.updateTransaction(updatedTransaction)
+        val transactionEntity = (resultDb as DomainResult.Success).data
+
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            val serverId = transactionEntity.serverId
+            if (serverId != null) {
+                safeApiCall(errorLogger) { transactionRemoteDataSource.getTransaction(serverId) }.onSuccess { transactionDto ->
+                    safeDbCall(errorLogger) {
+                        transactionLocalDataSource.updateTransaction(
+                            transactionDto.toEntity(
+                                localId = transactionEntity.localId,
+                                accountLocalId = transactionEntity.accountLocalId,
+                                syncStatus = SyncStatus.SYNCED
+                            )
+                        )
                     }
                 }
+            } else {
+                /** транзакция не синхронизирована с сервером то создаем на сервере*/
+                syncCreate(transactionEntity)
             }
-            return DomainResult.Success(localTransaction)
         }
 
-
-        // Если локально нет — запрашиваем с сервера
-        val response = transactionRemoteDataSource.getTransaction(id)
-        if (response.isSuccessful) {
-            val transactionDto = response.body() ?: throw IllegalStateException("Response body is null")
-            val transaction =
-                transactionDto.toEntity(accountIdLocal = UUID.randomUUID().toString()).toDomain()
-
-            // Сохраняем в локальную базу для кеширования
-            transactionLocalDataSource.saveTransaction(transaction.toEntity())
-
-            return DomainResult.Success(transaction)
-        } else {
-            throw Exception("Failed to fetch transaction: ${response.code()} ${response.message()}")
-        }
+        return DomainResult.Success(transactionEntity.toDomain())
     }
 
-    //todo баг с измененим транзакции
-    override suspend fun createTransaction(transaction: Transaction): DomainResult<Unit> {
-
-        transactionLocalDataSource.saveTransaction(transaction.toEntity())
-
-        applicationScope.launch(dispatcher + exceptionHandler) {
-            val accountEntity = accountLocalDataSource.getAccountByLocalId(transaction.accountId)!!
-            val response =
-                transactionRemoteDataSource.createTransaction(transaction.toDto(accountIdServer = accountEntity.serverId!!))
-            if (response.isSuccessful) {
-                val serverTransaction = response.body()!!
-                transactionLocalDataSource.updateTransactionId(
-                    //todo время унифицировать во все прилке
-                    createdAt = transaction.createdAt.atOffset(ZoneOffset.UTC)
-                        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                    newId = serverTransaction.id
-                )
-            }
-        }
-        return DomainResult.Success(Unit)
-    }
-
-    override suspend fun updateTransaction(transaction: Transaction): DomainResult<Unit> {
-        transactionLocalDataSource.saveTransaction(transaction.toEntity())
-        applicationScope.launch(dispatcher + exceptionHandler) {
-            val account = accountLocalDataSource.getAccountByLocalId(transaction.accountId)!!
-            val response =
-                transactionRemoteDataSource.updateTransaction(
-                    id = transaction.idServer,
-                    transaction = transaction.toDto(accountIdServer = account.serverId!!)
-                )
-            if (response.isSuccessful) {
-                val serverTransaction = response.body()!!
-                transactionLocalDataSource.updateTransactionId(
-                    //todo время унифицировать во все прилке
-                    createdAt = transaction.createdAt.atOffset(ZoneOffset.UTC)
-                        .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
-                    newId = serverTransaction.id
-                )
-            }
-        }
-        return DomainResult.Success(Unit)
-    }
-
-    //todo
-    override suspend fun deleteTransaction(transactionId: Int): DomainResult<Unit> {
-        // Асинхронно пытаемся удалить на сервере
-        applicationScope.launch(dispatcher + exceptionHandler) {
-            val response = transactionRemoteDataSource.deleteTransaction(transactionId)
-            if (!response.isSuccessful) {
-                // Если серверное удаление не удалось — можно добавить обработку
-                // Например, логирование или флаг "требует синхронизации"
-                // syncManager.markForDeletion(transactionId)
-            }
-        }
+    /**  Хелпер для получения локальной транзакции*/
+    private suspend fun getLocalTransactionOrFail(id: String): DomainResult<TransactionEntity> {
         return safeDbCall(errorLogger) {
-            transactionLocalDataSource.deleteTransaction(transactionId)
+            transactionLocalDataSource.getTransactionByLocalId(id)
+        }.fold(
+            onSuccess = { entity ->
+                entity?.let { DomainResult.Success(it) }
+                    ?: DomainResult.Failure(DataError.NotFound.toDomainError())
+            },
+            onFailure = { error ->
+                DomainResult.Failure(error)
+            }
+        )
+    }
+
+    override suspend fun createTransaction(transaction: Transaction): DomainResult<Unit> {
+        val accountServerId =
+            accountLocalDataSource.getAccountByLocalId(transaction.accountLocalId)?.serverId
+
+        val transactionEntity = transaction.toEntity(
+            serverId = null,
+            accountServerId = accountServerId,
+            syncStatus = SyncStatus.PENDING_CREATE
+        )
+
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            syncCreate(transactionEntity)
+        }
+
+        return safeDbCall(errorLogger) {
+            transactionLocalDataSource.createTransaction(transactionEntity)
         }
     }
+
+    /** Вытаскиваем из бд транзакцию(так как только в БД храним serverId) обновляем локальныую трнакцию и запускаем синхронизацию
+     * если транзакция не синхронизирована с сервером то создаем на сервере и обновляем локально, иначе просто обновляем на сервере,
+     * сразу возвращаем результат локального обновления транзакции */
+    override suspend fun updateTransaction(transaction: Transaction): DomainResult<Unit> {
+        val resultDb = getLocalTransactionOrFail(transaction.id)
+        if (resultDb is DomainResult.Failure) return resultDb
+
+        val transactionEntity = (resultDb as DomainResult.Success).data
+
+        val accountServerId =
+            accountLocalDataSource.getAccountByLocalId(transaction.accountLocalId)?.serverId
+
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            if (transactionEntity.serverId == null) {
+                syncCreate(
+                    transaction.toEntity(
+                        serverId = null,
+                        accountServerId = transactionEntity.accountServerId,
+                        syncStatus = SyncStatus.PENDING_UPDATE
+                    )
+                )
+            } else {
+                accountServerId?.let {
+                    syncUpdate(
+                        transaction.toEntity(
+                            serverId = transactionEntity.serverId,
+                            accountServerId = accountServerId,
+                            syncStatus = SyncStatus.PENDING_UPDATE
+                        )
+                    )
+                }
+            }
+        }
+
+        return safeDbCall(errorLogger) {
+            transactionLocalDataSource.updateTransaction(
+                transactionEntity.copy(
+                    categoryId = transaction.categoryId,
+                    currencyCode = transaction.currencyCode,
+                    amount = transaction.amount.toPlainString(),
+                    transactionDate = DateHelper.dataTimeForApi(transaction.transactionDate),
+                    comment = transaction.comment.orEmpty(),
+                    createdAt = DateHelper.dataTimeForApi(transaction.createdAt),
+                    updatedAt = DateHelper.dataTimeForApi(transaction.updatedAt),
+                    syncStatus = if (transactionEntity.serverId == null) SyncStatus.PENDING_CREATE else SyncStatus.PENDING_UPDATE
+                )
+            )
+        }
+    }
+
+    override suspend fun deleteTransaction(id: String): DomainResult<Unit> {
+        val localResult = getLocalTransactionOrFail(id)
+        if (localResult is DomainResult.Failure) return localResult
+
+        val transactionEntity = (localResult as DomainResult.Success).data
+
+        applicationScope.launch(dispatcher + exceptionHandler) {
+            syncDelete(transactionEntity)
+        }
+
+        return safeDbCall(errorLogger) {
+            transactionLocalDataSource.updateTransaction(
+                transactionEntity.copy(syncStatus = SyncStatus.PENDING_DELETE)
+            )
+        }
+    }
+
+
+    ////////////////// Sync //////////////////
+
+    override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
+        return runCatching { sync() }.isSuccess
+    }
+
+    private suspend fun sync() {
+        pullServerDataAll()
+        pushLocalChanges()
+    }
+
+    private suspend fun pullServerDataAll() {
+        accountLocalDataSource.getAccounts().collect { accounts ->
+            accounts.forEach { account ->
+                pullServerData(
+                    accountLocalId = account.localId,
+                    startDate = account.createdAt,
+                    endDate = DateHelper.dateToApiFormat(DateHelper.getToday())
+                )
+            }
+        }
+    }
+
+    /** Получаем все локальные данныве которые ожидают синхронизацю и запускаем синхронизацию */
+    private suspend fun pushLocalChanges() {
+        safeDbCall(errorLogger) {
+            transactionLocalDataSource.getPendingSync()
+        }.onSuccess { transactionEntities ->
+            transactionEntities.forEach { transactionEntity ->
+                when (transactionEntity.syncStatus) {
+                    SyncStatus.PENDING_CREATE -> syncCreate(transactionEntity)
+                    SyncStatus.PENDING_UPDATE -> syncUpdate(transactionEntity)
+                    SyncStatus.PENDING_DELETE -> syncDelete(transactionEntity)
+                    SyncStatus.SYNCED -> Unit
+                }
+            }
+        }
+    }
+
+    /** Создаем на серевер и обновляем локальную БД */
+    private suspend fun syncCreate(
+        transactionEntity: TransactionEntity
+    ) {
+        transactionEntity.accountServerId?.let { accountServerId ->
+            safeApiCall(errorLogger) {
+                transactionRemoteDataSource.createTransaction(transactionEntity.toDto(accountServerId))
+            }.onSuccess { transactionRequestDto ->
+                updateLocalFromRemote(
+                    transactionRequestDto.toEntity(
+                        localId = transactionEntity.localId,
+                        accountLocalId = transactionEntity.accountLocalId,
+                        currencyCode = transactionEntity.currencyCode,
+                        syncStatus = SyncStatus.SYNCED
+                    )
+                )
+            }
+        }
+    }
+
+    private suspend fun syncUpdate(transactionEntity: TransactionEntity) {
+        transactionEntity.serverId?.let { serverId ->
+            transactionEntity.accountServerId?.let { accountServerId ->
+                safeApiCall(errorLogger) {
+                    transactionRemoteDataSource.updateTransaction(
+                        id = serverId,
+                        transaction = transactionEntity.toDto(accountServerId)
+                    )
+                }.onSuccess { transactionDto ->
+                    updateLocalFromRemote(
+                        transactionRequestDto = transactionDto,
+                        localId = transactionEntity.localId,
+                        accountLocalId = transactionEntity.accountLocalId
+                    )
+                }
+            }
+
+        }
+    }
+
+    /** Унифицируем обновление локального аккаунта после ответа сервера */
+    private suspend fun updateLocalFromRemote(
+        transactionRequestDto: TransactionDto,
+        localId: String,
+        accountLocalId: String
+    ) {
+        safeDbCall(errorLogger) {
+            transactionLocalDataSource.updateTransaction(
+                transactionRequestDto.toEntity(
+                    localId = localId,
+                    accountLocalId = accountLocalId,
+                    syncStatus = SyncStatus.SYNCED
+                )
+            )
+        }
+    }
+
+    private suspend fun updateLocalFromRemote(transactionEntity: TransactionEntity) {
+        safeDbCall(errorLogger) { transactionLocalDataSource.updateTransaction(transactionEntity) }
+    }
+
+    /** Удаляем на сервере и удалем локально из БД */
+    private suspend fun syncDelete(transactionEntity: TransactionEntity) {
+        if (transactionEntity.serverId == null) {
+            safeDbCall(errorLogger) { transactionLocalDataSource.deleteTransaction(transactionEntity.localId) }
+        } else {
+            safeApiCall(errorLogger) { transactionRemoteDataSource.deleteTransaction(transactionEntity.serverId!!) }.onSuccess {
+                safeDbCall(errorLogger) {
+                    transactionLocalDataSource.deleteTransaction(transactionEntity.localId)
+                }
+            }
+        }
+    }
+
+    private suspend fun getServerAccountId(accountLocalId: String): Int? {
+        return safeDbCall(errorLogger) {
+            accountLocalDataSource.getAccountByLocalId(accountLocalId)
+        }.getOrNull()?.serverId
+    }
+
+    private suspend fun pullServerData(
+        accountLocalId: String,
+        startDate: String,
+        endDate: String
+    ) {
+        val serverAccountId = getServerAccountId(accountLocalId) ?: return
+        // если аккаунт ещё не синхронизирован — транзакции с сервера не тянем
+
+        safeApiCall(errorLogger) {
+            transactionRemoteDataSource.getTransactionsByAccountAndPeriod(
+                serverAccountId,
+                startDate,
+                endDate
+            )
+        }.onSuccess { transactionDtos ->
+            transactionDtos.forEach { transactionDto ->
+                val localResult = safeDbCall(errorLogger) {
+                    transactionLocalDataSource.getTransactionByServerId(transactionDto.id)
+                }
+
+                if (localResult is DomainResult.Success && localResult.data == null) {
+                    /** 1. Локальной транзакции нет → создаём */
+                    safeDbCall(errorLogger) {
+                        transactionLocalDataSource.createTransaction(
+                            transactionDto.toEntity(
+                                localId = generateUUID(),
+                                accountLocalId = accountLocalId,
+                                syncStatus = SyncStatus.SYNCED
+                            )
+                        )
+                    }
+                } else if (localResult is DomainResult.Success && transactionDto.updatedAt > localResult.data!!.updatedAt) {
+                    updateLocalFromRemote(
+                        transactionDto.toEntity(
+                            localId = localResult.data!!.localId,
+                            accountLocalId = localResult.data!!.accountLocalId,
+                            syncStatus = SyncStatus.SYNCED
+                        )
+                    )
+                }
+            }
+        }
+    }
+
 
 }

@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import soft.divan.financemanager.core.data.Synchronizer
 import soft.divan.financemanager.core.data.repository.AccountRepositoryImpl
 import soft.divan.financemanager.core.data.repository.CategoryRepositoryImpl
+import soft.divan.financemanager.core.data.repository.TransactionRepositoryImpl
 import soft.divan.financemanager.sync.domain.usecase.SetLastSyncTimeUseCase
 
 @HiltWorker
@@ -24,6 +25,7 @@ internal class SyncWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val categoryRepositoryImpl: CategoryRepositoryImpl,
     private val accountRepositoryImpl: AccountRepositoryImpl,
+    private val transactionRepositoryImpl: TransactionRepositoryImpl,
     private val setLastSyncTimeUseCase: SetLastSyncTimeUseCase,
     private val ioDispatcher: CoroutineDispatcher,
 ) : CoroutineWorker(appContext, workerParams), Synchronizer {
@@ -38,6 +40,7 @@ internal class SyncWorker @AssistedInject constructor(
             val syncedSuccessfully = awaitAll(
                 async { categoryRepositoryImpl.sync() },
                 async { accountRepositoryImpl.sync() },
+                async { transactionRepositoryImpl.sync() },
             ).all { it }
 
             if (syncedSuccessfully) {

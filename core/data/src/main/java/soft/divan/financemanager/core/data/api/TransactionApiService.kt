@@ -10,6 +10,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.dto.TransactionRequestDto
+import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
 
 interface TransactionApiService {
     @GET("v1/transactions/account/{accountId}/period")
@@ -22,7 +23,7 @@ interface TransactionApiService {
     @POST("v1/transactions")
     suspend fun createTransaction(
         @Body request: TransactionRequestDto
-    ): Response<TransactionDto>
+    ): Response<TransactionResponseCreateDto>
 
     @GET("v1/transactions/{id}")
     suspend fun getTransaction(

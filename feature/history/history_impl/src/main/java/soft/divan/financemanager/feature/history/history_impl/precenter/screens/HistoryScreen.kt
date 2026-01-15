@@ -72,7 +72,7 @@ fun HistoryScreenPreview() {
 fun HistoryScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
-    onNavigateToTransaction: (Int) -> Unit,
+    onNavigateToTransaction: (String) -> Unit,
     onNavigateToAnalysis: () -> Unit,
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
@@ -101,7 +101,7 @@ private fun HistoryContent(
     endDate: LocalDate,
     onUpdateStartDate: (LocalDate) -> Unit,
     onUpdateEndDate: (LocalDate) -> Unit,
-    onNavigateToTransaction: (Int) -> Unit,
+    onNavigateToTransaction: (String) -> Unit,
     onNavigateBack: () -> Unit,
     onNavigateToAnalysis: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -209,7 +209,7 @@ private fun DateItem(
 }
 
 @Composable
-private fun HistoryStatefulContent(uiState: HistoryUiState, onNavigateToTransaction: (Int) -> Unit) {
+private fun HistoryStatefulContent(uiState: HistoryUiState, onNavigateToTransaction: (String) -> Unit) {
     when (uiState) {
         is HistoryUiState.Loading -> LoadingProgressBar()
         is HistoryUiState.Error -> ErrorContent(onClick = {}) // TODO
@@ -225,7 +225,7 @@ private fun HistoryStatefulContent(uiState: HistoryUiState, onNavigateToTransact
 private fun HistorySuccessContent(
     sumTransaction: String,
     transactions: List<UiTransaction>,
-    onNavigateToTransaction: (Int) -> Unit
+    onNavigateToTransaction: (String) -> Unit
 ) {
     Column {
         SummaryItem(sum = sumTransaction)
@@ -247,7 +247,7 @@ private fun SummaryItem(sum: String) {
 @Composable
 private fun ListTransaction(
     transactions: List<UiTransaction>,
-    onNavigateToTransaction: (Int) -> Unit,
+    onNavigateToTransaction: (String) -> Unit,
 ) {
     LazyColumn {
         items(
@@ -261,7 +261,7 @@ private fun ListTransaction(
 
 @Composable
 private fun ItemTransaction(
-    onNavigateToTransaction: (Int) -> Unit,
+    onNavigateToTransaction: (String) -> Unit,
     item: UiTransaction
 ) {
     ListItem(

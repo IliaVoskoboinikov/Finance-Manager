@@ -37,7 +37,7 @@ val mockCategories = listOf(
 val mockAccounts = listOf(AccountUi("1", "Основной счёт", "1000", CurrencySymbol.RUB.symbol))
 
 val mockTransaction = TransactionUi(
-    id = 1001,
+    id = "1001",
     accountId = "1",
     category = mockCategories[0], // "Еда"
     amount = "450.75",

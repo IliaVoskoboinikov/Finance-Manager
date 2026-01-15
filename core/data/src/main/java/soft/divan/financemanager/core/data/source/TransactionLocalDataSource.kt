@@ -5,7 +5,6 @@ import soft.divan.finansemanager.core.database.entity.TransactionEntity
 
 
 interface TransactionLocalDataSource {
-    suspend fun insertTransactions(transactions: List<TransactionEntity>)
     suspend fun getTransactionsByAccountAndPeriod(
         accountId: String,
         startDate: String,
@@ -13,9 +12,10 @@ interface TransactionLocalDataSource {
     ): Flow<List<TransactionEntity>>
 
     suspend fun getByAccountId(accountId: String): List<TransactionEntity>
-    suspend fun saveTransaction(transaction: TransactionEntity)
-    suspend fun updateTransactionId(createdAt: String, newId: Int)
-    suspend fun deleteTransaction(transactionId: Int)
-    suspend fun getTransactionById(transactionId: Int): TransactionEntity?
+    suspend fun createTransaction(transaction: TransactionEntity)
+    suspend fun deleteTransaction(localId: String)
+    suspend fun getTransactionByLocalId(localId: String): TransactionEntity?
+    suspend fun getTransactionByServerId(id: Int): TransactionEntity?
     suspend fun updateTransaction(transaction: TransactionEntity)
+    suspend fun getPendingSync(): List<TransactionEntity>
 }

@@ -4,6 +4,7 @@ import retrofit2.Response
 import soft.divan.financemanager.core.data.api.TransactionApiService
 import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.dto.TransactionRequestDto
+import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import javax.inject.Inject
 
@@ -19,7 +20,7 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
         return transactionApiService.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
     }
 
-    override suspend fun createTransaction(request: TransactionRequestDto): Response<TransactionDto> {
+    override suspend fun createTransaction(request: TransactionRequestDto): Response<TransactionResponseCreateDto> {
         return transactionApiService.createTransaction(request)
     }
 

@@ -9,7 +9,7 @@ import javax.inject.Inject
 class GetTransactionUseCaseImpl @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) : GetTransactionUseCase {
-    override suspend fun invoke(id: Int): DomainResult<Transaction> {
-        return transactionRepository.getTransaction(id)
+    override suspend fun invoke(id: String): DomainResult<Transaction> {
+        return transactionRepository.getTransactionById(id)
     }
 }

@@ -10,10 +10,6 @@ class TransactionLocalDataSourceImpl @Inject constructor(
     private val transactionDao: TransactionDao,
 ) : TransactionLocalDataSource {
 
-    override suspend fun insertTransactions(transactions: List<TransactionEntity>) {
-        transactionDao.insertAll(transactions)
-    }
-
     override suspend fun getTransactionsByAccountAndPeriod(
         accountId: String,
         startDate: String,
@@ -26,26 +22,26 @@ class TransactionLocalDataSourceImpl @Inject constructor(
         return transactionDao.getByAccountId(accountId)
     }
 
-    override suspend fun saveTransaction(transaction: TransactionEntity) {
+    override suspend fun createTransaction(transaction: TransactionEntity) {
         transactionDao.insert(transaction)
     }
 
-    override suspend fun updateTransactionId(createdAt: String, newId: Int) {
-        transactionDao.updateTransactionId(createdAt, newId)
+    override suspend fun deleteTransaction(localId: String) {
+        transactionDao.deleteTransaction(localId)
     }
 
-    override suspend fun deleteTransaction(transactionId: Int) {
-        transactionDao.deleteTransaction(transactionId)
+    override suspend fun getTransactionByLocalId(localId: String): TransactionEntity? {
+        return transactionDao.getTransactionByLocalId(localId)
     }
 
-    override suspend fun getTransactionById(transactionId: Int): TransactionEntity? {
-        return transactionDao.getTransactionById(transactionId)
+    override suspend fun getTransactionByServerId(id: Int): TransactionEntity? {
+        return transactionDao.getTransactionByServerId(id)
     }
 
     override suspend fun updateTransaction(transaction: TransactionEntity) {
         return transactionDao.updateTransaction(transaction)
     }
 
-
+    override suspend fun getPendingSync(): List<TransactionEntity> = transactionDao.getPendingSync()
 
 }

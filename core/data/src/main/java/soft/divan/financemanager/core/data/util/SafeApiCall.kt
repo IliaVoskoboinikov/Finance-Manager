@@ -27,9 +27,7 @@ suspend fun <T : Any> safeApiCall(
                         if (body != null) {
                             DomainResult.Success(body)
                         } else {
-                            errorLogger.recordError(response.message())
-                            DomainResult.Failure(DataError.NotFound.toDomainError())
-
+                            DomainResult.Success(Unit as T)
                         }
                     }
 
