@@ -9,8 +9,8 @@ import soft.divan.financemanager.feature.transaction.transaction_impl.precenter.
 
 fun Transaction.toUi(category: CategoryUi): TransactionUi {
     return TransactionUi(
-        id = idServer,
-        accountId = accountId,
+        id = id,
+        accountId = accountLocalId,
         category = category,
         amount = amount.stripTrailingZeros().toPlainString(),
         date = DateHelper.formatDateForDisplay(transactionDate.toLocalDate()),
@@ -19,15 +19,14 @@ fun Transaction.toUi(category: CategoryUi): TransactionUi {
         createdAt = DateHelper.formatTimeForDisplay(createdAt),
         updatedAt = DateHelper.formatTimeForDisplay(updatedAt),
         currencyCode = currencyCode,
-        mode = TransactionMode.Edit(idServer)
+        mode = TransactionMode.Edit(id)
     )
 }
 
 fun TransactionUi.toDomain(): Transaction {
     return Transaction(
-        //todo
-        idServer = id ?: -1,
-        accountId = accountId,
+        id = id,
+        accountLocalId = accountId,
         categoryId = category.id,
         amount = amount.toBigDecimal(),
         transactionDate = DateHelper.parseDisplayDateTime("$date $time"),

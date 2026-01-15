@@ -11,8 +11,8 @@ interface TransactionRepository {
         endDate: String
     ): Flow<DomainResult<List<Transaction>>>
 
-    suspend fun getTransaction(id: Int): DomainResult<Transaction>
+    suspend fun getTransactionById(localId: String): DomainResult<Transaction>
     suspend fun createTransaction(transaction: Transaction): DomainResult<Unit>
     suspend fun updateTransaction(transaction: Transaction): DomainResult<Unit>
-    suspend fun deleteTransaction(transactionId: Int): DomainResult<Unit>
+    suspend fun deleteTransaction(id: String): DomainResult<Unit>
 }

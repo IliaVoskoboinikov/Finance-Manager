@@ -9,7 +9,7 @@ import soft.divan.financemanager.feature.history.history_impl.precenter.model.Ui
 
 fun Transaction.toUi(category: Category): UiTransaction {
     return UiTransaction(
-        id = idServer,
+        id = id,
         category = category.toUi(),
         amountFormatted = amount.stripTrailingZeros().toPlainString() + " " + CurrencySymbol.fromCode(
             currencyCode

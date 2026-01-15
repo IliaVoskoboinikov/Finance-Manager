@@ -32,3 +32,10 @@ inline fun <T> DomainResult<T>.onFailure(
     }
     return this
 }
+
+
+fun <T> DomainResult<T>.getOrNull(): T? =
+    when (this) {
+        is DomainResult.Success -> data
+        is DomainResult.Failure -> null
+    }

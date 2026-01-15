@@ -1,14 +1,21 @@
 package soft.divan.finansemanager.core.database.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
+import soft.divan.finansemanager.core.database.model.SyncStatus
 
-@Entity(tableName = "transactions")
+@Entity(
+    tableName = "transactions",
+    indices = [Index(value = ["serverId"], unique = true)] //todo
+)
 data class TransactionEntity(
     @PrimaryKey
-    val id: Int = 0,
-    val accountIdLocal: String,
-    val accountIdServer: Int?,
+    val localId: String,
+    val serverId: Int?,
+    val accountLocalId: String,
+    //todo может быть не хранить accountServerId тут вообще
+    val accountServerId: Int?,
     val categoryId: Int,
     val currencyCode: String,
     val amount: String,
@@ -16,5 +23,5 @@ data class TransactionEntity(
     val comment: String,
     val createdAt: String,
     val updatedAt: String,
-    val isSynced: Boolean = false,
+    val syncStatus: SyncStatus
 )
