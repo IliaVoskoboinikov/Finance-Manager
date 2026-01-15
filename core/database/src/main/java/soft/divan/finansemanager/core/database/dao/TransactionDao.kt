@@ -36,6 +36,16 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE serverId = :serverId")
     suspend fun getTransactionByServerId(serverId: Int): TransactionEntity?
 
+    @Query(
+        """
+        SELECT * FROM transactions
+        WHERE serverId IN (:serverIds)
+        """
+    )
+    suspend fun getTransactionsByServerIds(
+        serverIds: List<Int>
+    ): List<TransactionEntity>
+
     @Update
     suspend fun updateTransaction(transaction: TransactionEntity)
 

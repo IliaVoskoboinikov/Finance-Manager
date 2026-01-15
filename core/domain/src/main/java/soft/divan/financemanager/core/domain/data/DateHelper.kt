@@ -40,6 +40,7 @@ object DateHelper {
 
     private val apiDateFormatter: DateTimeFormatter =
         DateTimeFormatter.ofPattern(API_DATE_PATTERN).withLocale(Locale.getDefault())
+            .withZone(ZoneId.systemDefault())
     private val apiDateTimeFormatter: DateTimeFormatter =
         DateTimeFormatter.ofPattern(API_DATETIME_PATTERN).withLocale(Locale.getDefault())
             .withZone(ZoneOffset.UTC)
@@ -125,6 +126,13 @@ object DateHelper {
         }
     }
 
+    fun formatApiDate(apiDate: String): String {
+
+        val instant = Instant.parse(apiDate)
+        return apiDateFormatter.format(instant)
+
+
+    }
     fun parseDisplayDateTime(displayDateTimeString: String): LocalDateTime {
         return try {
             LocalDateTime.parse(displayDateTimeString, displayDateTimeFormatter)
