@@ -35,7 +35,7 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
         return transactionApiService.updateTransaction(id, transaction)
     }
 
-    override suspend fun deleteTransaction(id: Int): Response<Unit> {
+    override suspend fun delete(id: Int): Response<Unit> {
         return transactionApiService.deleteTransaction(id)
     }
 }

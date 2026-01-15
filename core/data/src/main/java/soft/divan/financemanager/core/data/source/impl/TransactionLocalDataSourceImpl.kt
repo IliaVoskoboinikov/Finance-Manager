@@ -42,6 +42,11 @@ class TransactionLocalDataSourceImpl @Inject constructor(
         return transactionDao.updateTransaction(transaction)
     }
 
+    override suspend fun getTransactionsByServerIds(serverIds: List<Int>): List<TransactionEntity> {
+        if (serverIds.isEmpty()) return emptyList()
+        return transactionDao.getTransactionsByServerIds(serverIds)
+    }
+
     override suspend fun getPendingSync(): List<TransactionEntity> = transactionDao.getPendingSync()
 
 }

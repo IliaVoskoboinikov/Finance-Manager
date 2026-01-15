@@ -17,5 +17,6 @@ interface TransactionLocalDataSource {
     suspend fun getTransactionByLocalId(localId: String): TransactionEntity?
     suspend fun getTransactionByServerId(id: Int): TransactionEntity?
     suspend fun updateTransaction(transaction: TransactionEntity)
+    suspend fun getTransactionsByServerIds(serverIds: List<Int>): List<TransactionEntity>
     suspend fun getPendingSync(): List<TransactionEntity>
 }

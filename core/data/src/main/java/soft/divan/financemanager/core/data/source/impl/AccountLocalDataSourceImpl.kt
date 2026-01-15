@@ -21,7 +21,7 @@ class AccountLocalDataSourceImpl @Inject constructor(
         return accountDao.delete(id)
     }
 
-    override suspend fun getAccountByLocalId(id: String): AccountEntity? {
+    override suspend fun getByLocalId(id: String): AccountEntity? {
         return accountDao.getById(id)
     }
 

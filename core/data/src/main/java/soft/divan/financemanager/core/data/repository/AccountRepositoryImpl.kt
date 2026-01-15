@@ -70,7 +70,7 @@ class AccountRepositoryImpl @Inject constructor(
     /**  Хелпер для получения локального аккаунта*/
     private suspend fun getLocalAccountOrFail(id: String): DomainResult<AccountEntity> {
         return safeDbCall(errorLogger) {
-            accountLocalDataSource.getAccountByLocalId(id)
+            accountLocalDataSource.getByLocalId(id)
         }.fold(
             onSuccess = { entity ->
                 entity?.let { DomainResult.Success(it) }
