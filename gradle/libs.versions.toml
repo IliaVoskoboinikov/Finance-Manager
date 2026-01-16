@@ -157,7 +157,7 @@ soft-divan-feature-api = { id = "soft.divan.feature.api" }
 soft-divan-feature-impl = { id = "soft.divan.feature.impl" }
 soft-divan-jvm-library = { id = "soft.divan.jvm.library" }
 soft-divan-hilt = { id = "soft.divan.hilt" }
-soft-divan-detect = { id = "soft.divan.detekt" }
+soft-divan-detekt = { id = "soft.divan.detekt" }
 soft-divan-build-time-tracker = { id = "soft.divan.build.time.tracker" }
 soft-divan-firebase = { id = "soft.divan.firebase" }
 

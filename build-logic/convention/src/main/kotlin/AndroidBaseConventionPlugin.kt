@@ -9,6 +9,7 @@ class AndroidBaseConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
             applyPlugin("kotlin-android")
+            applyPlugin("soft-divan-detekt")
 
             extensions.configure<KotlinAndroidProjectExtension> {
                 compilerOptions {
