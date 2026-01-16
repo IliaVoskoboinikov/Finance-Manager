@@ -63,7 +63,7 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию на получение этих данныъ с сервера */
-    override suspend fun getTransactionsByAccountAndPeriod(
+    override fun getTransactionsByAccountAndPeriod(
         accountId: String,
         startDate: String,
         endDate: String
