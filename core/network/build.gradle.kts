@@ -5,11 +5,20 @@ plugins {
     alias(libs.plugins.soft.divan.hilt)
 }
 
-val apiToken: String = project.rootProject
-    .file("local.properties")
-    .inputStream()
-    .use { Properties().apply { load(it) } }
-    .getProperty("api.token") ?: ""
+fun Project.getSecret(name: String): String {
+    System.getenv(name)?.let { return it }
+
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        val properties = Properties()
+        localPropertiesFile.inputStream().use(properties::load)
+        properties.getProperty(name)?.let { return it }
+    }
+
+    error("Secret '$name' is not defined")
+}
+
+val apiToken: String = project.getSecret("api.token")
 
 android {
     defaultConfig {
