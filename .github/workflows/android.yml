@@ -21,6 +21,8 @@ jobs:
 
       - name: Build project
         run: ./gradlew assembleDebug
+        env:
+          API_BASE_URL: ${{ secrets.API_TOKEN }}
 
       - name: Run unit tests
         run: ./gradlew test
