@@ -10,7 +10,7 @@ import javax.inject.Inject
 class GetAccountsUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : GetAccountsUseCase {
-    override suspend fun invoke(): Flow<DomainResult<List<Account>>> {
+    override fun invoke(): Flow<DomainResult<List<Account>>> {
         return accountRepository.getAccounts()
     }
 }

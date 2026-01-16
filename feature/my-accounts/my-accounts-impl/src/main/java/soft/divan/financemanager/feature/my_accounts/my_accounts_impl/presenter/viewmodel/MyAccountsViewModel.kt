@@ -3,15 +3,16 @@ package soft.divan.financemanager.feature.my_accounts.my_accounts_impl.presenter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticType
@@ -36,7 +37,6 @@ class MyAccountsViewModel @Inject constructor(
         )
 
     fun loadAccount() {
-        viewModelScope.launch {
             getAccountsUseCase()
                 .onStart { _uiState.update { MyAccountsUiState.Loading } }
                 .onEach { result ->
@@ -51,8 +51,9 @@ class MyAccountsViewModel @Inject constructor(
                         },
                         onFailure = { _uiState.update { MyAccountsUiState.Error(R.string.error_loading) } }
                     )
-                }.collect()
-        }
+                }
+                .flowOn(Dispatchers.IO)
+                .launchIn(viewModelScope)
     }
 
     fun hapticNavigation() {

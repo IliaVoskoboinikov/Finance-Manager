@@ -5,5 +5,5 @@ import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.result.DomainResult
 
 interface GetCategoriesByTypeUseCase {
-    suspend operator fun invoke(isIncome: Boolean): Flow<DomainResult<List<Category>>>
+    operator fun invoke(isIncome: Boolean): Flow<DomainResult<List<Category>>>
 }

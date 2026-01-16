@@ -3,10 +3,12 @@ package soft.divan.financemanager.feature.category.category_impl.presenter.viewm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -38,7 +40,6 @@ class CategoriesViewModel @Inject constructor(
         )
 
     fun loadCategories() {
-        viewModelScope.launch {
             getCategoriesUseCase()
                 .onStart { _uiState.update { CategoriesUiState.Loading } }
                 .onEach { result ->
@@ -63,8 +64,9 @@ class CategoriesViewModel @Inject constructor(
                             _uiState.update { CategoriesUiState.Error(R.string.error_loading) }
                         }
                     )
-                }.collect()
-        }
+                }
+                .flowOn(Dispatchers.IO)
+                .launchIn(viewModelScope)
     }
 
     fun search(query: String) {

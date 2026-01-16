@@ -10,7 +10,7 @@ import javax.inject.Inject
 class GetCategoriesUseCaseImpl @Inject constructor(
     private val categoryRepository: CategoryRepository
 ) : GetCategoriesUseCase {
-    override suspend fun invoke(): Flow<DomainResult<List<Category>>> {
+    override fun invoke(): Flow<DomainResult<List<Category>>> {
         return categoryRepository.getCategories()
     }
 }

@@ -44,7 +44,7 @@ class AccountRepositoryImpl @Inject constructor(
 ) : AccountRepository, Syncable {
 
     /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию */
-    override suspend fun getAccounts(): Flow<DomainResult<List<Account>>> {
+    override fun getAccounts(): Flow<DomainResult<List<Account>>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
             pullServerData()
         }
