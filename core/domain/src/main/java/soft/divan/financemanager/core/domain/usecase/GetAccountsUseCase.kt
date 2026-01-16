@@ -5,5 +5,5 @@ import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.result.DomainResult
 
 interface GetAccountsUseCase {
-    suspend operator fun invoke(): Flow<DomainResult<List<Account>>>
+    operator fun invoke(): Flow<DomainResult<List<Account>>>
 }
