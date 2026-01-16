@@ -5,6 +5,8 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      API_TOKEN: ${{ secrets.API_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -25,8 +27,6 @@ jobs:
 
       - name: Build project
         run: ./gradlew assembleDebug
-        env:
-          API_TOKEN: ${{ secrets.API_TOKEN }}
 
       - name: Run unit tests
         run: ./gradlew test
