@@ -55,7 +55,7 @@ gradlePlugin {
         }
 
         register("detektConventionPlugin") {
-            id = libs.plugins.soft.divan.detect.get().pluginId
+            id = libs.plugins.soft.divan.detekt.get().pluginId
             implementationClass = "DetektConventionPlugin"
         }
 

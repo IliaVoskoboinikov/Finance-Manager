@@ -17,7 +17,6 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             applyPlugin("soft-divan-firebase")
 
             applyPlugin("graph")
-            applyPlugin("soft-divan-detect")
             applyPlugin("soft-divan-build-time-tracker")
 
             extensions.configure<BaseAppModuleExtension> {

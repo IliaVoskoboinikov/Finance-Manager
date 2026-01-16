@@ -11,7 +11,7 @@ class DetektConventionPlugin : Plugin<Project> {
             applyPlugin("detekt")
             project.extensions.configure<DetektExtension> {
                 toolVersion = version("detekt")
-                config.from(file("config/detekt/detekt.yml"))
+                config.from(rootProject.file("config/detekt/detekt.yml"))
                 buildUponDefaultConfig = true
                 parallel = true
                 ignoreFailures = true
