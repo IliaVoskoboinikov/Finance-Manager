@@ -18,7 +18,7 @@ fun Project.getSecret(name: String): String {
     error("Secret '$name' is not defined")
 }
 
-val apiToken: String = project.getSecret("api.token")
+val apiToken: String = project.getSecret("API_TOKEN")
 
 android {
     defaultConfig {
