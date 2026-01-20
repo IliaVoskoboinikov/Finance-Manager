@@ -41,12 +41,25 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/init-gradle
 
-      - name: Create google-services.json
-        run: |
-          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
-
       - name: Run Detekt
         run: ./gradlew detekt $gradleFlags
+
+      - name: Generate Detekt summary
+        if: always()
+        run: |
+          find . -path "*/build/reports/detekt/*.md" -exec cat {} \; >> $GITHUB_STEP_SUMMARY
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: app/build/reports/detekt/detekt.sarif
+      - name: Upload Detekt HTML reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detekt-html
+          path: |
+            **/build/reports/detekt/*.html
 
       - name: Generate Markdown report
         run: cat build/reports/detekt/detekt.md > $GITHUB_STEP_SUMMARY
