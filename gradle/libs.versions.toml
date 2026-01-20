@@ -54,7 +54,9 @@ gmsPlugin = "4.4.4"
 firebaseBom = "33.7.0"
 firebaseCrashlyticsPlugin = "3.0.6"
 
-
+# UNIT TEST
+junit = "4.13.2"
+kotlinxCoroutinesTest = "1.10.2"
 
 ##############################################
 #                  Libraries
@@ -121,6 +123,9 @@ detekt-compose = { module = "io.nlopez.compose.rules:detekt", version.ref = "det
 bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 
+# UNIT TEST
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 
 ##############################################
 #                  Plugins
