@@ -29,7 +29,7 @@ jobs:
 
       - name: Create google-services.json
         run: |
-          echo GOOGLE_SERVICES_JSON | base64 --decode > app/google-services.json
+          echo "GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 
       - name: Build project $gradleFlags
         run: ./gradlew assembleDebug
