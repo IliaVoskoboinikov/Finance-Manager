@@ -46,7 +46,7 @@ converterGson = "2.11.0"
 loggingInterceptor = "3.9.0"
 
 # Lint & QA Tools
-detekt = "1.23.6"
+detekt = "1.23.8"
 detektCompose = "0.3.0"
 
 #Firebase
@@ -162,7 +162,6 @@ soft-divan-feature-api = { id = "soft.divan.feature.api" }
 soft-divan-feature-impl = { id = "soft.divan.feature.impl" }
 soft-divan-jvm-library = { id = "soft.divan.jvm.library" }
 soft-divan-hilt = { id = "soft.divan.hilt" }
-soft-divan-detekt = { id = "soft.divan.detekt" }
 soft-divan-build-time-tracker = { id = "soft.divan.build.time.tracker" }
 soft-divan-firebase = { id = "soft.divan.firebase" }
 

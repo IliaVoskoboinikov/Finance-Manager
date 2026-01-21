@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package soft.divan.financemanager.uikit.theme
 
 import androidx.compose.ui.graphics.Color
