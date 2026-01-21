@@ -6,7 +6,7 @@ import retrofit2.Response
 import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.domain.result.DomainResult
-import soft.divan.financemanager.core.logging_error.logging_error_api.ErrorLogger
+import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException

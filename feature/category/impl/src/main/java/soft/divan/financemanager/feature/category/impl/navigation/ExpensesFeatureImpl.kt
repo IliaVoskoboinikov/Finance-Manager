@@ -1,0 +1,28 @@
+package soft.divan.financemanager.feature.category.impl.navigation
+
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.composable
+import soft.divan.financemanager.feature.category.api.CategoryFeatureApi
+import soft.divan.financemanager.feature.category.impl.presenter.screen.CategoriesScreen
+import javax.inject.Inject
+
+private const val baseRoute = "category"
+
+class CategoryFeatureImpl @Inject constructor() : CategoryFeatureApi {
+
+    override val route: String = baseRoute
+
+    override fun registerGraph(
+        navGraphBuilder: NavGraphBuilder,
+        navController: NavHostController,
+        modifier: Modifier
+    ) {
+        navGraphBuilder.composable(route) {
+            CategoriesScreen(
+                modifier = modifier,
+            )
+        }
+    }
+}

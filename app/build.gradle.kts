@@ -16,53 +16,53 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
     implementation(projects.core.data)
-    implementation(projects.core.loggingError.loggingErrorApi)
-    implementation(projects.core.loggingError.loggingErrorImpl)
+    implementation(projects.core.loggingError.api)
+    implementation(projects.core.loggingError.impl)
 
-    implementation(projects.feature.category.categoryApi)
-    implementation(projects.feature.category.categoryImpl)
+    implementation(projects.feature.category.api)
+    implementation(projects.feature.category.impl)
 
-    implementation(projects.feature.settings.settingsApi)
-    implementation(projects.feature.settings.settingsImpl)
+    implementation(projects.feature.settings.api)
+    implementation(projects.feature.settings.impl)
 
-    implementation(projects.feature.myAccounts.myAccountsApi)
-    implementation(projects.feature.myAccounts.myAccountsImpl)
+    implementation(projects.feature.myAccounts.api)
+    implementation(projects.feature.myAccounts.impl)
 
-    implementation(projects.feature.transactionsToday.transactionsTodayApi)
-    implementation(projects.feature.transactionsToday.transactionsTodayImpl)
+    implementation(projects.feature.transactionsToday.api)
+    implementation(projects.feature.transactionsToday.impl)
 
-    implementation(projects.feature.splashScreen.splashScreenApi)
-    implementation(projects.feature.splashScreen.splashScreenImpl)
+    implementation(projects.feature.splashScreen.api)
+    implementation(projects.feature.splashScreen.impl)
 
-    implementation(projects.feature.transaction.transactionApi)
-    implementation(projects.feature.transaction.transactionImpl)
+    implementation(projects.feature.transaction.api)
+    implementation(projects.feature.transaction.impl)
 
-    implementation(projects.feature.security.securityApi)
-    implementation(projects.feature.security.securityImpl)
+    implementation(projects.feature.security.api)
+    implementation(projects.feature.security.impl)
 
-    implementation(projects.feature.designApp.designAppApi)
-    implementation(projects.feature.designApp.designAppImpl)
+    implementation(projects.feature.designApp.api)
+    implementation(projects.feature.designApp.impl)
 
-    implementation(projects.feature.analysis.analysisApi)
-    implementation(projects.feature.analysis.analysisImpl)
+    implementation(projects.feature.analysis.api)
+    implementation(projects.feature.analysis.impl)
 
-    implementation(projects.feature.history.historyApi)
-    implementation(projects.feature.history.historyImpl)
+    implementation(projects.feature.history.api)
+    implementation(projects.feature.history.impl)
 
-    implementation(projects.feature.account.accountApi)
-    implementation(projects.feature.account.accountImpl)
+    implementation(projects.feature.account.api)
+    implementation(projects.feature.account.impl)
 
-    implementation(projects.feature.haptics.hapticsApi)
-    implementation(projects.feature.haptics.hapticsImpl)
+    implementation(projects.feature.haptics.api)
+    implementation(projects.feature.haptics.impl)
 
-    implementation(projects.feature.sounds.soundsApi)
-    implementation(projects.feature.sounds.soundsImpl)
+    implementation(projects.feature.sounds.api)
+    implementation(projects.feature.sounds.impl)
 
-    implementation(projects.feature.languages.languagesApi)
-    implementation(projects.feature.languages.languagesImpl)
+    implementation(projects.feature.languages.api)
+    implementation(projects.feature.languages.impl)
 
-    implementation(projects.feature.synchronization.synchronizationApi)
-    implementation(projects.feature.synchronization.synchronizationImpl)
+    implementation(projects.feature.synchronization.api)
+    implementation(projects.feature.synchronization.impl)
 
     implementation(libs.androidx.lifecycle.process)
 }
