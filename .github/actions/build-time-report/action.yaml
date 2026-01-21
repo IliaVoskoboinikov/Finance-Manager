@@ -1,0 +1,20 @@
+name: build-time-report
+description: Generate build time report to step Markdown
+
+inputs:
+  file:
+    description: 'Path to input file'
+    required: true
+  output-file:
+    description: 'Path to input file'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Fix time csv
+      shell: bash
+      run: sed '1s/^/task,time,percent,bar\n/' ${{ inputs.file }} > ${{ inputs.output-file }}
+    - name: Generate Markdown report
+      shell: bash
+      run: chmod +x .github/actions/build-time-report/csv2md.sh && .github/actions/build-time-report/csv2md.sh ${{ inputs.output-file }} > $GITHUB_STEP_SUMMARY
