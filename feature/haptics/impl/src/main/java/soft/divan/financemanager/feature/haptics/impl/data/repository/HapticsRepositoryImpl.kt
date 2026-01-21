@@ -1,7 +1,7 @@
 package soft.divan.financemanager.feature.haptics.impl.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import soft.divan.financemanager.feature.haptics.impl.data.sourсe.HapticsLocalSource
+import soft.divan.financemanager.feature.haptics.impl.data.source.HapticsLocalSource
 import soft.divan.financemanager.feature.haptics.impl.domain.repository.HapticsRepository
 import javax.inject.Inject
 

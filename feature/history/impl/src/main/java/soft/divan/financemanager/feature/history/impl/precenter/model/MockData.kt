@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package soft.divan.financemanager.feature.history.impl.precenter.model
 
 

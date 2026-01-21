@@ -10,7 +10,7 @@ import soft.divan.financemanager.core.featureapi.register
 import soft.divan.financemanager.feature.account.api.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.api.CategoryFeatureApi
-import soft.divan.financemanager.feature.design_app.api.DesignAppFeatureApi
+import soft.divan.financemanager.feature.designapp.api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.haptics.api.HapticsFeatureApi
 import soft.divan.financemanager.feature.history.api.HistoryFeatureApi
 import soft.divan.financemanager.feature.languages.api.LanguagesFeatureApi

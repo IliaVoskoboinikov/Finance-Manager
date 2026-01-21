@@ -9,8 +9,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import soft.divan.financemanager.sync.data.sourсe.SyncLocalSource
-import soft.divan.financemanager.sync.data.sourсe.impl.SyncLocalSourceImpl
+import soft.divan.financemanager.sync.data.source.SyncLocalSource
+import soft.divan.financemanager.sync.data.source.impl.SyncLocalSourceImpl
 import javax.inject.Singleton
 
 val Context.syncDataStore: DataStore<Preferences> by preferencesDataStore("sync_preferences")

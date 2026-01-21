@@ -1,7 +1,7 @@
 package soft.divan.financemanager.sync.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import soft.divan.financemanager.sync.data.sourсe.SyncLocalSource
+import soft.divan.financemanager.sync.data.source.SyncLocalSource
 import soft.divan.financemanager.sync.domain.repository.SyncRepository
 import javax.inject.Inject
 

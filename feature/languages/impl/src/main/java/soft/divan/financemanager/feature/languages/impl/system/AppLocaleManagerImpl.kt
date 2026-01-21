@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.languages.impl1.system
+package soft.divan.financemanager.feature.languages.impl.system
 
 import android.app.LocaleManager
 import android.content.Context

@@ -9,11 +9,11 @@ import soft.divan.financemanager.feature.myaccounts.impl.MyAccountsFeatureApi
 import soft.divan.financemanager.feature.myaccounts.impl.presenter.screens.MyAccountsScreen
 import javax.inject.Inject
 
-private const val baseRoute = "my_accounts"
+private const val BASE_ROUTE = "my_accounts"
 
 class MyAccountsFeatureImpl @Inject constructor() : MyAccountsFeatureApi {
 
-    override val route: String = baseRoute
+    override val route: String = BASE_ROUTE
 
     @Inject
     lateinit var accountFeatureApi: AccountFeatureApi

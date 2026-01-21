@@ -7,7 +7,6 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.Locale
 
 /**
@@ -20,7 +19,8 @@ import java.util.Locale
  * Также содержит методы для получения текущей даты, начала месяца, и преобразования между
  * [java.util.Date], [java.time.LocalDate], [java.time.LocalDateTime], [java.time.Instant].
  *
- * Используется во всех слоях приложения: при работе с API, отображении дат на UI, фильтрации транзакций по времени и др.
+ * Используется во всех слоях приложения: при работе с API, отображении дат на UI,
+ * фильтрации транзакций по времени и др.
  *
  * ### Основные шаблоны:
  * - `API_DATE_PATTERN`: формат даты для API: `yyyy-MM-dd`
@@ -98,34 +98,6 @@ object DateHelper {
         return date.format(apiDateFormatter)
     }
 
-    /**
-     * Парсит строку в формате API (`yyyy-MM-dd`) в [LocalDate].
-     *
-     * @param apiDateString строка, полученная из API
-     * @return соответствующий [LocalDate], либо текущая дата при ошибке
-     */
-    fun parseApiDate(apiDateString: String): LocalDate {
-        return try {
-            LocalDate.parse(apiDateString, apiDateFormatter)
-        } catch (e: Exception) {
-            LocalDate.now()
-        }
-    }
-
-    /**
-     * Парсит строку из отображаемого формата (`dd.MM.yyyy`) в [LocalDate].
-     *
-     * @param displayDateString дата в виде строки
-     * @return [LocalDate], либо текущая дата при ошибке парсинга
-     */
-    fun parseDisplayDate(displayDateString: String): LocalDate {
-        return try {
-            LocalDate.parse(displayDateString, displayDateFormatter)
-        } catch (e: Exception) {
-            LocalDate.now()
-        }
-    }
-
     fun formatApiDate(apiDate: String): String {
 
         val instant = Instant.parse(apiDate)
@@ -133,25 +105,12 @@ object DateHelper {
 
 
     }
+
     fun parseDisplayDateTime(displayDateTimeString: String): LocalDateTime {
         return try {
             LocalDateTime.parse(displayDateTimeString, displayDateTimeFormatter)
         } catch (e: Exception) {
             LocalDateTime.now()
-        }
-    }
-
-    /**
-     * Парсит строку из API-даты с временем в формате UTC в [java.time.Instant].
-     *
-     * @param apiDateTimeString строка формата `yyyy-MM-dd'T'HH:mm:ss.SSS'Z'`
-     * @return [java.time.Instant], либо текущий момент времени при ошибке
-     */
-    fun parseApiDateTime(apiDateTimeString: String): Instant {
-        return try {
-            Instant.from(apiDateTimeFormatter.parse(apiDateTimeString))
-        } catch (e: Exception) {
-            Instant.now()
         }
     }
 
@@ -182,24 +141,6 @@ object DateHelper {
 
     fun formatTimeForDisplay(time: LocalDateTime): String {
         return time.format(displayTimeFormatter)
-    }
-
-    /**
-     * Расширение для преобразования [java.util.Date] в [LocalDate].
-     *
-     * @return локализованная дата без времени
-     */
-    fun Date.toLocalDate(): LocalDate {
-        return this.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-    }
-
-    /**
-     * Расширение для преобразования [LocalDate] в [Date].
-     *
-     * @return дата, представляющая начало дня в системной зоне
-     */
-    fun LocalDate.toDate(): Date {
-        return Date.from(this.atStartOfDay(ZoneId.systemDefault()).toInstant())
     }
 
     fun Long.toDateTimeString(

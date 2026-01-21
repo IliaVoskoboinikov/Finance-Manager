@@ -12,12 +12,12 @@ import soft.divan.financemanager.feature.history.impl.precenter.screens.HistoryS
 import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
 import javax.inject.Inject
 
-private const val baseRoute = "history"
+private const val BASE_ROUTE = "history"
 const val IS_INCOME_KEY: String = "isIncome"
 
 class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
 
-    override val route: String = baseRoute
+    override val route: String = BASE_ROUTE
 
     @Inject
     lateinit var transactionFeatureApi: TransactionFeatureApi

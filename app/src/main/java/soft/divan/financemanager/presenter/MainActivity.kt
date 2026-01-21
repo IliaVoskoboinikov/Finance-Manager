@@ -18,11 +18,11 @@ import dagger.hilt.android.AndroidEntryPoint
 import soft.divan.financemanager.feature.account.api.AccountFeatureApi
 import soft.divan.financemanager.feature.analysis.api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.api.CategoryFeatureApi
-import soft.divan.financemanager.feature.design_app.api.DesignAppFeatureApi
-import soft.divan.financemanager.feature.design_app.impl.domain.model.ThemeMode
-import soft.divan.financemanager.feature.design_app.impl.domain.usecase.GetAccentColorUseCase
-import soft.divan.financemanager.feature.design_app.impl.domain.usecase.GetCustomAccentColorUseCase
-import soft.divan.financemanager.feature.design_app.impl.domain.usecase.GetThemeModeUseCase
+import soft.divan.financemanager.feature.designapp.api.DesignAppFeatureApi
+import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
+import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetAccentColorUseCase
+import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetCustomAccentColorUseCase
+import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetThemeModeUseCase
 import soft.divan.financemanager.feature.haptics.api.HapticsFeatureApi
 import soft.divan.financemanager.feature.history.api.HistoryFeatureApi
 import soft.divan.financemanager.feature.languages.api.LanguagesFeatureApi
