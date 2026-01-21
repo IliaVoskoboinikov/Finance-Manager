@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import soft.divan.financemanager.core.network.util.NetworkMonitor
-import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticType
-import soft.divan.financemanager.feature.haptics.haptics_api.domain.HapticsManager
+import soft.divan.financemanager.feature.haptics.api.domain.HapticType
+import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
 import javax.inject.Inject
 
 @HiltViewModel
