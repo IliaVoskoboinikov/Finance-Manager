@@ -14,7 +14,7 @@ jobs:
   build-app:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup environment
@@ -27,10 +27,22 @@ jobs:
       - name: Build project $gradleFlags
         run: ./gradlew assembleDebug
 
+
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
+      - name: Create google-services.json
+        run: |
+          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+
       - name: Run unit tests (Debug only)
         run: ./gradlew testDebugUnitTest
-
-        continue-on-error: true
 
   run-detekt:
     runs-on: ubuntu-latest
