@@ -12,7 +12,6 @@ dependencies {
     compileOnly(libs.agp)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.compose.plugin)
-    compileOnly(libs.detekt.gradle)
     compileOnly(libs.build.time.tracker)
 }
 
@@ -52,11 +51,6 @@ gradlePlugin {
         register("hiltConventionPlugin") {
             id = libs.plugins.soft.divan.hilt.get().pluginId
             implementationClass = "HiltConventionPlugin"
-        }
-
-        register("detektConventionPlugin") {
-            id = libs.plugins.soft.divan.detekt.get().pluginId
-            implementationClass = "DetektConventionPlugin"
         }
 
         register("buildTimeTrackerConventionPlugin") {
