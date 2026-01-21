@@ -18,7 +18,7 @@ import soft.divan.financemanager.core.data.util.safeDbFlow
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
-import soft.divan.financemanager.core.logging_error.logging_error_api.ErrorLogger
+import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
 import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(
