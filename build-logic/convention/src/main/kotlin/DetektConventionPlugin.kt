@@ -20,6 +20,8 @@ class DetektConventionPlugin : Plugin<Project> {
             }
 
             tasks.withType<Detekt>().configureEach {
+                setSource(files(rootDir))
+
                 reports {
                     xml.required.set(true)
                     html.required.set(true)
