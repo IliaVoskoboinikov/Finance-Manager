@@ -11,8 +11,8 @@ import soft.divan.financemanager.feature.security.impl.presenter.screen.Security
 import javax.inject.Inject
 
 private const val BASE_ROUTE = "security"
-private const val scenarioSecurityRoute = "${BASE_ROUTE}/scenario"
-private const val screenScreenCreateRoute = "$scenarioSecurityRoute/create_pin"
+private const val SCENARIO_SECURITY_ROUTE = "${BASE_ROUTE}/scenario"
+private const val SCREEN_CREATE_ROUTE = "$SCENARIO_SECURITY_ROUTE/create_pin"
 
 class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
 
@@ -28,18 +28,18 @@ class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
                 modifier = modifier,
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToCreatePin = {
-                    navController.navigate(scenarioSecurityRoute)
+                    navController.navigate(SCENARIO_SECURITY_ROUTE)
                 },
             )
         }
 
         /* Nested graph for internal scenario */
         navGraphBuilder.navigation(
-            route = scenarioSecurityRoute,
-            startDestination = screenScreenCreateRoute
+            route = SCENARIO_SECURITY_ROUTE,
+            startDestination = SCREEN_CREATE_ROUTE
         ) {
 
-            composable(route = screenScreenCreateRoute) {
+            composable(route = SCREEN_CREATE_ROUTE) {
                 CreatePinScreen(
                     onNavigateBack = {
                         navController.popBackStack()

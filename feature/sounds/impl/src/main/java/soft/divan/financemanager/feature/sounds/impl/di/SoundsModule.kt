@@ -12,11 +12,11 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import soft.divan.financemanager.feature.sounds.api.domain.SoundsPlayer
-import soft.divan.financemanager.feature.sounds.impl.data.sounds.SoundsPlayerImpl
+import soft.divan.financemanager.feature.sounds.api.domain.SoundPlayer
+import soft.divan.financemanager.feature.sounds.impl.data.sounds.SoundPlayerImpl
 import soft.divan.financemanager.feature.sounds.impl.data.sounds.SoundsPoolHolder
-import soft.divan.financemanager.feature.sounds.impl.data.sourсe.SoundsLocalSource
-import soft.divan.financemanager.feature.sounds.impl.data.sourсe.impl.SoundsLocalSourceImpl
+import soft.divan.financemanager.feature.sounds.impl.data.source.SoundsLocalSource
+import soft.divan.financemanager.feature.sounds.impl.data.source.impl.SoundsLocalSourceImpl
 import soft.divan.financemanager.feature.sounds.impl.domain.usecase.ObserveSoundsEnabledUseCase
 import javax.inject.Singleton
 
@@ -38,8 +38,8 @@ object SoundsModule {
         soundsPoolHolder: SoundsPoolHolder,
         observeSoundEnabled: ObserveSoundsEnabledUseCase,
         @ApplicationScope scope: CoroutineScope
-    ): SoundsPlayer =
-        SoundsPlayerImpl(soundsPoolHolder, observeSoundEnabled, scope)
+    ): SoundPlayer =
+        SoundPlayerImpl(soundsPoolHolder, observeSoundEnabled, scope)
 
 
     @Provides

@@ -17,8 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
 import soft.divan.financemanager.feature.haptics.impl.data.haptics.HapticsManagerImpl
-import soft.divan.financemanager.feature.haptics.impl.data.sourсe.HapticsLocalSource
-import soft.divan.financemanager.feature.haptics.impl.data.sourсe.impl.HapticsLocalSourceImpl
+import soft.divan.financemanager.feature.haptics.impl.data.source.HapticsLocalSource
+import soft.divan.financemanager.feature.haptics.impl.data.source.impl.HapticsLocalSourceImpl
 import soft.divan.financemanager.feature.haptics.impl.domain.usecase.ObserveHapticsEnabledUseCase
 import javax.inject.Singleton
 

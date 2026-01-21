@@ -5,7 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import soft.divan.financemanager.feature.design_app.api.DesignAppFeatureApi
+import soft.divan.financemanager.feature.designapp.api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.haptics.api.HapticsFeatureApi
 import soft.divan.financemanager.feature.languages.api.LanguagesFeatureApi
 import soft.divan.financemanager.feature.security.api.SecurityFeatureApi
@@ -17,10 +17,8 @@ import soft.divan.financemanager.feature.synchronization.api.SynchronizationFeat
 import javax.inject.Inject
 
 private const val BASE_ROUTE = "settings"
-private const val scenarioSettingsRoute = "${BASE_ROUTE}/scenario"
-
-private const val screenSettingsAboutTheProgramScreenRoute = "$scenarioSettingsRoute/about"
-
+private const val SCENARIO_SETTINGS_ROUTE = "${BASE_ROUTE}/scenario"
+private const val SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE = "$SCENARIO_SETTINGS_ROUTE/about"
 
 class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
 
@@ -53,7 +51,7 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
             SettingsScreen(
                 modifier = modifier,
                 onNavigateToAboutTheProgram = {
-                    navController.navigate(screenSettingsAboutTheProgramScreenRoute)
+                    navController.navigate(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE)
                 },
                 onNavigateToSecurity = { navController.navigate(securityFeatureApi.route) },
                 onNavigateToDesignApp = { navController.navigate(designAppFeatureApi.route) },
@@ -66,12 +64,12 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
 
         /* Nested graph for internal scenario */
         navGraphBuilder.navigation(
-            route = scenarioSettingsRoute,
-            startDestination = screenSettingsAboutTheProgramScreenRoute
+            route = SCENARIO_SETTINGS_ROUTE,
+            startDestination = SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE
         ) {
 
 
-            composable(route = screenSettingsAboutTheProgramScreenRoute) {
+            composable(route = SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE) {
                 AboutTheProgramScreen(
                     modifier = modifier,
                 )

@@ -123,8 +123,9 @@ class TransactionRepositoryImpl @Inject constructor(
         return DomainResult.Success(transactionEntity.toDomain())
     }
 
-    /** Вытаскиваем из бд транзакцию(так как только в БД храним serverId) обновляем локальныую трнакцию и запускаем синхронизацию
-     * если транзакция не синхронизирована с сервером то создаем на сервере и обновляем локально, иначе просто обновляем на сервере,
+    /** Вытаскиваем из бд транзакцию(так как только в БД храним serverId) обновляем локальныую трнакцию и
+     * запускаем синхронизацию если транзакция не синхронизирована с сервером то создаем на сервере и
+     * обновляем локально, иначе просто обновляем на сервере,
      * сразу возвращаем результат локального обновления транзакции */
     override suspend fun updateTransaction(transaction: Transaction): DomainResult<Unit> {
         val resultDb = getLocalTransactionOrFail(transaction.id)
@@ -212,7 +213,8 @@ class TransactionRepositoryImpl @Inject constructor(
         pushPendingLocalTransactions()
     }
 
-    /** Получаем все локальные акаунты и тянем с сервера все транзакции с момента создания аккаунта и до сегодняшнего дня */
+    /** Получаем все локальные акаунты и тянем с сервера все транзакции с момента создания аккаунта
+     * и до сегодняшнего дня */
     private suspend fun pullTransactionsFromRemoteForAllAccounts() {
         accountLocalDataSource.getAccounts().first().forEach { account ->
             pullTransactionsFromRemoteForAccount(

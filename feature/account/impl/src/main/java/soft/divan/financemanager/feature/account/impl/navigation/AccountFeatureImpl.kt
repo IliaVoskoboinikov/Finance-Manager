@@ -10,12 +10,12 @@ import jakarta.inject.Inject
 import soft.divan.financemanager.feature.account.api.AccountFeatureApi
 import soft.divan.financemanager.feature.account.impl.precenter.screens.CreateAccountScreenScreen
 
-private const val baseRoute = "account"
+private const val BASE_ROUTE = "account"
 const val ACCOUNT_ID_KEY: String = "accountId"
 
 class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
 
-    override val route: String = baseRoute
+    override val route: String = BASE_ROUTE
 
     override fun accountRouteWithArgs(accountId: String) = "$route/$accountId"
 

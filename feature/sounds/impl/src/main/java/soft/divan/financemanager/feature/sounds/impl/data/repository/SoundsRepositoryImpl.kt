@@ -1,7 +1,7 @@
 package soft.divan.financemanager.feature.sounds.impl.data.repository
 
 import kotlinx.coroutines.flow.Flow
-import soft.divan.financemanager.feature.sounds.impl.data.sourсe.SoundsLocalSource
+import soft.divan.financemanager.feature.sounds.impl.data.source.SoundsLocalSource
 import soft.divan.financemanager.feature.sounds.impl.domain.repository.SoundsRepository
 import javax.inject.Inject
 
