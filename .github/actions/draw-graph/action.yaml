@@ -1,0 +1,20 @@
+name: draw-graph
+description: Send file to Telegram
+
+inputs:
+  input-file:
+    description: 'Path to input file'
+    required: true
+  output-file:
+    description: 'Path to output file'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install graphviz
+      shell: bash
+      run: sudo apt-get -y install graphviz
+    - name: Draw graph
+      shell: bash
+      run: dot -Tpng ${{ inputs.input-file }} -o ${{ inputs.output-file }}
