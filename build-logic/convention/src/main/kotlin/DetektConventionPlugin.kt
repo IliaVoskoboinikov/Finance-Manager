@@ -20,6 +20,14 @@ class DetektConventionPlugin : Plugin<Project> {
             }
 
             tasks.withType<Detekt>().configureEach {
+                reports {
+                    xml.required.set(true)
+                    html.required.set(true)
+                    sarif.required.set(true)
+                    md.required.set(true)
+                }
+                exclude("**/resources/**")
+                exclude("**/build/**")
                 exclude("**/icons/**")
                 exclude("**/Color.kt")
             }
