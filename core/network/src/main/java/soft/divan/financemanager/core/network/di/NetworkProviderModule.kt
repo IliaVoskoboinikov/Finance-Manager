@@ -36,7 +36,8 @@ object NetworkProviderModule {
         return Cache(cacheDir, cacheSize)
     }
 // todo
-    /* По умолчанию OkHttp будет кэшировать только те ответы, где сервер возвращает корректные заголовки Cache-Control или Expires.
+    /* По умолчанию OkHttp будет кэшировать только те ответы, где сервер возвращает
+     корректные заголовки Cache-Control или Expires.
     Пример серверного ответа, который будет кэшироваться:
         Cache-Control: public, max-age=3600
         */

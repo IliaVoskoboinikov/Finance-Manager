@@ -82,8 +82,9 @@ class AccountRepositoryImpl @Inject constructor(
         )
     }
 
-    /** Вытаскиваем из бд аккаунт(так как только в БД храним serverId) обновляем локальный аккаунт и запускаем синхронизацию
-     * если аккаунт не синхронизирован с сервером то создаем на сервере и обновляем локально, иначе просто обновляем на сервере */
+    /** Вытаскиваем из бд аккаунт(так как только в БД храним serverId) обновляем локальный аккаунт и
+     * запускаем синхронизацию если аккаунт не синхронизирован с сервером то создаем на сервере и
+     * обновляем локально, иначе просто обновляем на сервере */
     override suspend fun updateAccount(account: Account): DomainResult<Unit> {
         val resultDb = getLocalAccountOrFail(account.id)
         if (resultDb is DomainResult.Failure) return resultDb
@@ -92,7 +93,8 @@ class AccountRepositoryImpl @Inject constructor(
 
         applicationScope.launch(dispatcher + exceptionHandler) {
             if (accountEntity.serverId == null) {
-                /** если аккаунт не синхронизирован с сервером (нету serverId) то создать на сервере и обновить локально*/
+                /** если аккаунт не синхронизирован с сервером (нету serverId) то создать на сервере и
+                 *  обновить локально*/
                 syncCreate(accountDto = account.toDto(), localId = account.id)
             } else {
                 syncUpdate(

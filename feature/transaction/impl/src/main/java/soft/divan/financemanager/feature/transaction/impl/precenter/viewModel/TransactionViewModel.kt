@@ -21,8 +21,8 @@ import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.feature.haptics.api.domain.HapticType
 import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
+import soft.divan.financemanager.feature.sounds.api.domain.SoundPlayer
 import soft.divan.financemanager.feature.sounds.api.domain.SoundType
-import soft.divan.financemanager.feature.sounds.api.domain.SoundsPlayer
 import soft.divan.financemanager.feature.transaction.impl.R
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.CreateTransactionUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteTransactionUseCase
@@ -53,7 +53,7 @@ class TransactionViewModel @Inject constructor(
     private val updateTransactionUseCase: UpdateTransactionUseCase,
     private val deleteTransactionUseCase: DeleteTransactionUseCase,
     private val hapticsManager: HapticsManager,
-    private val soundPlayer: SoundsPlayer,
+    private val soundPlayer: SoundPlayer,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 

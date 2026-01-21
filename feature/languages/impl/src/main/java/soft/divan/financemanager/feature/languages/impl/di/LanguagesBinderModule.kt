@@ -13,7 +13,7 @@ import soft.divan.financemanager.feature.languages.impl.domain.usecase.SetLangua
 import soft.divan.financemanager.feature.languages.impl.domain.usecase.impl.ObserveLanguageUseCaseImpl
 import soft.divan.financemanager.feature.languages.impl.domain.usecase.impl.SetLanguageUseCaseImpl
 import soft.divan.financemanager.feature.languages.impl.navigation.LanguagesFeatureImpl
-import soft.divan.financemanager.feature.languages.impl1.system.AppLocaleManagerImpl
+import soft.divan.financemanager.feature.languages.impl.system.AppLocaleManagerImpl
 import javax.inject.Singleton
 
 
