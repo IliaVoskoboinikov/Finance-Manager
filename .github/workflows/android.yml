@@ -27,6 +27,12 @@ jobs:
       - name: Build project $gradleFlags
         run: ./gradlew assembleDebug
 
+      - name: Generate build time report
+        uses: ./.github/actions/build-time-report
+        with:
+          file: app/build/reports/buildTimeTracker/build.csv
+          output-file: buildTime.csv
+
 
   run-tests:
     runs-on: ubuntu-latest
