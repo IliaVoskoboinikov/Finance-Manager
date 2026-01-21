@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package soft.divan.financemanager.uikit.icons
 
 import androidx.compose.material.icons.Icons
