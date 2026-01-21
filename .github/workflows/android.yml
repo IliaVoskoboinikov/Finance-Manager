@@ -70,3 +70,39 @@ jobs:
         with:
           name: detekt.html
           path: build/reports/detekt/detekt.html
+
+  check-module-graph:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
+      - name: Check Graph
+        run: ./gradlew :app:assertModuleGraph $gradleFlags
+
+      - name: Generate graph
+        run: ./gradlew :app:generateModulesGraphvizText -Pmodules.graph.output.gv=all_modules $gradleFlags
+
+      - name: Generate Markdown report
+        run: |
+          set -e
+          echo '```' > $GITHUB_STEP_SUMMARY
+          cat all_modules >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Draw graph
+        uses: ./.github/actions/draw-graph
+
+        with:
+          input-file: all_modules
+          output-file: all_modules.png
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: all_modules.png
+          path: all_modules.png
