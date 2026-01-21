@@ -38,7 +38,7 @@ jobs:
         uses: ./.github/actions/init-gradle
 
       - name: Run unit tests (Debug only)
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew testDebugUnitTest $gradleFlags
 
   run-detekt:
     runs-on: ubuntu-latest
