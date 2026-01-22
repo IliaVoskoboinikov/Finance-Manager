@@ -4,6 +4,7 @@ import android.app.LocaleManager
 import android.content.Context
 import android.os.Build
 import android.os.LocaleList
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,6 +38,7 @@ class AppLocaleManagerImpl @Inject constructor(
         return locale.toDomain()
     }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun getLocaleForTiramisu(): Locale {
         val appLocales = context.getSystemService(LocaleManager::class.java)?.applicationLocales
         return appLocales?.takeIf { !it.isEmpty }?.get(0) ?: context.resources.configuration.locales[0]
