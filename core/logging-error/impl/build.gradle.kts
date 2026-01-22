@@ -5,6 +5,6 @@ plugins {
 
 dependencies {
     implementation(projects.core.loggingError.api)
-    implementation(platform(libs.bom))
+    implementation(platform(libs.firebase.bom))
     implementation(libs.crashlytics)
 }
