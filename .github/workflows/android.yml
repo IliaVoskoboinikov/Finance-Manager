@@ -50,6 +50,28 @@ jobs:
       - name: Run unit tests (Debug only)
         run: ./gradlew testDebugUnitTest $gradleFlags
 
+
+  run-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
+      - name: Run Android Lint (Debug)
+        run: ./gradlew lintDebug
+
+      - name: Upload Lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-reports
+          path: |
+            **/build/reports/lint-results*.html
+
+
   run-detekt:
     runs-on: ubuntu-latest
     steps:
@@ -76,6 +98,7 @@ jobs:
         with:
           name: detekt.html
           path: build/reports/detekt/detekt.html
+
 
   check-module-graph:
     runs-on: ubuntu-latest
