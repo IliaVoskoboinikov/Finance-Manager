@@ -19,13 +19,11 @@ kotlin {
 
 lint {
     htmlReport = true
-    htmlOutput = file("lint-report.html")
     textReport = true
     absolutePaths = false
     ignoreTestSources = true
     checkDependencies = true
     sarifReport = true
-    sarifOutput = file("../lint-results.sarif")
 }
 
 dependencies {
