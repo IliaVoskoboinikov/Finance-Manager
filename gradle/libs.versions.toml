@@ -47,6 +47,7 @@ loggingInterceptor = "3.9.0"
 # Lint & QA Tools
 detekt = "1.23.8"
 detektCompose = "0.3.0"
+lint = "32.0.0"
 
 #Firebase
 gmsPlugin = "4.4.4"
@@ -117,6 +118,11 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 # Static analysis
 detekt-gradle = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version.ref = "detekt" }
 detekt-compose = { module = "io.nlopez.compose.rules:detekt", version.ref = "detektCompose" }
+lint-api = { group = "com.android.tools.lint", name = "lint-api", version.ref = "lint" }
+lint-checks = { group = "com.android.tools.lint", name = "lint-checks", version.ref = "lint" }
+lint-cli = { group = "com.android.tools.lint", name = "lint", version.ref = "lint" }
+lint-tests = { group = "com.android.tools.lint", name = "lint-tests", version.ref = "lint" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 
 #Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
@@ -148,6 +154,7 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 graph = { id = "com.jraska.module.graph.assertion", version.ref = "graphPlugin" }
 build-time-tracker = { id = "com.asarkar.gradle.build-time-tracker", version.ref = "buildTimeTracker" }
+android-lint = { id = "com.android.lint", version.ref = "agp" }
 
 #Firebase
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
