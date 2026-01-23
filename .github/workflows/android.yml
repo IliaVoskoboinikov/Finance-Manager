@@ -65,15 +65,22 @@ jobs:
           echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 
       - name: Run Android Lint (Debug)
-        run: ./gradlew lintDebug
+        run: ./gradlew lint
 
-      - name: Upload Lint reports
+      - name: Upload Lint HTML reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: lint-reports
+          name: lint-html
           path: |
             **/build/reports/lint-results*.html
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: |
+            **/build/reports/lint-results*.sarif
 
 
   run-detekt:
