@@ -22,12 +22,14 @@ fun AboutTheProgramScreenPreview() {
     }
 }
 
+private const val SPLASH_DELAY_MS = 1_000L
+
 @Composable
 fun SplashScreen(
     onNavigateToExpenses: () -> Unit,
 ) {
     LaunchedEffect(true) {
-        delay(1000)
+        delay(SPLASH_DELAY_MS)
         onNavigateToExpenses()
     }
 
