@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.data.DateHelper
+import soft.divan.financemanager.core.domain.model.Period
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
@@ -59,8 +60,7 @@ class AnalysisViewModel @Inject constructor(
             .flatMapLatest { (start, end) ->
                 getTransactionsByPeriodUseCase(
                     isIncome = isIncome,
-                    startDate = start,
-                    endDate = end
+                    period = Period(start, end)
                 )
             }
             .onEach { result ->

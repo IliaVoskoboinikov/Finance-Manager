@@ -10,20 +10,19 @@ class AvoidDateDetectorTest : LintDetectorTest() {
     override fun getIssues(): List<Issue> = listOf(AvoidDateDetector.ISSUE)
 
     fun testDocumentationExample() {
-        lint()
-            .files(
-                kotlin(
-                    """
+        lint().files(
+            kotlin(
+                """
               package test.pkg
               import java.util.Date
               fun test() {
                 val date = Date()
               }
               """
-                )
-                    .indented(),
-                kotlin(
-                    """
+            )
+                .indented(),
+            kotlin(
+                """
               package test.pkg
               import java.util.Calendar
 
@@ -31,9 +30,9 @@ class AvoidDateDetectorTest : LintDetectorTest() {
                   val calendar = Calendar.getInstance()
               }
               """
-                )
-                    .indented(),
             )
+                .indented(),
+        )
             .allowMissingSdk()
             .run()
             .expect(

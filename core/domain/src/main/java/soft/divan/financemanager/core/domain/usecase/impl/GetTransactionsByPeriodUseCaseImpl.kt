@@ -7,8 +7,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import soft.divan.financemanager.core.domain.data.DateHelper
+import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.core.domain.model.Period
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
@@ -16,7 +18,6 @@ import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
-import java.time.LocalDate
 import javax.inject.Inject
 
 /**
@@ -38,13 +39,8 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override operator fun invoke(
         isIncome: Boolean,
-        startDate: LocalDate,
-        endDate: LocalDate
+        period: Period,
     ): Flow<DomainResult<Triple<List<Transaction>, CurrencySymbol, List<Category>>>> {
-
-        val startDateApi = DateHelper.dateToApiFormat(startDate)
-        val endDateApi = DateHelper.dateToApiFormat(endDate)
-
         /**
          * Базовый combine независимых источников:
          * - аккаунты
@@ -54,7 +50,24 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
          * Эти источники независимы друг от друга.
          * Любое изменение любого из них → пересчёт downstream логики.
          */
-        return combine(
+        return baseDataFlow()
+            /**
+             * flatMapLatest:
+             * - при любом изменении аккаунтов / категорий / валюты
+             * - отменяем старые подписки
+             * - пересобираем транзакции корректно
+             */
+            .flatMapLatest { baseResult ->
+                handleBaseResult(baseResult, period, isIncome)
+            }
+            /**
+             * Защита от повторных эмитов одинакового состояния.
+             */
+            .distinctUntilChanged()
+    }
+
+    private fun baseDataFlow(): Flow<DomainResult<Triple<List<Account>, CurrencySymbol, List<Category>>>> =
+        combine(
             accountRepository.getAccounts(),
             categoryRepository.getCategories(),
             currencyRepository.getCurrency()
@@ -79,94 +92,112 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
                 }
             }
         }
-            /**
-             * flatMapLatest:
-             * - при любом изменении аккаунтов / категорий / валюты
-             * - отменяем старые подписки
-             * - пересобираем транзакции корректно
-             */
-            .flatMapLatest { baseResult ->
-                when (baseResult) {
 
-                    is DomainResult.Failure -> {
-                        // Ошибка базовых данных → просто пробрасываем
-                        flowOf(baseResult)
-                    }
+    private fun handleBaseResult(
+        baseResult: DomainResult<Triple<List<Account>, CurrencySymbol, List<Category>>>,
+        period: Period,
+        isIncome: Boolean
+    ): Flow<DomainResult<Triple<List<Transaction>, CurrencySymbol, List<Category>>>> =
+        when (baseResult) {
 
-                    is DomainResult.Success -> {
-                        val (accounts, currency, categories) = baseResult.data
-                        val categoriesMap = categories.associateBy { it.id }
+            is DomainResult.Failure -> {
+                // Ошибка базовых данных → просто пробрасываем
+                flowOf(baseResult)
+            }
 
-                        /**
-                         * Нет аккаунтов → нет транзакций
-                         * Это SUCCESS с пустым списком
-                         */
-                        if (accounts.isEmpty()) {
-                            flowOf(
-                                DomainResult.Success(
-                                    Triple(
-                                        emptyList(),
-                                        currency,
-                                        categories
-                                    )
-                                )
-                            )
-                        } else {
-                            /**
-                             * Подписка на транзакции по каждому аккаунту
-                             */
-                            combine(
-                                accounts.map { account ->
-                                    transactionRepository.getTransactionsByAccountAndPeriod(
-                                        accountId = account.id,
-                                        startDate = startDateApi,
-                                        endDate = endDateApi
-                                    )
-                                }
-                            ) { transactionResults ->
-
-                                /**
-                                 * Любая ошибка → ошибка всего use case
-                                 */
-                                val failure = transactionResults
-                                    .firstOrNull { it is DomainResult.Failure }
-
-                                if (failure != null) {
-                                    failure as DomainResult.Failure
-                                } else {
-                                    /**
-                                     * Агрегация всех транзакций
-                                     */
-                                    val allTransactions = transactionResults
-                                        .filterIsInstance<DomainResult.Success<List<Transaction>>>()
-                                        .flatMap { it.data }
-
-                                    /**
-                                     * Фильтрация по типу
-                                     * + сортировка по дате
-                                     */
-                                    val filteredTransactions = allTransactions
-                                        .filter { transaction ->
-                                            categoriesMap[transaction.categoryId]?.isIncome == isIncome
-                                        }
-                                        .sortedByDescending { it.transactionDate }
-
-                                    DomainResult.Success(
-                                        Triple(
-                                            filteredTransactions,
-                                            currency,
-                                            categories
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
+            is DomainResult.Success -> {
+                val (accounts, currency, categories) = baseResult.data
+                /**
+                 * Нет аккаунтов → нет транзакций
+                 * Это SUCCESS с пустым списком
+                 */
+                if (accounts.isEmpty()) {
+                    emptyTransactionsResult(currency, categories)
+                } else {
+                    /**
+                     * Подписка на транзакции по каждому аккаунту
+                     */
+                    transactionsFlow(
+                        accounts,
+                        period,
+                        isIncome,
+                        currency,
+                        categories
+                    )
                 }
             }
+        }
+
+    private fun emptyTransactionsResult(
+        currency: CurrencySymbol,
+        categories: List<Category>
+    ): Flow<DomainResult.Success<Triple<List<Transaction>, CurrencySymbol, List<Category>>>> = flowOf(
+        DomainResult.Success(Triple(emptyList(), currency, categories))
+    )
+
+    private fun transactionsFlow(
+        accounts: List<Account>,
+        period: Period,
+        isIncome: Boolean,
+        currency: CurrencySymbol,
+        categories: List<Category>
+    ): Flow<DomainResult<Triple<List<Transaction>, CurrencySymbol, List<Category>>>> {
+
+        val categoriesMap = categories.associateBy { it.id }
+
+        val startDateApi = DateHelper.dateToApiFormat(period.startDate)
+        val endDateApi = DateHelper.dateToApiFormat(period.endDate)
+
+        return combine(
+            accounts.map { account ->
+                transactionRepository.getTransactionsByAccountAndPeriod(
+                    accountId = account.id,
+                    startDate = startDateApi,
+                    endDate = endDateApi
+                )
+            }
+        ) { results ->
+
             /**
-             * Защита от повторных эмитов одинакового состояния.
+             * Любая ошибка → ошибка всего use case
              */
-            .distinctUntilChanged()
+            val failure = results.firstOrNull { it is DomainResult.Failure }
+
+            if (failure != null) {
+                failure as DomainResult.Failure
+            } else {
+                DomainResult.Success(
+                    Triple(
+                        filterAndSortTransactions(results, categoriesMap, isIncome),
+                        currency,
+                        categories
+                    )
+                )
+            }
+        }
+    }
+
+    private fun filterAndSortTransactions(
+        results: Array<DomainResult<List<Transaction>>>,
+        categoriesMap: Map<Int, Category>,
+        isIncome: Boolean
+    ): List<Transaction> {
+        /**
+         * Агрегация всех транзакций
+         */
+        val allTransactions = results
+            .filterIsInstance<DomainResult.Success<List<Transaction>>>()
+            .flatMap { it.data }
+
+        /**
+         * Фильтрация по типу
+         * + сортировка по дате
+         */
+        val filteredTransactions = allTransactions
+            .filter { transaction ->
+                categoriesMap[transaction.categoryId]?.isIncome == isIncome
+            }
+            .sortedByDescending { it.transactionDate }
+        return filteredTransactions
     }
 }
