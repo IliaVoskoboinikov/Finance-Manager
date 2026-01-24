@@ -10,6 +10,7 @@ import soft.divan.financemanager.feature.sounds.impl.data.source.SoundsLocalSour
 import javax.inject.Inject
 
 private val KEY_SOUND_ENABLED = booleanPreferencesKey("app_sound_enabled")
+private const val DEFAULT_SOUND_ENABLED = true
 
 class SoundsLocalSourceImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
@@ -17,7 +18,7 @@ class SoundsLocalSourceImpl @Inject constructor(
 
     override fun getSoundEnabled(): Flow<Boolean> {
         return dataStore.data.map { preferences ->
-            preferences[KEY_SOUND_ENABLED] ?: true
+            preferences[KEY_SOUND_ENABLED] ?: DEFAULT_SOUND_ENABLED
         }
     }
 
