@@ -1,3 +1,4 @@
+@file:Suppress("MagicNumber")
 package soft.divan.financemanager.feature.transactionstoday.impl.presenter.model
 
 

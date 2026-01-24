@@ -19,8 +19,7 @@ class AvoidDateDetectorTest : LintDetectorTest() {
                 val date = Date()
               }
               """
-            )
-                .indented(),
+            ).indented(),
             kotlin(
                 """
               package test.pkg
@@ -30,10 +29,8 @@ class AvoidDateDetectorTest : LintDetectorTest() {
                   val calendar = Calendar.getInstance()
               }
               """
-            )
-                .indented(),
-        )
-            .allowMissingSdk()
+            ).indented(),
+        ).allowMissingSdk()
             .run()
             .expect(
                 """

@@ -68,12 +68,39 @@ class DesignAppLocalSourceImpl @Inject constructor(
 
     //todo utils
     fun Color.toHexString(): String {
-        val a = (alpha * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
-        val r = (red * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
-        val g = (green * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
-        val b = (blue * 255).toInt().coerceIn(0, 255).toString(16).padStart(2, '0')
+        val a = (alpha * COLOR_CHANNEL_MAX)
+            .toInt()
+            .coerceIn(COLOR_CHANNEL_MIN, COLOR_CHANNEL_MAX)
+            .toString(HEX_RADIX)
+            .padStart(HEX_CHANNEL_LENGTH, HEX_PADDING_CHAR)
+
+        val r = (red * COLOR_CHANNEL_MAX)
+            .toInt()
+            .coerceIn(COLOR_CHANNEL_MIN, COLOR_CHANNEL_MAX)
+            .toString(HEX_RADIX)
+            .padStart(HEX_CHANNEL_LENGTH, HEX_PADDING_CHAR)
+
+        val g = (green * COLOR_CHANNEL_MAX)
+            .toInt()
+            .coerceIn(COLOR_CHANNEL_MIN, COLOR_CHANNEL_MAX)
+            .toString(HEX_RADIX)
+            .padStart(HEX_CHANNEL_LENGTH, HEX_PADDING_CHAR)
+
+        val b = (blue * COLOR_CHANNEL_MAX)
+            .toInt()
+            .coerceIn(COLOR_CHANNEL_MIN, COLOR_CHANNEL_MAX)
+            .toString(HEX_RADIX)
+            .padStart(HEX_CHANNEL_LENGTH, HEX_PADDING_CHAR)
+
         return "#$a$r$g$b".uppercase()
     }
 
+
 }
+
+private const val COLOR_CHANNEL_MAX = 255
+private const val COLOR_CHANNEL_MIN = 0
+private const val HEX_RADIX = 16
+private const val HEX_CHANNEL_LENGTH = 2
+private const val HEX_PADDING_CHAR = '0'
 
