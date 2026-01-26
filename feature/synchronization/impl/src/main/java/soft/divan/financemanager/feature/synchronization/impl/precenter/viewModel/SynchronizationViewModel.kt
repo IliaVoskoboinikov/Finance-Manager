@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.data.DateHelper.toDateTimeString
+import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.feature.synchronization.impl.R
 import soft.divan.financemanager.feature.synchronization.impl.domain.usecase.ObserveLastSyncTimeUseCase
 import soft.divan.financemanager.feature.synchronization.impl.domain.usecase.SetSyncIntervalHoursUseCase
@@ -40,7 +41,7 @@ class SynchronizationViewModel @Inject constructor(
             }
             .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
+                started = SharingStarted.WhileSubscribed(DEFAULT_STOP_TIMEOUT_MS),
                 initialValue = SynchronizationUiState.Loading
             )
 

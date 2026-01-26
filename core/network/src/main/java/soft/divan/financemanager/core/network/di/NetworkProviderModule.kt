@@ -27,11 +27,13 @@ import javax.inject.Singleton
 object NetworkProviderModule {
 
     private const val CACHE_SIZE_MB = 10L // 10 MB
+    private const val BYTES_IN_KB = 1024L
+    private const val KB_IN_MB = 1024L
 
     @Provides
     @Singleton
     fun provideCache(@ApplicationContext context: Context): Cache {
-        val cacheSize = CACHE_SIZE_MB * 1024 * 1024 // bytes
+        val cacheSize = CACHE_SIZE_MB * BYTES_IN_KB * KB_IN_MB // bytes
         val cacheDir = File(context.cacheDir, "http_cache")
         return Cache(cacheDir, cacheSize)
     }
