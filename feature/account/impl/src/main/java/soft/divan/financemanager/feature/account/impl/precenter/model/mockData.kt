@@ -6,7 +6,7 @@ import soft.divan.financemanager.feature.account.impl.R
 val mockAccountUiStateLoading = AccountUiState.Loading
 
 val mockAccountUiStateSuccess = AccountUiState.Success(
-    account = AccountUiModel(
+    account = AccountUi(
         id = "1",
         name = "счет1",
         balance = "1000",

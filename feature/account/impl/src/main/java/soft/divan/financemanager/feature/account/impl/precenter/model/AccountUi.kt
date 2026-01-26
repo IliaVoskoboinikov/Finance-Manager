@@ -1,6 +1,6 @@
 package soft.divan.financemanager.feature.account.impl.precenter.model
 
-data class AccountUiModel(
+data class AccountUi(
     val id: String,
     val name: String,
     val balance: String,

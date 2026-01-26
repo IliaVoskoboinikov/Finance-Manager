@@ -9,4 +9,5 @@
     <string name="cancellation">Отмена</string>
     <string name="error_save">Ошибка сохранения</string>
     <string name="error_delete">Ошибка удаления</string>
+    <string name="balance">Баланс</string>
 </resources>
