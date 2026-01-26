@@ -35,10 +35,10 @@ fun TransactionScreenPreview() {
 
 @Composable
 fun ErrorContent(
+    modifier: Modifier = Modifier,
     messageResId: Int = R.string.error_occurred,
     textBtnResId: Int = R.string.try_again,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier
@@ -64,7 +64,7 @@ fun ErrorContent(
         Button(
             onClick = onClick,
         ) {
-            Text(text = stringResource(R.string.try_again))
+            Text(text = stringResource(textBtnResId))
         }
     }
 }

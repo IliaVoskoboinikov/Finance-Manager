@@ -46,6 +46,7 @@ import java.time.LocalTime
 import javax.inject.Inject
 
 @HiltViewModel
+@Suppress("LongParameterList", "TooManyFunctions")
 class TransactionViewModel @Inject constructor(
     private val createTransactionUseCase: CreateTransactionUseCase,
     private val getAccountsUseCase: GetAccountsUseCase,

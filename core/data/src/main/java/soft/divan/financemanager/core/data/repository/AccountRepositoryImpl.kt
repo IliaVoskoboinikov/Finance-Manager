@@ -133,7 +133,7 @@ class AccountRepositoryImpl @Inject constructor(
         val hasTransactions = safeDbCall(errorLogger) {
             transactionLocalDataSource.getByAccountId(id).isNotEmpty()
         }
-        //todo доработать, по серверной логике нельзя удалять счет если на нем есть операции
+        // todo доработать, по серверной логике нельзя удалять счет если на нем есть операции
         if (hasTransactions is DomainResult.Success && hasTransactions.data) {
             return DomainResult.Failure(
                 DataError.LocalDb(Throwable("Account has transactions")).toDomainError()
@@ -150,7 +150,6 @@ class AccountRepositoryImpl @Inject constructor(
             )
         }
     }
-
 
     /**
      * 1. Получаем аккаунт из локальной БД (источник истины)
@@ -275,7 +274,6 @@ class AccountRepositoryImpl @Inject constructor(
             }.onSuccess { accountDto ->
                 updateLocalFromRemote(accountDto = accountDto, localId = accountEntity.localId)
             }
-
         }
     }
 
@@ -290,5 +288,4 @@ class AccountRepositoryImpl @Inject constructor(
             }
         }
     }
-
 }
