@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.error.DomainError
+import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
 import soft.divan.financemanager.feature.category.impl.R
@@ -35,7 +36,7 @@ class CategoriesViewModel @Inject constructor(
         .onStart { loadCategories() }
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5000L),
+            SharingStarted.WhileSubscribed(DEFAULT_STOP_TIMEOUT_MS),
             CategoriesUiState.Loading
         )
 
