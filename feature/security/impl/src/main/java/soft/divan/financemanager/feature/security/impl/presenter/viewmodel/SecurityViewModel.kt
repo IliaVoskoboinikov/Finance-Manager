@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.feature.security.impl.domain.usecase.DeletePinUseCase
 import soft.divan.financemanager.feature.security.impl.domain.usecase.GetSavedPinUseCase
 import soft.divan.financemanager.feature.security.impl.domain.usecase.IsPinSetUseCase
@@ -27,7 +28,7 @@ open class SecurityViewModel @Inject constructor(
         .onStart { loadPin() }
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5000L),
+            SharingStarted.WhileSubscribed(DEFAULT_STOP_TIMEOUT_MS),
             SecurityUiState.Loading
         )
 

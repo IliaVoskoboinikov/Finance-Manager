@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.data.DateHelper
+import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.feature.account.impl.R
@@ -51,7 +52,7 @@ class AccountViewModel @Inject constructor(
         .onStart { loadAccount() }
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5000L),
+            SharingStarted.WhileSubscribed(DEFAULT_STOP_TIMEOUT_MS),
             AccountUiState.Loading
         )
 

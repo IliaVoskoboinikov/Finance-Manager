@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.domain.data.DateHelper
+import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
@@ -64,7 +65,7 @@ class TransactionViewModel @Inject constructor(
     val uiState: StateFlow<TransactionUiState> = _uiState.onStart { load() }
         .stateIn(
             viewModelScope,
-            SharingStarted.WhileSubscribed(5000L),
+            SharingStarted.WhileSubscribed(DEFAULT_STOP_TIMEOUT_MS),
             TransactionUiState.Loading
         )
 
