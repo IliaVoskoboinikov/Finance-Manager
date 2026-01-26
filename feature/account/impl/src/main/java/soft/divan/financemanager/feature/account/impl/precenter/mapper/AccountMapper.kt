@@ -2,9 +2,9 @@ package soft.divan.financemanager.feature.account.impl.precenter.mapper
 
 import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Account
-import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUiModel
+import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUi
 
-fun AccountUiModel.toDomain(): Account {
+fun AccountUi.toDomain(): Account {
     return Account(
         id = id,
         name = name,
@@ -15,11 +15,11 @@ fun AccountUiModel.toDomain(): Account {
     )
 }
 
-fun Account.toUi(): AccountUiModel {
-    return AccountUiModel(
+fun Account.toUi(): AccountUi {
+    return AccountUi(
         id = id,
         name = name,
-        balance = balance.toString(),
+        balance = balance.stripTrailingZeros().toPlainString(),
         currency = currency,
         createdAt = DateHelper.formatTimeForDisplay(createdAt),
         updatedAt = DateHelper.formatTimeForDisplay(updatedAt),

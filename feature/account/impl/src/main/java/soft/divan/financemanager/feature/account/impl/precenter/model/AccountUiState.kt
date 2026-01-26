@@ -8,7 +8,7 @@ sealed interface AccountUiState {
     data object Loading : AccountUiState
 
     data class Success(
-        val account: AccountUiModel,
+        val account: AccountUi,
         val mode: AccountMode
     ) : AccountUiState
 

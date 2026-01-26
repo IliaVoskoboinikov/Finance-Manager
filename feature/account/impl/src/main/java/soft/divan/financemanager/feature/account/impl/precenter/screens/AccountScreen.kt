@@ -198,7 +198,7 @@ fun CreateAccountForm(
     ) {
         Name(uiState.account.name, onUpdateName)
         FMDriver()
-        Balance(uiState, onUpdateBalance)
+        Balance(uiState.account.balance, onUpdateBalance)
         FMDriver()
         Currency(
             isSheetOpen = isCurrencySheetOpen,
@@ -217,18 +217,17 @@ fun CreateAccountForm(
 
 @Composable
 private fun Balance(
-    uiState: AccountUiState.Success,
+    balance: String,
     onUpdateBalance: (String) -> Unit
 ) {
     ListItem(
         modifier = Modifier
             .height(70.dp)
-            .fillMaxWidth()
-            .clickable { },
-        lead = { ContentTextListItem("Баланс") },
+            .fillMaxWidth(),
+        lead = { ContentTextListItem(stringResource(R.string.balance)) },
         content = {
             BasicTextField(
-                value = uiState.account.balance,
+                value = balance,
                 onValueChange = { newValue ->
                     val moneyRegex = Regex("^(0|[1-9]\\d*)(\\.\\d{0,2})?$")
 
@@ -237,10 +236,7 @@ private fun Balance(
                             onUpdateBalance("0")
                         }
 //todo to viewModel
-                        uiState.account.balance == "0" &&
-                                newValue.length == 2 &&
-                                newValue.startsWith("0") &&
-                                newValue[1].isDigit() -> {
+                        balance == "0" && newValue.length == 2 && newValue[1].isDigit() -> {
                             onUpdateBalance(newValue.last().toString())
                         }
 
@@ -255,8 +251,7 @@ private fun Balance(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number
                 ),
-                singleLine = false,
-                maxLines = 2,
+                singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
