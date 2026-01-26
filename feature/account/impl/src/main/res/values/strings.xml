@@ -9,4 +9,5 @@
     <string name="cancellation">Cancel</string>
     <string name="error_save">Save error</string>
     <string name="error_delete">Uninstall error</string>
+    <string name="balance">Balance</string>
 </resources>
