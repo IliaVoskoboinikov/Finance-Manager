@@ -18,10 +18,9 @@ val Pink = Color(0xFFE91E63)
 
 val MintBackground = Color(0xFFD4FAE6)
 
-
 val Black = Color(0xFF000000)
 
-val  CharcoalPurple = Color(0xFF1D1B20)
+val CharcoalPurple = Color(0xFF1D1B20)
 
 val White = Color(0xFFFFFFFF)
 
@@ -33,9 +32,7 @@ val RoseWhite = Color(0xFFFEF7FF)
 
 val CoralRed = Color(0xFFE46962)
 
-
 val SoftLavender = Color(0xFFF7F2FA)
-
 
 val Purple80Dark = Color(0xFFCF6679)
 val NeonMintDark = Color(0xFF00C57A)

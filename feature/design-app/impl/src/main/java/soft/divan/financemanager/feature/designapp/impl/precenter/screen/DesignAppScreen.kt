@@ -102,7 +102,7 @@ fun DesignAppContent(
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
-                is DesignUiState.Error -> ErrorContent(onClick = {}) //todo
+                is DesignUiState.Error -> ErrorContent(onClick = {}) // todo
                 is DesignUiState.Loading -> LoadingProgressBar()
                 is DesignUiState.Success -> DesignAppForm(
                     modifier = modifier,
@@ -195,7 +195,6 @@ fun ThemeSection(
     }
 }
 
-
 @Composable
 fun AccentColorSection(
     currentColor: AccentColor,
@@ -211,7 +210,6 @@ fun AccentColorSection(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
         Text(
             text = stringResource(R.string.color_palette),
             style = MaterialTheme.typography.headlineSmall,
@@ -248,8 +246,12 @@ fun CustomColorOptionItem(
             .background(
                 Brush.horizontalGradient(
                     listOf(
-                        Color.Red, Color.Yellow, Color.Green,
-                        Color.Cyan, Color.Blue, Color.Magenta
+                        Color.Red,
+                        Color.Yellow,
+                        Color.Green,
+                        Color.Cyan,
+                        Color.Blue,
+                        Color.Magenta
                     )
                 )
             )
@@ -328,7 +330,8 @@ fun ThemeSwitchItem(title: String, selected: Boolean, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            title, modifier = Modifier.weight(1f),
+            text = title,
+            modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyLarge.copy(
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -338,15 +341,14 @@ fun ThemeSwitchItem(title: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun getColorForAccent(accentColor: AccentColor, customColor: Color? = null): Color {
-    return when (accentColor) {
-        AccentColor.DYNAMIC -> getDynamicColorPreview()
-        AccentColor.CUSTOM -> Color.Transparent
-        AccentColor.MINT -> Color(0xFF00E5A0)
-        AccentColor.PURPLE -> Color(0xFF9C27B0)
-        AccentColor.ORANGE -> Color(0xFFFF9800)
-        AccentColor.BLUE -> Color(0xFF2196F3)
-        AccentColor.PINK -> Color(0xFFE91E63)
+fun getColorForAccent(
+    accentColor: AccentColor,
+    customColor: Color? = null
+): Color = when (accentColor) {
+    AccentColor.DYNAMIC -> getDynamicColorPreview()
+    AccentColor.CUSTOM -> customColor ?: Color.Transparent
+    else -> requireNotNull(accentColor.color) {
+        "AccentColor ${accentColor.name} must have a color"
     }
 }
 
@@ -399,7 +401,8 @@ fun CustomColorPickerDialog(
         confirmButton = {
             TextButton(onClick = { onColorSelected(selectedColor) }) {
                 Text(
-                    stringResource(R.string.choose), style = MaterialTheme.typography.bodyLarge.copy(
+                    stringResource(R.string.choose),
+                    style = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 )
@@ -408,7 +411,8 @@ fun CustomColorPickerDialog(
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
                 Text(
-                    stringResource(R.string.сancel), style = MaterialTheme.typography.bodyLarge.copy(
+                    stringResource(R.string.сancel),
+                    style = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 )

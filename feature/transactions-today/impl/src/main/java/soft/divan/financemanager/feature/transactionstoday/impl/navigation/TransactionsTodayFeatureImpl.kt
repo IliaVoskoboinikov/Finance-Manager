@@ -34,11 +34,13 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
         modifier: Modifier
     ) {
         navGraphBuilder.composable(
-            route = "${route}/{$IS_INCOME_KEY}",
-            arguments = listOf(navArgument(IS_INCOME_KEY) {
-                type = NavType.BoolType
-                defaultValue = false
-            })
+            route = "$route/{$IS_INCOME_KEY}",
+            arguments = listOf(
+                navArgument(IS_INCOME_KEY) {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
         ) { backStackEntry ->
             val isIncome = backStackEntry.arguments?.getBoolean(IS_INCOME_KEY) ?: false
 
@@ -67,7 +69,6 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
             route = route,
 
             ) {
-
             TransactionsTodayScreen(
                 modifier = modifier,
                 isIncome = false,
@@ -93,7 +94,6 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
             route = route2,
 
             ) {
-
             TransactionsTodayScreen(
                 modifier = modifier,
                 isIncome = true,
@@ -114,5 +114,4 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
             )
         }
     }
-
 }
