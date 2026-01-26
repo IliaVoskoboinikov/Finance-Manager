@@ -41,33 +41,33 @@ class CategoriesViewModel @Inject constructor(
         )
 
     fun loadCategories() {
-            getCategoriesUseCase()
-                .onStart { _uiState.update { CategoriesUiState.Loading } }
-                .onEach { result ->
-                    result.fold(
-                        onSuccess = { categories ->
-                            val categories = categories.map { it.toUi() }
-                            if (categories.isEmpty()) {
-                                _uiState.update { CategoriesUiState.EmptyData }
-                            } else {
-                                _uiState.update {
-                                    CategoriesUiState.Success(
-                                        categories = categories,
-                                        filteredCategories = categories
-                                    )
-                                }
+        getCategoriesUseCase()
+            .onStart { _uiState.update { CategoriesUiState.Loading } }
+            .onEach { result ->
+                result.fold(
+                    onSuccess = { categories ->
+                        val categories = categories.map { it.toUi() }
+                        if (categories.isEmpty()) {
+                            _uiState.update { CategoriesUiState.EmptyData }
+                        } else {
+                            _uiState.update {
+                                CategoriesUiState.Success(
+                                    categories = categories,
+                                    filteredCategories = categories
+                                )
                             }
-                        },
-                        onFailure = { error ->
-                            if (error == DomainError.NoData) {
-                                _uiState.update { CategoriesUiState.EmptyData }
-                            }
-                            _uiState.update { CategoriesUiState.Error(R.string.error_loading) }
                         }
-                    )
-                }
-                .flowOn(Dispatchers.IO)
-                .launchIn(viewModelScope)
+                    },
+                    onFailure = { error ->
+                        if (error == DomainError.NoData) {
+                            _uiState.update { CategoriesUiState.EmptyData }
+                        }
+                        _uiState.update { CategoriesUiState.Error(R.string.error_loading) }
+                    }
+                )
+            }
+            .flowOn(Dispatchers.IO)
+            .launchIn(viewModelScope)
     }
 
     fun search(query: String) {
@@ -91,5 +91,4 @@ class CategoriesViewModel @Inject constructor(
             }
         }
     }
-
 }
