@@ -18,7 +18,6 @@ import soft.divan.financemanager.feature.myaccounts.impl.MyAccountsFeatureApi
 import soft.divan.financemanager.feature.security.api.SecurityFeatureApi
 import soft.divan.financemanager.feature.settings.api.SettingsFeatureApi
 import soft.divan.financemanager.feature.sounds.api.SoundsFeatureApi
-import soft.divan.financemanager.feature.splashscreen.api.SplashScreenFeatureApi
 import soft.divan.financemanager.feature.synchronization.api.SynchronizationFeatureApi
 import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transactionstoday.api.TransactionsTodayFeatureApi
@@ -27,7 +26,6 @@ import soft.divan.financemanager.feature.transactionstoday.api.TransactionsToday
 fun NavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    splashScreenFeatureApi: SplashScreenFeatureApi,
     transactionsTodayFeatureApi: TransactionsTodayFeatureApi,
     categoryFeatureApi: CategoryFeatureApi,
     accountFeatureApi: AccountFeatureApi,
@@ -45,14 +43,13 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = splashScreenFeatureApi.route,
+        startDestination = transactionsTodayFeatureApi.route,
         modifier = modifier,
         enterTransition = { EnterTransition.None },
         exitTransition = { ExitTransition.None },
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None }
     ) {
-        register(featureApi = splashScreenFeatureApi, navController = navController, modifier = modifier)
         register(featureApi = settingsFeatureApi, navController = navController, modifier = modifier)
         register(
             featureApi = transactionsTodayFeatureApi,
@@ -77,6 +74,5 @@ fun NavGraph(
             navController = navController,
             modifier = modifier
         )
-
     }
 }

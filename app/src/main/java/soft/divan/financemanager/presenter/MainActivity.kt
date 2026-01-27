@@ -36,6 +36,7 @@ import soft.divan.financemanager.feature.splashscreen.api.SplashScreenFeatureApi
 import soft.divan.financemanager.feature.synchronization.api.SynchronizationFeatureApi
 import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transactionstoday.api.TransactionsTodayFeatureApi
+import soft.divan.financemanager.presenter.navigation.RootNavGraph
 import soft.divan.financemanager.presenter.screens.MainScreen
 import soft.divan.financemanager.uikit.theme.AccentColor
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
@@ -43,6 +44,9 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var splashFeatureApi: SplashScreenFeatureApi
 
     @Inject
     lateinit var settingsFeatureApi: SettingsFeatureApi
@@ -64,9 +68,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var analysisFeatureApi: AnalysisFeatureApi
-
-    @Inject
-    lateinit var splashSettingsFeatureApi: SplashScreenFeatureApi
 
     @Inject
     lateinit var securityFeatureApi: SecurityFeatureApi
@@ -151,22 +152,27 @@ class MainActivity : ComponentActivity() {
                         shouldLock.value = false
                     })
                 } else {
-                    MainScreen(
-                        splashFeatureApi = splashSettingsFeatureApi,
-                        transactionsTodayFeatureApi = transactionsTodayFeatureApi,
-                        categoryFeatureApi = categoryFeatureApi,
-                        accountFeatureApi = accountFeatureApi,
-                        settingsFeatureApi = settingsFeatureApi,
-                        transactionFeatureApi = transactionFeatureApi,
-                        securityFeatureApi = securityFeatureApi,
-                        designAppFeatureApi = designAppFeatureApi,
-                        analysisFeatureApi = analysisFeatureApi,
-                        historyFeatureApi = historyFeatureApi,
-                        myAccountsFeatureApi = myAccountsFeatureApi,
-                        hapticsFeatureApi = hapticsFeatureApi,
-                        soundsFeatureApi = soundsFeatureApi,
-                        languagesFeatureApi = languagesFeatureApi,
-                        synchronizationFeatureApi = synchronizationFeatureApi
+                    RootNavGraph(
+                        splashFeatureApi = splashFeatureApi,
+                        mainScreen = {
+                            MainScreen(
+                                splashFeatureApi = splashFeatureApi,
+                                transactionsTodayFeatureApi = transactionsTodayFeatureApi,
+                                categoryFeatureApi = categoryFeatureApi,
+                                accountFeatureApi = accountFeatureApi,
+                                settingsFeatureApi = settingsFeatureApi,
+                                transactionFeatureApi = transactionFeatureApi,
+                                securityFeatureApi = securityFeatureApi,
+                                designAppFeatureApi = designAppFeatureApi,
+                                analysisFeatureApi = analysisFeatureApi,
+                                historyFeatureApi = historyFeatureApi,
+                                myAccountsFeatureApi = myAccountsFeatureApi,
+                                hapticsFeatureApi = hapticsFeatureApi,
+                                soundsFeatureApi = soundsFeatureApi,
+                                languagesFeatureApi = languagesFeatureApi,
+                                synchronizationFeatureApi = synchronizationFeatureApi
+                            )
+                        }
                     )
                 }
             }
