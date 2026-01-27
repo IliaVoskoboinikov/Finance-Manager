@@ -118,7 +118,6 @@ fun MainScreen(
         ) {
             NavGraph(
                 navController = navController,
-                splashScreenFeatureApi = splashFeatureApi,
                 transactionsTodayFeatureApi = transactionsTodayFeatureApi,
                 categoryFeatureApi = categoryFeatureApi,
                 accountFeatureApi = accountFeatureApi,
