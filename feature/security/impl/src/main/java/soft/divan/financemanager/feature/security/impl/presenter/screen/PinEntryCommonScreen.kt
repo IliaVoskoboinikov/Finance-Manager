@@ -25,11 +25,13 @@ import soft.divan.financemanager.feature.security.impl.presenter.components.Keyb
 import soft.divan.financemanager.feature.security.impl.presenter.components.PinCodeScreenHeader
 import soft.divan.financemanager.feature.security.impl.presenter.components.RoundedBoxesRow
 
+private const val DEFAULT_PIN_SIZE = 4
+private const val PIN_INPUT_CONFIRMATION_DELAY_MS = 200L
 
 @Composable
 fun PinEntryCommonScreen(
     titleId: Int,
-    pinSize: Int = 4,
+    pinSize: Int = DEFAULT_PIN_SIZE,
     errorMessage: String = "",
     showBiometricButton: Boolean = false,
     onPinEntered: (String) -> Unit,
@@ -43,7 +45,7 @@ fun PinEntryCommonScreen(
     // Проверка длины и отправка результата
     LaunchedEffect(inputPin.size) {
         if (inputPin.size == pinSize) {
-            delay(200) // чтобы пользователь успел увидеть ввод
+            delay(PIN_INPUT_CONFIRMATION_DELAY_MS) // чтобы пользователь успел увидеть ввод
             onPinEntered(inputPin.joinToString(""))
             inputPin.clear()
         }

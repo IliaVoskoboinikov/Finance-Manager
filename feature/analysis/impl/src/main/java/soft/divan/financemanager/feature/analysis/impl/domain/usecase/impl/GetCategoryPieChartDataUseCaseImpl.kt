@@ -8,18 +8,20 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
 
+private const val PERCENT_MULTIPLIER = 100
+private const val PERCENT_SCALE = 2
+
 class GetCategoryPieChartDataUseCaseImpl @Inject constructor() : GetCategoryPieChartDataUseCase {
     override fun invoke(
         transactions: List<Transaction>,
         category: List<Category>
     ): List<CategoryPieSlice> {
 
-        if (transactions.isEmpty()) return emptyList()
-
-
-        val total = transactions.sumOf { it.amount.abs() }
-
-        if (total == BigDecimal.ZERO) return emptyList()
+        val total = transactions
+            .takeIf { it.isNotEmpty() }
+            ?.sumOf { it.amount.abs() }
+            ?.takeIf { it != BigDecimal.ZERO }
+            ?: return emptyList()
 
         return transactions
             .groupBy { it.categoryId }
@@ -27,8 +29,8 @@ class GetCategoryPieChartDataUseCaseImpl @Inject constructor() : GetCategoryPieC
                 val category = category.find { it.id == grouped.first().categoryId }!!
                 val sum = grouped.fold(BigDecimal.ZERO) { acc, t -> acc + t.amount.abs() }
                 val percent = sum
-                    .multiply(BigDecimal(100))
-                    .divide(total, 2, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal(PERCENT_MULTIPLIER))
+                    .divide(total, PERCENT_SCALE, RoundingMode.HALF_UP)
                     .toFloat()
 
                 CategoryPieSlice(

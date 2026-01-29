@@ -12,7 +12,6 @@ import soft.divan.financemanager.feature.transactionstoday.impl.presenter.screen
 import javax.inject.Inject
 
 private const val BASE_ROUTE = "transactions_today"
-private const val IS_INCOME_KEY: String = "isIncome"
 
 class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeatureApi {
 

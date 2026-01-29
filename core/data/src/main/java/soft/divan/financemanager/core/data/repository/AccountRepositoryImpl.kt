@@ -114,14 +114,17 @@ class AccountRepositoryImpl @Inject constructor(
                     currency = account.currency,
                     createdAt = DateHelper.dataTimeForApi(account.createdAt),
                     updatedAt = DateHelper.dataTimeForApi(account.updatedAt),
-                    syncStatus = if (accountEntity.serverId == null) SyncStatus.PENDING_CREATE else SyncStatus.PENDING_UPDATE
+                    syncStatus = if (accountEntity.serverId == null)
+                        SyncStatus.PENDING_CREATE
+                    else
+                        SyncStatus.PENDING_UPDATE
                 )
             )
         }
     }
 
-    /** Получаем аккаунт из БД и и проверяем есть ли у него транзакции если нет то помечаем в БД как удаленный
-     *  и запускаем синхронизацию удаления,
+    /** Получаем аккаунт из БД и и проверяем есть ли у него транзакции если нет то помечаем в БД
+     * как удаленный и запускаем синхронизацию удаления,
      * если на сервере аккаунта нету то просто удалем, если есть то удаляем на сервере и локально */
     override suspend fun deleteAccount(id: String): DomainResult<Unit> {
         val localResult = getLocalAccountOrFail(id)

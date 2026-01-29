@@ -163,7 +163,10 @@ class TransactionRepositoryImpl @Inject constructor(
                     comment = transaction.comment.orEmpty(),
                     createdAt = DateHelper.dataTimeForApi(transaction.createdAt),
                     updatedAt = DateHelper.dataTimeForApi(transaction.updatedAt),
-                    syncStatus = if (transactionEntity.serverId == null) SyncStatus.PENDING_CREATE else SyncStatus.PENDING_UPDATE
+                    syncStatus = if (transactionEntity.serverId == null)
+                        SyncStatus.PENDING_CREATE
+                    else
+                        SyncStatus.PENDING_UPDATE
                 )
             )
         }
