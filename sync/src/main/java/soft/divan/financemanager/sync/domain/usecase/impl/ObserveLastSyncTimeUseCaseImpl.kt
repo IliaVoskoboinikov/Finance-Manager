@@ -1,8 +1,8 @@
-package soft.divan.financemanager.feature.synchronization.impl.domain.usecase.impl
+package soft.divan.financemanager.sync.domain.usecase.impl
 
 import kotlinx.coroutines.flow.Flow
-import soft.divan.financemanager.feature.synchronization.impl.domain.usecase.ObserveLastSyncTimeUseCase
 import soft.divan.financemanager.sync.domain.repository.SyncRepository
+import soft.divan.financemanager.sync.domain.usecase.ObserveLastSyncTimeUseCase
 import javax.inject.Inject
 
 class ObserveLastSyncTimeUseCaseImpl @Inject constructor(

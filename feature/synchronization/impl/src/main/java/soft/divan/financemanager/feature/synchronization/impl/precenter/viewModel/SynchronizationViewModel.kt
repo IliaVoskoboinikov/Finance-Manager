@@ -12,10 +12,10 @@ import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.data.DateHelper.toDateTimeString
 import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.feature.synchronization.impl.R
-import soft.divan.financemanager.feature.synchronization.impl.domain.usecase.ObserveLastSyncTimeUseCase
-import soft.divan.financemanager.feature.synchronization.impl.domain.usecase.SetSyncIntervalHoursUseCase
 import soft.divan.financemanager.feature.synchronization.impl.precenter.model.SynchronizationUiState
+import soft.divan.financemanager.sync.domain.usecase.ObserveLastSyncTimeUseCase
 import soft.divan.financemanager.sync.domain.usecase.ObserveSyncIntervalHoursUseCase
+import soft.divan.financemanager.sync.domain.usecase.SetSyncIntervalHoursUseCase
 import soft.divan.financemanager.sync.worker.BASE_SYNCHRONIZATION_PERIOD_IN_HOURS
 import javax.inject.Inject
 

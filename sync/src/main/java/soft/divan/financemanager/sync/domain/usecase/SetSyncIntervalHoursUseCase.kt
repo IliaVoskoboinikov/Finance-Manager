@@ -1,4 +1,4 @@
-package soft.divan.financemanager.feature.synchronization.impl.domain.usecase
+package soft.divan.financemanager.sync.domain.usecase
 
 interface SetSyncIntervalHoursUseCase {
     suspend operator fun invoke(hours: Int)
