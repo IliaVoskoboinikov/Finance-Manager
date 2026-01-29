@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import soft.divan.financemanager.core.featureapi.RouteScope
 import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transaction.impl.precenter.screens.TransactionScreen
 import javax.inject.Inject
@@ -26,10 +27,11 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
+        scope: RouteScope,
         modifier: Modifier
     ) {
         navGraphBuilder.composable(
-            route = "${route}/{$TRANSACTION_ID_KEY}/{$IS_INCOME_KEY}",
+            route = "${scope.route()}/{$TRANSACTION_ID_KEY}/{$IS_INCOME_KEY}",
             arguments = listOf(
                 navArgument(TRANSACTION_ID_KEY) {
                     type = NavType.StringType
@@ -52,7 +54,7 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
         }
 
         navGraphBuilder.composable(
-            "${route}/{$IS_INCOME_KEY}",
+            "${scope.route()}/{$IS_INCOME_KEY}",
             arguments = listOf(
                 navArgument(IS_INCOME_KEY) {
                     type = NavType.BoolType
