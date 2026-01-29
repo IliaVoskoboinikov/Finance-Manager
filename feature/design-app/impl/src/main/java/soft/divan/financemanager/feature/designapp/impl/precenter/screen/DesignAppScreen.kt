@@ -155,7 +155,7 @@ private fun ShowColorPicker(
 ) {
     if (showColorPicker.value) {
         CustomColorPickerDialog(
-            initialColor = Color(0xFF6200EE),
+            initialColor = Color.Yellow,
             onDismissRequest = { showColorPicker.value = false },
             onColorSelected = { selectedColor ->
                 setCustomColor(selectedColor)

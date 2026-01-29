@@ -30,6 +30,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Suppress("MagicNumber")
 @Composable
 fun SynchronizationScreenPreview() {
     FinanceManagerTheme {
