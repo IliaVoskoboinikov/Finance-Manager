@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import jakarta.inject.Inject
+import soft.divan.financemanager.core.featureapi.RouteScope
 import soft.divan.financemanager.feature.account.api.AccountFeatureApi
 import soft.divan.financemanager.feature.account.impl.precenter.screens.CreateAccountScreenScreen
 
@@ -22,10 +23,11 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
+        scope: RouteScope,
         modifier: Modifier
     ) {
 
-        navGraphBuilder.composable(route) {
+        navGraphBuilder.composable(scope.route()) {
             CreateAccountScreenScreen(
                 modifier = modifier,
                 accountId = null,
@@ -34,7 +36,7 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
         }
 
         navGraphBuilder.composable(
-            "${route}/{$ACCOUNT_ID_KEY}",
+            "${scope.route()}/{$ACCOUNT_ID_KEY}",
             arguments = listOf(
                 navArgument(ACCOUNT_ID_KEY) {
                     type = NavType.StringType

@@ -25,8 +25,8 @@ data class ScreenBottom(
             category: FeatureApi,
             settings: FeatureApi,
         ) = listOf(
-            ScreenBottom(transactionsToday.route, R.string.expenses, Icons.Filled.Downtrend),
-            ScreenBottom(transactionsToday.route2, R.string.income, Icons.Filled.Uptrend),
+            ScreenBottom(transactionsToday.expenseRoute, R.string.expenses, Icons.Filled.Downtrend),
+            ScreenBottom(transactionsToday.incomeRoute, R.string.income, Icons.Filled.Uptrend),
             ScreenBottom(myAccounts.route, R.string.account, Icons.Filled.Calculator),
             ScreenBottom(category.route, R.string.category, Icons.Filled.Chart90),
             ScreenBottom(settings.route, R.string.settings, Icons.Filled.Settings),

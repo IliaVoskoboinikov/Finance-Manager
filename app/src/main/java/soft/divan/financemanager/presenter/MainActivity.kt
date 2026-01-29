@@ -15,26 +15,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import dagger.hilt.android.AndroidEntryPoint
-import soft.divan.financemanager.feature.account.api.AccountFeatureApi
-import soft.divan.financemanager.feature.analysis.api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.category.api.CategoryFeatureApi
-import soft.divan.financemanager.feature.designapp.api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetThemeModeUseCase
-import soft.divan.financemanager.feature.haptics.api.HapticsFeatureApi
-import soft.divan.financemanager.feature.history.api.HistoryFeatureApi
-import soft.divan.financemanager.feature.languages.api.LanguagesFeatureApi
 import soft.divan.financemanager.feature.myaccounts.impl.MyAccountsFeatureApi
-import soft.divan.financemanager.feature.security.api.SecurityFeatureApi
 import soft.divan.financemanager.feature.security.impl.domain.usecase.IsPinSetUseCase
 import soft.divan.financemanager.feature.security.impl.presenter.screen.PinLockScreen
 import soft.divan.financemanager.feature.settings.api.SettingsFeatureApi
-import soft.divan.financemanager.feature.sounds.api.SoundsFeatureApi
 import soft.divan.financemanager.feature.splashscreen.api.SplashScreenFeatureApi
-import soft.divan.financemanager.feature.synchronization.api.SynchronizationFeatureApi
-import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transactionstoday.api.TransactionsTodayFeatureApi
 import soft.divan.financemanager.presenter.navigation.RootNavGraph
 import soft.divan.financemanager.presenter.screens.MainScreen
@@ -49,46 +39,16 @@ class MainActivity : ComponentActivity() {
     lateinit var splashFeatureApi: SplashScreenFeatureApi
 
     @Inject
-    lateinit var settingsFeatureApi: SettingsFeatureApi
-
-    @Inject
     lateinit var transactionsTodayFeatureApi: TransactionsTodayFeatureApi
-
-    @Inject
-    lateinit var categoryFeatureApi: CategoryFeatureApi
-
-    @Inject
-    lateinit var accountFeatureApi: AccountFeatureApi
-
-    @Inject
-    lateinit var historyFeatureApi: HistoryFeatureApi
-
-    @Inject
-    lateinit var transactionFeatureApi: TransactionFeatureApi
-
-    @Inject
-    lateinit var analysisFeatureApi: AnalysisFeatureApi
-
-    @Inject
-    lateinit var securityFeatureApi: SecurityFeatureApi
 
     @Inject
     lateinit var myAccountsFeatureApi: MyAccountsFeatureApi
 
     @Inject
-    lateinit var designAppFeatureApi: DesignAppFeatureApi
+    lateinit var categoryFeatureApi: CategoryFeatureApi
 
     @Inject
-    lateinit var hapticsFeatureApi: HapticsFeatureApi
-
-    @Inject
-    lateinit var soundsFeatureApi: SoundsFeatureApi
-
-    @Inject
-    lateinit var languagesFeatureApi: LanguagesFeatureApi
-
-    @Inject
-    lateinit var synchronizationFeatureApi: SynchronizationFeatureApi
+    lateinit var settingsFeatureApi: SettingsFeatureApi
 
     @Inject
     lateinit var getThemeModeUseCase: GetThemeModeUseCase
@@ -156,21 +116,10 @@ class MainActivity : ComponentActivity() {
                         splashFeatureApi = splashFeatureApi,
                         mainScreen = {
                             MainScreen(
-                                splashFeatureApi = splashFeatureApi,
                                 transactionsTodayFeatureApi = transactionsTodayFeatureApi,
-                                categoryFeatureApi = categoryFeatureApi,
-                                accountFeatureApi = accountFeatureApi,
-                                settingsFeatureApi = settingsFeatureApi,
-                                transactionFeatureApi = transactionFeatureApi,
-                                securityFeatureApi = securityFeatureApi,
-                                designAppFeatureApi = designAppFeatureApi,
-                                analysisFeatureApi = analysisFeatureApi,
-                                historyFeatureApi = historyFeatureApi,
                                 myAccountsFeatureApi = myAccountsFeatureApi,
-                                hapticsFeatureApi = hapticsFeatureApi,
-                                soundsFeatureApi = soundsFeatureApi,
-                                languagesFeatureApi = languagesFeatureApi,
-                                synchronizationFeatureApi = synchronizationFeatureApi
+                                categoryFeatureApi = categoryFeatureApi,
+                                settingsFeatureApi = settingsFeatureApi
                             )
                         }
                     )
