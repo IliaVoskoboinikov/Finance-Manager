@@ -4,6 +4,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import soft.divan.financemanager.core.featureapi.RouteScope
 import soft.divan.financemanager.feature.haptics.api.HapticsFeatureApi
 import soft.divan.financemanager.feature.haptics.impl.precenter.screen.HapticsScreen
 import javax.inject.Inject
@@ -17,15 +18,14 @@ class HapticFeatureImpl @Inject constructor() : HapticsFeatureApi {
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
+        scope: RouteScope,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(route) {
+        navGraphBuilder.composable(scope.route()) {
             HapticsScreen(
                 modifier = modifier,
                 onNavigateBack = navController::popBackStack
             )
         }
     }
-
-
 }

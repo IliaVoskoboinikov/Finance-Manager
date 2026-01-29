@@ -10,6 +10,7 @@ interface FeatureApi {
     fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
+        scope: RouteScope,
         modifier: Modifier = Modifier
     )
 }

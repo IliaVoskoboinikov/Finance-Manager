@@ -4,6 +4,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import soft.divan.financemanager.core.featureapi.RouteScope
 import soft.divan.financemanager.feature.synchronization.api.SynchronizationFeatureApi
 import soft.divan.financemanager.feature.synchronization.impl.precenter.screen.SynchronizationScreen
 import javax.inject.Inject
@@ -17,9 +18,10 @@ class SynchronizationFeatureImpl @Inject constructor() : SynchronizationFeatureA
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
+        scope: RouteScope,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(route) {
+        navGraphBuilder.composable(scope.route()) {
             SynchronizationScreen(
                 modifier = modifier,
                 onNavigateBack = navController::popBackStack

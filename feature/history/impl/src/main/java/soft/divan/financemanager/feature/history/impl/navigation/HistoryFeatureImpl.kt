@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import soft.divan.financemanager.core.featureapi.RouteScope
 import soft.divan.financemanager.feature.analysis.api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.history.api.HistoryFeatureApi
 import soft.divan.financemanager.feature.history.impl.precenter.screens.HistoryScreen
@@ -30,10 +31,11 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
+        scope: RouteScope,
         modifier: Modifier
     ) {
         navGraphBuilder.composable(
-            "${route}/{$IS_INCOME_KEY}",
+            "${scope.route()}/{$IS_INCOME_KEY}",
             arguments = listOf(
                 navArgument(IS_INCOME_KEY) {
                     type = NavType.BoolType
@@ -49,17 +51,32 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
                 onNavigateBack = navController::popBackStack,
                 onNavigateToTransaction = { transitionId ->
                     navController.navigate(
-                        transactionFeatureApi.transactionRouteWithArgs(
-                            transactionId = transitionId,
-                            isIncome = isIncome
+                        scope.route(
+                            transactionFeatureApi.transactionRouteWithArgs(
+                                transactionId = transitionId,
+                                isIncome = isIncome
+                            )
                         )
                     )
                 },
                 onNavigateToAnalysis = {
-                    navController.navigate(analysisFeatureApi.analysisRouteWithArgs(isIncome = isIncome))
+                    navController.navigate(scope.route(analysisFeatureApi.analysisRouteWithArgs(isIncome = isIncome)))
                 }
             )
         }
+        transactionFeatureApi.registerGraph(
+            navGraphBuilder = navGraphBuilder,
+            navController = navController,
+            scope = scope.child(transactionFeatureApi.route),
+            modifier = modifier
+        )
+
+        analysisFeatureApi.registerGraph(
+            navGraphBuilder = navGraphBuilder,
+            navController = navController,
+            scope = scope.child(analysisFeatureApi.route),
+            modifier = modifier
+        )
     }
 
 

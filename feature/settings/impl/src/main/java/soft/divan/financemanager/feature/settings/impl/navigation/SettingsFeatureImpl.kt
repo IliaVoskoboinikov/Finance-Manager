@@ -5,6 +5,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
+import soft.divan.financemanager.core.featureapi.RouteScope
 import soft.divan.financemanager.feature.designapp.api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.haptics.api.HapticsFeatureApi
 import soft.divan.financemanager.feature.languages.api.LanguagesFeatureApi
@@ -42,34 +43,41 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
     @Inject
     lateinit var synchronizationFeatureApi: SynchronizationFeatureApi
 
+
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
+        scope: RouteScope,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(route) {
+        navGraphBuilder.composable(scope.route()) {
+
             SettingsScreen(
                 modifier = modifier,
                 onNavigateToAboutTheProgram = {
-                    navController.navigate(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE)
+                    navController.navigate(scope.route(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE))
                 },
-                onNavigateToSecurity = { navController.navigate(securityFeatureApi.route) },
-                onNavigateToDesignApp = { navController.navigate(designAppFeatureApi.route) },
-                onNavigateToHaptic = { navController.navigate(hapticsFeatureApi.route) },
-                onNavigateToSounds = { navController.navigate(soundsFeatureApi.route) },
-                onNavigateToLanguages = { navController.navigate(languagesFeatureApi.route) },
-                onNavigateToSynchronization = { navController.navigate(synchronizationFeatureApi.route) }
+                onNavigateToSecurity = { navController.navigate(scope.route(securityFeatureApi.route)) },
+                onNavigateToDesignApp = { navController.navigate(scope.route(designAppFeatureApi.route)) },
+                onNavigateToHaptic = { navController.navigate(scope.route(hapticsFeatureApi.route)) },
+                onNavigateToSounds = { navController.navigate(scope.route(soundsFeatureApi.route)) },
+                onNavigateToLanguages = { navController.navigate(scope.route(languagesFeatureApi.route)) },
+                onNavigateToSynchronization = {
+                    navController.navigate(
+                        scope.route(
+                            synchronizationFeatureApi.route
+                        )
+                    )
+                }
             )
         }
 
         /* Nested graph for internal scenario */
         navGraphBuilder.navigation(
-            route = SCENARIO_SETTINGS_ROUTE,
-            startDestination = SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE
+            route = scope.route(SCENARIO_SETTINGS_ROUTE),
+            startDestination = scope.route(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE)
         ) {
-
-
-            composable(route = SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE) {
+            composable(route = scope.route(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE)) {
                 AboutTheProgramScreen(
                     modifier = modifier,
                 )
@@ -77,5 +85,46 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
 
         }
 
+        designAppFeatureApi.registerGraph(
+            navGraphBuilder = navGraphBuilder,
+            navController = navController,
+            scope = scope.child(designAppFeatureApi.route),
+            modifier = modifier
+        )
+
+        soundsFeatureApi.registerGraph(
+            navGraphBuilder = navGraphBuilder,
+            navController = navController,
+            scope = scope.child(soundsFeatureApi.route),
+            modifier = modifier
+        )
+
+        hapticsFeatureApi.registerGraph(
+            navGraphBuilder = navGraphBuilder,
+            navController = navController,
+            scope = scope.child(hapticsFeatureApi.route),
+            modifier = modifier
+        )
+
+        securityFeatureApi.registerGraph(
+            navGraphBuilder = navGraphBuilder,
+            navController = navController,
+            scope = scope.child(securityFeatureApi.route),
+            modifier = modifier
+        )
+
+        synchronizationFeatureApi.registerGraph(
+            navGraphBuilder = navGraphBuilder,
+            navController = navController,
+            scope = scope.child(synchronizationFeatureApi.route),
+            modifier = modifier
+        )
+
+        languagesFeatureApi.registerGraph(
+            navGraphBuilder = navGraphBuilder,
+            navController = navController,
+            scope = scope.child(languagesFeatureApi.route),
+            modifier = modifier
+        )
     }
 }

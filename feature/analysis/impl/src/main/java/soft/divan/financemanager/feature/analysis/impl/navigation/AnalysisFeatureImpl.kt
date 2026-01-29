@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import soft.divan.financemanager.core.featureapi.RouteScope
 import soft.divan.financemanager.feature.analysis.api.AnalysisFeatureApi
 import soft.divan.financemanager.feature.analysis.impl.precenter.screen.AnalysisScreen
 import javax.inject.Inject
@@ -25,10 +26,11 @@ class AnalysisFeatureImpl @Inject constructor() : AnalysisFeatureApi {
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
+        scope: RouteScope,
         modifier: Modifier
     ) {
         navGraphBuilder.composable(
-            route = "${route}/{$IS_INCOME_KEY}",
+            route = "${scope.route()}/{$IS_INCOME_KEY}",
             arguments = listOf(
                 navArgument(IS_INCOME_KEY) {
                     type = NavType.BoolType

@@ -4,6 +4,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import soft.divan.financemanager.core.featureapi.RouteScope
 import soft.divan.financemanager.feature.designapp.api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.designapp.impl.precenter.screen.DesignAppScreen
 
@@ -18,15 +19,14 @@ class DesignAppFeatureImpl @Inject constructor() : DesignAppFeatureApi {
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
+        scope: RouteScope,
         modifier: Modifier
     ) {
 
-        navGraphBuilder.composable(route) {
+        navGraphBuilder.composable(scope.route()) {
             DesignAppScreen(
                 modifier = modifier,
             )
         }
     }
-
-
 }
