@@ -1,7 +1,7 @@
-package soft.divan.financemanager.feature.synchronization.impl.domain.usecase.impl
+package soft.divan.financemanager.sync.domain.usecase.impl
 
-import soft.divan.financemanager.feature.synchronization.impl.domain.usecase.SetSyncIntervalHoursUseCase
 import soft.divan.financemanager.sync.domain.repository.SyncRepository
+import soft.divan.financemanager.sync.domain.usecase.SetSyncIntervalHoursUseCase
 import soft.divan.financemanager.sync.scheduler.SyncScheduler
 import javax.inject.Inject
 
