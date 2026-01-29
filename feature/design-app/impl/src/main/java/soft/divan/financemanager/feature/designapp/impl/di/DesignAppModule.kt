@@ -11,6 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.feature.designapp.impl.data.source.DesignAppLocalSource
 import soft.divan.financemanager.feature.designapp.impl.data.source.impl.DesignAppLocalSourceImpl
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 val Context.themeDataStore: DataStore<Preferences> by preferencesDataStore("user_preferences")
@@ -33,3 +34,6 @@ object DesignAppProviderModule {
     }
 }
 
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class ThemeDataStore

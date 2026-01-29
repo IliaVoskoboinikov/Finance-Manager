@@ -11,6 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.feature.languages.impl.data.source.LanguagesLocalSource
 import soft.divan.financemanager.feature.languages.impl.data.source.impl.LanguageLocalSourceImpl
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
 val Context.languagesDataStore: DataStore<Preferences> by preferencesDataStore("language_preferences")
@@ -32,3 +33,7 @@ object LanguagesModule {
         return LanguageLocalSourceImpl(dataStore)
     }
 }
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class LanguagesDataStore
