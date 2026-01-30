@@ -11,6 +11,7 @@ import soft.divan.financemanager.core.data.Synchronizer
 import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.data.error.DataError
+import soft.divan.financemanager.core.data.mapper.TimeMapper
 import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.data.mapper.toDto
@@ -22,7 +23,6 @@ import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeApiCall
 import soft.divan.financemanager.core.data.util.safeDbCall
 import soft.divan.financemanager.core.data.util.safeDbFlow
-import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
@@ -112,12 +112,13 @@ class AccountRepositoryImpl @Inject constructor(
                     name = account.name,
                     balance = account.balance.toPlainString(),
                     currency = account.currency,
-                    createdAt = DateHelper.dataTimeForApi(account.createdAt),
-                    updatedAt = DateHelper.dataTimeForApi(account.updatedAt),
-                    syncStatus = if (accountEntity.serverId == null)
+                    createdAt = TimeMapper.toApi(account.createdAt),
+                    updatedAt = TimeMapper.toApi(account.updatedAt),
+                    syncStatus = if (accountEntity.serverId == null) {
                         SyncStatus.PENDING_CREATE
-                    else
+                    } else {
                         SyncStatus.PENDING_UPDATE
+                    }
                 )
             )
         }
@@ -126,6 +127,7 @@ class AccountRepositoryImpl @Inject constructor(
     /** Получаем аккаунт из БД и и проверяем есть ли у него транзакции если нет то помечаем в БД
      * как удаленный и запускаем синхронизацию удаления,
      * если на сервере аккаунта нету то просто удалем, если есть то удаляем на сервере и локально */
+    @Suppress("ReturnCount")
     override suspend fun deleteAccount(id: String): DomainResult<Unit> {
         val localResult = getLocalAccountOrFail(id)
 

@@ -39,8 +39,8 @@ import co.yml.charts.common.model.LegendsConfig
 import co.yml.charts.ui.piechart.charts.PieChart
 import co.yml.charts.ui.piechart.models.PieChartConfig
 import co.yml.charts.ui.piechart.models.PieChartData
-import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.extension.pretty
+import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.analysis.impl.R
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisUiState
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.mockTransactionUiStateSuccess
@@ -154,7 +154,7 @@ private fun PeriodSelector(
     Column {
         DateItem(
             label = stringResource(R.string.period_start),
-            value = DateHelper.formatDateForDisplay(startDate),
+            value = UiDateFormatter.formatDate(startDate),
             onClick = { isShowStartPicker.value = true }
         )
 
@@ -162,7 +162,7 @@ private fun PeriodSelector(
 
         DateItem(
             label = stringResource(R.string.period_end),
-            value = DateHelper.formatDateForDisplay(endDate),
+            value = UiDateFormatter.formatDate(endDate),
             onClick = { isShowEndPicker.value = true }
         )
 

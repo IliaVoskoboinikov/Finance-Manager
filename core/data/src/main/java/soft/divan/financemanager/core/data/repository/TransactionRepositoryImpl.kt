@@ -10,6 +10,8 @@ import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.Syncable
 import soft.divan.financemanager.core.data.Synchronizer
 import soft.divan.financemanager.core.data.error.DataError
+import soft.divan.financemanager.core.data.mapper.ApiDateMapper
+import soft.divan.financemanager.core.data.mapper.TimeMapper
 import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.data.mapper.toDto
@@ -21,7 +23,6 @@ import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeApiCall
 import soft.divan.financemanager.core.data.util.safeDbCall
 import soft.divan.financemanager.core.data.util.safeDbFlow
-import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
@@ -31,6 +32,7 @@ import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
 import soft.divan.finansemanager.core.database.entity.TransactionEntity
 import soft.divan.finansemanager.core.database.model.SyncStatus
+import java.time.Instant
 import javax.inject.Inject
 
 class TransactionRepositoryImpl @Inject constructor(
@@ -65,9 +67,11 @@ class TransactionRepositoryImpl @Inject constructor(
     /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию на получение этих данныъ с сервера */
     override fun getTransactionsByAccountAndPeriod(
         accountId: String,
-        startDate: String,
-        endDate: String
+        startDate: Instant,
+        endDate: Instant
     ): Flow<DomainResult<List<Transaction>>> {
+        val startDate = ApiDateMapper.toApiDate(startDate)
+        val endDate = ApiDateMapper.toApiDate(endDate)
         applicationScope.launch(dispatcher + exceptionHandler) {
             pullTransactionsFromRemoteForAccount(
                 accountLocalId = accountId,
@@ -159,14 +163,15 @@ class TransactionRepositoryImpl @Inject constructor(
                     categoryId = transaction.categoryId,
                     currencyCode = transaction.currencyCode,
                     amount = transaction.amount.toPlainString(),
-                    transactionDate = DateHelper.dataTimeForApi(transaction.transactionDate),
+                    transactionDate = TimeMapper.toApi(transaction.transactionDate),
                     comment = transaction.comment.orEmpty(),
-                    createdAt = DateHelper.dataTimeForApi(transaction.createdAt),
-                    updatedAt = DateHelper.dataTimeForApi(transaction.updatedAt),
-                    syncStatus = if (transactionEntity.serverId == null)
+                    createdAt = TimeMapper.toApi(transaction.createdAt),
+                    updatedAt = TimeMapper.toApi(transaction.updatedAt),
+                    syncStatus = if (transactionEntity.serverId == null) {
                         SyncStatus.PENDING_CREATE
-                    else
+                    } else {
                         SyncStatus.PENDING_UPDATE
+                    }
                 )
             )
         }
@@ -222,8 +227,8 @@ class TransactionRepositoryImpl @Inject constructor(
         accountLocalDataSource.getAccounts().first().forEach { account ->
             pullTransactionsFromRemoteForAccount(
                 accountLocalId = account.localId,
-                startDate = DateHelper.formatApiDate(account.createdAt),
-                endDate = DateHelper.dateToApiFormat(DateHelper.getToday())
+                startDate = ApiDateMapper.toApiDate(Instant.parse(account.createdAt)),
+                endDate = ApiDateMapper.toApiDate(Instant.now())
             )
         }
     }

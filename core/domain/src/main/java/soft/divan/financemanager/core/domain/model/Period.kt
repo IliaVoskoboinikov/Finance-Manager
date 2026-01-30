@@ -1,8 +1,8 @@
 package soft.divan.financemanager.core.domain.model
 
-import java.time.LocalDate
+import java.time.Instant
 
 data class Period(
-    val startDate: LocalDate,
-    val endDate: LocalDate
+    val startDate: Instant,
+    val endDate: Instant
 )
