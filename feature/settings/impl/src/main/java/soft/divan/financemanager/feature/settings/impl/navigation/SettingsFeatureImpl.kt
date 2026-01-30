@@ -43,7 +43,6 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
     @Inject
     lateinit var synchronizationFeatureApi: SynchronizationFeatureApi
 
-
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
@@ -51,7 +50,6 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
         modifier: Modifier
     ) {
         navGraphBuilder.composable(scope.route()) {
-
             SettingsScreen(
                 modifier = modifier,
                 onNavigateToAboutTheProgram = {
@@ -82,49 +80,62 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
                     modifier = modifier,
                 )
             }
-
         }
 
-        designAppFeatureApi.registerGraph(
+        registerChildFeatures(
             navGraphBuilder = navGraphBuilder,
             navController = navController,
-            scope = scope.child(designAppFeatureApi.route),
+            scope = scope,
             modifier = modifier
+        )
+    }
+
+    private fun registerChildFeatures(
+        navGraphBuilder: NavGraphBuilder,
+        navController: NavHostController,
+        scope: RouteScope,
+        modifier: Modifier
+    ) {
+        designAppFeatureApi.registerGraph(
+            navGraphBuilder,
+            navController,
+            scope.child(designAppFeatureApi.route),
+            modifier
         )
 
         soundsFeatureApi.registerGraph(
-            navGraphBuilder = navGraphBuilder,
-            navController = navController,
-            scope = scope.child(soundsFeatureApi.route),
-            modifier = modifier
+            navGraphBuilder,
+            navController,
+            scope.child(soundsFeatureApi.route),
+            modifier
         )
 
         hapticsFeatureApi.registerGraph(
-            navGraphBuilder = navGraphBuilder,
-            navController = navController,
-            scope = scope.child(hapticsFeatureApi.route),
-            modifier = modifier
+            navGraphBuilder,
+            navController,
+            scope.child(hapticsFeatureApi.route),
+            modifier
         )
 
         securityFeatureApi.registerGraph(
-            navGraphBuilder = navGraphBuilder,
-            navController = navController,
-            scope = scope.child(securityFeatureApi.route),
-            modifier = modifier
+            navGraphBuilder,
+            navController,
+            scope.child(securityFeatureApi.route),
+            modifier
         )
 
         synchronizationFeatureApi.registerGraph(
-            navGraphBuilder = navGraphBuilder,
-            navController = navController,
-            scope = scope.child(synchronizationFeatureApi.route),
-            modifier = modifier
+            navGraphBuilder,
+            navController,
+            scope.child(synchronizationFeatureApi.route),
+            modifier
         )
 
         languagesFeatureApi.registerGraph(
-            navGraphBuilder = navGraphBuilder,
-            navController = navController,
-            scope = scope.child(languagesFeatureApi.route),
-            modifier = modifier
+            navGraphBuilder,
+            navController,
+            scope.child(languagesFeatureApi.route),
+            modifier
         )
     }
 }
