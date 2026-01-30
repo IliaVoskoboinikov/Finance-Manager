@@ -6,8 +6,6 @@ import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.finansemanager.core.database.entity.TransactionEntity
 import soft.divan.finansemanager.core.database.model.SyncStatus
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 fun TransactionDto.toEntity(
     localId: String,
@@ -42,19 +40,10 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     currencyCode = currencyCode,
     categoryId = categoryId,
     amount = amount.toBigDecimal(),
-    transactionDate = LocalDateTime.parse(transactionDate, formatter),
+    transactionDate = TimeMapper.fromApi(transactionDate),
     comment = comment,
-    createdAt = LocalDateTime.parse(createdAt, formatter),
-    updatedAt = LocalDateTime.parse(updatedAt, formatter)
-)
-
-
-fun Transaction.toDto(accountIdServer: Int): TransactionRequestDto = TransactionRequestDto(
-    accountId = accountIdServer,
-    categoryId = categoryId,
-    amount = amount.toString(),
-    transactionDate = transactionDate.atOffset(ZoneOffset.UTC).format(formatter),
-    comment = comment
+    createdAt = TimeMapper.fromApi(createdAt),
+    updatedAt = TimeMapper.fromApi(updatedAt)
 )
 
 fun Transaction.toEntity(
@@ -69,13 +58,12 @@ fun Transaction.toEntity(
     categoryId = categoryId,
     currencyCode = currencyCode,
     amount = amount.toPlainString(),
-    transactionDate = transactionDate.atOffset(ZoneOffset.UTC).format(formatter),
+    transactionDate = TimeMapper.toApi(transactionDate),
     comment = comment.orEmpty(),
-    createdAt = createdAt.atOffset(ZoneOffset.UTC).format(formatter),
-    updatedAt = updatedAt.atOffset(ZoneOffset.UTC).format(formatter),
+    createdAt = TimeMapper.toApi(createdAt),
+    updatedAt = TimeMapper.toApi(updatedAt),
     syncStatus = syncStatus
 )
-
 
 fun TransactionResponseCreateDto.toEntity(
     localId: String,

@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
-import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Period
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
@@ -22,6 +21,7 @@ import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
 import soft.divan.financemanager.feature.transactions_today.impl.R
 import soft.divan.financemanager.feature.transactionstoday.impl.presenter.mapper.toUi
 import soft.divan.financemanager.feature.transactionstoday.impl.presenter.model.TransactionsTodayUiState
+import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,7 +35,7 @@ class TransactionsTodayViewModel @Inject constructor(
     val uiState: StateFlow<TransactionsTodayUiState> = _uiState.asStateFlow()
 
     fun loadTodayTransactions(isIncome: Boolean) {
-        val today = DateHelper.getToday()
+        val today = Instant.now()
         getTransactionsByPeriodUseCase(
             isIncome = isIncome,
             period = Period(today, today),

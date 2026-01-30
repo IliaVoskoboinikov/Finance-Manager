@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
@@ -99,7 +98,6 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
         isIncome: Boolean
     ): Flow<DomainResult<Triple<List<Transaction>, CurrencySymbol, List<Category>>>> =
         when (baseResult) {
-
             is DomainResult.Failure -> {
                 // Ошибка базовых данных → просто пробрасываем
                 flowOf(baseResult)
@@ -142,18 +140,14 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
         currency: CurrencySymbol,
         categories: List<Category>
     ): Flow<DomainResult<Triple<List<Transaction>, CurrencySymbol, List<Category>>>> {
-
         val categoriesMap = categories.associateBy { it.id }
-
-        val startDateApi = DateHelper.dateToApiFormat(period.startDate)
-        val endDateApi = DateHelper.dateToApiFormat(period.endDate)
 
         return combine(
             accounts.map { account ->
                 transactionRepository.getTransactionsByAccountAndPeriod(
                     accountId = account.id,
-                    startDate = startDateApi,
-                    endDate = endDateApi
+                    startDate = period.startDate,
+                    endDate = period.endDate
                 )
             }
         ) { results ->
