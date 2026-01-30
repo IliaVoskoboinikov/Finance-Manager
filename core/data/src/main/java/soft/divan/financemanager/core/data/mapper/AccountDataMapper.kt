@@ -6,9 +6,6 @@ import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.finansemanager.core.database.entity.AccountEntity
 import soft.divan.finansemanager.core.database.model.SyncStatus
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 fun AccountDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity = AccountEntity(
     localId = localId,
@@ -27,20 +24,18 @@ fun Account.toEntity(serverId: Int?, syncStatus: SyncStatus): AccountEntity = Ac
     name = name,
     balance = balance.toString(),
     currency = currency,
-    createdAt = createdAt.atOffset(ZoneOffset.UTC).format(formatter),
-    updatedAt = updatedAt.atOffset(ZoneOffset.UTC).format(formatter),
+    createdAt = TimeMapper.toApi(createdAt),
+    updatedAt = TimeMapper.toApi(updatedAt),
     syncStatus = syncStatus
 )
-
-val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
 fun AccountEntity.toDomain(): Account = Account(
     id = localId,
     name = name,
     balance = balance.toBigDecimal(),
     currency = currency,
-    createdAt = LocalDateTime.parse(createdAt, formatter),
-    updatedAt = LocalDateTime.parse(updatedAt, formatter)
+    createdAt = TimeMapper.fromApi(createdAt),
+    updatedAt = TimeMapper.fromApi(updatedAt)
 )
 
 fun Account.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(

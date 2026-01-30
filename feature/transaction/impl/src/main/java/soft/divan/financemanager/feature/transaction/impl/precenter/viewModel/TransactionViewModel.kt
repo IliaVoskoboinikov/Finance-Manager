@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.util.generateUUID
-import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
+import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.haptics.api.domain.HapticType
 import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
 import soft.divan.financemanager.feature.sounds.api.domain.SoundPlayer
@@ -122,10 +122,10 @@ class TransactionViewModel @Inject constructor(
             accountId = account.id,
             category = category,
             amount = "0",
-            date = DateHelper.formatDateForDisplay(LocalDate.now()),
-            time = DateHelper.formatTimeForDisplay(LocalTime.now()),
-            createdAt = DateHelper.formatDateTimeForDisplay(now),
-            updatedAt = DateHelper.formatDateTimeForDisplay(now),
+            date = UiDateFormatter.formatDate(LocalDate.now()),
+            time = UiDateFormatter.formatTime(LocalTime.now()),
+            createdAt = UiDateFormatter.formatDateTime(now),
+            updatedAt = UiDateFormatter.formatDateTime(now),
             currencyCode = account.currency,
             comment = "",
             mode = TransactionMode.Create
@@ -154,7 +154,7 @@ class TransactionViewModel @Inject constructor(
             _uiState.update { TransactionUiState.Loading }
 
             val updated = current.copy(
-                updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now())
+                updatedAt = UiDateFormatter.formatDateTime(LocalDateTime.now())
             ).toDomain()
 
             val result = when (mode) {
@@ -183,12 +183,13 @@ class TransactionViewModel @Inject constructor(
     }
 
     fun updateDate(date: LocalDate) {
-        transaction = transaction?.copy(date = DateHelper.formatDateForDisplay(date))
+        transaction =
+            transaction?.copy(date = UiDateFormatter.formatDate(date))
         publishSuccess()
     }
 
     fun updateTime(time: LocalTime) {
-        transaction = transaction?.copy(time = DateHelper.formatTimeForDisplay(time))
+        transaction = transaction?.copy(time = UiDateFormatter.formatTime(time))
         publishSuccess()
     }
 

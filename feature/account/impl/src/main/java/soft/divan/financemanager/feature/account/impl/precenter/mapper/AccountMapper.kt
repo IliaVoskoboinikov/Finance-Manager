@@ -1,7 +1,7 @@
 package soft.divan.financemanager.feature.account.impl.precenter.mapper
 
-import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUi
 
 fun AccountUi.toDomain(): Account {
@@ -10,8 +10,8 @@ fun AccountUi.toDomain(): Account {
         name = name,
         balance = balance.toBigDecimal(),
         currency = currency,
-        createdAt = DateHelper.parseDisplayDateTime(createdAt),
-        updatedAt = DateHelper.parseDisplayDateTime(createdAt),
+        createdAt = UiDateFormatter.parse(createdAt),
+        updatedAt = UiDateFormatter.parse(updatedAt),
     )
 }
 
@@ -21,7 +21,7 @@ fun Account.toUi(): AccountUi {
         name = name,
         balance = balance.stripTrailingZeros().toPlainString(),
         currency = currency,
-        createdAt = DateHelper.formatTimeForDisplay(createdAt),
-        updatedAt = DateHelper.formatTimeForDisplay(updatedAt),
+        createdAt = UiDateFormatter.formatDateTime(createdAt),
+        updatedAt = UiDateFormatter.formatDateTime(updatedAt),
     )
 }

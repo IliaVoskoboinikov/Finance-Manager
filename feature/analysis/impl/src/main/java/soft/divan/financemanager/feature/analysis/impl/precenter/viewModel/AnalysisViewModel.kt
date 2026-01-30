@@ -16,11 +16,11 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
-import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Period
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
+import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.analysis.impl.R
 import soft.divan.financemanager.feature.analysis.impl.domain.usecase.GetCategoryPieChartDataUseCase
 import soft.divan.financemanager.feature.analysis.impl.navigation.IS_INCOME_KEY
@@ -28,7 +28,6 @@ import soft.divan.financemanager.feature.analysis.impl.precenter.mapper.toPieCha
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisUiState
 import java.time.LocalDate
 import javax.inject.Inject
-
 
 @HiltViewModel
 class AnalysisViewModel @Inject constructor(
@@ -43,10 +42,10 @@ class AnalysisViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Loading)
     val uiState: StateFlow<AnalysisUiState> = _uiState.asStateFlow()
 
-    private val _startDate = MutableStateFlow(DateHelper.getCurrentMonthStart())
+    private val _startDate = MutableStateFlow(LocalDate.now().withDayOfMonth(1))
     val startDate: StateFlow<LocalDate> = _startDate.asStateFlow()
 
-    private val _endDate = MutableStateFlow(DateHelper.getToday())
+    private val _endDate = MutableStateFlow(LocalDate.now())
     val endDate: StateFlow<LocalDate> = _endDate.asStateFlow()
 
     init {
@@ -60,7 +59,10 @@ class AnalysisViewModel @Inject constructor(
             .flatMapLatest { (start, end) ->
                 getTransactionsByPeriodUseCase(
                     isIncome = isIncome,
-                    period = Period(start, end)
+                    period = Period(
+                        UiDateFormatter.formateOfDay(start),
+                        UiDateFormatter.formateOfDay(end)
+                    )
                 )
             }
             .onEach { result ->
@@ -75,7 +77,7 @@ class AnalysisViewModel @Inject constructor(
                             _uiState.update {
                                 AnalysisUiState.Success(
                                     sumTransaction = "$sum ${data.second.symbol}",
-                                    categoryPieSlice = pie.toPieChartData()
+                                    categoryPieSlice = pie.toPieChartData(),
                                 )
                             }
                         }

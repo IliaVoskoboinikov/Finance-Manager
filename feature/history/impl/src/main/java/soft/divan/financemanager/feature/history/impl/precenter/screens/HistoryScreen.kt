@@ -26,7 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import soft.divan.financemanager.core.domain.data.DateHelper
+import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.history.impl.R
 import soft.divan.financemanager.feature.history.impl.precenter.model.HistoryUiState
 import soft.divan.financemanager.feature.history.impl.precenter.model.UiTransaction
@@ -158,7 +158,7 @@ private fun PeriodSelector(
     Column {
         DateItem(
             label = stringResource(R.string.start),
-            value = DateHelper.formatDateForDisplay(startDate),
+            value = UiDateFormatter.formatDate(startDate),
             onClick = { showStartPicker.value = true }
         )
 
@@ -166,7 +166,7 @@ private fun PeriodSelector(
 
         DateItem(
             label = stringResource(R.string.end),
-            value = DateHelper.formatDateForDisplay(endDate),
+            value = UiDateFormatter.formatDate(endDate),
             onClick = { showEndPicker.value = true }
         )
 

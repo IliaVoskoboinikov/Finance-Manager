@@ -13,10 +13,10 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import soft.divan.financemanager.core.domain.data.DateHelper
 import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.account.impl.R
 import soft.divan.financemanager.feature.account.impl.domain.usecase.CreateAccountUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.DeleteAccountUseCase
@@ -90,8 +90,8 @@ class AccountViewModel @Inject constructor(
             name = "",
             balance = "0",
             currency = CurrencySymbol.RUB.symbol,
-            createdAt = DateHelper.formatDateTimeForDisplay(now),
-            updatedAt = DateHelper.formatDateTimeForDisplay(now),
+            createdAt = UiDateFormatter.formatDateTime(now),
+            updatedAt = UiDateFormatter.formatDateTime(now),
         )
 
         publishSuccess()
@@ -109,7 +109,6 @@ class AccountViewModel @Inject constructor(
             )
         }
     }
-
 
     fun updateName(name: String) {
         account = account?.copy(name = name)
@@ -133,7 +132,7 @@ class AccountViewModel @Inject constructor(
             _uiState.update { AccountUiState.Loading }
 
             val updated = current.copy(
-                updatedAt = DateHelper.formatDateTimeForDisplay(LocalDateTime.now())
+                updatedAt = UiDateFormatter.formatDateTime(LocalDateTime.now())
             )
 
             val result = when (mode) {

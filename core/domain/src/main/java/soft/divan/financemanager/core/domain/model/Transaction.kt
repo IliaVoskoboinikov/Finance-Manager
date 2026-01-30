@@ -1,7 +1,7 @@
 package soft.divan.financemanager.core.domain.model
 
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 
 data class Transaction(
     val id: String,
@@ -9,8 +9,8 @@ data class Transaction(
     val currencyCode: String,
     val categoryId: Int,
     val amount: BigDecimal,
-    val transactionDate: LocalDateTime,
+    val transactionDate: Instant,
     val comment: String?,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val createdAt: Instant,
+    val updatedAt: Instant
 )

@@ -9,14 +9,18 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import soft.divan.financemanager.core.domain.data.DateHelper.toDateTimeString
 import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
+import soft.divan.financemanager.core.domain.utli.UiDatePatterns
 import soft.divan.financemanager.feature.synchronization.impl.R
 import soft.divan.financemanager.feature.synchronization.impl.precenter.model.SynchronizationUiState
 import soft.divan.financemanager.sync.domain.usecase.ObserveLastSyncTimeUseCase
 import soft.divan.financemanager.sync.domain.usecase.ObserveSyncIntervalHoursUseCase
 import soft.divan.financemanager.sync.domain.usecase.SetSyncIntervalHoursUseCase
 import soft.divan.financemanager.sync.worker.BASE_SYNCHRONIZATION_PERIOD_IN_HOURS
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -51,3 +55,14 @@ class SynchronizationViewModel @Inject constructor(
         }
     }
 }
+
+fun Long.toDateTimeString(
+    formatter: DateTimeFormatter = DateTimeFormatter.ofPattern(
+        UiDatePatterns.DISPLAY_DATE_TIME,
+        Locale.getDefault()
+    ),
+    zoneId: ZoneId = ZoneId.systemDefault()
+): String =
+    Instant.ofEpochMilli(this)
+        .atZone(zoneId)
+        .format(formatter)

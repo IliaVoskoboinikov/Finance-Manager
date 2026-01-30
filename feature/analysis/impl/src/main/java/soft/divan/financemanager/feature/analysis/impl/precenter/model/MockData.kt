@@ -26,7 +26,7 @@ val mockTransactionUiStateSuccess = AnalysisUiState.Success(
         ),
         plotType = PlotType.Bar
     ),
-    )
+)
 
 val mockTransactionUiStateLoading = AnalysisUiState.Loading
 
