@@ -9,6 +9,6 @@ class DeleteAccountUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : DeleteAccountUseCase {
     override suspend fun invoke(id: String): DomainResult<Unit> {
-        return accountRepository.deleteAccount(id)
+        return accountRepository.delete(id)
     }
 }

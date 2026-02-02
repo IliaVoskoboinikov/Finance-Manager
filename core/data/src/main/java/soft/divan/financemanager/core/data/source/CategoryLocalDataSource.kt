@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import soft.divan.finansemanager.core.database.entity.CategoryEntity
 
 interface CategoryLocalDataSource {
-    suspend fun getCategories(): Flow<List<CategoryEntity>>
-    suspend fun insertCategories(categories: List<CategoryEntity>)
-    suspend fun getCategoriesByType(isIncome: Boolean): Flow<List<CategoryEntity>>
+    suspend fun insert(categories: List<CategoryEntity>)
+    suspend fun getAll(): Flow<List<CategoryEntity>>
+    suspend fun getByType(isIncome: Boolean): Flow<List<CategoryEntity>>
 }

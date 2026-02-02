@@ -10,6 +10,6 @@ class UpdateTransactionUseCaseImpl @Inject constructor(
     val transactionRepository: TransactionRepository
 ) : UpdateTransactionUseCase {
     override suspend fun invoke(transaction: Transaction): DomainResult<Unit> {
-        return transactionRepository.updateTransaction(transaction)
+        return transactionRepository.update(transaction)
     }
 }

@@ -13,17 +13,18 @@ import soft.divan.financemanager.core.data.dto.TransactionRequestDto
 import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
 
 interface TransactionApiService {
+
+    @POST("v1/transactions")
+    suspend fun createTransaction(
+        @Body request: TransactionRequestDto
+    ): Response<TransactionResponseCreateDto>
+
     @GET("v1/transactions/account/{accountId}/period")
     suspend fun getTransactionsByAccountAndPeriod(
         @Path("accountId") accountId: Int,
         @Query("startDate") startDate: String? = null,
         @Query("endDate") endDate: String? = null
     ): Response<List<TransactionDto>>
-
-    @POST("v1/transactions")
-    suspend fun createTransaction(
-        @Body request: TransactionRequestDto
-    ): Response<TransactionResponseCreateDto>
 
     @GET("v1/transactions/{id}")
     suspend fun getTransaction(

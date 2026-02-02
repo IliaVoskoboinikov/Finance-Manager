@@ -11,6 +11,6 @@ class GetCategoriesUseCaseImpl @Inject constructor(
     private val categoryRepository: CategoryRepository
 ) : GetCategoriesUseCase {
     override fun invoke(): Flow<DomainResult<List<Category>>> {
-        return categoryRepository.getCategories()
+        return categoryRepository.getAll()
     }
 }

@@ -20,8 +20,8 @@ import soft.divan.finansemanager.core.database.model.SyncStatus
 import javax.inject.Inject
 
 class AccountSyncManagerImpl @Inject constructor(
-    private val accountRemoteDataSource: AccountRemoteDataSource,
-    private val accountLocalDataSource: AccountLocalDataSource,
+    private val remoteDataSource: AccountRemoteDataSource,
+    private val localDataSource: AccountLocalDataSource,
     private val errorLogger: ErrorLogger
 ) : AccountSyncManager, Syncable {
 
@@ -35,14 +35,14 @@ class AccountSyncManagerImpl @Inject constructor(
 
     /** Получаем данные с сервера и обновляем локальную БД разрешая конфликты */
     override suspend fun pullServerData() {
-        safeApiCall(errorLogger) { accountRemoteDataSource.getAccounts() }.onSuccess { accountDtos ->
+        safeApiCall(errorLogger) { remoteDataSource.getAll() }.onSuccess { accountDtos ->
             accountDtos.forEach { accountDto ->
                 val resultDb =
-                    safeDbCall(errorLogger) { accountLocalDataSource.getAccountByServerId(accountDto.id) }
+                    safeDbCall(errorLogger) { localDataSource.getByServerId(accountDto.id) }
                 if (resultDb is DomainResult.Success && resultDb.data == null) {
                     /** новаый аккаунт на сервере → создаем его локально*/
                     safeDbCall(errorLogger) {
-                        accountLocalDataSource.createAccount(
+                        localDataSource.create(
                             accountDto.toEntity(
                                 localId = generateUUID(),
                                 syncStatus = SyncStatus.SYNCED
@@ -63,7 +63,7 @@ class AccountSyncManagerImpl @Inject constructor(
     /** Создаем на серевере и обновляем локальную БД */
     override suspend fun syncCreate(accountDto: CreateAccountRequestDto, localId: String) {
         safeApiCall(errorLogger) {
-            accountRemoteDataSource.createAccount(accountDto)
+            remoteDataSource.create(accountDto)
         }.onSuccess { accountDto ->
             updateLocalFromRemote(accountDto = accountDto, localId = localId)
         }
@@ -73,7 +73,7 @@ class AccountSyncManagerImpl @Inject constructor(
     override suspend fun syncUpdate(accountEntity: AccountEntity) {
         accountEntity.serverId?.let { idAccount ->
             safeApiCall(errorLogger) {
-                accountRemoteDataSource.updateAccount(
+                remoteDataSource.update(
                     id = idAccount,
                     account = accountEntity.toDto()
                 )
@@ -85,19 +85,20 @@ class AccountSyncManagerImpl @Inject constructor(
 
     /** Удаляем на сервере и удалем локально из БД */
     override suspend fun syncDelete(accountEntity: AccountEntity) {
-        // todo улучшить нейминг удаления по локал айди
         if (accountEntity.serverId == null) {
-            safeDbCall(errorLogger) { accountLocalDataSource.deleteAccount(accountEntity.localId) }
+            deleteLocalAccount(accountEntity.localId)
         } else {
-            safeApiCall(errorLogger) { accountRemoteDataSource.delete(accountEntity.serverId!!) }.onSuccess {
-                safeDbCall(errorLogger) { accountLocalDataSource.deleteAccount(accountEntity.localId) }
+            safeApiCall(errorLogger) {
+                remoteDataSource.delete(accountEntity.serverId!!)
+            }.onSuccess {
+                deleteLocalAccount(accountEntity.localId)
             }
         }
     }
 
     /** Получаем все локальные данныве которые ожидают синхронизацю и запускаем синхронизацию */
     private suspend fun pushLocalChanges() {
-        safeDbCall(errorLogger) { accountLocalDataSource.getPendingSync() }.onSuccess { accountEntities ->
+        safeDbCall(errorLogger) { localDataSource.getPendingSync() }.onSuccess { accountEntities ->
             accountEntities.forEach { accountEntity ->
                 when (accountEntity.syncStatus) {
                     SyncStatus.SYNCED -> Unit
@@ -117,12 +118,18 @@ class AccountSyncManagerImpl @Inject constructor(
     /** Унифицируем обновление локального аккаунта после ответа сервера */
     private suspend fun updateLocalFromRemote(accountDto: AccountDto, localId: String) {
         safeDbCall(errorLogger) {
-            accountLocalDataSource.updateAccount(
+            localDataSource.update(
                 accountDto.toEntity(
                     localId = localId,
                     syncStatus = SyncStatus.SYNCED
                 )
             )
+        }
+    }
+
+    private suspend fun deleteLocalAccount(localId: String) {
+        safeDbCall(errorLogger) {
+            localDataSource.delete(localId)
         }
     }
 }

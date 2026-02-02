@@ -10,12 +10,9 @@ class CategoryRemoteDataSourceImpl @Inject constructor(
     private val categoryApiService: CategoryApiService,
 ) : CategoryRemoteDataSource {
 
-    override suspend fun getCategories(): Response<List<CategoryDto>> {
-        return categoryApiService.getCategories()
-    }
+    override suspend fun getAll(): Response<List<CategoryDto>> = categoryApiService.getAll()
 
-    override suspend fun getCategoriesByType(isIncome: Boolean): Response<List<CategoryDto>> {
-        return categoryApiService.getCategoriesByType(isIncome)
-    }
 
+    override suspend fun getByType(isIncome: Boolean): Response<List<CategoryDto>> =
+        categoryApiService.getByType(isIncome)
 }

@@ -12,28 +12,15 @@ class AccountRemoteDataSourceImpl @Inject constructor(
     private val accountApiService: AccountApiService,
 ) : AccountRemoteDataSource {
 
-    override suspend fun getAccounts(): Response<List<AccountDto>> {
-        return accountApiService.getAccounts()
-    }
+    override suspend fun create(createAccountRequestDto: CreateAccountRequestDto): Response<AccountDto> =
+        accountApiService.createAccount(createAccountRequestDto)
 
-    override suspend fun createAccount(createAccountRequestDto: CreateAccountRequestDto): Response<AccountDto> {
-        return accountApiService.createAccount(createAccountRequestDto)
-    }
+    override suspend fun getAll(): Response<List<AccountDto>> = accountApiService.getAccounts()
 
-    override suspend fun updateAccount(
-        id: Int,
-        account: CreateAccountRequestDto
-    ): Response<AccountDto> {
-        return accountApiService.updateAccount(id, account)
-    }
+    override suspend fun getById(id: Int): Response<AccountWithStatsDto> = accountApiService.getById(id)
 
-    override suspend fun delete(id: Int): Response<Unit> {
-        return accountApiService.delete(id)
-    }
+    override suspend fun update(id: Int, account: CreateAccountRequestDto): Response<AccountDto> =
+        accountApiService.updateAccount(id, account)
 
-    override suspend fun getById(id: Int): Response<AccountWithStatsDto> {
-        return accountApiService.getById(id)
-    }
-
-
+    override suspend fun delete(id: Int): Response<Unit> = accountApiService.delete(id)
 }

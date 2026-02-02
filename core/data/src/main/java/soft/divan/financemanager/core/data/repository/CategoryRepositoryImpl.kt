@@ -17,42 +17,41 @@ import soft.divan.financemanager.core.data.util.safeDbFlow
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
 import javax.inject.Inject
 
 class CategoryRepositoryImpl @Inject constructor(
-    private val categoryRemoteDataSource: CategoryRemoteDataSource,
-    private val categoryLocalDataSource: CategoryLocalDataSource,
-    private val categorySyncManager: CategorySyncManager,
+    private val remoteDataSource: CategoryRemoteDataSource,
+    private val localDataSource: CategoryLocalDataSource,
+    private val syncManager: CategorySyncManager,
     private val applicationScope: CoroutineScope,
     private val dispatcher: CoroutineDispatcher,
     private val exceptionHandler: CoroutineExceptionHandler,
     private val errorLogger: ErrorLogger
 ) : CategoryRepository {
 
-    override fun getCategories(): Flow<DomainResult<List<Category>>> {
+    override fun getAll(): Flow<DomainResult<List<Category>>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
-            categorySyncManager.pullServerData()
+            syncManager.pullServerData()
         }
         return safeDbFlow(errorLogger) {
-            categoryLocalDataSource.getCategories().map { list -> list.map { it.toDomain() } }
+            localDataSource.getAll().map { list -> list.map { it.toDomain() } }
         }
     }
 
-    override fun getCategoriesByType(isIncome: Boolean): Flow<DomainResult<List<Category>>> {
+    override fun getByType(isIncome: Boolean): Flow<DomainResult<List<Category>>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
-            val resultApi =
-                safeApiCall(errorLogger) { categoryRemoteDataSource.getCategoriesByType(isIncome) }
-            if (resultApi is DomainResult.Success) {
+            safeApiCall(errorLogger) {
+                remoteDataSource.getByType(isIncome)
+            }.onSuccess { categoryDtos ->
                 safeDbCall(errorLogger) {
-                    categoryLocalDataSource.insertCategories(resultApi.data.map { it.toEntity() })
+                    localDataSource.insert(categoryDtos.map { it.toEntity() })
                 }
             }
         }
-
         return safeDbFlow(errorLogger) {
-            categoryLocalDataSource.getCategoriesByType(isIncome)
-                .map { list -> list.map { it.toDomain() } }
+            localDataSource.getByType(isIncome).map { list -> list.map { it.toDomain() } }
         }
     }
 }

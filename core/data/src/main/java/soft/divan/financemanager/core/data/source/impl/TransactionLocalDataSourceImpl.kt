@@ -10,43 +10,34 @@ class TransactionLocalDataSourceImpl @Inject constructor(
     private val transactionDao: TransactionDao,
 ) : TransactionLocalDataSource {
 
-    override suspend fun getTransactionsByAccountAndPeriod(
+    override suspend fun create(transaction: TransactionEntity) =
+        transactionDao.insert(transaction)
+
+    override suspend fun getByAccountAndPeriod(
         accountId: String,
         startDate: String,
         endDate: String
-    ): Flow<List<TransactionEntity>> {
-        return transactionDao.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
-    }
+    ): Flow<List<TransactionEntity>> =
+        transactionDao.getByAccountAndPeriod(accountId, startDate, endDate)
 
-    override suspend fun getByAccountId(accountId: String): List<TransactionEntity> {
-        return transactionDao.getByAccountId(accountId)
-    }
 
-    override suspend fun createTransaction(transaction: TransactionEntity) {
-        transactionDao.insert(transaction)
-    }
+    override suspend fun getByAccountId(accountId: String): List<TransactionEntity> =
+        transactionDao.getByAccountId(accountId)
 
-    override suspend fun deleteTransaction(localId: String) {
-        transactionDao.deleteTransaction(localId)
-    }
 
-    override suspend fun getTransactionByLocalId(localId: String): TransactionEntity? {
-        return transactionDao.getTransactionByLocalId(localId)
-    }
+    override suspend fun getByLocalId(localId: String): TransactionEntity? =
+        transactionDao.getByLocalId(localId)
 
-    override suspend fun getTransactionByServerId(id: Int): TransactionEntity? {
-        return transactionDao.getTransactionByServerId(id)
-    }
 
-    override suspend fun updateTransaction(transaction: TransactionEntity) {
-        return transactionDao.updateTransaction(transaction)
-    }
+    override suspend fun getByServerId(id: Int): TransactionEntity? = transactionDao.getByServerId(id)
 
-    override suspend fun getTransactionsByServerIds(serverIds: List<Int>): List<TransactionEntity> {
-        if (serverIds.isEmpty()) return emptyList()
-        return transactionDao.getTransactionsByServerIds(serverIds)
-    }
+    override suspend fun getByServerIds(serverIds: List<Int>): List<TransactionEntity> =
+        if (serverIds.isEmpty()) emptyList() else transactionDao.getByServerIds(serverIds)
+
 
     override suspend fun getPendingSync(): List<TransactionEntity> = transactionDao.getPendingSync()
 
+    override suspend fun update(transaction: TransactionEntity) = transactionDao.update(transaction)
+
+    override suspend fun delete(localId: String) = transactionDao.delete(localId)
 }

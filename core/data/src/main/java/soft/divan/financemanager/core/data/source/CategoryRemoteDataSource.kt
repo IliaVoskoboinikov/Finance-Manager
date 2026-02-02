@@ -4,6 +4,6 @@ import retrofit2.Response
 import soft.divan.financemanager.core.data.dto.CategoryDto
 
 interface CategoryRemoteDataSource {
-    suspend fun getCategories(): Response<List<CategoryDto>>
-    suspend fun getCategoriesByType(isIncome: Boolean): Response<List<CategoryDto>>
+    suspend fun getAll(): Response<List<CategoryDto>>
+    suspend fun getByType(isIncome: Boolean): Response<List<CategoryDto>>
 }

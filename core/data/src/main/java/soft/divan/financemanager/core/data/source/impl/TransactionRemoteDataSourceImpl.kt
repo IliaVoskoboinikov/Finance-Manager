@@ -12,30 +12,21 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
     private val transactionApiService: TransactionApiService,
 ) : TransactionRemoteDataSource {
 
-    override suspend fun getTransactionsByAccountAndPeriod(
+    override suspend fun create(request: TransactionRequestDto): Response<TransactionResponseCreateDto> =
+        transactionApiService.createTransaction(request)
+
+    override suspend fun getByAccountAndPeriod(
         accountId: Int,
         startDate: String?,
         endDate: String?
-    ): Response<List<TransactionDto>> {
-        return transactionApiService.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
-    }
+    ): Response<List<TransactionDto>> =
+        transactionApiService.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
 
-    override suspend fun createTransaction(request: TransactionRequestDto): Response<TransactionResponseCreateDto> {
-        return transactionApiService.createTransaction(request)
-    }
+    override suspend fun get(id: Int): Response<TransactionDto> =
+        transactionApiService.getTransaction(id)
 
-    override suspend fun getTransaction(id: Int): Response<TransactionDto> {
-        return transactionApiService.getTransaction(id)
-    }
+    override suspend fun update(id: Int, transaction: TransactionRequestDto): Response<TransactionDto> =
+        transactionApiService.updateTransaction(id, transaction)
 
-    override suspend fun updateTransaction(
-        id: Int,
-        transaction: TransactionRequestDto
-    ): Response<TransactionDto> {
-        return transactionApiService.updateTransaction(id, transaction)
-    }
-
-    override suspend fun delete(id: Int): Response<Unit> {
-        return transactionApiService.deleteTransaction(id)
-    }
+    override suspend fun delete(id: Int): Response<Unit> = transactionApiService.deleteTransaction(id)
 }

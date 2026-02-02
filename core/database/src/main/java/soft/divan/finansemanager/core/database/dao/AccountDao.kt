@@ -10,28 +10,26 @@ import soft.divan.finansemanager.core.database.entity.AccountEntity
 
 @Dao
 interface AccountDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertAccounts(accounts: List<AccountEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(account: AccountEntity)
 
     @Query("SELECT * FROM account")
-    fun getAccounts(): Flow<List<AccountEntity>>
+    fun getAll(): Flow<List<AccountEntity>>
 
     @Query("SELECT * FROM account WHERE localId = :id")
-    suspend fun getById(id: String): AccountEntity?
+    suspend fun getByLocalId(id: String): AccountEntity?
 
     @Query("SELECT * FROM account WHERE serverId = :id")
     suspend fun getByServerId(id: Int): AccountEntity?
 
-    @Query("DELETE FROM account WHERE localId = :id")
-    suspend fun delete(id: String)
+    @Query("SELECT * FROM account WHERE syncStatus != 'SYNCED'")
+    suspend fun getPendingSync(): List<AccountEntity>
 
     @Update
     suspend fun update(account: AccountEntity)
 
-    @Query("SELECT * FROM account WHERE syncStatus != 'SYNCED'")
-    suspend fun getPendingSync(): List<AccountEntity>
+    @Query("DELETE FROM account WHERE localId = :id")
+    suspend fun delete(id: String)
 
 }
