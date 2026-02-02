@@ -10,13 +10,10 @@ import soft.divan.finansemanager.core.database.entity.CategoryEntity
 @Dao
 interface CategoryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertCategories(categories: List<CategoryEntity>)
+    suspend fun insertAll(categories: List<CategoryEntity>)
 
     @Query("SELECT * FROM categories")
-    fun getCategories(): Flow<List<CategoryEntity>>
-
-    @Query("SELECT * FROM categories WHERE id = :id")
-    fun getById(id: Int): CategoryEntity
+    fun getAll(): Flow<List<CategoryEntity>>
 
     @Query("SELECT * FROM categories WHERE isIncome = :isIncome ORDER BY name ASC")
     fun getByType(isIncome: Boolean): Flow<List<CategoryEntity>>

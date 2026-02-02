@@ -16,13 +16,13 @@ class CurrencyLocalDataSourceImpl @Inject constructor(
 
     private val key = stringPreferencesKey("app_currency")
 
-    override fun getCurrency(): Flow<CurrencySymbol> {
+    override fun get(): Flow<CurrencySymbol> {
         return dataStore.data.map { prefs ->
             prefs[key]?.toEnumOrNull<CurrencySymbol>() ?: CurrencySymbol.RUB
         }
     }
 
-    override suspend fun updateCurrency(currency: CurrencySymbol) {
+    override suspend fun update(currency: CurrencySymbol) {
         dataStore.edit { prefs ->
             prefs[key] = currency.code
         }

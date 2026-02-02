@@ -7,8 +7,8 @@ import soft.divan.financemanager.core.data.dto.CategoryDto
 
 interface CategoryApiService {
     @GET("v1/categories")
-    suspend fun getCategories(): Response<List<CategoryDto>>
+    suspend fun getAll(): Response<List<CategoryDto>>
 
     @GET("v1/categories/type/{isIncome}")
-    suspend fun getCategoriesByType(@Path("isIncome") isIncome: Boolean): Response<List<CategoryDto>>
+    suspend fun getByType(@Path("isIncome") isIncome: Boolean): Response<List<CategoryDto>>
 }

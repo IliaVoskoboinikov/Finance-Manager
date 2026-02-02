@@ -10,6 +10,6 @@ class GetAccountByIdUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : GetAccountByIdUseCase {
     override suspend fun invoke(id: String): DomainResult<Account> {
-        return accountRepository.getAccountById(id)
+        return accountRepository.getById(id)
     }
 }

@@ -9,34 +9,18 @@ import javax.inject.Inject
 class AccountLocalDataSourceImpl @Inject constructor(
     private val accountDao: AccountDao,
 ) : AccountLocalDataSource {
-    override suspend fun getAccounts(): Flow<List<AccountEntity>> {
-        return accountDao.getAccounts()
-    }
 
-    override suspend fun insertAccounts(accounts: List<AccountEntity>) {
-        return accountDao.insertAccounts(accounts)
-    }
+    override suspend fun create(account: AccountEntity) = accountDao.insert(account)
 
-    override suspend fun deleteAccount(id: String) {
-        return accountDao.delete(id)
-    }
+    override suspend fun getAll(): Flow<List<AccountEntity>> = accountDao.getAll()
 
-    override suspend fun getByLocalId(id: String): AccountEntity? {
-        return accountDao.getById(id)
-    }
+    override suspend fun getByLocalId(id: String): AccountEntity? = accountDao.getByLocalId(id)
 
-    override suspend fun getAccountByServerId(id: Int): AccountEntity? {
-        return accountDao.getByServerId(id)
-    }
+    override suspend fun getByServerId(id: Int): AccountEntity? = accountDao.getByServerId(id)
 
-    override suspend fun updateAccount(account: AccountEntity) {
-        return accountDao.update(account)
-    }
+    override suspend fun getPendingSync(): List<AccountEntity> = accountDao.getPendingSync()
 
-    override suspend fun createAccount(account: AccountEntity) {
-        return accountDao.insert(account)
-    }
+    override suspend fun update(account: AccountEntity) = accountDao.update(account)
 
-    override suspend fun getPendingSync() = accountDao.getPendingSync()
-
+    override suspend fun delete(id: String) = accountDao.delete(id)
 }

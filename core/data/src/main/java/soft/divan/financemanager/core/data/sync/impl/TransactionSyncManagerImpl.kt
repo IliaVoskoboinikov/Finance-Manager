@@ -39,8 +39,8 @@ class TransactionSyncManagerImpl @Inject constructor(
     /** Получаем все локальные акаунты и тянем с сервера все транзакции с момента создания аккаунта
      * и до сегодняшнего дня */
     override suspend fun pullServerData() {
-        accountLocalDataSource.getAccounts().first().forEach { account ->
-            pullTransactionsFromRemoteForAccount(
+        accountLocalDataSource.getAll().first().forEach { account ->
+            pullFromRemoteForAccount(
                 accountLocalId = account.localId,
                 startDate = ApiDateMapper.toApiDate(Instant.parse(account.createdAt)),
                 endDate = ApiDateMapper.toApiDate(Instant.now())
@@ -52,7 +52,7 @@ class TransactionSyncManagerImpl @Inject constructor(
     override suspend fun syncCreate(transactionEntity: TransactionEntity) {
         transactionEntity.accountServerId?.let { accountServerId ->
             safeApiCall(errorLogger) {
-                remoteDataSource.createTransaction(transactionEntity.toDto(accountServerId))
+                remoteDataSource.create(transactionEntity.toDto(accountServerId))
             }.onSuccess { transactionRequestDto ->
                 updateLocalFromRemote(
                     transactionRequestDto.toEntity(
@@ -71,7 +71,7 @@ class TransactionSyncManagerImpl @Inject constructor(
         transactionEntity.serverId?.let { serverId ->
             transactionEntity.accountServerId?.let { accountServerId ->
                 safeApiCall(errorLogger) {
-                    remoteDataSource.updateTransaction(
+                    remoteDataSource.update(
                         id = serverId,
                         transaction = transactionEntity.toDto(accountServerId)
                     )
@@ -117,7 +117,7 @@ class TransactionSyncManagerImpl @Inject constructor(
         }
     }
 
-    override suspend fun pullTransactionsFromRemoteForAccount(
+    override suspend fun pullFromRemoteForAccount(
         accountLocalId: String,
         startDate: String,
         endDate: String
@@ -126,7 +126,7 @@ class TransactionSyncManagerImpl @Inject constructor(
         val serverAccountId = getServerAccountIdByLocalId(accountLocalId) ?: return
 
         safeApiCall(errorLogger) {
-            remoteDataSource.getTransactionsByAccountAndPeriod(
+            remoteDataSource.getByAccountAndPeriod(
                 serverAccountId,
                 startDate,
                 endDate
@@ -135,7 +135,7 @@ class TransactionSyncManagerImpl @Inject constructor(
             val serverIds = transactionDtos.map { it.id }
 
             val localTransactions = safeDbCall(errorLogger) {
-                localDataSource.getTransactionsByServerIds(serverIds)
+                localDataSource.getByServerIds(serverIds)
             }.getOrNull().orEmpty()
 
             val localMap = localTransactions.associateBy { it.serverId }
@@ -146,7 +146,7 @@ class TransactionSyncManagerImpl @Inject constructor(
                 if (localTransaction == null) {
                     /**  Локальной транзакции нет → создаём */
                     safeDbCall(errorLogger) {
-                        localDataSource.createTransaction(
+                        localDataSource.create(
                             transactionDto.toEntity(
                                 localId = generateUUID(),
                                 accountLocalId = accountLocalId,
@@ -171,13 +171,13 @@ class TransactionSyncManagerImpl @Inject constructor(
     /** Унифицируем обновление локальной транзакции */
     private suspend fun updateLocalFromRemote(transactionEntity: TransactionEntity) {
         safeDbCall(errorLogger) {
-            localDataSource.updateTransaction(transactionEntity)
+            localDataSource.update(transactionEntity)
         }
     }
 
     private suspend fun deleteLocalTransaction(localId: String) {
         safeDbCall(errorLogger) {
-            localDataSource.deleteTransaction(localId)
+            localDataSource.delete(localId)
         }
     }
 

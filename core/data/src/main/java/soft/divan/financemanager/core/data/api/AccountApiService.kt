@@ -13,6 +13,11 @@ import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 
 interface AccountApiService {
 
+    @POST("v1/accounts")
+    suspend fun createAccount(
+        @Body createAccountRequestDto: CreateAccountRequestDto
+    ): Response<AccountDto>
+
     @GET("v1/accounts")
     suspend fun getAccounts(): Response<List<AccountDto>>
 
@@ -20,11 +25,6 @@ interface AccountApiService {
     suspend fun getById(
         @Path("id") id: Int
     ): Response<AccountWithStatsDto>
-
-    @POST("v1/accounts")
-    suspend fun createAccount(
-        @Body createAccountRequestDto: CreateAccountRequestDto
-    ): Response<AccountDto>
 
     @PUT("v1/accounts/{id}")
     suspend fun updateAccount(

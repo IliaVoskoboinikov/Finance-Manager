@@ -11,6 +11,6 @@ class GetCategoriesByTypeUseCaseImpl @Inject constructor(
     private val categoryRepository: CategoryRepository
 ) : GetCategoriesByTypeUseCase {
     override fun invoke(isIncome: Boolean): Flow<DomainResult<List<Category>>> {
-        return categoryRepository.getCategoriesByType(isIncome)
+        return categoryRepository.getByType(isIncome)
     }
 }
