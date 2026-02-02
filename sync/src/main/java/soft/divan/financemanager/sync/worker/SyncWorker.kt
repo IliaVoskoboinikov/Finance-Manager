@@ -13,9 +13,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
-import soft.divan.financemanager.core.data.repository.TransactionRepositoryImpl
 import soft.divan.financemanager.core.data.sync.impl.AccountSyncManagerImpl
 import soft.divan.financemanager.core.data.sync.impl.CategorySyncManagerImpl
+import soft.divan.financemanager.core.data.sync.impl.TransactionSyncManagerImpl
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
 import soft.divan.financemanager.sync.domain.usecase.SetLastSyncTimeUseCase
 
@@ -25,7 +25,7 @@ internal class SyncWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val categorySyncManagerImpl: CategorySyncManagerImpl,
     private val accountSyncManagerImpl: AccountSyncManagerImpl,
-    private val transactionRepositoryImpl: TransactionRepositoryImpl,
+    private val transactionSyncManagerImpl: TransactionSyncManagerImpl,
     private val setLastSyncTimeUseCase: SetLastSyncTimeUseCase,
     private val ioDispatcher: CoroutineDispatcher,
 ) : CoroutineWorker(appContext, workerParams), Synchronizer {
@@ -39,7 +39,7 @@ internal class SyncWorker @AssistedInject constructor(
             val syncedSuccessfully = awaitAll(
                 async { categorySyncManagerImpl.sync() },
                 async { accountSyncManagerImpl.sync() },
-                async { transactionRepositoryImpl.sync() },
+                async { transactionSyncManagerImpl.sync() },
             ).all { it }
 
             if (syncedSuccessfully) {
