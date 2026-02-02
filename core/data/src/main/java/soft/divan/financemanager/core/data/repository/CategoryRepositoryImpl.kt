@@ -10,8 +10,7 @@ import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
-import soft.divan.financemanager.core.data.sync.util.Syncable
-import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.sync.CategorySyncManager
 import soft.divan.financemanager.core.data.util.safeApiCall
 import soft.divan.financemanager.core.data.util.safeDbCall
 import soft.divan.financemanager.core.data.util.safeDbFlow
@@ -24,15 +23,16 @@ import javax.inject.Inject
 class CategoryRepositoryImpl @Inject constructor(
     private val categoryRemoteDataSource: CategoryRemoteDataSource,
     private val categoryLocalDataSource: CategoryLocalDataSource,
+    private val categorySyncManager: CategorySyncManager,
     private val applicationScope: CoroutineScope,
     private val dispatcher: CoroutineDispatcher,
     private val exceptionHandler: CoroutineExceptionHandler,
     private val errorLogger: ErrorLogger
-) : CategoryRepository, Syncable {
+) : CategoryRepository {
 
     override fun getCategories(): Flow<DomainResult<List<Category>>> {
         applicationScope.launch(dispatcher + exceptionHandler) {
-            pullServerData()
+            categorySyncManager.pullServerData()
         }
         return safeDbFlow(errorLogger) {
             categoryLocalDataSource.getCategories().map { list -> list.map { it.toDomain() } }
@@ -53,21 +53,6 @@ class CategoryRepositoryImpl @Inject constructor(
         return safeDbFlow(errorLogger) {
             categoryLocalDataSource.getCategoriesByType(isIncome)
                 .map { list -> list.map { it.toDomain() } }
-        }
-    }
-
-    override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
-        return runCatching {
-            pullServerData()
-        }.isSuccess
-    }
-
-    private suspend fun pullServerData() {
-        val resultApi = safeApiCall(errorLogger) { categoryRemoteDataSource.getCategories() }
-        if (resultApi is DomainResult.Success) {
-            safeDbCall(errorLogger) {
-                categoryLocalDataSource.insertCategories(resultApi.data.map { it.toEntity() })
-            }
         }
     }
 }
