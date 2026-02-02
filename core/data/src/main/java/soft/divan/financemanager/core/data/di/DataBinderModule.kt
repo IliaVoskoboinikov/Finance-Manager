@@ -20,6 +20,8 @@ import soft.divan.financemanager.core.data.source.impl.CategoryLocalDataSourceIm
 import soft.divan.financemanager.core.data.source.impl.CategoryRemoteDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.TransactionLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.TransactionRemoteDataSourceImpl
+import soft.divan.financemanager.core.data.sync.AccountSyncManager
+import soft.divan.financemanager.core.data.sync.impl.AccountSyncManagerImpl
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.repository.CurrencyRepository
@@ -70,4 +72,7 @@ interface DataBinderModule {
     @Singleton
     fun bindCategoryRepository(impl: CategoryRepositoryImpl): CategoryRepository
 
+    @Binds
+    @Singleton
+    fun bindAccountSyncManager(impl: AccountSyncManagerImpl): AccountSyncManager
 }

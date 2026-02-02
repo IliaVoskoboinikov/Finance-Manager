@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data
+package soft.divan.financemanager.core.data.sync.util
 
 /**
  * Syntactic sugar to call [Syncable.syncWith] while omitting the synchronizer argument
