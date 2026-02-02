@@ -15,7 +15,6 @@ import soft.divan.financemanager.core.data.api.CategoryApiService
 import soft.divan.financemanager.core.data.api.TransactionApiService
 import soft.divan.financemanager.core.data.source.CurrencyLocalDataSource
 import soft.divan.financemanager.core.data.source.impl.CurrencyLocalDataSourceImpl
-import javax.inject.Qualifier
 import javax.inject.Singleton
 
 
@@ -52,7 +51,3 @@ object DataProviderModule {
         retrofit.create(CategoryApiService::class.java)
 
 }
-
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class CurrencyDataStore

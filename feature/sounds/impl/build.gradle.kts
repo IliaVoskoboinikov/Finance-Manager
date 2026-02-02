@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
     implementation(projects.feature.sounds.api)
+    implementation(projects.core.common)
     implementation(projects.core.uikit)
 
     implementation(libs.androidx.datastore.preferences)

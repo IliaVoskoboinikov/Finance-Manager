@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
+import soft.divan.common.di.IoDispatcher
 import soft.divan.financemanager.core.data.sync.impl.AccountSyncManagerImpl
 import soft.divan.financemanager.core.data.sync.impl.CategorySyncManagerImpl
 import soft.divan.financemanager.core.data.sync.impl.TransactionSyncManagerImpl
@@ -27,7 +28,7 @@ internal class SyncWorker @AssistedInject constructor(
     private val accountSyncManagerImpl: AccountSyncManagerImpl,
     private val transactionSyncManagerImpl: TransactionSyncManagerImpl,
     private val setLastSyncTimeUseCase: SetLastSyncTimeUseCase,
-    private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : CoroutineWorker(appContext, workerParams), Synchronizer {
 
     override suspend fun getForegroundInfo(): ForegroundInfo = appContext.syncForegroundInfo()

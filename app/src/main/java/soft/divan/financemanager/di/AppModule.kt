@@ -10,6 +10,8 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import soft.divan.common.di.ApplicationScope
+import soft.divan.common.di.IoDispatcher
 import javax.inject.Singleton
 
 @Module
@@ -18,8 +20,9 @@ object AppModule {
 
     @Provides
     @Singleton
+    @ApplicationScope
     fun provideApplicationScope(
-        ioDispatcher: CoroutineDispatcher,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher,
         exceptionHandler: CoroutineExceptionHandler
     ): CoroutineScope {
         return CoroutineScope(SupervisorJob() + ioDispatcher + exceptionHandler)
@@ -27,6 +30,7 @@ object AppModule {
 
     @Provides
     @Singleton
+    @IoDispatcher
     fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
     @Provides
@@ -35,5 +39,4 @@ object AppModule {
         CoroutineExceptionHandler { _, throwable ->
             Log.e("AppCoroutineException", "Unhandled exception: ${throwable.message}", throwable)
         }
-
 }
