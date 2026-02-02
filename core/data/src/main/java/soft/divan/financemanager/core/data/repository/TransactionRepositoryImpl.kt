@@ -1,11 +1,7 @@
 package soft.divan.financemanager.core.data.repository
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
 import soft.divan.financemanager.core.data.mapper.TimeMapper
@@ -16,9 +12,10 @@ import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
-import soft.divan.financemanager.core.data.util.safeApiCall
-import soft.divan.financemanager.core.data.util.safeDbCall
-import soft.divan.financemanager.core.data.util.safeDbFlow
+import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
+import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
+import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
+import soft.divan.financemanager.core.data.util.safeCall.safeDbFlow
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
@@ -35,9 +32,7 @@ class TransactionRepositoryImpl @Inject constructor(
     private val localDataSource: TransactionLocalDataSource,
     private val accountLocalDataSource: AccountLocalDataSource,
     private val syncManager: TransactionSyncManager,
-    private val applicationScope: CoroutineScope,
-    private val dispatcher: CoroutineDispatcher,
-    private val exceptionHandler: CoroutineExceptionHandler,
+    private val appCoroutineContext: AppCoroutineContext,
     private val errorLogger: ErrorLogger
 ) : TransactionRepository {
 
@@ -51,7 +46,7 @@ class TransactionRepositoryImpl @Inject constructor(
             syncStatus = SyncStatus.PENDING_CREATE
         )
 
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             syncManager.syncCreate(transactionEntity)
         }
 
@@ -68,7 +63,7 @@ class TransactionRepositoryImpl @Inject constructor(
     ): Flow<DomainResult<List<Transaction>>> {
         val startDate = ApiDateMapper.toApiDate(startDate)
         val endDate = ApiDateMapper.toApiDate(endDate)
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             syncManager.pullFromRemoteForAccount(
                 accountLocalId = accountId,
                 startDate = startDate,
@@ -100,7 +95,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (resultDb as DomainResult.Success).data
 
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             val serverId = transactionEntity.serverId
             if (serverId != null) {
                 safeApiCall(errorLogger) {
@@ -135,7 +130,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (resultDb as DomainResult.Success).data
 
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             if (transactionEntity.serverId == null) {
                 syncManager.syncCreate(
                     transaction.toEntity(
@@ -181,7 +176,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (localResult as DomainResult.Success).data
 
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             syncManager.syncDelete(transactionEntity)
         }
 

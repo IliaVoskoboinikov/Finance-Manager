@@ -6,15 +6,13 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import soft.divan.common.di.ApplicationScope
 import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
 import soft.divan.financemanager.feature.haptics.impl.data.haptics.HapticsManagerImpl
 import soft.divan.financemanager.feature.haptics.impl.data.source.HapticsLocalSource
@@ -22,11 +20,9 @@ import soft.divan.financemanager.feature.haptics.impl.data.source.impl.HapticsLo
 import soft.divan.financemanager.feature.haptics.impl.domain.usecase.ObserveHapticsEnabledUseCase
 import javax.inject.Singleton
 
-val Context.hapticsDataStore: DataStore<Preferences> by preferencesDataStore("haptics_preferences")
-
 @Module
 @InstallIn(SingletonComponent::class)
-object HapticModule {
+object HapticsModule {
 
     @Provides
     @Singleton
@@ -47,21 +43,16 @@ object HapticModule {
     ): HapticsManager =
         HapticsManagerImpl(vibrator, observeHapticsEnabled, scope)
 
-
-    @Provides
-    @ApplicationScope
-    fun provideApplicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
     @Provides
     @Singleton
     @HapticsDataStore
-    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
-        return context.hapticsDataStore
-    }
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        context.hapticsDataStore
+
 
     @Provides
     @Singleton
-    fun provideHapticsPreferences(@HapticsDataStore dataStore: DataStore<Preferences>): HapticsLocalSource {
-        return HapticsLocalSourceImpl(dataStore)
-    }
+    fun provideHapticsPreferences(@HapticsDataStore dataStore: DataStore<Preferences>): HapticsLocalSource =
+        HapticsLocalSourceImpl(dataStore)
+
 }

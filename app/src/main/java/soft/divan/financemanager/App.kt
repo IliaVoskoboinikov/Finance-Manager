@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import soft.divan.common.di.ApplicationScope
 import soft.divan.financemanager.sync.initializers.SyncInitializer
 import javax.inject.Inject
 
@@ -13,6 +14,7 @@ import javax.inject.Inject
 class App: Application() {
 
     @Inject
+    @ApplicationScope
     lateinit var applicationScope: CoroutineScope
 
     @Inject

@@ -11,8 +11,8 @@ import soft.divan.financemanager.core.data.sync.TransactionSyncManager
 import soft.divan.financemanager.core.data.sync.util.Syncable
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
 import soft.divan.financemanager.core.data.util.generateUUID
-import soft.divan.financemanager.core.data.util.safeApiCall
-import soft.divan.financemanager.core.data.util.safeDbCall
+import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
+import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.api.ErrorLogger

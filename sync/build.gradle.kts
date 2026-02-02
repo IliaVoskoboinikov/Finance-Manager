@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(projects.core.data)
+    implementation(projects.core.common)
 
     ksp(libs.hilt.ext.compiler)
     implementation(libs.androidx.tracing.ktx)

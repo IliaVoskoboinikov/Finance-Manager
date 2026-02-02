@@ -3,7 +3,6 @@ package soft.divan.financemanager.feature.designapp.impl.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,10 +10,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.feature.designapp.impl.data.source.DesignAppLocalSource
 import soft.divan.financemanager.feature.designapp.impl.data.source.impl.DesignAppLocalSourceImpl
-import javax.inject.Qualifier
 import javax.inject.Singleton
-
-val Context.themeDataStore: DataStore<Preferences> by preferencesDataStore("user_preferences")
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -33,7 +29,3 @@ object DesignAppProviderModule {
         return DesignAppLocalSourceImpl(dataStore)
     }
 }
-
-@Qualifier
-@Retention(AnnotationRetention.BINARY)
-annotation class ThemeDataStore
