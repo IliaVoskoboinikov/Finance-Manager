@@ -10,6 +10,6 @@ class GetTransactionUseCaseImpl @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) : GetTransactionUseCase {
     override suspend fun invoke(id: String): DomainResult<Transaction> {
-        return transactionRepository.getTransactionById(id)
+        return transactionRepository.getById(id)
     }
 }

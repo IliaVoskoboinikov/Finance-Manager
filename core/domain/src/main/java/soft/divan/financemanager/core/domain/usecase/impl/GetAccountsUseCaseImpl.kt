@@ -11,6 +11,6 @@ class GetAccountsUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : GetAccountsUseCase {
     override fun invoke(): Flow<DomainResult<List<Account>>> {
-        return accountRepository.getAccounts()
+        return accountRepository.getAll()
     }
 }

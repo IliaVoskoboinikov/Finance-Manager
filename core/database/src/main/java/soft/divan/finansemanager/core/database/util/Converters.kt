@@ -1,4 +1,4 @@
-package soft.divan.finansemanager.core.database
+package soft.divan.finansemanager.core.database.util
 
 import androidx.room.TypeConverter
 import soft.divan.finansemanager.core.database.model.SyncStatus

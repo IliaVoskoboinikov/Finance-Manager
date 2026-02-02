@@ -10,6 +10,6 @@ class CreateTransactionUseCaseImpl @Inject constructor(
     val transactionRepository: TransactionRepository
 ) : CreateTransactionUseCase {
     override suspend fun invoke(transaction: Transaction): DomainResult<Unit> {
-        return transactionRepository.createTransaction(transaction)
+        return transactionRepository.create(transaction)
     }
 }

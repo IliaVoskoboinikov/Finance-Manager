@@ -10,6 +10,6 @@ class UpdateAccountUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : UpdateAccountUseCase {
     override suspend fun invoke(account: Account): DomainResult<Unit> {
-        return accountRepository.updateAccount(account)
+        return accountRepository.update(account)
     }
 }

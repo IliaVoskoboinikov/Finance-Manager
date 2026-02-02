@@ -4,7 +4,7 @@ import soft.divan.finansemanager.core.database.entity.TransactionEntity
 
 interface TransactionSyncManager {
     suspend fun pullServerData()
-    suspend fun pullTransactionsFromRemoteForAccount(
+    suspend fun pullFromRemoteForAccount(
         accountLocalId: String,
         startDate: String,
         endDate: String

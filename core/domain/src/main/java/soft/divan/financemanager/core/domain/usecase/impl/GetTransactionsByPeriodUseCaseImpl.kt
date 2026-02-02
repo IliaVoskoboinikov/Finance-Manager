@@ -67,9 +67,9 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
 
     private fun baseDataFlow(): Flow<DomainResult<Triple<List<Account>, CurrencySymbol, List<Category>>>> =
         combine(
-            accountRepository.getAccounts(),
-            categoryRepository.getCategories(),
-            currencyRepository.getCurrency()
+            accountRepository.getAll(),
+            categoryRepository.getAll(),
+            currencyRepository.get()
         ) { accountsResult, categoriesResult, currency ->
 
             when {
@@ -144,7 +144,7 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
 
         return combine(
             accounts.map { account ->
-                transactionRepository.getTransactionsByAccountAndPeriod(
+                transactionRepository.getByAccountAndPeriod(
                     accountId = account.id,
                     startDate = period.startDate,
                     endDate = period.endDate

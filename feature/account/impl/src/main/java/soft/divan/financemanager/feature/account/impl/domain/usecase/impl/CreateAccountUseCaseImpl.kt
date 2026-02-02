@@ -10,6 +10,6 @@ class CreateAccountUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository
 ) : CreateAccountUseCase {
     override suspend fun invoke(account: Account): DomainResult<Unit> {
-        return accountRepository.createAccount(account)
+        return accountRepository.create(account)
     }
 }

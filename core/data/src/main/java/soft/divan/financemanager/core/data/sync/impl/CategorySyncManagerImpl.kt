@@ -28,10 +28,10 @@ class CategorySyncManagerImpl @Inject constructor(
     /** Получаем данные с сервера и обновляем локальную БД разрешая конфликты */
     override suspend fun pullServerData() {
         safeApiCall(errorLogger) {
-            remoteDataSource.getCategories()
+            remoteDataSource.getAll()
         }.onSuccess { categoryDtos ->
             safeDbCall(errorLogger) {
-                localDataSource.insertCategories(categoryDtos.map { it.toEntity() })
+                localDataSource.insert(categoryDtos.map { it.toEntity() })
             }
         }
     }

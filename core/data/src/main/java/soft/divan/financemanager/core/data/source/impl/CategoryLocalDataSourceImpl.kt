@@ -9,16 +9,11 @@ import javax.inject.Inject
 class CategoryLocalDataSourceImpl @Inject constructor(
     private val categoryDao: CategoryDao,
 ) : CategoryLocalDataSource {
-    override suspend fun getCategories(): Flow<List<CategoryEntity>> {
-        return categoryDao.getCategories()
-    }
 
-    override suspend fun insertCategories(categories: List<CategoryEntity>) {
-        return categoryDao.insertCategories(categories)
-    }
+    override suspend fun insert(categories: List<CategoryEntity>) = categoryDao.insertAll(categories)
 
-    override suspend fun getCategoriesByType(isIncome: Boolean): Flow<List<CategoryEntity>> {
-        return categoryDao.getByType(isIncome)
-    }
+    override suspend fun getAll(): Flow<List<CategoryEntity>> = categoryDao.getAll()
 
+    override suspend fun getByType(isIncome: Boolean): Flow<List<CategoryEntity>> =
+        categoryDao.getByType(isIncome)
 }

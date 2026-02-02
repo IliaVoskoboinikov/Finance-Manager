@@ -10,9 +10,7 @@ class CurrencyRepositoryImpl @Inject constructor(
     private val currencyLocalDataSource: CurrencyLocalDataSource
 ) : CurrencyRepository {
 
-    override fun getCurrency(): Flow<CurrencySymbol> = currencyLocalDataSource.getCurrency()
+    override fun get(): Flow<CurrencySymbol> = currencyLocalDataSource.get()
 
-    override suspend fun updateCurrency(currency: CurrencySymbol) {
-        currencyLocalDataSource.updateCurrency(currency)
-    }
+    override suspend fun update(currency: CurrencySymbol) = currencyLocalDataSource.update(currency)
 }

@@ -9,6 +9,6 @@ class DeleteTransactionUseCaseImpl @Inject constructor(
     private val transactionRepository: TransactionRepository
 ) : DeleteTransactionUseCase {
     override suspend fun invoke(id: String): DomainResult<Unit> {
-        return transactionRepository.deleteTransaction(id)
+        return transactionRepository.delete(id)
     }
 }
