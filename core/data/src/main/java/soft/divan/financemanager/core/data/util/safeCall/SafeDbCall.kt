@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data.util
+package soft.divan.financemanager.core.data.util.safeCall
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

@@ -5,9 +5,9 @@ import android.os.Vibrator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import soft.divan.common.di.ApplicationScope
 import soft.divan.financemanager.feature.haptics.api.domain.HapticType
 import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
-import soft.divan.financemanager.feature.haptics.impl.di.ApplicationScope
 import soft.divan.financemanager.feature.haptics.impl.domain.usecase.ObserveHapticsEnabledUseCase
 import javax.inject.Inject
 

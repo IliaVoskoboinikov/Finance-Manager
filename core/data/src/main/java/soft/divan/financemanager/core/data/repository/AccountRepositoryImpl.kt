@@ -1,11 +1,7 @@
 package soft.divan.financemanager.core.data.repository
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.TimeMapper
 import soft.divan.financemanager.core.data.mapper.toDomain
@@ -16,9 +12,10 @@ import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
-import soft.divan.financemanager.core.data.util.safeApiCall
-import soft.divan.financemanager.core.data.util.safeDbCall
-import soft.divan.financemanager.core.data.util.safeDbFlow
+import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
+import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
+import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
+import soft.divan.financemanager.core.data.util.safeCall.safeDbFlow
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
@@ -34,15 +31,13 @@ class AccountRepositoryImpl @Inject constructor(
     private val localDataSource: AccountLocalDataSource,
     private val transactionLocalDataSource: TransactionLocalDataSource,
     private val syncManager: AccountSyncManager,
-    private val applicationScope: CoroutineScope,
-    private val dispatcher: CoroutineDispatcher,
-    private val exceptionHandler: CoroutineExceptionHandler,
+    private val appCoroutineContext: AppCoroutineContext,
     private val errorLogger: ErrorLogger
 ) : AccountRepository {
 
     /** Создаем аккаунт в БД и сразу запускаем синхронизацию */
     override suspend fun create(account: Account): DomainResult<Unit> {
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
         }
         return safeDbCall(errorLogger) {
@@ -54,7 +49,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию */
     override fun getAll(): Flow<DomainResult<List<Account>>> {
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             syncManager.pullServerData()
         }
         return safeDbFlow(errorLogger) {
@@ -77,7 +72,7 @@ class AccountRepositoryImpl @Inject constructor(
 
         val accountEntity = (localResult as DomainResult.Success).data
 
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             val serverId = accountEntity.serverId
             if (serverId != null) {
                 safeApiCall(errorLogger) { remoteDataSource.getById(serverId) }.onSuccess { accountDto ->
@@ -108,7 +103,7 @@ class AccountRepositoryImpl @Inject constructor(
 
         val accountEntity = (resultDb as DomainResult.Success).data
 
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             if (accountEntity.serverId == null) {
                 /** если аккаунт не синхронизирован с сервером (нету serverId) то создать на сервере и
                  *  обновить локально*/
@@ -162,7 +157,7 @@ class AccountRepositoryImpl @Inject constructor(
             )
         }
 
-        applicationScope.launch(dispatcher + exceptionHandler) {
+        appCoroutineContext.launch {
             syncManager.syncDelete(accountEntity)
         }
 

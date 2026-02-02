@@ -6,8 +6,8 @@ import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
 import soft.divan.financemanager.core.data.sync.CategorySyncManager
 import soft.divan.financemanager.core.data.sync.util.Syncable
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
-import soft.divan.financemanager.core.data.util.safeApiCall
-import soft.divan.financemanager.core.data.util.safeDbCall
+import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
+import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
 import javax.inject.Inject
