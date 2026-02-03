@@ -126,7 +126,7 @@ fun CreateAccountScreenScreen(
         accountId = accountId,
         onNavigateBack = onNavigateBack,
         onUpdateName = viewModel::updateName,
-        onUpdateBalance = viewModel::updateBalance,
+        onUpdateBalance = viewModel::onBalanceInputChanged,
         onUpdateCurrency = viewModel::updateCurrency,
         onSave = viewModel::createAccount,
         onDelete = viewModel::delete,
@@ -218,7 +218,7 @@ fun CreateAccountForm(
 @Composable
 private fun Balance(
     balance: String,
-    onUpdateBalance: (String) -> Unit
+    onBalanceChanged: (String) -> Unit
 ) {
     ListItem(
         modifier = Modifier
@@ -226,54 +226,52 @@ private fun Balance(
             .fillMaxWidth(),
         lead = { ContentTextListItem(stringResource(R.string.balance)) },
         content = {
-            BasicTextField(
+            BalanceTextField(
                 value = balance,
-                onValueChange = { newValue ->
-                    val moneyRegex = Regex("^(0|[1-9]\\d*)(\\.\\d{0,2})?$")
-
-                    when {
-                        newValue.isEmpty() -> {
-                            onUpdateBalance("0")
-                        }
-//todo to viewModel
-                        balance == "0" && newValue.length == 2 && newValue[1].isDigit() -> {
-                            onUpdateBalance(newValue.last().toString())
-                        }
-
-                        newValue.matches(moneyRegex) -> {
-                            onUpdateBalance(newValue)
-                        }
-                    }
-                },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = colorScheme.onSurface
-                ),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                decorationBox = { innerTextField ->
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .border(1.dp, colorScheme.primaryContainer)
-                    ) {
-                        innerTextField()
-                    }
-
-                }
+                onValueChange = onBalanceChanged
             )
-        },
+        }
     )
 }
 
 @Composable
+private fun BalanceTextField(
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number
+        ),
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        decorationBox = { innerTextField ->
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    )
+            ) {
+                innerTextField()
+            }
+        }
+    )
+}
+
+
+@Composable
 private fun Name(
-    balance: String,
+    name: String,
     onUpdateName: (String) -> Unit
 ) {
     ListItem(
@@ -281,11 +279,11 @@ private fun Name(
             .height(70.dp)
             .fillMaxWidth()
             .clickable { },
-        lead = { ContentTextListItem("Название") },
+        lead = { ContentTextListItem(stringResource(R.string.name)) },
         content = {
 
             BasicTextField(
-                value = balance,
+                value = name,
                 onValueChange = { onUpdateName(it) },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(
                     color = colorScheme.onSurface

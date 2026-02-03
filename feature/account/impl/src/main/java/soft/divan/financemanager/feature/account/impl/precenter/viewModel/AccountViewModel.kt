@@ -64,6 +64,9 @@ class AccountViewModel @Inject constructor(
     private val mode =
         if (accountId == null) AccountMode.Create else AccountMode.Edit(accountId)
 
+    private val moneyRegex =
+        Regex("^(0|[1-9]\\d*)(\\.\\d{0,2})?$")
+
     private fun publishSuccess() {
         val currentAccount = account ?: return
         _uiState.update {
@@ -115,8 +118,24 @@ class AccountViewModel @Inject constructor(
         publishSuccess()
     }
 
-    fun updateBalance(balance: String) {
-        account = account?.copy(balance = balance)
+    fun onBalanceInputChanged(input: String) {
+        val current = account?.balance ?: "0"
+
+        val newBalance = when {
+            input.isEmpty() -> "0"
+
+            current == "0" &&
+                    input.length == 2 &&
+                    input[1].isDigit() ->
+                input.last().toString()
+
+            moneyRegex.matches(input) ->
+                input
+
+            else -> return
+        }
+
+        account = account?.copy(balance = newBalance)
         publishSuccess()
     }
 
