@@ -23,6 +23,9 @@ interface AccountDao {
     @Query("SELECT * FROM account WHERE serverId = :id")
     suspend fun getByServerId(id: Int): AccountEntity?
 
+    @Query("SELECT * FROM account WHERE serverId IN (:serverIds)")
+    suspend fun getByServerIds(serverIds: List<Int>): List<AccountEntity>
+
     @Query("SELECT * FROM account WHERE syncStatus != 'SYNCED'")
     suspend fun getPendingSync(): List<AccountEntity>
 
@@ -31,5 +34,4 @@ interface AccountDao {
 
     @Query("DELETE FROM account WHERE localId = :id")
     suspend fun delete(id: String)
-
 }

@@ -1,14 +1,10 @@
 package soft.divan.finansemanager.core.database.entity
 
 import androidx.room.Entity
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import soft.divan.finansemanager.core.database.model.SyncStatus
 
-@Entity(
-    tableName = "transactions",
-    indices = [Index(value = ["serverId"], unique = true)] //todo
-)
+@Entity(tableName = "transactions")
 data class TransactionEntity(
     @PrimaryKey
     val localId: String,
