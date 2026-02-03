@@ -13,4 +13,5 @@ sealed interface HistoryUiState {
     ) : HistoryUiState
 
     data class Error(@field:StringRes val message: Int) : HistoryUiState
+    data object EmptyData : HistoryUiState
 }

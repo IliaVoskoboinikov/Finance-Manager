@@ -59,6 +59,10 @@ class DesignAppViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    fun retry() {
+        load()
+    }
+
     fun setAccentColor(accentColor: AccentColor) {
         hapticsManager.perform(HapticType.CLICK)
         viewModelScope.launch {

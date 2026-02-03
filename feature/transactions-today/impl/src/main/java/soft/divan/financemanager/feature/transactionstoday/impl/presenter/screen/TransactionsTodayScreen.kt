@@ -51,6 +51,7 @@ fun TransactionsTodayPreview() {
         TransactionsTodayContent(
             isIncome = false,
             uiState = mockTransactionsTodayUiStateSuccess,
+            onRetry = {},
             onNavigateToHistory = {},
             onNavigateToNewTransaction = {},
             onNavigateToOldTransaction = {},
@@ -81,6 +82,7 @@ fun TransactionsTodayScreen(
         modifier = modifier,
         isIncome = isIncome,
         uiState = uiState,
+        onRetry = viewModel::retry,
         onNavigateToHistory = onNavigateToHistory,
         onNavigateToNewTransaction = onNavigateToNewTransaction,
         onNavigateToOldTransaction = onNavigateToOldTransaction,
@@ -94,6 +96,7 @@ fun TransactionsTodayContent(
     modifier: Modifier = Modifier,
     isIncome: Boolean,
     uiState: TransactionsTodayUiState,
+    onRetry: () -> Unit,
     onNavigateToHistory: () -> Unit,
     onNavigateToNewTransaction: () -> Unit,
     hapticNavigation: () -> Unit,
@@ -122,7 +125,7 @@ fun TransactionsTodayContent(
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is TransactionsTodayUiState.Loading -> LoadingProgressBar()
-                is TransactionsTodayUiState.Error -> ErrorContent(onClick = {}) // TODO
+                is TransactionsTodayUiState.Error -> ErrorContent(onClick = { onRetry() })
                 is TransactionsTodayUiState.Success -> TransactionsList(
                     modifier = modifier,
                     uiState = uiState,

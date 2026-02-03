@@ -124,7 +124,11 @@ private fun MyAccountsStatefulContent(
 ) {
     when (uiState) {
         is MyAccountsUiState.Loading -> LoadingProgressBar()
-        is MyAccountsUiState.Error -> ErrorContent(onClick = {}) // TODO
+        is MyAccountsUiState.Error -> ErrorContent(
+            messageResId = R.string.error_unknown,
+            onClick = { loadAccounts() }
+        )
+
         is MyAccountsUiState.Success -> AccountsSuccessContent(
             accounts = uiState.accounts,
             onNavigateToUpdateAccount = onNavigateToUpdateAccount
@@ -132,7 +136,8 @@ private fun MyAccountsStatefulContent(
 
         is MyAccountsUiState.EmptyData -> ErrorContent(
             messageResId = R.string.empty_data,
-            onClick = { loadAccounts() })
+            onClick = { loadAccounts() }
+        )
     }
 }
 

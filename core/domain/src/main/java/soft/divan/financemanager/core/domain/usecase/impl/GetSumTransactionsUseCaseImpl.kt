@@ -9,6 +9,5 @@ class GetSumTransactionsUseCaseImpl @Inject constructor() : GetSumTransactionsUs
     override operator fun invoke(transactions: List<Transaction>): BigDecimal {
         return transactions.sumOf { it.amount }
     }
-    //todo сделать пересчет с учетом валюты
-    //todo сделать выбор дефолтной валюты
+    //todo сделать пересчет с учетом валюты , сделать выбор дефолтной валюты
 }

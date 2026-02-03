@@ -6,5 +6,6 @@
     <string name="end">End</string>
     <string name="error_loading">Loading error</string>
     <string name="empty">Empty list</string>
-
+    <string name="error_unknown">Oops, there was a mistake</string>
+    <string name="empty_data">Oops, it seems that nothing could be found</string>
 </resources>
