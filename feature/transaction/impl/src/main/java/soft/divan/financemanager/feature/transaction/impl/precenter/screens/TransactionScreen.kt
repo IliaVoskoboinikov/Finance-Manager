@@ -146,7 +146,7 @@ fun TransactionScreen(
         isIncome = isIncome,
         onNavigateBack = onNavigateBack,
         onSave = viewModel::save,
-        onAmountChange = viewModel::updateAmount,
+        onAmountChange = viewModel::onAmountInputChanged,
         onCommentChange = viewModel::updateComment,
         onDateChange = viewModel::updateDate,
         onTimeChange = viewModel::updateTime,
@@ -259,7 +259,7 @@ fun TransactionForm(
             category = uiState.transaction.category.emoji + " " + uiState.transaction.category.name,
             onClick = { isShowCategorySheet.value = true })
         FMDriver()
-        Amount(amount = uiState.transaction.amount, updateAmount = onAmountChange)
+        Amount(amount = uiState.transaction.amount, onAmountChange = onAmountChange)
         FMDriver()
         Data(
             transactionDate = uiState.transaction.date,
@@ -527,11 +527,10 @@ private fun CategorySheetContent(
     }
 }
 
-
 @Composable
 private fun Amount(
     amount: String,
-    updateAmount: (String) -> Unit
+    onAmountChange: (String) -> Unit
 ) {
     ListItem(
         modifier = Modifier
@@ -539,47 +538,43 @@ private fun Amount(
             .fillMaxWidth(),
         content = { ContentTextListItem(stringResource(R.string.sum)) },
         trail = {
-// todo сделать что бы изначально фокус ставился в начало и пренисти во viewModel
-            BasicTextField(
+            AmountTextField(
                 value = amount,
-                onValueChange = { newValue ->
-                    val moneyRegex = Regex("^(0|[1-9]\\d*)(\\.\\d{0,2})?$")
-
-                    when {
-                        newValue.isEmpty() -> {
-                            updateAmount("0")
-                        }
-
-                        amount == "0" && newValue.length == 2 && newValue[1].isDigit() -> {
-                            updateAmount(newValue.last().toString())
-                        }
-
-                        newValue.matches(moneyRegex) -> {
-                            updateAmount(newValue)
-                        }
-                    }
-                },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.End
-                ),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                singleLine = true,
-                modifier = Modifier.width(200.dp),
-                decorationBox = { innerTextField ->
-                    Box(
-                        contentAlignment = Alignment.CenterEnd,
-                        modifier = Modifier.fillMaxHeight()
-                    ) {
-                        innerTextField()
-                    }
-                }
+                onValueChange = onAmountChange
             )
-        },
+        }
     )
 }
+
+@Composable
+private fun AmountTextField(
+    value: String,
+    onValueChange: (String) -> Unit
+) {
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        textStyle = MaterialTheme.typography.bodyLarge.copy(
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.End
+        ),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal
+        ),
+        singleLine = true,
+        modifier = Modifier
+            .width(200.dp),
+        decorationBox = { innerTextField ->
+            Box(
+                contentAlignment = Alignment.CenterEnd,
+                modifier = Modifier.fillMaxHeight()
+            ) {
+                innerTextField()
+            }
+        }
+    )
+}
+
 
 @Composable
 private fun Data(
