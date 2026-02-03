@@ -18,6 +18,9 @@ class AccountLocalDataSourceImpl @Inject constructor(
 
     override suspend fun getByServerId(id: Int): AccountEntity? = accountDao.getByServerId(id)
 
+    override suspend fun getByServerIds(serverIds: List<Int>): List<AccountEntity> =
+        if (serverIds.isEmpty()) emptyList() else accountDao.getByServerIds(serverIds)
+
     override suspend fun getPendingSync(): List<AccountEntity> = accountDao.getPendingSync()
 
     override suspend fun update(account: AccountEntity) = accountDao.update(account)

@@ -8,6 +8,7 @@ interface AccountLocalDataSource {
     suspend fun getAll(): Flow<List<AccountEntity>>
     suspend fun getByLocalId(id: String): AccountEntity?
     suspend fun getByServerId(id: Int): AccountEntity?
+    suspend fun getByServerIds(serverIds: List<Int>): List<AccountEntity>
     suspend fun getPendingSync(): List<AccountEntity>
     suspend fun update(account: AccountEntity)
     suspend fun delete(id: String)

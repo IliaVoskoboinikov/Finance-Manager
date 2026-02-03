@@ -12,7 +12,7 @@ import soft.divan.financemanager.core.data.sync.util.Synchronizer
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
-import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
 import soft.divan.finansemanager.core.database.entity.AccountEntity
@@ -33,14 +33,26 @@ class AccountSyncManagerImpl @Inject constructor(
         }.isSuccess
     }
 
+
     /** Получаем данные с сервера и обновляем локальную БД разрешая конфликты */
     override suspend fun pullServerData() {
-        safeApiCall(errorLogger) { remoteDataSource.getAll() }.onSuccess { accountDtos ->
+        safeApiCall(errorLogger) {
+            remoteDataSource.getAll()
+        }.onSuccess { accountDtos ->
+
+            val serverIds = accountDtos.map { it.id }
+
+            val localAccounts = safeDbCall(errorLogger) {
+                localDataSource.getByServerIds(serverIds)
+            }.getOrNull().orEmpty()
+
+            val localMap = localAccounts.associateBy { it.serverId }
+
             accountDtos.forEach { accountDto ->
-                val resultDb =
-                    safeDbCall(errorLogger) { localDataSource.getByServerId(accountDto.id) }
-                if (resultDb is DomainResult.Success && resultDb.data == null) {
-                    /** новаый аккаунт на сервере → создаем его локально*/
+                val localAccount = localMap[accountDto.id]
+
+                if (localAccount == null) {
+                    /** Локального аккаунта нет → создаём */
                     safeDbCall(errorLogger) {
                         localDataSource.create(
                             accountDto.toEntity(
@@ -49,11 +61,11 @@ class AccountSyncManagerImpl @Inject constructor(
                             )
                         )
                     }
-                    /** если конфликт то сравниваем по времени обновления, побеждает тот кто поослдений был обновлен */
-                } else if (resultDb is DomainResult.Success && accountDto.updatedAt > resultDb.data!!.updatedAt) {
+                } else if (accountDto.updatedAt > localAccount.updatedAt) {
+                    /** Конфликт → побеждает тот, кто обновлялся позже */
                     updateLocalFromRemote(
                         accountDto = accountDto,
-                        localId = resultDb.data!!.localId
+                        localId = localAccount.localId
                     )
                 }
             }
