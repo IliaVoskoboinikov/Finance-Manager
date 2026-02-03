@@ -19,6 +19,7 @@ import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
 import soft.divan.finansemanager.core.database.entity.TransactionEntity
 import soft.divan.finansemanager.core.database.model.SyncStatus
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 class TransactionSyncManagerImpl @Inject constructor(
@@ -42,7 +43,9 @@ class TransactionSyncManagerImpl @Inject constructor(
         accountLocalDataSource.getAll().first().forEach { account ->
             pullFromRemoteForAccount(
                 accountLocalId = account.localId,
-                startDate = ApiDateMapper.toApiDate(Instant.parse(account.createdAt)),
+                startDate = ApiDateMapper.toApiDate(
+                    Instant.parse(account.createdAt).minus(5, ChronoUnit.DAYS)
+                ),
                 endDate = ApiDateMapper.toApiDate(Instant.now())
             )
         }
