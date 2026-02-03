@@ -68,7 +68,8 @@ fun TransactionScreenPreview() {
             uiState = mockDesignUiStateSuccess,
             setAccentColor = {},
             onThemeSelected = {},
-            setCustomColor = { }
+            setCustomColor = { },
+            onRetry = {}
         )
     }
 }
@@ -85,7 +86,8 @@ fun DesignAppScreen(
         uiState = uiState,
         setAccentColor = viewModel::setAccentColor,
         onThemeSelected = viewModel::onThemeSelected,
-        setCustomColor = viewModel::setCustomColor
+        setCustomColor = viewModel::setCustomColor,
+        onRetry = viewModel::retry
     )
 }
 
@@ -95,14 +97,16 @@ fun DesignAppContent(
     uiState: DesignUiState,
     setAccentColor: (AccentColor) -> Unit,
     onThemeSelected: (ThemeMode) -> Unit,
-    setCustomColor: (Color) -> Unit
+    setCustomColor: (Color) -> Unit,
+    onRetry: () -> Unit
+
 ) {
     Scaffold(
         topBar = { TopBar(topBar = TopBarModel(title = R.string.design)) },
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
-                is DesignUiState.Error -> ErrorContent(onClick = {}) // todo
+                is DesignUiState.Error -> ErrorContent(onClick = { onRetry() })
                 is DesignUiState.Loading -> LoadingProgressBar()
                 is DesignUiState.Success -> DesignAppForm(
                     modifier = modifier,

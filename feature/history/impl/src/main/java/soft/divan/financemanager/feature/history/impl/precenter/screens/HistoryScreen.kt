@@ -64,6 +64,7 @@ fun HistoryScreenPreview() {
             onNavigateToTransaction = {},
             onNavigateBack = {},
             onNavigateToAnalysis = {},
+            onRetry = {},
         )
     }
 }
@@ -85,6 +86,7 @@ fun HistoryScreen(
         uiState = uiState,
         startDate = startDate,
         endDate = endDate,
+        onRetry = viewModel::reloadData,
         onUpdateStartDate = viewModel::updateStartDate,
         onUpdateEndDate = viewModel::updateEndDate,
         onNavigateToTransaction = onNavigateToTransaction,
@@ -99,6 +101,7 @@ private fun HistoryContent(
     uiState: HistoryUiState,
     startDate: LocalDate,
     endDate: LocalDate,
+    onRetry: () -> Unit,
     onUpdateStartDate: (LocalDate) -> Unit,
     onUpdateEndDate: (LocalDate) -> Unit,
     onNavigateToTransaction: (String) -> Unit,
@@ -123,7 +126,11 @@ private fun HistoryContent(
                 onUpdateEndDate = onUpdateEndDate
             )
 
-            HistoryStatefulContent(uiState = uiState, onNavigateToTransaction = onNavigateToTransaction)
+            HistoryStatefulContent(
+                uiState = uiState,
+                onRetry = onRetry,
+                onNavigateToTransaction = onNavigateToTransaction
+            )
         }
     }
 }
@@ -209,14 +216,27 @@ private fun DateItem(
 }
 
 @Composable
-private fun HistoryStatefulContent(uiState: HistoryUiState, onNavigateToTransaction: (String) -> Unit) {
+private fun HistoryStatefulContent(
+    uiState: HistoryUiState,
+    onRetry: () -> Unit,
+    onNavigateToTransaction: (String) -> Unit
+) {
     when (uiState) {
         is HistoryUiState.Loading -> LoadingProgressBar()
-        is HistoryUiState.Error -> ErrorContent(onClick = {}) // TODO
+        is HistoryUiState.Error -> ErrorContent(
+            messageResId = R.string.error_unknown,
+            onClick = { onRetry() }
+        )
+
         is HistoryUiState.Success -> HistorySuccessContent(
             sumTransaction = uiState.sumTransaction,
             transactions = uiState.transactions,
             onNavigateToTransaction = onNavigateToTransaction
+        )
+
+        HistoryUiState.EmptyData -> ErrorContent(
+            messageResId = R.string.empty_data,
+            onClick = { onRetry() }
         )
     }
 }

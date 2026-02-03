@@ -72,7 +72,7 @@ class AnalysisViewModel @Inject constructor(
                         val pie = getCategoryPieChartDataUseCase(data.first, data.third)
 
                         if (data.first.isEmpty()) {
-                            _uiState.update { AnalysisUiState.Error(R.string.empty) }
+                            _uiState.update { AnalysisUiState.EmptyData }
                         } else {
                             _uiState.update {
                                 AnalysisUiState.Success(
@@ -96,4 +96,10 @@ class AnalysisViewModel @Inject constructor(
     fun updateEndDate(date: LocalDate) {
         _endDate.value = date
     }
+
+    fun reloadData() {
+        _startDate.value = _startDate.value
+        _endDate.value = _endDate.value
+    }
+
 }

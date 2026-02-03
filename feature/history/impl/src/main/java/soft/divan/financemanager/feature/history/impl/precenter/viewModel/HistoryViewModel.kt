@@ -72,7 +72,7 @@ class HistoryViewModel @Inject constructor(
                         }
 
                         if (data.first.isEmpty()) {
-                            _uiState.update { HistoryUiState.Error(R.string.empty) }
+                            _uiState.update { HistoryUiState.EmptyData }
                         } else {
                             _uiState.update {
                                 HistoryUiState.Success(
@@ -87,6 +87,11 @@ class HistoryViewModel @Inject constructor(
             }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
+    }
+
+    fun reloadData() {
+        _startDate.value = _startDate.value
+        _endDate.value = _endDate.value
     }
 
     fun updateStartDate(date: LocalDate) {

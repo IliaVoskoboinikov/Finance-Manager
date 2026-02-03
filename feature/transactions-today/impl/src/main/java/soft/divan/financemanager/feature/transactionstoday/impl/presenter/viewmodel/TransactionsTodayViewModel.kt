@@ -34,7 +34,11 @@ class TransactionsTodayViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<TransactionsTodayUiState>(TransactionsTodayUiState.Loading)
     val uiState: StateFlow<TransactionsTodayUiState> = _uiState.asStateFlow()
 
+    private var lastIsIncome: Boolean? = null
+
     fun loadTodayTransactions(isIncome: Boolean) {
+        lastIsIncome = isIncome
+
         val today = Instant.now()
         getTransactionsByPeriodUseCase(
             isIncome = isIncome,
@@ -64,6 +68,10 @@ class TransactionsTodayViewModel @Inject constructor(
             }
             .flowOn(Dispatchers.IO)
             .launchIn(viewModelScope)
+    }
+
+    fun retry() {
+        lastIsIncome?.let { loadTodayTransactions(it) }
     }
 
     fun hapticNavigation() {

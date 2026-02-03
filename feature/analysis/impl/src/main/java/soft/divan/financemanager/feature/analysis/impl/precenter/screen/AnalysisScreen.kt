@@ -43,7 +43,7 @@ import soft.divan.financemanager.core.domain.extension.pretty
 import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.analysis.impl.R
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisUiState
-import soft.divan.financemanager.feature.analysis.impl.precenter.model.mockTransactionUiStateSuccess
+import soft.divan.financemanager.feature.analysis.impl.precenter.model.mockTransactionUiStateError
 import soft.divan.financemanager.feature.analysis.impl.precenter.viewModel.AnalysisViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.ErrorContent
@@ -64,7 +64,8 @@ fun AnalysisScreenPreview() {
     val today = remember { LocalDate.now() }
     FinanceManagerTheme {
         AnalysisContent(
-            uiState = mockTransactionUiStateSuccess,
+            uiState = mockTransactionUiStateError,
+            onRetry = {},
             onNavigateBack = { },
             snackbarHostState = remember { SnackbarHostState() },
             onUpdateStartDate = {},
@@ -91,6 +92,7 @@ fun AnalysisScreen(
         uiState = uiState,
         startDate = startDate,
         endDate = endDate,
+        onRetry = viewModel::reloadData,
         onNavigateBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
         onUpdateStartDate = viewModel::updateStartDate,
@@ -104,6 +106,7 @@ private fun AnalysisContent(
     uiState: AnalysisUiState,
     startDate: LocalDate,
     endDate: LocalDate,
+    onRetry: () -> Unit,
     onNavigateBack: () -> Unit,
     onUpdateStartDate: (LocalDate) -> Unit,
     onUpdateEndDate: (LocalDate) -> Unit,
@@ -122,7 +125,10 @@ private fun AnalysisContent(
                 onUpdateEndDate = onUpdateEndDate
             )
 
-            AnalysisStatefulContent(uiState = uiState)
+            AnalysisStatefulContent(
+                uiState = uiState,
+                onRetry = onRetry
+            )
         }
     }
 }
@@ -205,11 +211,21 @@ private fun DateItem(
 }
 
 @Composable
-private fun AnalysisStatefulContent(uiState: AnalysisUiState) {
+private fun AnalysisStatefulContent(
+    uiState: AnalysisUiState,
+    onRetry: () -> Unit
+) {
     when (uiState) {
         is AnalysisUiState.Loading -> LoadingProgressBar()
-        is AnalysisUiState.Error -> ErrorContent(onClick = {}) // TODO
+        is AnalysisUiState.Error -> ErrorContent(
+            messageResId = R.string.error_unknown, onClick = { onRetry() }
+        )
+
         is AnalysisUiState.Success -> AnalysisSuccessContent(uiState = uiState)
+        AnalysisUiState.EmptyData -> ErrorContent(
+            messageResId = R.string.empty_data,
+            onClick = { onRetry() }
+        )
     }
 }
 
