@@ -13,4 +13,6 @@ sealed interface AnalysisUiState {
     ) : AnalysisUiState
 
     data class Error(@field:StringRes val messageRes: Int) : AnalysisUiState
+    data object EmptyData : AnalysisUiState
+
 }

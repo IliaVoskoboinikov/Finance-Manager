@@ -6,5 +6,6 @@
     <string name="end">Конец</string>
     <string name="error_loading">Ошибка загрузки</string>
     <string name="empty">Пустой список</string>
-
+    <string name="empty_data">Упс, кажется ни чего не удалось найти</string>
+    <string name="error_unknown">Упс, ошибочка вышла</string>
 </resources>
