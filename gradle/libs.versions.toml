@@ -11,6 +11,7 @@ ksp = "2.1.21-2.0.1"
 coroutines = "1.10.2"
 buildTimeTracker = "5.0.1"
 graphPlugin = "2.9.0"
+ktlint = "14.0.1"
 
 # AndroidX Core
 coreKtx = "1.16.0"
@@ -155,6 +156,7 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 graph = { id = "com.jraska.module.graph.assertion", version.ref = "graphPlugin" }
 build-time-tracker = { id = "com.asarkar.gradle.build-time-tracker", version.ref = "buildTimeTracker" }
 android-lint = { id = "com.android.lint", version.ref = "agp" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 
 #Firebase
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
