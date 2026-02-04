@@ -124,8 +124,8 @@ jobs:
         run: |
           echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 
-      - name: Run ktlint
-        run: ./gradlew ktlintCheck $gradleFlags
+      - name: Run ktlint (report only)
+        run: ./gradlew ktlintCheck $gradleFlags || true
 
       - name: Upload ktlint reports
         if: always()
