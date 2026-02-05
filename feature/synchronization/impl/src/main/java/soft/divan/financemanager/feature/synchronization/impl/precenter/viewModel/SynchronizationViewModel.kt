@@ -16,7 +16,7 @@ import soft.divan.financemanager.feature.synchronization.impl.precenter.model.Sy
 import soft.divan.financemanager.sync.domain.usecase.ObserveLastSyncTimeUseCase
 import soft.divan.financemanager.sync.domain.usecase.ObserveSyncIntervalHoursUseCase
 import soft.divan.financemanager.sync.domain.usecase.SetSyncIntervalHoursUseCase
-import soft.divan.financemanager.sync.worker.BASE_SYNCHRONIZATION_PERIOD_IN_HOURS
+import soft.divan.financemanager.sync.worker.SYNCHRONIZATION_PERIOD_IN_HOURS
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -37,7 +37,7 @@ class SynchronizationViewModel @Inject constructor(
         ) { lastSyncTime, interval ->
             SynchronizationUiState.Success(
                 lastSyncTime = lastSyncTime?.toDateTimeString(),
-                hoursInterval = interval ?: BASE_SYNCHRONIZATION_PERIOD_IN_HOURS
+                hoursInterval = interval ?: SYNCHRONIZATION_PERIOD_IN_HOURS
             ) as SynchronizationUiState
         }
             .catch {
