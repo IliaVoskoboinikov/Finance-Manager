@@ -124,16 +124,28 @@ jobs:
         run: |
           echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 
-      - name: Run ktlint (report only)
-        run: ./gradlew ktlintCheck $gradleFlags || true
+      - name: Run KtLint
+        run: ./gradlew --continue ktlintCheck $gradleFlags
 
-      - name: Upload ktlint reports
-        if: always()
+      - name: Generate Markdown-like report for GitHub Actions
+        run: |
+          echo '### KtLint Report' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          # Берём все PLAIN отчёты KtLint и выводим их
+          find **/build/reports/ktlint/*.txt -type f -exec cat {} \; >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v4
+        if: success() || failure()
+        with:
+          sarif_file: '**/build/reports/ktlint/*.sarif'
+
+      - name: Upload HTML report
         uses: actions/upload-artifact@v4
         with:
-          name: ktlint-reports
-          path: |
-            **/build/reports/ktlint/**
+          name: ktlint-html
+          path: '**/build/reports/ktlint/*.html'
 
 
   check-module-graph:

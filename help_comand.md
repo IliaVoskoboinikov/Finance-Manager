@@ -26,3 +26,17 @@ dot -Tpng all_modules -o all_modules.png
 ```shell script
 ./gradlew app:assembleDebug
 ```
+
+# Ktlint
+
+# Запустить проверку
+
+```shell script
+./gradlew --continue ktlintCheck
+```
+
+# Выполнить форматирование
+
+```shell script
+./gradlew --continue ktlintFormat 
+```
