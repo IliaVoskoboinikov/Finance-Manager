@@ -123,12 +123,19 @@ jobs:
       - name: Run KtLint
         run: ./gradlew --continue ktlintCheck $gradleFlags
 
-      - name: Upload SARIF
+      - name: Upload all ktlint SARIF
+        if: always()
+        run: |
+          mkdir -p sarif-to-upload
+          find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} sarif-to-upload/ \;
+          echo "Files to upload:"
+          ls sarif-to-upload
+      - name: Upload SARIF to GitHub
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: |
-            **/build/reports/ktlint/*/*.sarif
+            $(find sarif-to-upload -type f)
           category: ktlint
 
       - name: Upload HTML report
