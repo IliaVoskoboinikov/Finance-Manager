@@ -133,7 +133,7 @@ jobs:
 
       - name: Install sarif-tools
         if: always()
-        run: npm install -g @microsoft/sarif-tools
+        run: npm install -g sarif-tools
 
       - name: Merge ktlint SARIF reports
         if: always()
