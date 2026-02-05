@@ -123,31 +123,12 @@ jobs:
       - name: Run KtLint
         run: ./gradlew --continue ktlintCheck $gradleFlags
 
-      - name: Publish KtLint summary
+      - name: Upload SARIF
         if: always()
-        run: |
-          echo '### KtLint Report' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          find . -type f -path "*/build/reports/ktlint/*.txt" -exec cat {} \; >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: Install sarif-tools
-        if: always()
-        run: npm install -g sarif-tools
-
-      - name: Merge ktlint SARIF reports
-        if: always()
-        run: |
-          mkdir -p sarif
-          sarif merge \
-            $(find . -type f -path "*/build/reports/ktlint/*/*.sarif") \
-            --output sarif/ktlint.sarif
-
-      - name: Upload merged ktlint SARIF
         uses: github/codeql-action/upload-sarif@v4
-        if: always()
         with:
-          sarif_file: sarif/ktlint.sarif
+          sarif_file: |
+            **/build/reports/ktlint/*/*.sarif
           category: ktlint
 
       - name: Upload HTML report
