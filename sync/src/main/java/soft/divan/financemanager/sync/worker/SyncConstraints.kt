@@ -10,4 +10,4 @@ val SyncConstraints
         .build()
 
 /**  По умолчанию синхронизируем раз в 4 часа*/
-const val BASE_SYNCHRONIZATION_PERIOD_IN_HOURS = 4
+const val SYNCHRONIZATION_PERIOD_IN_HOURS = 4

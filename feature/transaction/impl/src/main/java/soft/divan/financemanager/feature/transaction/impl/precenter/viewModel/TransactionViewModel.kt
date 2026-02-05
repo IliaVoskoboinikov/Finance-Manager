@@ -205,15 +205,8 @@ class TransactionViewModel @Inject constructor(
 
         val newAmount = when {
             input.isEmpty() -> "0"
-
-            current == "0" &&
-                    input.length == 2 &&
-                    input[1].isDigit() ->
-                input.last().toString()
-
-            moneyRegex.matches(input) ->
-                input
-
+            current == "0" && input.length == 2 && input[1].isDigit() -> input.last().toString()
+            moneyRegex.matches(input) -> input
             else -> return
         }
 
