@@ -31,7 +31,7 @@ class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToCreatePin = {
                     navController.navigate(scope.route(SCENARIO_SECURITY_ROUTE))
-                },
+                }
             )
         }
 
@@ -40,7 +40,6 @@ class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
             route = SCENARIO_SECURITY_ROUTE,
             startDestination = SCREEN_CREATE_ROUTE
         ) {
-
             composable(route = scope.route(SCREEN_CREATE_ROUTE)) {
                 CreatePinScreen(
                     onNavigateBack = {
@@ -48,8 +47,6 @@ class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
                     }
                 )
             }
-
         }
-
     }
 }

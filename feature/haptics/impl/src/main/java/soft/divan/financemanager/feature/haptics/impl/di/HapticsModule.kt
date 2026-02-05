@@ -49,10 +49,10 @@ object HapticsModule {
     fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
         context.hapticsDataStore
 
-
     @Provides
     @Singleton
-    fun provideHapticsPreferences(@HapticsDataStore dataStore: DataStore<Preferences>): HapticsLocalSource =
+    fun provideHapticsPreferences(
+        @HapticsDataStore dataStore: DataStore<Preferences>
+    ): HapticsLocalSource =
         HapticsLocalSourceImpl(dataStore)
-
 }

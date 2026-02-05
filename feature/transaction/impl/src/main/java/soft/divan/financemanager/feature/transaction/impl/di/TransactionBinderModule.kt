@@ -31,12 +31,13 @@ interface TransactionBinderModule {
     fun bindGetTransactionUseCase(impl: GetTransactionUseCaseImpl): GetTransactionUseCase
 
     @Binds
-    fun bindGetCategoriesByTypeUseCase(impl: GetCategoriesByTypeUseCaseImpl): GetCategoriesByTypeUseCase
+    fun bindGetCategoriesByTypeUseCase(
+        impl: GetCategoriesByTypeUseCaseImpl
+    ): GetCategoriesByTypeUseCase
 
     @Binds
     fun bindDeleteTransactionUseCase(impl: DeleteTransactionUseCaseImpl): DeleteTransactionUseCase
 
     @Binds
     fun bindUpdateTransactionUseCase(impl: UpdateTransactionUseCaseImpl): UpdateTransactionUseCase
-
 }

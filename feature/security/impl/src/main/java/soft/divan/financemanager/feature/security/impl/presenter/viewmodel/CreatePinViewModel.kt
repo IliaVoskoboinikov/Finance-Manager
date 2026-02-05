@@ -25,5 +25,4 @@ class CreatePinViewModel @Inject constructor(
         savePinUseCase(pin)
         changeState(CreatePinScreenState.PinCreatedState)
     }
-
 }

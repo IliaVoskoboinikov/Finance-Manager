@@ -13,7 +13,6 @@ import soft.divan.finansemanager.core.database.dao.TransactionDao
 import soft.divan.finansemanager.core.database.db.FinanceManagerDatabase
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object DataBaseProviderModule {
@@ -37,5 +36,4 @@ object DataBaseProviderModule {
     @Provides
     @Singleton
     fun provideAccountDao(db: FinanceManagerDatabase): AccountDao = db.accountDao()
-
 }

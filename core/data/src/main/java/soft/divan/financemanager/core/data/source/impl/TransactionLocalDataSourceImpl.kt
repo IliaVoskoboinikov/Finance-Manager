@@ -7,7 +7,7 @@ import soft.divan.finansemanager.core.database.entity.TransactionEntity
 import javax.inject.Inject
 
 class TransactionLocalDataSourceImpl @Inject constructor(
-    private val transactionDao: TransactionDao,
+    private val transactionDao: TransactionDao
 ) : TransactionLocalDataSource {
 
     override suspend fun create(transaction: TransactionEntity) =
@@ -20,20 +20,17 @@ class TransactionLocalDataSourceImpl @Inject constructor(
     ): Flow<List<TransactionEntity>> =
         transactionDao.getByAccountAndPeriod(accountId, startDate, endDate)
 
-
     override suspend fun getByAccountId(accountId: String): List<TransactionEntity> =
         transactionDao.getByAccountId(accountId)
-
 
     override suspend fun getByLocalId(localId: String): TransactionEntity? =
         transactionDao.getByLocalId(localId)
 
-
-    override suspend fun getByServerId(id: Int): TransactionEntity? = transactionDao.getByServerId(id)
+    override suspend fun getByServerId(id: Int): TransactionEntity? =
+        transactionDao.getByServerId(id)
 
     override suspend fun getByServerIds(serverIds: List<Int>): List<TransactionEntity> =
         if (serverIds.isEmpty()) emptyList() else transactionDao.getByServerIds(serverIds)
-
 
     override suspend fun getPendingSync(): List<TransactionEntity> = transactionDao.getPendingSync()
 

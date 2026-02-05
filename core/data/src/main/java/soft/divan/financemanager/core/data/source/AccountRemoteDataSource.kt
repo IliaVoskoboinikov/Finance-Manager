@@ -5,7 +5,6 @@ import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 
-
 interface AccountRemoteDataSource {
     suspend fun create(createAccountRequestDto: CreateAccountRequestDto): Response<AccountDto>
     suspend fun getAll(): Response<List<AccountDto>>

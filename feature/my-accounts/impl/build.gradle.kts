@@ -10,5 +10,4 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.feature.account.api)
     implementation(projects.feature.haptics.api)
-
 }

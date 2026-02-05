@@ -73,7 +73,6 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import java.time.LocalDate
 import java.time.LocalTime
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun TransactionScreenPreview() {
@@ -92,7 +91,6 @@ fun TransactionScreenPreview() {
             onDelete = {},
             snackbarHostState = remember { SnackbarHostState() }
         )
-
     }
 }
 
@@ -173,7 +171,6 @@ fun TransactionContent(
     onDelete: () -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
-
     Scaffold(
         topBar = { TopBarTransaction(isIncome, onNavigateBack, onSave) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -181,7 +178,9 @@ fun TransactionContent(
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is TransactionUiState.Loading -> LoadingProgressBar()
+
                 is TransactionUiState.Error -> ErrorContent(onClick = onSave)
+
                 is TransactionUiState.Success -> TransactionForm(
                     modifier = modifier,
                     uiState = uiState,
@@ -251,13 +250,14 @@ fun TransactionForm(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
     ) {
         Account(uiState = uiState, onClick = { isShowAccountsSheet.value = true })
         FMDriver()
         Category(
             category = uiState.transaction.category.emoji + " " + uiState.transaction.category.name,
-            onClick = { isShowCategorySheet.value = true })
+            onClick = { isShowCategorySheet.value = true }
+        )
         FMDriver()
         Amount(amount = uiState.transaction.amount, onAmountChange = onAmountChange)
         FMDriver()
@@ -275,12 +275,13 @@ fun TransactionForm(
             value = uiState.transaction.comment,
             onValueChange = {
                 onCommentChange(it)
-            },
+            }
         )
         FMDriver()
         Spacer(modifier = Modifier.height(24.dp))
-        if (uiState.transaction.mode is TransactionMode.Edit)
+        if (uiState.transaction.mode is TransactionMode.Edit) {
             DeleteButton({ isShowDeleteDialog.value = true })
+        }
     }
 }
 
@@ -352,7 +353,6 @@ private fun ShowAccountsBottomSheet(
     }
 }
 
-
 @Composable
 private fun ShowDeleteDialog(isShowDeleteDialog: MutableState<Boolean>, onDelete: () -> Unit) {
     if (isShowDeleteDialog.value) {
@@ -382,7 +382,7 @@ private fun Account(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
 
             )
-        },
+        }
     )
 }
 
@@ -407,10 +407,9 @@ private fun Category(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        },
+        }
     )
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -422,7 +421,7 @@ fun CategoryBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         CategorySheetContent(categories, onCategorySelected, onDismissRequest)
     }
@@ -438,12 +437,11 @@ fun AccountsBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
         AccountSheetContent(accounts, onAccountsSelected, onDismissRequest)
     }
 }
-
 
 @Composable
 private fun AccountSheetContent(
@@ -473,14 +471,15 @@ private fun AccountSheetContent(
                         .clickable {
                             onAccountSelected(account)
                             onDismissRequest()
-                        }, content = {
+                        },
+                    content = {
                         Text(
                             text = account.name + " " + account.balance + " " + account.currency,
                             style = MaterialTheme.typography.bodyLarge
                         )
-                    })
+                    }
+                )
                 FMDriver()
-
             }
         }
     }
@@ -514,14 +513,15 @@ private fun CategorySheetContent(
                         .clickable {
                             onCategorySelected(category)
                             onDismissRequest()
-                        }, content = {
+                        },
+                    content = {
                         Text(
                             text = category.emoji + " " + category.name,
                             style = MaterialTheme.typography.bodyLarge
                         )
-                    })
+                    }
+                )
                 FMDriver()
-
             }
         }
     }
@@ -575,11 +575,10 @@ private fun AmountTextField(
     )
 }
 
-
 @Composable
 private fun Data(
     transactionDate: String,
-    isShowStartDatePicker: MutableState<Boolean>,
+    isShowStartDatePicker: MutableState<Boolean>
 ) {
     ListItem(
         modifier = Modifier
@@ -587,7 +586,7 @@ private fun Data(
             .fillMaxWidth()
             .clickable { isShowStartDatePicker.value = true },
         content = { ContentTextListItem(stringResource(R.string.data)) },
-        trail = { ContentTextListItem(transactionDate) },
+        trail = { ContentTextListItem(transactionDate) }
     )
 }
 
@@ -599,7 +598,7 @@ private fun Time(transactionDate: String, isShowTimePicker: MutableState<Boolean
             .fillMaxWidth()
             .clickable { isShowTimePicker.value = true },
         content = { ContentTextListItem(stringResource(R.string.time)) },
-        trail = { ContentTextListItem(transactionDate) },
+        trail = { ContentTextListItem(transactionDate) }
     )
 }
 
@@ -655,5 +654,3 @@ fun CommentInputField(
         }
     }
 }
-
-

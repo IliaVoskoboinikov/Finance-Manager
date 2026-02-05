@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SoundViewModel @Inject constructor(
     private val setSoundsEnabledUseCase: SetSoundsEnabledUseCase,
-    private val observeSoundsEnabledUseCase: ObserveSoundsEnabledUseCase,
+    private val observeSoundsEnabledUseCase: ObserveSoundsEnabledUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<SoundsUiState>(SoundsUiState.Loading)
@@ -45,6 +45,4 @@ class SoundViewModel @Inject constructor(
             setSoundsEnabledUseCase(isEnabled)
         }
     }
-
-
 }

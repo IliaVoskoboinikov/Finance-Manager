@@ -12,13 +12,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import soft.divan.financemanager.feature.security.impl.presenter.util.BiometricHelper
 
-
 @Composable
 @RequiresApi(Build.VERSION_CODES.P)
 fun BiometricScreen(authenticationCallback: BiometricPrompt.AuthenticationCallback) {
     val context = LocalContext.current
     val biometricHelper = BiometricHelper(context)
-
 
     val requestPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -26,16 +24,18 @@ fun BiometricScreen(authenticationCallback: BiometricPrompt.AuthenticationCallba
         if (isGranted) {
             biometricHelper.openBiometric(authenticationCallback)
         } else {
-            /// нет разрещения на использование биометрии
+            // нет разрещения на использование биометрии
             // Здесь можно показать сообщение пользователю о том, что разрешение не предоставлено
             // или перенаправить его в настройки приложения для предоставления разрешения
         }
     }
 
-    when (ContextCompat.checkSelfPermission(
-        context,
-        Manifest.permission.USE_BIOMETRIC
-    )) {
+    when (
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.USE_BIOMETRIC
+        )
+    ) {
         PackageManager.PERMISSION_GRANTED -> {
             biometricHelper.openBiometric(authenticationCallback)
         }

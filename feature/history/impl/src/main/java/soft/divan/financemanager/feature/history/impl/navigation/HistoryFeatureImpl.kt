@@ -60,7 +60,9 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
                     )
                 },
                 onNavigateToAnalysis = {
-                    navController.navigate(scope.route(analysisFeatureApi.analysisRouteWithArgs(isIncome = isIncome)))
+                    navController.navigate(
+                        scope.route(analysisFeatureApi.analysisRouteWithArgs(isIncome = isIncome))
+                    )
                 }
             )
         }
@@ -78,6 +80,4 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
             modifier = modifier
         )
     }
-
-
 }

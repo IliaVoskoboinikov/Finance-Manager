@@ -48,11 +48,9 @@ import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import java.time.LocalDate
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun HistoryScreenPreview() {
-
     val today = remember { LocalDate.now() }
     FinanceManagerTheme {
         HistoryContent(
@@ -64,7 +62,7 @@ fun HistoryScreenPreview() {
             onNavigateToTransaction = {},
             onNavigateBack = {},
             onNavigateToAnalysis = {},
-            onRetry = {},
+            onRetry = {}
         )
     }
 }
@@ -134,7 +132,6 @@ private fun HistoryContent(
         }
     }
 }
-
 
 @Composable
 private fun HistoryTopBar(onNavigateBack: () -> Unit, onNavigateToAnalysis: () -> Unit) {
@@ -223,6 +220,7 @@ private fun HistoryStatefulContent(
 ) {
     when (uiState) {
         is HistoryUiState.Loading -> LoadingProgressBar()
+
         is HistoryUiState.Error -> ErrorContent(
             messageResId = R.string.error_unknown,
             onClick = { onRetry() }
@@ -250,7 +248,10 @@ private fun HistorySuccessContent(
     Column {
         SummaryItem(sum = sumTransaction)
         FMDriver()
-        ListTransaction(transactions = transactions, onNavigateToTransaction = onNavigateToTransaction)
+        ListTransaction(
+            transactions = transactions,
+            onNavigateToTransaction = onNavigateToTransaction
+        )
     }
 }
 
@@ -267,7 +268,7 @@ private fun SummaryItem(sum: String) {
 @Composable
 private fun ListTransaction(
     transactions: List<UiTransaction>,
-    onNavigateToTransaction: (String) -> Unit,
+    onNavigateToTransaction: (String) -> Unit
 ) {
     LazyColumn {
         items(
@@ -308,7 +309,7 @@ private fun ItemTransaction(
                 contentDescription = "arrow",
                 tint = colorScheme.onSurfaceVariant
             )
-        },
+        }
     )
     FMDriver()
 }

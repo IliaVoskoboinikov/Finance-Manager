@@ -31,7 +31,6 @@ fun NumberButton(
                 horizontal = Dimens.horizontalKeyboardButtonPadding
             )
     ) {
-
         Box(
             modifier = Modifier
                 .size(Dimens.keyBoardButtonSize)
@@ -42,10 +41,9 @@ fun NumberButton(
             Text(
                 text = number,
                 style = TextStyle(fontSize = Dimens.keyBoardButtonFontSize),
-                color = MaterialTheme.colorScheme.onBackground,
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
-
     }
 }
 
@@ -62,7 +60,6 @@ fun IconButton(
                 horizontal = Dimens.horizontalKeyboardButtonPadding
             )
     ) {
-
         Box(
             modifier = Modifier
                 .size(Dimens.keyBoardButtonSize)
@@ -76,7 +73,5 @@ fun IconButton(
                 contentDescription = null
             )
         }
-
     }
 }
-

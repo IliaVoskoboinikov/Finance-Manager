@@ -26,7 +26,6 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
         scope: RouteScope,
         modifier: Modifier
     ) {
-
         navGraphBuilder.composable(scope.route()) {
             CreateAccountScreenScreen(
                 modifier = modifier,
@@ -47,7 +46,7 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
             CreateAccountScreenScreen(
                 modifier = modifier,
                 accountId = accountId,
-                onNavigateBack = navController::popBackStack,
+                onNavigateBack = navController::popBackStack
             )
         }
     }

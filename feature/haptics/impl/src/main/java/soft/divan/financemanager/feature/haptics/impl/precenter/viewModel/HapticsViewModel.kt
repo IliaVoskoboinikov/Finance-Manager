@@ -19,7 +19,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HapticsViewModel @Inject constructor(
     private val setHapticEnabledEnabledUseCase: SetHapticsEnabledUseCase,
-    private val observeHapticsEnabledUseCase: ObserveHapticsEnabledUseCase,
+    private val observeHapticsEnabledUseCase: ObserveHapticsEnabledUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HapticsUiState>(HapticsUiState.Loading)
@@ -45,6 +45,4 @@ class HapticsViewModel @Inject constructor(
             setHapticEnabledEnabledUseCase(isEnabled)
         }
     }
-
-
 }

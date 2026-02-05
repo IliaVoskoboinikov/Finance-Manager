@@ -8,7 +8,6 @@ import androidx.security.crypto.MasterKey
 import soft.divan.financemanager.feature.security.impl.data.sourse.SecurityLocalDataSource
 import javax.inject.Inject
 
-
 private const val PREFS_FILE_NAME = "secure_prefs"
 private const val USER_PIN_KEY = "user_pin"
 

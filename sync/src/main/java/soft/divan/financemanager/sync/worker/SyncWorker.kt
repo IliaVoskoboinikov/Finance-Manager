@@ -26,7 +26,7 @@ internal class SyncWorker @AssistedInject constructor(
     private val accountSyncManager: AccountSyncManagerImpl,
     private val transactionSyncManager: TransactionSyncManagerImpl,
     private val setLastSyncTimeUseCase: SetLastSyncTimeUseCase,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : CoroutineWorker(appContext, workerParams), Synchronizer {
 
     override suspend fun getForegroundInfo(): ForegroundInfo = appContext.syncForegroundInfo()

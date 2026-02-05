@@ -11,7 +11,7 @@ import soft.divan.financemanager.sync.initializers.SyncInitializer
 import javax.inject.Inject
 
 @HiltAndroidApp
-class App: Application() {
+class App : Application() {
 
     @Inject
     @ApplicationScope

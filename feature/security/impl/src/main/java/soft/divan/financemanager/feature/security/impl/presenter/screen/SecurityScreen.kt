@@ -27,7 +27,6 @@ import soft.divan.financemanager.uikit.icons.ArrowBack
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun PreviewSecurityScreen() {
@@ -46,7 +45,7 @@ fun SecurityScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     onNavigateToCreatePin: () -> Unit,
-    viewModel: SecurityViewModel = hiltViewModel(),
+    viewModel: SecurityViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -68,12 +67,14 @@ fun SecurityContent(
     onNavigateToCreatePin: () -> Unit
 ) {
     Scaffold(
-        topBar = { TopBarSecurity(onNavigateBack) },
+        topBar = { TopBarSecurity(onNavigateBack) }
     ) { paddingValues ->
         Column(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is SecurityUiState.Error -> ErrorContent(onClick = {})
+
                 is SecurityUiState.Loading -> LoadingProgressBar()
+
                 is SecurityUiState.Success -> SecuritySucsessState(
                     uiState = uiState,
                     onNavigateToCreatePin = onNavigateToCreatePin,
@@ -90,13 +91,12 @@ private fun SecuritySucsessState(
     onNavigateToCreatePin: () -> Unit,
     deletePin: () -> Unit
 ) {
-
     Spacer(modifier = Modifier.size(50.dp))
     Btn(textRes = R.string.create_pin, onClick = onNavigateToCreatePin)
     Spacer(modifier = Modifier.size(50.dp))
-    if (uiState.hasPin)
+    if (uiState.hasPin) {
         Btn(textRes = R.string.delete_pin, onClick = deletePin)
-
+    }
 }
 
 @Composable
@@ -105,7 +105,7 @@ private fun TopBarSecurity(onNavigateBack: () -> Unit) {
         topBar = TopBarModel(
             title = R.string.security,
             navigationIcon = Icons.Filled.ArrowBack,
-            navigationIconClick = { onNavigateBack() },
+            navigationIconClick = { onNavigateBack() }
         )
     )
 }

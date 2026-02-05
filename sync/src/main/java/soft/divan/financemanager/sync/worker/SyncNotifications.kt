@@ -16,7 +16,7 @@ private const val SYNC_NOTIFICATION_CHANNEL_ID = "SyncNotificationChannel"
  */
 fun Context.syncForegroundInfo() = ForegroundInfo(
     SYNC_NOTIFICATION_ID,
-    syncWorkNotification(),
+    syncWorkNotification()
 )
 
 /**
@@ -27,7 +27,7 @@ private fun Context.syncWorkNotification(): Notification {
     val channel = NotificationChannel(
         SYNC_NOTIFICATION_CHANNEL_ID,
         "sync",
-        NotificationManager.IMPORTANCE_DEFAULT,
+        NotificationManager.IMPORTANCE_DEFAULT
     ).apply {
         description = "Sync"
     }
@@ -39,7 +39,7 @@ private fun Context.syncWorkNotification(): Notification {
 
     return NotificationCompat.Builder(
         this,
-        SYNC_NOTIFICATION_CHANNEL_ID,
+        SYNC_NOTIFICATION_CHANNEL_ID
     ) /*.setSmallIcon(
         R.drawable.notification,
     )*/

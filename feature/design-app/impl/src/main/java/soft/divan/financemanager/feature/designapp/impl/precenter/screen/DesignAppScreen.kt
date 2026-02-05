@@ -102,12 +102,14 @@ fun DesignAppContent(
 
 ) {
     Scaffold(
-        topBar = { TopBar(topBar = TopBarModel(title = R.string.design)) },
+        topBar = { TopBar(topBar = TopBarModel(title = R.string.design)) }
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is DesignUiState.Error -> ErrorContent(onClick = { onRetry() })
+
                 is DesignUiState.Loading -> LoadingProgressBar()
+
                 is DesignUiState.Success -> DesignAppForm(
                     modifier = modifier,
                     uiState = uiState,
@@ -350,7 +352,9 @@ fun getColorForAccent(
     customColor: Color? = null
 ): Color = when (accentColor) {
     AccentColor.DYNAMIC -> getDynamicColorPreview()
+
     AccentColor.CUSTOM -> customColor ?: Color.Transparent
+
     else -> requireNotNull(accentColor.color) {
         "AccentColor ${accentColor.name} must have a color"
     }
@@ -398,7 +402,7 @@ fun CustomColorPickerDialog(
                     onColorChanged = { colorEnvelope ->
                         selectedColor = colorEnvelope.color
                     },
-                    controller = controller,
+                    controller = controller
                 )
             }
         },

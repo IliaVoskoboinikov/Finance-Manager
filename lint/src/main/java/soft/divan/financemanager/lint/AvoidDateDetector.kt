@@ -30,7 +30,7 @@ class AvoidDateDetector : Detector(), SourceCodeScanner {
                 priority = 6,
                 severity = Severity.ERROR,
                 androidSpecific = true,
-                implementation = IMPLEMENTATION,
+                implementation = IMPLEMENTATION
             )
     }
 
@@ -40,7 +40,7 @@ class AvoidDateDetector : Detector(), SourceCodeScanner {
     override fun visitConstructor(
         context: JavaContext,
         node: UCallExpression,
-        constructor: PsiMethod,
+        constructor: PsiMethod
     ) {
         context.report(
             ISSUE,
@@ -52,8 +52,8 @@ class AvoidDateDetector : Detector(), SourceCodeScanner {
                     fix().replace().all().with("java.time.LocalTime.now()").shortenNames().build(),
                     fix().replace().all().with("java.time.LocalDate.now()").shortenNames().build(),
                     fix().replace().all().with("java.time.LocalDateTime.now()").shortenNames()
-                        .build(),
-                ),
+                        .build()
+                )
         )
     }
 
@@ -69,7 +69,7 @@ class AvoidDateDetector : Detector(), SourceCodeScanner {
             ISSUE,
             node,
             context.getLocation(node),
-            "Don't use `Calendar.getInstance`; use `java.time.*` instead",
+            "Don't use `Calendar.getInstance`; use `java.time.*` instead"
         )
     }
 }

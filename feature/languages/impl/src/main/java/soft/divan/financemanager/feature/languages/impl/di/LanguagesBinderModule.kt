@@ -16,7 +16,6 @@ import soft.divan.financemanager.feature.languages.impl.navigation.LanguagesFeat
 import soft.divan.financemanager.feature.languages.impl.system.AppLocaleManagerImpl
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 interface LanguagesBinderModule {
@@ -36,5 +35,4 @@ interface LanguagesBinderModule {
 
     @Binds
     fun bindAppLocaleManager(impl: AppLocaleManagerImpl): AppLocaleManager
-
 }

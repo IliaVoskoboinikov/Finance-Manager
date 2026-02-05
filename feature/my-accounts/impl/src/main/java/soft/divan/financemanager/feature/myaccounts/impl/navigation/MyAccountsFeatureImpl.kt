@@ -37,9 +37,12 @@ class MyAccountsFeatureImpl @Inject constructor() : MyAccountsFeatureApi {
                         )
                     )
                 },
-                onNavigateToCreateAccount = { navController.navigate(scope.route(accountFeatureApi.route)) }
+                onNavigateToCreateAccount = {
+                    navController.navigate(
+                        scope.route(accountFeatureApi.route)
+                    )
+                }
             )
-
         }
         accountFeatureApi.registerGraph(
             navGraphBuilder = navGraphBuilder,

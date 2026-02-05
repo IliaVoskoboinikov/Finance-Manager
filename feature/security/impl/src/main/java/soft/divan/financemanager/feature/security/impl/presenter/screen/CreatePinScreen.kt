@@ -13,13 +13,11 @@ import soft.divan.financemanager.feature.security.impl.R
 import soft.divan.financemanager.feature.security.impl.presenter.model.CreatePinScreenState
 import soft.divan.financemanager.feature.security.impl.presenter.viewmodel.CreatePinViewModel
 
-
 @Composable
 fun CreatePinScreen(
     viewModel: CreatePinViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
-
     var headerId by remember { mutableIntStateOf(R.string.сome_up_with_pin) }
     var tempPin by remember { mutableStateOf<String?>(null) }
     val notificationText = ""
@@ -27,9 +25,7 @@ fun CreatePinScreen(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-
     when (val state = uiState) {
-
         is CreatePinScreenState.InitialState -> {
             headerId = R.string.сome_up_with_pin
             tempPin = null
@@ -56,9 +52,7 @@ fun CreatePinScreen(
         }
 
         is CreatePinScreenState.ErrorState -> {
-
         }
-
     }
 
     PinEntryCommonScreen(
@@ -70,7 +64,6 @@ fun CreatePinScreen(
             } else {
                 viewModel.changeState(CreatePinScreenState.ConfirmingPinState(pinCode))
             }
-        },
-        )
-
+        }
+    )
 }

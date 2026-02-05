@@ -14,6 +14,6 @@ fun Transaction.toUi(category: Category): TransactionUi {
             currencyCode
         ),
         transactionDateTime = UiDateFormatter.formatDateTime(transactionDate),
-        comment = comment.toString(),
+        comment = comment.toString()
     )
 }

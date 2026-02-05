@@ -22,10 +22,9 @@ class DesignAppFeatureImpl @Inject constructor() : DesignAppFeatureApi {
         scope: RouteScope,
         modifier: Modifier
     ) {
-
         navGraphBuilder.composable(scope.route()) {
             DesignAppScreen(
-                modifier = modifier,
+                modifier = modifier
             )
         }
     }

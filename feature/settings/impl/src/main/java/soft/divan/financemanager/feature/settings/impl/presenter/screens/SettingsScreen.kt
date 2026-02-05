@@ -27,7 +27,6 @@ import soft.divan.financemanager.uikit.icons.Triangle
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun SettingsScreenPreview() {
@@ -68,7 +67,7 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        topBar = { TopBar(topBar = TopBarModel(title = R.string.settings)) },
+        topBar = { TopBar(topBar = TopBarModel(title = R.string.settings)) }
     ) { paddingValues ->
         Column(
             modifier = modifier
@@ -103,7 +102,6 @@ private fun SettingsItem(model: SettingsModel) {
     FMDriver()
 }
 
-
 private fun provideSettings(
     onNavigateToAboutTheProgram: () -> Unit,
     onNavigateToSecurity: () -> Unit,
@@ -111,7 +109,7 @@ private fun provideSettings(
     onNavigateToHaptic: () -> Unit,
     onNavigateToSounds: () -> Unit,
     onNavigateToLanguages: () -> Unit,
-    onNavigateToSynchronization: () -> Unit,
+    onNavigateToSynchronization: () -> Unit
 ): List<SettingsModel> {
     return listOf(
         SettingsModel(R.string.design) { onNavigateToDesignApp() },
@@ -123,4 +121,3 @@ private fun provideSettings(
         SettingsModel(R.string.program_notes) { onNavigateToAboutTheProgram() }
     )
 }
-

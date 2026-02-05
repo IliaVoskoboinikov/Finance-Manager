@@ -11,7 +11,6 @@ import soft.divan.financemanager.uikit.icons.Downtrend
 import soft.divan.financemanager.uikit.icons.Settings
 import soft.divan.financemanager.uikit.icons.Uptrend
 
-
 data class ScreenBottom(
     val route: String,
     val title: Int,
@@ -23,13 +22,13 @@ data class ScreenBottom(
 
             myAccounts: FeatureApi,
             category: FeatureApi,
-            settings: FeatureApi,
+            settings: FeatureApi
         ) = listOf(
             ScreenBottom(transactionsToday.expenseRoute, R.string.expenses, Icons.Filled.Downtrend),
             ScreenBottom(transactionsToday.incomeRoute, R.string.income, Icons.Filled.Uptrend),
             ScreenBottom(myAccounts.route, R.string.account, Icons.Filled.Calculator),
             ScreenBottom(category.route, R.string.category, Icons.Filled.Chart90),
-            ScreenBottom(settings.route, R.string.settings, Icons.Filled.Settings),
+            ScreenBottom(settings.route, R.string.settings, Icons.Filled.Settings)
         )
     }
 }

@@ -22,7 +22,6 @@ import soft.divan.financemanager.feature.designapp.impl.domain.usecase.impl.SetT
 import soft.divan.financemanager.feature.designapp.impl.navigation.DesignAppFeatureImpl
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 interface DesignAppBinderModule {
@@ -47,9 +46,12 @@ interface DesignAppBinderModule {
     fun bindSetAccentColorUseCase(impl: SetAccentColorUseCaseImpl): SetAccentColorUseCase
 
     @Binds
-    fun bindGetCustomAccentColorUseCase(impl: GetCustomAccentColorUseCaseImpl): GetCustomAccentColorUseCase
+    fun bindGetCustomAccentColorUseCase(
+        impl: GetCustomAccentColorUseCaseImpl
+    ): GetCustomAccentColorUseCase
 
     @Binds
-    fun bindSetCustomAccentColorUseCase(impl: SetCustomAccentColorUseCaseImpl): SetCustomAccentColorUseCase
-
+    fun bindSetCustomAccentColorUseCase(
+        impl: SetCustomAccentColorUseCaseImpl
+    ): SetCustomAccentColorUseCase
 }

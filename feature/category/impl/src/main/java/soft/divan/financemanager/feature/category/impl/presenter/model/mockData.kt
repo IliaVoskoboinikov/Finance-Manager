@@ -43,5 +43,5 @@ val mockCategoriesUiStateLoading = CategoriesUiState.Loading
 
 val mockCategoriesUiStateSuccess = CategoriesUiState.Success(
     categories = mockCategories,
-    filteredCategories = mockCategories,
+    filteredCategories = mockCategories
 )

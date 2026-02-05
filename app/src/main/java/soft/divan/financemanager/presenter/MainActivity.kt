@@ -132,5 +132,4 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
         ProcessLifecycleOwner.get().lifecycle.removeObserver(autoLockObserver)
     }
-
 }

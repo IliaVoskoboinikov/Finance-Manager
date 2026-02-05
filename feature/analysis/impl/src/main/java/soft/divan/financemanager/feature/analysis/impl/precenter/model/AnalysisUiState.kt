@@ -9,10 +9,9 @@ sealed interface AnalysisUiState {
     data object Loading : AnalysisUiState
     data class Success(
         val sumTransaction: String,
-        val categoryPieSlice: PieChartData,
+        val categoryPieSlice: PieChartData
     ) : AnalysisUiState
 
     data class Error(@field:StringRes val messageRes: Int) : AnalysisUiState
     data object EmptyData : AnalysisUiState
-
 }

@@ -26,7 +26,7 @@ class MainViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(DEFAULT_STOP_TIMEOUT_MS),
-            initialValue = false,
+            initialValue = false
         )
 
     fun hapticToggleMenu() {

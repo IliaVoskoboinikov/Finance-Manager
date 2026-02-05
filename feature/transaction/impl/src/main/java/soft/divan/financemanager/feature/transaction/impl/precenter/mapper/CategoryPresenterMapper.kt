@@ -7,6 +7,6 @@ fun Category.toUi(): CategoryUi {
     return CategoryUi(
         id = id,
         name = name,
-        emoji = emoji,
+        emoji = emoji
     )
 }

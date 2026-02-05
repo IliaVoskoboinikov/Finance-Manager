@@ -25,7 +25,6 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
     @Inject
     lateinit var historyFeatureApi: HistoryFeatureApi
 
-
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
@@ -65,7 +64,7 @@ class TransactionsTodayFeatureImpl @Inject constructor() : TransactionsTodayFeat
                             )
                         )
                     )
-                },
+                }
             )
         }
 
