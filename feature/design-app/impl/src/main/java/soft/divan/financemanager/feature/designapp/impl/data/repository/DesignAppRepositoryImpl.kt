@@ -35,5 +35,4 @@ class DesignAppRepositoryImpl @Inject constructor(
     override suspend fun setCustomAccentColor(color: Color) {
         designAppLocalSource.setCustomAccentColor(color)
     }
-
 }

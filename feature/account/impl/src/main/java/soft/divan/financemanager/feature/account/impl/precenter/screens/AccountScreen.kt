@@ -68,7 +68,6 @@ import soft.divan.financemanager.uikit.icons.RoundCross
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun CreateAccountScreenPreview() {
@@ -110,6 +109,7 @@ fun CreateAccountScreenScreen(
         viewModel.eventFlow.collect { event ->
             when (event) {
                 is AccountEvent.Saved -> onNavigateBack()
+
                 is AccountEvent.ShowError -> snackbarHostState.showSnackbar(
                     message = context.getString(event.messageRes),
                     withDismissAction = true
@@ -164,7 +164,9 @@ fun CreateAccountContent(
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is AccountUiState.Error -> ErrorContent(onClick = onSave)
+
                 is AccountUiState.Loading -> LoadingProgressBar()
+
                 is AccountUiState.Success -> CreateAccountForm(
                     uiState = uiState,
                     onUpdateName = onUpdateName,
@@ -194,7 +196,7 @@ fun CreateAccountForm(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
     ) {
         Name(uiState.account.name, onUpdateName)
         FMDriver()
@@ -208,10 +210,11 @@ fun CreateAccountForm(
         )
         FMDriver()
         Spacer(modifier = Modifier.height(24.dp))
-        if (uiState.mode is AccountMode.Create)
+        if (uiState.mode is AccountMode.Create) {
             SaveButton(onSave)
-        else
+        } else {
             DeleteButton(onDelete)
+        }
     }
 }
 
@@ -268,7 +271,6 @@ private fun BalanceTextField(
     )
 }
 
-
 @Composable
 private fun Name(
     name: String,
@@ -281,7 +283,6 @@ private fun Name(
             .clickable { },
         lead = { ContentTextListItem(stringResource(R.string.name)) },
         content = {
-
             BasicTextField(
                 value = name,
                 onValueChange = { onUpdateName(it) },
@@ -303,10 +304,9 @@ private fun Name(
                     ) {
                         innerTextField()
                     }
-
                 }
             )
-        },
+        }
     )
 }
 
@@ -338,7 +338,6 @@ private fun Currency(
     )
 }
 
-
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun ChoiceCurrency(
@@ -359,7 +358,6 @@ private fun ChoiceCurrency(
             )
         }
     }
-
 }
 
 @Composable
@@ -373,11 +371,9 @@ fun CurrencyItem(icon: ImageVector, title: Int, symbol: String, onClick: () -> U
                 tint = Color.Unspecified
             )
         },
-        content = { ContentTextListItem(text = stringResource(title) + " $symbol") },
+        content = { ContentTextListItem(text = stringResource(title) + " $symbol") }
     )
-
 }
-
 
 @Composable
 fun CurrencySheetContent(onCancel: () -> Unit, updateCurrency: (String) -> Unit) {
@@ -414,6 +410,5 @@ fun CurrencySheetContent(onCancel: () -> Unit, updateCurrency: (String) -> Unit)
             },
             containerColor = colorScheme.error
         )
-
     }
 }

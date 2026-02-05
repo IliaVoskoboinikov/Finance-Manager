@@ -25,7 +25,7 @@ interface TransactionDao {
     fun getByAccountAndPeriod(
         accountId: String,
         startDate: String, // "2025-10-24"
-        endDate: String    // "2025-10-24"
+        endDate: String // "2025-10-24"
     ): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM transactions WHERE localId = :localId")
@@ -37,7 +37,9 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE serverId IN (:serverIds)")
     suspend fun getByServerIds(serverIds: List<Int>): List<TransactionEntity>
 
-    @Query("SELECT * FROM transactions WHERE accountLocalId = :accountId ORDER BY transactionDate DESC")
+    @Query(
+        "SELECT * FROM transactions WHERE accountLocalId = :accountId ORDER BY transactionDate DESC"
+    )
     suspend fun getByAccountId(accountId: String): List<TransactionEntity>
 
     @Query("SELECT * FROM transactions WHERE syncStatus != 'SYNCED'")

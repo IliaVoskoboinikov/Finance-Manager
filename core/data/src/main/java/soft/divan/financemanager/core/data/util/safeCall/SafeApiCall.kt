@@ -12,7 +12,6 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import kotlin.coroutines.CoroutineContext
 
-
 suspend fun <T : Any> safeApiCall(
     errorLogger: ErrorLogger,
     ctx: CoroutineContext = Dispatchers.IO,
@@ -61,11 +60,12 @@ suspend fun <T : Any> safeApiCall(
                 when (error) {
                     is UnknownHostException,
                     is ConnectException,
-                    is SocketTimeoutException -> DomainResult.Failure(DataError.Network.toDomainError())
+                    is SocketTimeoutException -> DomainResult.Failure(
+                        DataError.Network.toDomainError()
+                    )
 
                     else ->
                         DomainResult.Failure(DataError.Unknown(error).toDomainError())
-
                 }
             }
         )

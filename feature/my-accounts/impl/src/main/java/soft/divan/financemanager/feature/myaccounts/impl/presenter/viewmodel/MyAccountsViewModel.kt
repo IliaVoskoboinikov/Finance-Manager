@@ -26,7 +26,7 @@ import javax.inject.Inject
 @HiltViewModel
 class MyAccountsViewModel @Inject constructor(
     private val getAccountsUseCase: GetAccountsUseCase,
-    private val hapticsManager: HapticsManager,
+    private val hapticsManager: HapticsManager
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MyAccountsUiState>(MyAccountsUiState.Loading)
     val uiState: StateFlow<MyAccountsUiState> = _uiState
@@ -50,7 +50,11 @@ class MyAccountsViewModel @Inject constructor(
                             _uiState.update { MyAccountsUiState.Success(accounts = accounts) }
                         }
                     },
-                    onFailure = { _uiState.update { MyAccountsUiState.Error(R.string.error_loading) } }
+                    onFailure = {
+                        _uiState.update {
+                            MyAccountsUiState.Error(R.string.error_loading)
+                        }
+                    }
                 )
             }
             .flowOn(Dispatchers.IO)
@@ -60,5 +64,4 @@ class MyAccountsViewModel @Inject constructor(
     fun hapticNavigation() {
         hapticsManager.perform(HapticType.CLICK)
     }
-
 }

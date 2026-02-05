@@ -10,6 +10,6 @@ fun Account.toUiModel(): MyAccountsUiModel {
         id = id,
         name = name,
         balance = "${balance.toPlainString()} $currencySymbol",
-        currency = currencySymbol,
+        currency = currencySymbol
     )
 }

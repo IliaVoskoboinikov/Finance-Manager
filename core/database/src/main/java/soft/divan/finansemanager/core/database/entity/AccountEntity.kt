@@ -7,7 +7,7 @@ import soft.divan.finansemanager.core.database.model.SyncStatus
 
 @Entity(
     tableName = "account",
-    indices = [Index(value = ["serverId"], unique = true)] //todo
+    indices = [Index(value = ["serverId"], unique = true)] // todo
 )
 data class AccountEntity(
     @PrimaryKey

@@ -37,7 +37,7 @@ fun PinEntryCommonScreen(
     onPinEntered: (String) -> Unit,
     onBackspaceClick: () -> Unit = {},
     onFingerprintClick: () -> Unit = {},
-    authenticationCallback: BiometricPrompt.AuthenticationCallback? = null,
+    authenticationCallback: BiometricPrompt.AuthenticationCallback? = null
 ) {
     val inputPin = remember { mutableStateListOf<Int>() }
     var showBiometricScreen by remember { mutableStateOf(true) }
@@ -61,7 +61,7 @@ fun PinEntryCommonScreen(
 
         RoundedBoxesRow(
             startQuantity = pinSize,
-            quantity = inputPin.size,
+            quantity = inputPin.size
         )
 
         if (errorMessage.isNotEmpty()) {
@@ -95,6 +95,3 @@ fun PinEntryCommonScreen(
         }
     }
 }
-
-
-

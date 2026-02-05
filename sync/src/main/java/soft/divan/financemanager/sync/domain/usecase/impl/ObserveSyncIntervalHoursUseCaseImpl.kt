@@ -6,7 +6,7 @@ import soft.divan.financemanager.sync.domain.usecase.ObserveSyncIntervalHoursUse
 import javax.inject.Inject
 
 class ObserveSyncIntervalHoursUseCaseImpl @Inject constructor(
-    private val repository: SyncRepository,
+    private val repository: SyncRepository
 ) : ObserveSyncIntervalHoursUseCase {
     override fun invoke(): Flow<Int?> = repository.observeSyncIntervalHours()
 }

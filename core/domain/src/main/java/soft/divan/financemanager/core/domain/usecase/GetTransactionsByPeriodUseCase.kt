@@ -12,5 +12,4 @@ interface GetTransactionsByPeriodUseCase {
         isIncome: Boolean,
         period: Period
     ): Flow<DomainResult<Triple<List<Transaction>, CurrencySymbol, List<Category>>>>
-
 }

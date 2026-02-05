@@ -48,5 +48,4 @@ class AppLocaleManagerImpl @Inject constructor(
         val appLocales = AppCompatDelegate.getApplicationLocales()
         return appLocales.takeIf { !it.isEmpty }?.get(0) ?: Locale.getDefault()
     }
-
 }

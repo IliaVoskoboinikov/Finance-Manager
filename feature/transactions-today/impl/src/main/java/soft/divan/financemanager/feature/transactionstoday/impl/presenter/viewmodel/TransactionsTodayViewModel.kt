@@ -31,7 +31,8 @@ class TransactionsTodayViewModel @Inject constructor(
     private val hapticsManager: HapticsManager
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<TransactionsTodayUiState>(TransactionsTodayUiState.Loading)
+    private val _uiState =
+        MutableStateFlow<TransactionsTodayUiState>(TransactionsTodayUiState.Loading)
     val uiState: StateFlow<TransactionsTodayUiState> = _uiState.asStateFlow()
 
     private var lastIsIncome: Boolean? = null
@@ -42,7 +43,7 @@ class TransactionsTodayViewModel @Inject constructor(
         val today = Instant.now()
         getTransactionsByPeriodUseCase(
             isIncome = isIncome,
-            period = Period(today, today),
+            period = Period(today, today)
         )
             .onStart {
                 _uiState.update { TransactionsTodayUiState.Loading }
@@ -63,7 +64,13 @@ class TransactionsTodayViewModel @Inject constructor(
                             )
                         }
                     },
-                    onFailure = { _uiState.update { TransactionsTodayUiState.Error(R.string.error_loading) } }
+                    onFailure = {
+                        _uiState.update {
+                            TransactionsTodayUiState.Error(
+                                R.string.error_loading
+                            )
+                        }
+                    }
                 )
             }
             .flowOn(Dispatchers.IO)

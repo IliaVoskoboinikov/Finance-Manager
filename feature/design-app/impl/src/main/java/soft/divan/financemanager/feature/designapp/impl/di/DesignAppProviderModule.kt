@@ -25,7 +25,9 @@ object DesignAppProviderModule {
 
     @Provides
     @Singleton
-    fun provideThemePreferences(@ThemeDataStore dataStore: DataStore<Preferences>): DesignAppLocalSource {
+    fun provideThemePreferences(
+        @ThemeDataStore dataStore: DataStore<Preferences>
+    ): DesignAppLocalSource {
         return DesignAppLocalSourceImpl(dataStore)
     }
 }

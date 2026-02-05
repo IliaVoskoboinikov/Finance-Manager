@@ -21,7 +21,6 @@ fun RowScope.FmNavigationBarItem(
     screenBottom: ScreenBottom,
     hapticToggleMenu: () -> Unit
 ) {
-
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentDestination = currentBackStack?.destination
     val selected = currentDestination
@@ -54,8 +53,8 @@ fun RowScope.FmNavigationBarItem(
             Text(
                 text = stringResource(screenBottom.title),
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                fontSize = 12.sp,
+                fontSize = 12.sp
             )
-        },
+        }
     )
 }

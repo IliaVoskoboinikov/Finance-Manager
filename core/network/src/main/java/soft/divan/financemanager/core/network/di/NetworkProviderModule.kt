@@ -42,7 +42,7 @@ object NetworkProviderModule {
      корректные заголовки Cache-Control или Expires.
     Пример серверного ответа, который будет кэшироваться:
         Cache-Control: public, max-age=3600
-        */
+     */
 
     @Provides
     @Singleton
@@ -65,7 +65,6 @@ object NetworkProviderModule {
     fun provideHttpLoggingInterceptor(
         provider: LoggingInterceptor
     ): HttpLoggingInterceptor = provider.provide()
-
 
     @Provides
     @Singleton
@@ -91,11 +90,9 @@ object NetworkProviderModule {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-
     @Provides
     @Singleton
     fun provideNetworkMonitor(
         networkMonitor: ConnectivityManagerNetworkMonitor
     ): NetworkMonitor = networkMonitor
-
 }

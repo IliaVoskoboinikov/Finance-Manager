@@ -9,5 +9,5 @@ enum class AccentColor(val color: Color?) {
     PURPLE(Purple),
     ORANGE(Orange),
     BLUE(Blue),
-    PINK(Pink),
+    PINK(Pink)
 }

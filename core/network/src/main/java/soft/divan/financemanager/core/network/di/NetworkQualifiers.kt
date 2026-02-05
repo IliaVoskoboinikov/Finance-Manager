@@ -1,6 +1,5 @@
 package soft.divan.financemanager.core.network.di
 
-
 import javax.inject.Qualifier
 
 @Qualifier

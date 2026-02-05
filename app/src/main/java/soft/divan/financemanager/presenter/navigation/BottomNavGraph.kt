@@ -20,7 +20,7 @@ fun NavGraph(
     transactionsTodayFeatureApi: TransactionsTodayFeatureApi,
     categoryFeatureApi: CategoryFeatureApi,
     settingsFeatureApi: SettingsFeatureApi,
-    myAccountsFeatureApi: MyAccountsFeatureApi,
+    myAccountsFeatureApi: MyAccountsFeatureApi
 ) {
     NavHost(
         navController = navController,
@@ -31,7 +31,6 @@ fun NavGraph(
         popEnterTransition = { EnterTransition.None },
         popExitTransition = { ExitTransition.None }
     ) {
-
         register(
             featureApi = transactionsTodayFeatureApi,
             navController = navController,

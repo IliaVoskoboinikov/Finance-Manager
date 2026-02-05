@@ -11,7 +11,6 @@ import soft.divan.finansemanager.core.database.entity.CategoryEntity
 import soft.divan.finansemanager.core.database.entity.TransactionEntity
 import soft.divan.finansemanager.core.database.util.Converters
 
-
 @Database(
     entities = [
         TransactionEntity::class,
@@ -21,11 +20,9 @@ import soft.divan.finansemanager.core.database.util.Converters
     version = 1,
     exportSchema = true
 )
-
 @TypeConverters(Converters::class)
 abstract class FinanceManagerDatabase : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun categoryDao(): CategoryDao
     abstract fun accountDao(): AccountDao
-
 }

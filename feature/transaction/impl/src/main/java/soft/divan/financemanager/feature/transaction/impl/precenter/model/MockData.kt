@@ -1,6 +1,5 @@
 package soft.divan.financemanager.feature.transaction.impl.precenter.model
 
-
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.feature.transaction.impl.R
 
@@ -10,27 +9,27 @@ val mockCategories = listOf(
     CategoryUi(
         id = 1,
         name = "Еда",
-        emoji = "🍔",
+        emoji = "🍔"
     ),
     CategoryUi(
         id = 2,
         name = "Зарплата",
-        emoji = "💰",
+        emoji = "💰"
     ),
     CategoryUi(
         id = 3,
         name = "Транспорт",
-        emoji = "🚌",
+        emoji = "🚌"
     ),
     CategoryUi(
         id = 4,
         name = "Подарки",
-        emoji = "🎁",
+        emoji = "🎁"
     ),
     CategoryUi(
         id = 5,
         name = "Инвестиции",
-        emoji = "📈",
+        emoji = "📈"
     )
 )
 

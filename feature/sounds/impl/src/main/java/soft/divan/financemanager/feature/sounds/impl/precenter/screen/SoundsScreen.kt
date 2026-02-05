@@ -29,7 +29,6 @@ import soft.divan.financemanager.uikit.icons.ArrowBack
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun SoundsScreenPreview() {
@@ -75,14 +74,16 @@ fun SoundsContent(
                     title = R.string.sounds,
                     navigationIcon = Icons.Filled.ArrowBack,
                     navigationIconClick = onNavigateBack
-                ),
+                )
             )
         }
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is SoundsUiState.Error -> ErrorContent(onClick = { loadData() })
+
                 is SoundsUiState.Loading -> LoadingProgressBar()
+
                 is SoundsUiState.Success -> SoundsSuccessContent(
                     modifier = modifier,
                     uiState = uiState,
@@ -103,7 +104,10 @@ private fun SoundsSuccessContent(
         modifier = modifier.padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = stringResource(id = R.string.sounds), style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = stringResource(id = R.string.sounds),
+            style = MaterialTheme.typography.bodyLarge
+        )
         Spacer(modifier = Modifier.width(16.dp))
         Switch(
             checked = uiState.isEnabled,
@@ -111,4 +115,3 @@ private fun SoundsSuccessContent(
         )
     }
 }
-

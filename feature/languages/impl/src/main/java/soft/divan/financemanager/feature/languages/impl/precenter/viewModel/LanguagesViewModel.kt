@@ -23,7 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class LanguagesViewModel @Inject constructor(
     private val setLanguageUseCase: SetLanguageUseCase,
-    private val observeLanguagesUseCase: ObserveLanguagesUseCase,
+    private val observeLanguagesUseCase: ObserveLanguagesUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<LanguageUiState>(LanguageUiState.Loading)
@@ -47,5 +47,4 @@ class LanguagesViewModel @Inject constructor(
             setLanguageUseCase(languages.toDomain())
         }
     }
-
 }

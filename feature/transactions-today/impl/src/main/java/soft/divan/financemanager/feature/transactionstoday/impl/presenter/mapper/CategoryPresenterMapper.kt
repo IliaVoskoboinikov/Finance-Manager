@@ -6,6 +6,6 @@ import soft.divan.financemanager.feature.transactionstoday.impl.presenter.model.
 fun Category.toUi(): CategoryUi {
     return CategoryUi(
         name = name,
-        emoji = emoji,
+        emoji = emoji
     )
 }

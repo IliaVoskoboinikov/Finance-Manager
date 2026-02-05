@@ -14,7 +14,6 @@ import soft.divan.financemanager.feature.sounds.impl.domain.usecase.impl.SetSoun
 import soft.divan.financemanager.feature.sounds.impl.navigation.SoundsFeatureImpl
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 interface SoundsBinderModule {
@@ -27,9 +26,10 @@ interface SoundsBinderModule {
     fun bindSoundsRepository(impl: SoundsRepositoryImpl): SoundsRepository
 
     @Binds
-    fun bindObserveSoundsEnabledUseCase(impl: ObserveSoundsEnabledUseCaseImpl): ObserveSoundsEnabledUseCase
+    fun bindObserveSoundsEnabledUseCase(
+        impl: ObserveSoundsEnabledUseCaseImpl
+    ): ObserveSoundsEnabledUseCase
 
     @Binds
     fun bindSetSoundsEnabledUseCase(impl: SetSoundsEnabledUseCaseImpl): SetSoundsEnabledUseCase
-
 }

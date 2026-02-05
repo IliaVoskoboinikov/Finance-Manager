@@ -38,7 +38,7 @@ fun ErrorContent(
     modifier: Modifier = Modifier,
     messageResId: Int = R.string.error_occurred,
     textBtnResId: Int = R.string.try_again,
-    onClick: () -> Unit,
+    onClick: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -62,7 +62,7 @@ fun ErrorContent(
         )
 
         Button(
-            onClick = onClick,
+            onClick = onClick
         ) {
             Text(text = stringResource(textBtnResId))
         }

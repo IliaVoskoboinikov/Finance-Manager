@@ -21,11 +21,9 @@ import androidx.compose.ui.unit.dp
 import soft.divan.financemanager.uikit.icons.Arrow
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun ListItemPreview() {
-
     FinanceManagerTheme {
         ListItem(
             content = { Text("Дата") },
@@ -36,7 +34,6 @@ fun ListItemPreview() {
                     imageVector = Icons.Filled.Arrow,
                     contentDescription = ""
                 )
-
             }
 
         )
@@ -50,12 +47,11 @@ fun ListItem(
     content: @Composable () -> Unit,
     trail: (@Composable () -> Unit)? = null,
     containerColor: Color = MaterialTheme.colorScheme.background,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp)
 ) {
-
     Surface(
         modifier = modifier,
-        color = containerColor,
+        color = containerColor
     ) {
         Row(
             modifier = Modifier
@@ -63,17 +59,14 @@ fun ListItem(
                 .padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
             lead?.let {
                 it()
                 Spacer(modifier = Modifier.width(16.dp))
             }
 
-
             Box(modifier = Modifier.weight(1f)) {
                 content()
             }
-
 
             trail?.let {
                 Spacer(modifier = Modifier.width(16.dp))

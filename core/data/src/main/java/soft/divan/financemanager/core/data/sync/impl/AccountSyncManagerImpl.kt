@@ -33,7 +33,6 @@ class AccountSyncManagerImpl @Inject constructor(
         }.isSuccess
     }
 
-
     /** Получаем данные с сервера и обновляем локальную БД разрешая конфликты */
     override suspend fun pullServerData() {
         safeApiCall(errorLogger) {
@@ -114,18 +113,19 @@ class AccountSyncManagerImpl @Inject constructor(
             accountEntities.forEach { accountEntity ->
                 when (accountEntity.syncStatus) {
                     SyncStatus.SYNCED -> Unit
+
                     SyncStatus.PENDING_CREATE -> syncCreate(
                         accountDto = accountEntity.toDto(),
                         localId = accountEntity.localId
                     )
 
                     SyncStatus.PENDING_UPDATE -> syncUpdate(accountEntity)
+
                     SyncStatus.PENDING_DELETE -> syncDelete(accountEntity)
                 }
             }
         }
     }
-
 
     /** Унифицируем обновление локального аккаунта после ответа сервера */
     private suspend fun updateLocalFromRemote(accountDto: AccountDto, localId: String) {

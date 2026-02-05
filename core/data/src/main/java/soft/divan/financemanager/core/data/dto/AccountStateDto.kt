@@ -10,5 +10,5 @@ data class AccountStateDto(
     @SerializedName("balance")
     val balance: String,
     @SerializedName("currency")
-    val currency: String,
+    val currency: String
 )

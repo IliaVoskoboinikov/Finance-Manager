@@ -5,7 +5,6 @@ import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.dto.TransactionRequestDto
 import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
 
-
 interface TransactionRemoteDataSource {
     suspend fun create(request: TransactionRequestDto): Response<TransactionResponseCreateDto>
     suspend fun getByAccountAndPeriod(

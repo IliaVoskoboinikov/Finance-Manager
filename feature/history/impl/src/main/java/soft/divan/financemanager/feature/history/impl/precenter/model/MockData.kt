@@ -2,7 +2,6 @@
 
 package soft.divan.financemanager.feature.history.impl.precenter.model
 
-
 import soft.divan.financemanager.feature.history.impl.R
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -93,9 +92,8 @@ val testUiTransactions = listOf(
         amountFormatted = "1200.00₽",
         transactionDateTime = now.minusDays(1).format(dateFormatter),
         comment = "Доход по вкладу"
-    ),
+    )
 )
-
 
 val mockHistoryUiStateSuccess = HistoryUiState.Success(
     transactions = testUiTransactions,

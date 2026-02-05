@@ -10,7 +10,7 @@ data class TransactionEntity(
     val localId: String,
     val serverId: Int?,
     val accountLocalId: String,
-    //todo может быть не хранить accountServerId тут вообще
+    // todo может быть не хранить accountServerId тут вообще
     val accountServerId: Int?,
     val categoryId: Int,
     val currencyCode: String,

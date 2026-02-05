@@ -7,10 +7,11 @@ import soft.divan.finansemanager.core.database.entity.CategoryEntity
 import javax.inject.Inject
 
 class CategoryLocalDataSourceImpl @Inject constructor(
-    private val categoryDao: CategoryDao,
+    private val categoryDao: CategoryDao
 ) : CategoryLocalDataSource {
 
-    override suspend fun insert(categories: List<CategoryEntity>) = categoryDao.insertAll(categories)
+    override suspend fun insert(categories: List<CategoryEntity>) =
+        categoryDao.insertAll(categories)
 
     override suspend fun getAll(): Flow<List<CategoryEntity>> = categoryDao.getAll()
 

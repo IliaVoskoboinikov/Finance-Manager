@@ -26,7 +26,7 @@ private const val SPLASH_DELAY_MS = 1_000L
 
 @Composable
 fun SplashScreen(
-    onFinish: () -> Unit,
+    onFinish: () -> Unit
 ) {
     LaunchedEffect(true) {
         delay(SPLASH_DELAY_MS)
@@ -38,7 +38,9 @@ fun SplashScreen(
 
 @Composable
 fun SplashContent() {
-    val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.splash_animation))
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.splash_animation)
+    )
     val progress by animateLottieCompositionAsState(
         composition = composition,
         iterations = 1,
@@ -48,7 +50,6 @@ fun SplashContent() {
     LottieAnimation(
         composition = composition,
         progress = { progress },
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize()
     )
-
 }

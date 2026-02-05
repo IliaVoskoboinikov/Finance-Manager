@@ -42,10 +42,10 @@ object SoundsModule {
     fun provideSoundsDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
         context.soundDataStore
 
-
     @Provides
     @Singleton
-    fun provideSoundsPreferences(@SoundsDataStore dataStore: DataStore<Preferences>): SoundsLocalSource =
+    fun provideSoundsPreferences(
+        @SoundsDataStore dataStore: DataStore<Preferences>
+    ): SoundsLocalSource =
         SoundsLocalSourceImpl(dataStore)
-
 }

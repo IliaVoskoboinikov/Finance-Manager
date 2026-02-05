@@ -16,7 +16,6 @@ class GetCategoryPieChartDataUseCaseImpl @Inject constructor() : GetCategoryPieC
         transactions: List<Transaction>,
         category: List<Category>
     ): List<CategoryPieSlice> {
-
         val total = transactions
             .takeIf { it.isNotEmpty() }
             ?.sumOf { it.amount.abs() }

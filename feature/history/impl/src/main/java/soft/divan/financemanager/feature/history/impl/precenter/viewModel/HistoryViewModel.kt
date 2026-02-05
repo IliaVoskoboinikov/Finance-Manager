@@ -60,7 +60,7 @@ class HistoryViewModel @Inject constructor(
                     period = Period(
                         UiDateFormatter.formateOfDay(start),
                         UiDateFormatter.formateOfDay(end)
-                    ),
+                    )
                 )
             }
             .onEach { result ->

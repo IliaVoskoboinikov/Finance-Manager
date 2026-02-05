@@ -34,7 +34,7 @@ class DesignAppViewModel @Inject constructor(
     private val getAccentColorUseCase: GetAccentColorUseCase,
     private val setAccentColorUseCase: SetAccentColorUseCase,
     private val setCustomAccentColorUseCase: SetCustomAccentColorUseCase,
-    private val hapticsManager: HapticsManager,
+    private val hapticsManager: HapticsManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DesignUiState>(DesignUiState.Loading)
@@ -84,5 +84,4 @@ class DesignAppViewModel @Inject constructor(
             setAccentColor(AccentColor.CUSTOM)
         }
     }
-
 }

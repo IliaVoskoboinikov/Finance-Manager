@@ -18,5 +18,4 @@ object SecurityProviderModule {
     fun provideSecurityLocalDataSourceImpl(
         @ApplicationContext context: Context
     ): SecurityLocalDataSourceImpl = SecurityLocalDataSourceImpl(context)
-
 }

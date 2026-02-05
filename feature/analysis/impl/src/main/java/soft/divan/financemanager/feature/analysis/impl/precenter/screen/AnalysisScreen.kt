@@ -57,7 +57,6 @@ import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import java.time.LocalDate
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AnalysisScreenPreview() {
@@ -96,7 +95,7 @@ fun AnalysisScreen(
         onNavigateBack = onNavigateBack,
         snackbarHostState = snackbarHostState,
         onUpdateStartDate = viewModel::updateStartDate,
-        onUpdateEndDate = viewModel::updateEndDate,
+        onUpdateEndDate = viewModel::updateEndDate
     )
 }
 
@@ -110,9 +109,9 @@ private fun AnalysisContent(
     onNavigateBack: () -> Unit,
     onUpdateStartDate: (LocalDate) -> Unit,
     onUpdateEndDate: (LocalDate) -> Unit,
-    snackbarHostState: SnackbarHostState,
+    snackbarHostState: SnackbarHostState
 
-    ) {
+) {
     Scaffold(
         topBar = { AnalysisTopBar(onNavigateBack = onNavigateBack) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -217,11 +216,14 @@ private fun AnalysisStatefulContent(
 ) {
     when (uiState) {
         is AnalysisUiState.Loading -> LoadingProgressBar()
+
         is AnalysisUiState.Error -> ErrorContent(
-            messageResId = R.string.error_unknown, onClick = { onRetry() }
+            messageResId = R.string.error_unknown,
+            onClick = { onRetry() }
         )
 
         is AnalysisUiState.Success -> AnalysisSuccessContent(uiState = uiState)
+
         AnalysisUiState.EmptyData -> ErrorContent(
             messageResId = R.string.empty_data,
             onClick = { onRetry() }
@@ -248,14 +250,13 @@ private fun SummaryItem(sum: String) {
     )
 }
 
-
 @Composable
 private fun CategoryDiagram(data: PieChartData) {
     val config = PieChartConfig(
         showSliceLabels = false,
         backgroundColor = colorScheme.background,
         isClickOnSliceEnabled = true,
-        isAnimationEnable = true,
+        isAnimationEnable = true
     )
 
     var selectedSlice by rememberSaveable { mutableStateOf<String?>(null) }
@@ -287,7 +288,7 @@ private fun buildLegendsConfig(data: PieChartData): LegendsConfig {
     val labels = data.slices.map { slice ->
         LegendLabel(
             color = slice.color,
-            name = "${slice.label} ${slice.value.pretty()}%",
+            name = "${slice.label} ${slice.value.pretty()}%"
         )
     }
 

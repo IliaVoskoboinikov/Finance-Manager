@@ -13,5 +13,4 @@ interface SplashScreenBinderModule {
 
     @Binds
     fun bindSplashScreenRouter(impl: SplashScreenFeatureImpl): SplashScreenFeatureApi
-
 }

@@ -23,7 +23,7 @@ class CategoryFeatureImpl @Inject constructor() : CategoryFeatureApi {
     ) {
         navGraphBuilder.composable(scope.route()) {
             CategoriesScreen(
-                modifier = modifier,
+                modifier = modifier
             )
         }
     }

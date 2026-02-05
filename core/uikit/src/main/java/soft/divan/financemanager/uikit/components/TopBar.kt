@@ -1,6 +1,5 @@
 package soft.divan.financemanager.uikit.components
 
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,7 +19,6 @@ import soft.divan.financemanager.uikit.icons.ArrowBack
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun TopBarPreview() {
@@ -32,7 +30,8 @@ fun TopBarPreview() {
                 navigationIconClick = { },
                 actionIcon = Icons.Filled.ArrowBack,
                 actionIconClick = {}
-            ))
+            )
+        )
     }
 }
 
@@ -57,7 +56,6 @@ fun TopBar(
                 ),
                 modifier = modifier
             )
-
         },
         actions = {
             if (topBar.actionIcon != null) {
@@ -75,5 +73,3 @@ fun TopBar(
         }
     )
 }
-
-

@@ -18,5 +18,5 @@ data class TransactionDto(
     @SerializedName("createdAt")
     val createdAt: String,
     @SerializedName("updatedAt")
-    val updatedAt: String,
+    val updatedAt: String
 )

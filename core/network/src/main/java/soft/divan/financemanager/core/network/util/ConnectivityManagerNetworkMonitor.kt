@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class ConnectivityManagerNetworkMonitor @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context
 ) : NetworkMonitor {
     override val isOnline: Flow<Boolean> = callbackFlow {
         trace("NetworkMonitor.callbackFlow") {
@@ -58,8 +58,7 @@ class ConnectivityManagerNetworkMonitor @Inject constructor(
                 connectivityManager.registerNetworkCallback(request, callback)
             }
 
-            /**
-             * Sends the latest connectivity status to the underlying channel.
+            /** Sends the latest connectivity status to the underlying channel.
              */
             channel.trySend(connectivityManager.isCurrentlyConnected())
 

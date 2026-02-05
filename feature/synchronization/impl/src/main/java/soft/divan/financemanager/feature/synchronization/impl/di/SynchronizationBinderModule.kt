@@ -11,7 +11,6 @@ import soft.divan.financemanager.sync.domain.usecase.SetSyncIntervalHoursUseCase
 import soft.divan.financemanager.sync.domain.usecase.impl.ObserveLastSyncTimeUseCaseImpl
 import soft.divan.financemanager.sync.domain.usecase.impl.SetSyncIntervalHoursUseCaseImpl
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 interface SynchronizationBinderModule {
@@ -20,8 +19,12 @@ interface SynchronizationBinderModule {
     fun bindSynchronizationRouter(impl: SynchronizationFeatureImpl): SynchronizationFeatureApi
 
     @Binds
-    fun bindSetSyncIntervalHoursUseCase(impl: SetSyncIntervalHoursUseCaseImpl): SetSyncIntervalHoursUseCase
+    fun bindSetSyncIntervalHoursUseCase(
+        impl: SetSyncIntervalHoursUseCaseImpl
+    ): SetSyncIntervalHoursUseCase
 
     @Binds
-    fun bindObserveLastSyncTimeUseCase(impl: ObserveLastSyncTimeUseCaseImpl): ObserveLastSyncTimeUseCase
+    fun bindObserveLastSyncTimeUseCase(
+        impl: ObserveLastSyncTimeUseCaseImpl
+    ): ObserveLastSyncTimeUseCase
 }

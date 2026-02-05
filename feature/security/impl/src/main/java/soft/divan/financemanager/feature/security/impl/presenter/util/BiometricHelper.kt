@@ -15,7 +15,7 @@ class BiometricHelper(private val context: Context) {
 
     private var executor: Executor? = null
 
-    //todo если на устройстве нет добавленных отпечатков пальца то это работать не будет
+    // todo если на устройстве нет добавленных отпечатков пальца то это работать не будет
     private fun isBiometricSupported(): Boolean {
         val biometricManager = BiometricManager.from(context)
         return biometricManager.canAuthenticate() == BiometricManager.BIOMETRIC_SUCCESS
@@ -43,7 +43,6 @@ class BiometricHelper(private val context: Context) {
     }
 
     fun openBiometric(authenticationCallback: BiometricPrompt.AuthenticationCallback) {
-
         if (isBiometricSupported()) {
             startAuthentication(authenticationCallback)
         } else {

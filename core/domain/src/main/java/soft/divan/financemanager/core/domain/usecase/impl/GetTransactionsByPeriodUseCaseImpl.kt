@@ -32,13 +32,13 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
     private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository,
     private val currencyRepository: CurrencyRepository,
-    private val categoryRepository: CategoryRepository,
+    private val categoryRepository: CategoryRepository
 ) : GetTransactionsByPeriodUseCase {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override operator fun invoke(
         isIncome: Boolean,
-        period: Period,
+        period: Period
     ): Flow<DomainResult<Triple<List<Transaction>, CurrencySymbol, List<Category>>>> {
         /**
          * Базовый combine независимых источников:
@@ -75,7 +75,9 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
             when {
                 accountsResult is DomainResult.Failure -> DomainResult.Failure(accountsResult.error)
 
-                categoriesResult is DomainResult.Failure -> DomainResult.Failure(categoriesResult.error)
+                categoriesResult is DomainResult.Failure -> DomainResult.Failure(
+                    categoriesResult.error
+                )
 
                 else -> {
                     val accounts = (accountsResult as DomainResult.Success).data

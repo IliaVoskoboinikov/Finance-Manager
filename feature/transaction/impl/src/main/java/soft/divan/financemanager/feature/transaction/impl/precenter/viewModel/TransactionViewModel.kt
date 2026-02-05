@@ -146,7 +146,11 @@ class TransactionViewModel @Inject constructor(
                 transaction = domainTransaction.toUi(category)
                 publishSuccess()
             },
-            onFailure = { _uiState.update { TransactionUiState.Error(R.string.error_load_transaction) } }
+            onFailure = {
+                _uiState.update {
+                    TransactionUiState.Error(R.string.error_load_transaction)
+                }
+            }
         )
     }
 
@@ -216,7 +220,6 @@ class TransactionViewModel @Inject constructor(
         transaction = transaction?.copy(amount = newAmount)
         publishSuccess()
     }
-
 
     fun updateCategory(category: CategoryUi) {
         transaction = transaction?.copy(category = category)

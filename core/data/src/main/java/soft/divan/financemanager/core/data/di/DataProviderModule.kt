@@ -17,7 +17,6 @@ import soft.divan.financemanager.core.data.source.CurrencyLocalDataSource
 import soft.divan.financemanager.core.data.source.impl.CurrencyLocalDataSourceImpl
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object DataProviderModule {
@@ -32,7 +31,9 @@ object DataProviderModule {
 
     @Provides
     @Singleton
-    fun provideCurrencyLocalDataSource(@CurrencyDataStore dataStore: DataStore<Preferences>): CurrencyLocalDataSource =
+    fun provideCurrencyLocalDataSource(
+        @CurrencyDataStore dataStore: DataStore<Preferences>
+    ): CurrencyLocalDataSource =
         CurrencyLocalDataSourceImpl(dataStore)
 
     @Provides
@@ -49,5 +50,4 @@ object DataProviderModule {
     @Singleton
     fun provideCategoryApi(retrofit: Retrofit): CategoryApiService =
         retrofit.create(CategoryApiService::class.java)
-
 }

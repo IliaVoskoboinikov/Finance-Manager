@@ -27,6 +27,6 @@ class FmIssueRegistry : IssueRegistry() {
         Vendor(
             vendorName = "soft-divan",
             feedbackUrl = "https://github.com/googlesamples/android-custom-lint-rules/issues",
-            contact = "https://github.com/googlesamples/android-custom-lint-rules",
+            contact = "https://github.com/googlesamples/android-custom-lint-rules"
         )
 }

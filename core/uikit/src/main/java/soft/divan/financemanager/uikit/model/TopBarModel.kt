@@ -7,5 +7,5 @@ data class TopBarModel(
     val navigationIcon: ImageVector? = null,
     val navigationIconClick: () -> Unit = {},
     val actionIcon: ImageVector? = null,
-    val actionIconClick: () -> Unit = {},
+    val actionIconClick: () -> Unit = {}
 )

@@ -53,13 +53,35 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
             SettingsScreen(
                 modifier = modifier,
                 onNavigateToAboutTheProgram = {
-                    navController.navigate(scope.route(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE))
+                    navController.navigate(
+                        scope.route(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE)
+                    )
                 },
-                onNavigateToSecurity = { navController.navigate(scope.route(securityFeatureApi.route)) },
-                onNavigateToDesignApp = { navController.navigate(scope.route(designAppFeatureApi.route)) },
-                onNavigateToHaptic = { navController.navigate(scope.route(hapticsFeatureApi.route)) },
-                onNavigateToSounds = { navController.navigate(scope.route(soundsFeatureApi.route)) },
-                onNavigateToLanguages = { navController.navigate(scope.route(languagesFeatureApi.route)) },
+                onNavigateToSecurity = {
+                    navController.navigate(
+                        scope.route(securityFeatureApi.route)
+                    )
+                },
+                onNavigateToDesignApp = {
+                    navController.navigate(
+                        scope.route(designAppFeatureApi.route)
+                    )
+                },
+                onNavigateToHaptic = {
+                    navController.navigate(
+                        scope.route(hapticsFeatureApi.route)
+                    )
+                },
+                onNavigateToSounds = {
+                    navController.navigate(
+                        scope.route(soundsFeatureApi.route)
+                    )
+                },
+                onNavigateToLanguages = {
+                    navController.navigate(
+                        scope.route(languagesFeatureApi.route)
+                    )
+                },
                 onNavigateToSynchronization = {
                     navController.navigate(
                         scope.route(
@@ -77,7 +99,7 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
         ) {
             composable(route = scope.route(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE)) {
                 AboutTheProgramScreen(
-                    modifier = modifier,
+                    modifier = modifier
                 )
             }
         }

@@ -27,7 +27,7 @@ import javax.inject.Inject
 class SynchronizationViewModel @Inject constructor(
     private val setSyncIntervalHoursUseCase: SetSyncIntervalHoursUseCase,
     observeLastSyncTimeUseCase: ObserveLastSyncTimeUseCase,
-    observeSyncIntervalHoursUseCase: ObserveSyncIntervalHoursUseCase,
+    observeSyncIntervalHoursUseCase: ObserveSyncIntervalHoursUseCase
 ) : ViewModel() {
 
     val uiState: StateFlow<SynchronizationUiState> =

@@ -7,7 +7,7 @@ import soft.divan.finansemanager.core.database.entity.AccountEntity
 import javax.inject.Inject
 
 class AccountLocalDataSourceImpl @Inject constructor(
-    private val accountDao: AccountDao,
+    private val accountDao: AccountDao
 ) : AccountLocalDataSource {
 
     override suspend fun create(account: AccountEntity) = accountDao.insert(account)

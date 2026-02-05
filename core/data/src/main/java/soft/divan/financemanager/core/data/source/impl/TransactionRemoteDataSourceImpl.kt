@@ -9,7 +9,7 @@ import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import javax.inject.Inject
 
 class TransactionRemoteDataSourceImpl @Inject constructor(
-    private val transactionApiService: TransactionApiService,
+    private val transactionApiService: TransactionApiService
 ) : TransactionRemoteDataSource {
 
     override suspend fun create(request: TransactionRequestDto): Response<TransactionResponseCreateDto> =
@@ -28,5 +28,6 @@ class TransactionRemoteDataSourceImpl @Inject constructor(
     override suspend fun update(id: Int, transaction: TransactionRequestDto): Response<TransactionDto> =
         transactionApiService.updateTransaction(id, transaction)
 
-    override suspend fun delete(id: Int): Response<Unit> = transactionApiService.deleteTransaction(id)
+    override suspend fun delete(id: Int): Response<Unit> =
+        transactionApiService.deleteTransaction(id)
 }

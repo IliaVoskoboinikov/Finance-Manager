@@ -16,7 +16,7 @@ class SoundsPoolHolder @Inject constructor(
         .build()
 
     private val sounds: Map<SoundType, Int> = mapOf(
-        SoundType.COIN to soundPool.load(context, R.raw.coin, 1),
+        SoundType.COIN to soundPool.load(context, R.raw.coin, 1)
     )
 
     fun play(type: SoundType) {

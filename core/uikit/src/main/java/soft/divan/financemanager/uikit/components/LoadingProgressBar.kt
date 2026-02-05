@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 
-
 @Composable
 fun LoadingProgressBar(modifier: Modifier = Modifier) {
     CircularProgressIndicator(
@@ -16,4 +15,3 @@ fun LoadingProgressBar(modifier: Modifier = Modifier) {
             .wrapContentSize(Alignment.Center)
     )
 }
-

@@ -125,7 +125,9 @@ fun TransactionsTodayContent(
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is TransactionsTodayUiState.Loading -> LoadingProgressBar()
+
                 is TransactionsTodayUiState.Error -> ErrorContent(onClick = { onRetry() })
+
                 is TransactionsTodayUiState.Success -> TransactionsList(
                     modifier = modifier,
                     uiState = uiState,
@@ -140,7 +142,7 @@ fun TransactionsTodayContent(
 fun TransactionsList(
     modifier: Modifier = Modifier,
     uiState: TransactionsTodayUiState.Success,
-    onNavigateToOldTransaction: (idTransaction: String) -> Unit,
+    onNavigateToOldTransaction: (idTransaction: String) -> Unit
 ) {
     Column(modifier = modifier) {
         SummaryItem(sum = uiState.sumTransaction)

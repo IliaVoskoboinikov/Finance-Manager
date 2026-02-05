@@ -7,7 +7,7 @@ import androidx.compose.runtime.Immutable
 sealed interface SoundsUiState {
     data object Loading : SoundsUiState
     data class Success(
-        val isEnabled: Boolean,
+        val isEnabled: Boolean
     ) : SoundsUiState
 
     data class Error(@field:StringRes val messageRes: Int) : SoundsUiState

@@ -32,5 +32,4 @@ class SyncLocalSourceImpl @Inject constructor(
     override suspend fun setSyncIntervalHours(hours: Int) {
         dataStore.edit { it[KEY_SYNC_INTERVAL_HOURS] = hours }
     }
-
 }

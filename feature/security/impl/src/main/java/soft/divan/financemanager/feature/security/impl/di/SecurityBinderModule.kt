@@ -20,7 +20,6 @@ import soft.divan.financemanager.feature.security.impl.domain.usecase.impl.SaveP
 import soft.divan.financemanager.feature.security.impl.navigation.SecurityFeatureImpl
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 interface SecurityBinderModule {
@@ -47,5 +46,4 @@ interface SecurityBinderModule {
 
     @Binds
     fun bindDeletePinUseCase(impl: DeletePinUseCaseImpl): DeletePinUseCase
-
 }

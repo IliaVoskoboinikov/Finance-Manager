@@ -9,7 +9,7 @@ sealed interface TransactionUiState {
     data class Success(
         val transaction: TransactionUi,
         val categories: List<CategoryUi>,
-        val accounts: List<AccountUi>,
+        val accounts: List<AccountUi>
     ) : TransactionUiState
 
     data class Error(@field:StringRes val messageRes: Int) : TransactionUiState

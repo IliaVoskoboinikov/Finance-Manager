@@ -34,7 +34,6 @@ interface AccountApiService {
 
     @DELETE("v1/accounts/{id}")
     suspend fun delete(
-        @Path("id") id: Int,
+        @Path("id") id: Int
     ): Response<Unit>
-
 }

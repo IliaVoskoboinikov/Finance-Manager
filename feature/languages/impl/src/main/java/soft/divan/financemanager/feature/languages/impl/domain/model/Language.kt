@@ -4,5 +4,5 @@ enum class Language(
     val tag: String
 ) {
     ENGLISH("en"),
-    RUSSIAN("ru");
+    RUSSIAN("ru")
 }

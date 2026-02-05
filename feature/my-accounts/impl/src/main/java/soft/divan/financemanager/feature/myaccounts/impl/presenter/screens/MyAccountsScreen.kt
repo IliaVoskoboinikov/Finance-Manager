@@ -56,7 +56,7 @@ fun AccountScreenPreview() {
             loadAccounts = {},
             onNavigateToUpdateAccount = {},
             onNavigateToCreateAccount = {},
-            hapticNavigation = {},
+            hapticNavigation = {}
         )
     }
 }
@@ -76,7 +76,7 @@ fun MyAccountsScreen(
         loadAccounts = viewModel::loadAccount,
         onNavigateToUpdateAccount = onNavigateToUpdateAccount,
         onNavigateToCreateAccount = onNavigateToCreateAccount,
-        hapticNavigation = viewModel::hapticNavigation,
+        hapticNavigation = viewModel::hapticNavigation
     )
 }
 
@@ -105,7 +105,7 @@ fun MyAccounts(
             MyAccountsStatefulContent(
                 uiState = uiState,
                 loadAccounts = loadAccounts,
-                onNavigateToUpdateAccount = onNavigateToUpdateAccount,
+                onNavigateToUpdateAccount = onNavigateToUpdateAccount
             )
         }
     }
@@ -124,6 +124,7 @@ private fun MyAccountsStatefulContent(
 ) {
     when (uiState) {
         is MyAccountsUiState.Loading -> LoadingProgressBar()
+
         is MyAccountsUiState.Error -> ErrorContent(
             messageResId = R.string.error_unknown,
             onClick = { loadAccounts() }

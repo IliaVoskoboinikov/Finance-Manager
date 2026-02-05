@@ -15,7 +15,6 @@ import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
 import soft.divan.financemanager.uikit.theme.AccentColor
 import javax.inject.Inject
 
-
 private val KEY_THEME_MODE = stringPreferencesKey("app_theme_mode")
 private val KEY_ACCENT_COLOR = stringPreferencesKey("app_accent_color")
 private val KEY_CUSTOM_COLOR = stringPreferencesKey("app_custom_accent_hex")
@@ -63,5 +62,3 @@ class DesignAppLocalSourceImpl @Inject constructor(
         }
     }
 }
-
-

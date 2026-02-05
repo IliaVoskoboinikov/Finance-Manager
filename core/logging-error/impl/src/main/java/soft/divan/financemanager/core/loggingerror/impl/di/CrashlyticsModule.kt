@@ -13,5 +13,4 @@ interface CrashlyticsModule {
 
     @Binds
     fun bindErrorLogger(impl: CrashlyticsLogger): ErrorLogger
-
 }

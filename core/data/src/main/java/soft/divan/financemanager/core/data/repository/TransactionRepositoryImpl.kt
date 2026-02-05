@@ -38,7 +38,9 @@ class TransactionRepositoryImpl @Inject constructor(
 
     /** Создаем транзакцию в БД и сразу запускаем синхронизацию */
     override suspend fun create(transaction: Transaction): DomainResult<Unit> {
-        val accountServerId = accountLocalDataSource.getByLocalId(transaction.accountLocalId)?.serverId
+        val accountServerId = accountLocalDataSource.getByLocalId(
+            transaction.accountLocalId
+        )?.serverId
 
         val transactionEntity = transaction.toEntity(
             serverId = null,

@@ -1,6 +1,6 @@
 @file:Suppress("MagicNumber")
-package soft.divan.financemanager.feature.transactionstoday.impl.presenter.model
 
+package soft.divan.financemanager.feature.transactionstoday.impl.presenter.model
 
 import soft.divan.financemanager.feature.transactions_today.impl.R
 import java.time.LocalDateTime
@@ -92,9 +92,8 @@ val testTransactionUis = listOf(
         amountFormatted = "1200.00₽",
         transactionDateTime = now.minusDays(1).format(dateFormatter),
         comment = "Доход по вкладу"
-    ),
+    )
 )
-
 
 val mockTransactionsTodayUiStateSuccess = TransactionsTodayUiState.Success(
     transactions = testTransactionUis,
