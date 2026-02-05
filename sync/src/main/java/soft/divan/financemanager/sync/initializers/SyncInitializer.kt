@@ -3,7 +3,7 @@ package soft.divan.financemanager.sync.initializers
 import kotlinx.coroutines.flow.first
 import soft.divan.financemanager.sync.domain.usecase.ObserveSyncIntervalHoursUseCase
 import soft.divan.financemanager.sync.scheduler.SyncScheduler
-import soft.divan.financemanager.sync.worker.BASE_SYNCHRONIZATION_PERIOD_IN_HOURS
+import soft.divan.financemanager.sync.worker.SYNCHRONIZATION_PERIOD_IN_HOURS
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,7 +17,7 @@ class SyncInitializer @Inject constructor(
 ) {
 
     suspend fun initialize() {
-        val interval = observeSyncIntervalHoursUseCase().first() ?: BASE_SYNCHRONIZATION_PERIOD_IN_HOURS
+        val interval = observeSyncIntervalHoursUseCase().first() ?: SYNCHRONIZATION_PERIOD_IN_HOURS
         // немедленная синхронизация при запуске приложения
         syncScheduler.scheduleOneTimeSync()
         // фоновая периодическая

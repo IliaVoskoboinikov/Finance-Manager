@@ -40,7 +40,8 @@ private fun Context.syncWorkNotification(): Notification {
     return NotificationCompat.Builder(
         this,
         SYNC_NOTIFICATION_CHANNEL_ID
-    ) /*.setSmallIcon(
+    )
+        /*.setSmallIcon(
         R.drawable.notification,
     )*/
         .setContentTitle("Sync")
