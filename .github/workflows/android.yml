@@ -132,7 +132,7 @@ jobs:
           echo '### KtLint Report' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           # Берём все PLAIN отчёты KtLint и выводим их
-          find **/build/reports/ktlint/*.txt -type f -exec cat {} \; >> $GITHUB_STEP_SUMMARY
+          find . -path "*/build/reports/ktlint/*.txt" -type f -exec cat {} \; >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload SARIF to GitHub Code Scanning
