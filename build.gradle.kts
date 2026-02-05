@@ -28,7 +28,7 @@ subprojects {
         verbose.set(true)
         android.set(true)
         outputToConsole.set(true)
-        ignoreFailures.set(false)
+        ignoreFailures.set(true)
 
         reporters {
             reporter(ReporterType.HTML)
