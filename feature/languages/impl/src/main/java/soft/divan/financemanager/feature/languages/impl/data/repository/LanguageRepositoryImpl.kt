@@ -9,7 +9,7 @@ import soft.divan.financemanager.feature.languages.impl.domain.repository.Langua
 import javax.inject.Inject
 
 class LanguageRepositoryImpl @Inject constructor(
-    private val languagesLocalSource: LanguagesLocalSource,
+    private val languagesLocalSource: LanguagesLocalSource
 ) : LanguageRepository {
 
     override fun observeLanguage(): Flow<Language?> {
@@ -19,5 +19,4 @@ class LanguageRepositoryImpl @Inject constructor(
     override suspend fun setLanguage(language: Language) {
         languagesLocalSource.save(language.tag)
     }
-
 }

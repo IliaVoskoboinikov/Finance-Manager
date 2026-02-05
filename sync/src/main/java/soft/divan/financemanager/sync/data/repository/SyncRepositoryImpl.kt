@@ -6,7 +6,7 @@ import soft.divan.financemanager.sync.domain.repository.SyncRepository
 import javax.inject.Inject
 
 class SyncRepositoryImpl @Inject constructor(
-    private val syncLocalSource: SyncLocalSource,
+    private val syncLocalSource: SyncLocalSource
 ) : SyncRepository {
 
     override fun observeLastSyncTime(): Flow<Long?> {
@@ -24,5 +24,4 @@ class SyncRepositoryImpl @Inject constructor(
     override suspend fun setSyncIntervalHours(hours: Int) {
         syncLocalSource.setSyncIntervalHours(hours)
     }
-
 }

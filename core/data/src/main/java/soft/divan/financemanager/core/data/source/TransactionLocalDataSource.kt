@@ -3,7 +3,6 @@ package soft.divan.financemanager.core.data.source
 import kotlinx.coroutines.flow.Flow
 import soft.divan.finansemanager.core.database.entity.TransactionEntity
 
-
 interface TransactionLocalDataSource {
     suspend fun create(transaction: TransactionEntity)
     suspend fun getByAccountAndPeriod(

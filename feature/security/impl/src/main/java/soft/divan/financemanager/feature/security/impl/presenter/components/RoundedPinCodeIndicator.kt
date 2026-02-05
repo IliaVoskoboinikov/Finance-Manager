@@ -31,7 +31,7 @@ fun RoundedBoxesRow(startQuantity: Int, quantity: Int) {
         modifier = Modifier
             .wrapContentSize()
             .padding(horizontal = 16.dp, vertical = 20.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         items(quantity) {
             RoundedBox(isFilled = true)
@@ -49,8 +49,11 @@ fun RoundedBox(isFilled: Boolean) {
         .size(35.dp)
         .padding(9.dp)
         .let {
-            if (isFilled) it.background(color, shape = CircleShape)
-            else it.border(1.dp, color, shape = CircleShape)
+            if (isFilled) {
+                it.background(color, shape = CircleShape)
+            } else {
+                it.border(1.dp, color, shape = CircleShape)
+            }
         }
 
     Box(
@@ -58,6 +61,3 @@ fun RoundedBox(isFilled: Boolean) {
         contentAlignment = Alignment.Center
     ) {}
 }
-
-
-

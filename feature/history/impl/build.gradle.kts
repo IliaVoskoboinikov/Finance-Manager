@@ -9,5 +9,4 @@ dependencies {
     implementation(projects.feature.history.api)
     implementation(projects.feature.transaction.api)
     implementation(projects.feature.analysis.api)
-
 }

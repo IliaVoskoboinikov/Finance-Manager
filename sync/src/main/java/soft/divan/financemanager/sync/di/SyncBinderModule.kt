@@ -30,6 +30,7 @@ interface SyncBinderModule {
     fun bindSetLastSyncTimeUseCaseCase(impl: SetLastSyncTimeUseCaseImpl): SetLastSyncTimeUseCase
 
     @Binds
-    fun bindObserveSyncIntervalHoursUseCase(impl: ObserveSyncIntervalHoursUseCaseImpl): ObserveSyncIntervalHoursUseCase
-
+    fun bindObserveSyncIntervalHoursUseCase(
+        impl: ObserveSyncIntervalHoursUseCaseImpl
+    ): ObserveSyncIntervalHoursUseCase
 }

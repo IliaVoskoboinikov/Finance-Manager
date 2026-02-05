@@ -5,7 +5,7 @@ import soft.divan.financemanager.sync.domain.usecase.SetLastSyncTimeUseCase
 import javax.inject.Inject
 
 class SetLastSyncTimeUseCaseImpl @Inject constructor(
-    private val repository: SyncRepository,
+    private val repository: SyncRepository
 ) : SetLastSyncTimeUseCase {
     override suspend fun invoke(timeMillis: Long) {
         repository.setLastSyncTime(timeMillis)

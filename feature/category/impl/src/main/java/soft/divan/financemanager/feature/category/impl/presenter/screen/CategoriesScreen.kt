@@ -50,7 +50,6 @@ import soft.divan.financemanager.uikit.icons.Search
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun CategoriesScreenPreview() {
@@ -58,7 +57,7 @@ fun CategoriesScreenPreview() {
         CategoriesContent(
             uiState = mockCategoriesUiStateSuccess,
             onSearch = {},
-            loadCategories = {},
+            loadCategories = {}
         )
     }
 }
@@ -90,7 +89,7 @@ private fun CategoriesContent(
     Scaffold(
         topBar = {
             TopBar(topBar = TopBarModel(title = R.string.my_articles))
-        },
+        }
     ) { paddingValues ->
         Column(modifier = modifier.padding(paddingValues)) {
             SearchBar(
@@ -104,14 +103,18 @@ private fun CategoriesContent(
             FMDriver()
             when (uiState) {
                 is CategoriesUiState.Loading -> LoadingProgressBar()
+
                 is CategoriesUiState.Error -> ErrorContent(
                     messageResId = uiState.message,
-                    onClick = { loadCategories() })
+                    onClick = { loadCategories() }
+                )
 
                 is CategoriesUiState.Success -> CategoriesSuccessUiState(uiState)
+
                 is CategoriesUiState.EmptyData -> ErrorContent(
                     messageResId = R.string.empty_data,
-                    onClick = { loadCategories() })
+                    onClick = { loadCategories() }
+                )
             }
         }
     }
@@ -126,7 +129,6 @@ private fun CategoriesSuccessUiState(uiState: CategoriesUiState.Success) {
         CategoriesList(categories)
     }
 }
-
 
 @Composable
 private fun EmptyCategoriesMessage() {
@@ -151,7 +153,6 @@ private fun CategoriesList(categories: List<UiCategory>) {
         }
     }
 }
-
 
 @Composable
 fun CategoryListItem(categoryUiModel: UiCategory) {
@@ -199,8 +200,8 @@ fun SearchBar(
                     containerColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    disabledSupportingTextColor = Color.Transparent,
-                ),
+                    disabledSupportingTextColor = Color.Transparent
+                )
             )
 
             IconButton(onClick = onSearchClick) {
@@ -211,7 +212,6 @@ fun SearchBar(
                     modifier = Modifier.size(48.dp)
                 )
             }
-
         }
     }
 }

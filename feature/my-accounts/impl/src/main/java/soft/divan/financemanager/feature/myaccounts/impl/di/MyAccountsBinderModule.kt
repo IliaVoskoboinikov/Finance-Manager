@@ -21,12 +21,13 @@ interface MyAccountsBinderModule {
     fun bindAMyAccountsRouter(impl: MyAccountsFeatureImpl): MyAccountsFeatureApi
 
     @Binds
-    fun bindGetSumTransactionsUseCase(impl: GetSumTransactionsUseCaseImpl): GetSumTransactionsUseCase
+    fun bindGetSumTransactionsUseCase(
+        impl: GetSumTransactionsUseCaseImpl
+    ): GetSumTransactionsUseCase
 
     @Binds
     fun bindUpdateCurrencyUseCase(impl: UpdateCurrencyUseCaseIml): UpdateCurrencyUseCase
 
     @Binds
     fun bindGetAccountsUseCase(impl: GetAccountsUseCaseImpl): GetAccountsUseCase
-
 }

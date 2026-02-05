@@ -77,12 +77,16 @@ class AnalysisViewModel @Inject constructor(
                             _uiState.update {
                                 AnalysisUiState.Success(
                                     sumTransaction = "$sum ${data.second.symbol}",
-                                    categoryPieSlice = pie.toPieChartData(),
+                                    categoryPieSlice = pie.toPieChartData()
                                 )
                             }
                         }
                     },
-                    onFailure = { _uiState.update { AnalysisUiState.Error(R.string.error_loading) } }
+                    onFailure = {
+                        _uiState.update {
+                            AnalysisUiState.Error(R.string.error_loading)
+                        }
+                    }
                 )
             }
             .flowOn(Dispatchers.IO)
@@ -101,5 +105,4 @@ class AnalysisViewModel @Inject constructor(
         _startDate.value = _startDate.value
         _endDate.value = _endDate.value
     }
-
 }

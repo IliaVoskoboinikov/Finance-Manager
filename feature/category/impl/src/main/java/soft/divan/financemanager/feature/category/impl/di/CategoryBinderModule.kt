@@ -11,7 +11,6 @@ import soft.divan.financemanager.feature.category.impl.domain.usecase.SearchCate
 import soft.divan.financemanager.feature.category.impl.domain.usecase.impl.SearchCategoryUseCaseImpl
 import soft.divan.financemanager.feature.category.impl.navigation.CategoryFeatureImpl
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 interface CategoryBinderModule {
@@ -24,5 +23,4 @@ interface CategoryBinderModule {
 
     @Binds
     fun bindGetCategoriesUseCase(impl: GetCategoriesUseCaseImpl): GetCategoriesUseCase
-
 }

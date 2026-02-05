@@ -22,10 +22,10 @@ object LanguagesModule {
     fun provideLanguagesDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
         context.languagesDataStore
 
-
     @Provides
     @Singleton
-    fun provideLanguagesPreferences(@LanguagesDataStore dataStore: DataStore<Preferences>): LanguagesLocalSource =
+    fun provideLanguagesPreferences(
+        @LanguagesDataStore dataStore: DataStore<Preferences>
+    ): LanguagesLocalSource =
         LanguageLocalSourceImpl(dataStore)
-
 }

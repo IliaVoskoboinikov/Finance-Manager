@@ -31,7 +31,6 @@ import soft.divan.financemanager.presenter.navigation.NavGraph
 import soft.divan.financemanager.presenter.navigation.ScreenBottom
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun MainScreenPreview() {
@@ -49,7 +48,7 @@ fun MainScreen(
     transactionsTodayFeatureApi: TransactionsTodayFeatureApi,
     categoryFeatureApi: CategoryFeatureApi,
     settingsFeatureApi: SettingsFeatureApi,
-    myAccountsFeatureApi: MyAccountsFeatureApi,
+    myAccountsFeatureApi: MyAccountsFeatureApi
 ) {
     val navController = rememberNavController()
 
@@ -68,7 +67,7 @@ fun MainScreen(
         if (isOffline) {
             snackbarHostState.showSnackbar(
                 message = notConnectedMessage,
-                duration = Indefinite,
+                duration = Indefinite
             )
         }
     }
@@ -84,14 +83,14 @@ fun MainScreen(
                 transactionsTodayFeatureApi = transactionsTodayFeatureApi,
                 categoryFeatureApi = categoryFeatureApi,
                 settingsFeatureApi = settingsFeatureApi,
-                myAccountsFeatureApi = myAccountsFeatureApi,
+                myAccountsFeatureApi = myAccountsFeatureApi
             )
 
             SnackbarHost(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 72.dp),
-                hostState = snackbarHostState,
+                hostState = snackbarHostState
             )
         }
 
@@ -101,9 +100,5 @@ fun MainScreen(
             screens = bottomScreens,
             hapticToggleMenu = viewModel::hapticToggleMenu
         )
-
     }
 }
-
-
-

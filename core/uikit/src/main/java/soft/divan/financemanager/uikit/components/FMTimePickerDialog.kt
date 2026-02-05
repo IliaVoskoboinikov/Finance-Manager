@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import soft.divan.financemanager.core.uikit.R
 import java.time.LocalTime
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FMTimePickerDialog(
@@ -50,10 +49,9 @@ fun FMTimePickerDialog(
             TimePicker(
                 state = state,
                 layoutType = TimePickerLayoutType.Vertical,
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.padding(top = 8.dp)
 
-                )
-
+            )
         },
         shape = MaterialTheme.shapes.extraLarge,
         containerColor = MaterialTheme.colorScheme.secondaryContainer

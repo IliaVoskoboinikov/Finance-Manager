@@ -14,7 +14,6 @@ import soft.divan.financemanager.feature.haptics.impl.domain.usecase.impl.SetHap
 import soft.divan.financemanager.feature.haptics.impl.navigation.HapticFeatureImpl
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 interface HapticsBinderModule {
@@ -27,9 +26,10 @@ interface HapticsBinderModule {
     fun bindHapticsRepository(impl: HapticsRepositoryImpl): HapticsRepository
 
     @Binds
-    fun bindObserveHapticsEnabledUseCase(impl: ObserveHapticsEnabledUseCaseImpl): ObserveHapticsEnabledUseCase
+    fun bindObserveHapticsEnabledUseCase(
+        impl: ObserveHapticsEnabledUseCaseImpl
+    ): ObserveHapticsEnabledUseCase
 
     @Binds
     fun bindSetHapticsEnabledUseCase(impl: SetHapticsEnabledUseCaseImpl): SetHapticsEnabledUseCase
-
 }

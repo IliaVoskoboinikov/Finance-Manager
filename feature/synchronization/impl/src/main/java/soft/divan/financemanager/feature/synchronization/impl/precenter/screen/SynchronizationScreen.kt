@@ -28,7 +28,6 @@ import soft.divan.financemanager.uikit.icons.ArrowBack
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Suppress("MagicNumber")
 @Composable
@@ -37,7 +36,7 @@ fun SynchronizationScreenPreview() {
         SynchronizationContent(
             uiState = SynchronizationUiState.Success("12.12.25 14:00", 4),
             onNavigateBack = {},
-            onIntervalChanged = {},
+            onIntervalChanged = {}
         )
     }
 }
@@ -72,17 +71,21 @@ private fun SynchronizationContent(
                     title = R.string.synchronization,
                     navigationIcon = Icons.Filled.ArrowBack,
                     navigationIconClick = onNavigateBack
-                ),
+                )
             )
         }
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is SynchronizationUiState.Error -> ErrorContent(onClick = { })
+
                 is SynchronizationUiState.Loading -> LoadingProgressBar()
+
                 is SynchronizationUiState.Success -> SynchronizationUiStateSuccess(
                     interval = uiState.hoursInterval,
-                    lastSync = uiState.lastSyncTime ?: stringResource(id = R.string.data_not_synced),
+                    lastSync = uiState.lastSyncTime ?: stringResource(
+                        id = R.string.data_not_synced
+                    ),
                     onIntervalChanged = onIntervalChanged
 
                 )
@@ -127,4 +130,3 @@ private fun SynchronizationUiStateSuccess(
         )
     }
 }
-

@@ -75,7 +75,9 @@ class AccountRepositoryImpl @Inject constructor(
         appCoroutineContext.launch {
             val serverId = accountEntity.serverId
             if (serverId != null) {
-                safeApiCall(errorLogger) { remoteDataSource.getById(serverId) }.onSuccess { accountDto ->
+                safeApiCall(errorLogger) {
+                    remoteDataSource.getById(serverId)
+                }.onSuccess { accountDto ->
                     safeDbCall(errorLogger) {
                         localDataSource.update(
                             accountDto.toEntity(

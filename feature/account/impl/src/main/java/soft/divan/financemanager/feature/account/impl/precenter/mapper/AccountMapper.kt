@@ -11,7 +11,7 @@ fun AccountUi.toDomain(): Account {
         balance = balance.toBigDecimal(),
         currency = currency,
         createdAt = UiDateFormatter.parse(createdAt),
-        updatedAt = UiDateFormatter.parse(updatedAt),
+        updatedAt = UiDateFormatter.parse(updatedAt)
     )
 }
 
@@ -22,6 +22,6 @@ fun Account.toUi(): AccountUi {
         balance = balance.stripTrailingZeros().toPlainString(),
         currency = currency,
         createdAt = UiDateFormatter.formatDateTime(createdAt),
-        updatedAt = UiDateFormatter.formatDateTime(updatedAt),
+        updatedAt = UiDateFormatter.formatDateTime(updatedAt)
     )
 }

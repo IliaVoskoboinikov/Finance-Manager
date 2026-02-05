@@ -5,5 +5,5 @@ data class UiTransaction(
     val category: UiCategory,
     val amountFormatted: String,
     val transactionDateTime: String,
-    val comment: String,
+    val comment: String
 )

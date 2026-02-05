@@ -6,7 +6,7 @@ import soft.divan.financemanager.sync.domain.usecase.ObserveLastSyncTimeUseCase
 import javax.inject.Inject
 
 class ObserveLastSyncTimeUseCaseImpl @Inject constructor(
-    private val repository: SyncRepository,
+    private val repository: SyncRepository
 ) : ObserveLastSyncTimeUseCase {
     override fun invoke(): Flow<Long?> = repository.observeLastSyncTime()
 }

@@ -10,7 +10,6 @@ import javax.inject.Singleton
 const val SYNC_ONE_TIME_WORK = "SyncOneTimeWork"
 const val SYNC_PERIODIC_WORK = "SyncPeriodicWork"
 
-
 @Singleton
 class SyncInitializer @Inject constructor(
     private val observeSyncIntervalHoursUseCase: ObserveSyncIntervalHoursUseCase,

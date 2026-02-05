@@ -7,7 +7,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 
-
 @Composable
 fun SubContentTextListItem(text: String, modifier: Modifier = Modifier) {
     Text(

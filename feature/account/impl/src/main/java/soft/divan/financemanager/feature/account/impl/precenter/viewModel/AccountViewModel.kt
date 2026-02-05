@@ -94,7 +94,7 @@ class AccountViewModel @Inject constructor(
             balance = "0",
             currency = CurrencySymbol.RUB.symbol,
             createdAt = UiDateFormatter.formatDateTime(now),
-            updatedAt = UiDateFormatter.formatDateTime(now),
+            updatedAt = UiDateFormatter.formatDateTime(now)
         )
 
         publishSuccess()

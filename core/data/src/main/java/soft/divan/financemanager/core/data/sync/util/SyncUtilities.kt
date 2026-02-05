@@ -14,4 +14,3 @@ interface Synchronizer {
 interface Syncable {
     suspend fun syncWith(synchronizer: Synchronizer): Boolean
 }
-

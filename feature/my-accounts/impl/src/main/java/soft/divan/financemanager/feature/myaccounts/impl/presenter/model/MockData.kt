@@ -2,18 +2,18 @@ package soft.divan.financemanager.feature.myaccounts.impl.presenter.model
 
 import soft.divan.financemanager.feature.my_accounts.impl.R
 
-
 val mockAccountsUi = listOf(
     MyAccountsUiModel(
         id = "1",
         name = "основной счет",
         balance = "1000000$",
-        currency = "$",
-    ), MyAccountsUiModel(
+        currency = "$"
+    ),
+    MyAccountsUiModel(
         id = "2",
         name = "основной счет2",
         balance = "1000000$",
-        currency = "$",
+        currency = "$"
     )
 )
 val mockMyAccountsUiStateSuccess = MyAccountsUiState.Success(

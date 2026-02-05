@@ -9,7 +9,7 @@ sealed interface HistoryUiState {
 
     data class Success(
         val transactions: List<UiTransaction>,
-        val sumTransaction: String,
+        val sumTransaction: String
     ) : HistoryUiState
 
     data class Error(@field:StringRes val message: Int) : HistoryUiState

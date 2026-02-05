@@ -21,7 +21,6 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @Preview(showBackground = true)
 @Composable
 fun PreviewKeyboard() {
-
     FinanceManagerTheme {
         Keyboard(
             showBiometricButton = true,
@@ -40,7 +39,6 @@ fun Keyboard(
     onBackspaceClick: () -> Unit,
     onFingerprintClick: () -> Unit = {}
 ) {
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.Center,
@@ -49,9 +47,9 @@ fun Keyboard(
         listOf(
             listOf("1", "2", "3"),
             listOf("4", "5", "6"),
-            listOf("7", "8", "9"),
+            listOf("7", "8", "9")
         ).forEach { row ->
-            Row() {
+            Row {
                 row.forEach { number ->
                     NumberButton(number, onClick = { onNumberClick(number) })
                 }
@@ -80,7 +78,7 @@ fun Keyboard(
 
             IconButton(
                 icon = Icons.AutoMirrored.Filled.Backspace,
-                onClick = onBackspaceClick,
+                onClick = onBackspaceClick
             )
         }
     }

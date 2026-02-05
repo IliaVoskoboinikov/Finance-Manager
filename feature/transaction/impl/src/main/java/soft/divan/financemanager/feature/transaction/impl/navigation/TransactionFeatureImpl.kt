@@ -11,7 +11,6 @@ import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transaction.impl.precenter.screens.TransactionScreen
 import javax.inject.Inject
 
-
 const val TRANSACTION_ID_KEY: String = "transactionId"
 const val IS_INCOME_KEY: String = "isIncome"
 
@@ -50,7 +49,6 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
                 isIncome = isIncome,
                 onNavigateBack = navController::popBackStack
             )
-
         }
 
         navGraphBuilder.composable(
@@ -72,6 +70,4 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
             )
         }
     }
-
-
 }

@@ -10,5 +10,5 @@ data class CategoryDto(
     @SerializedName("emoji")
     val emoji: String,
     @SerializedName("isIncome")
-    val isIncome: Boolean,
+    val isIncome: Boolean
 )

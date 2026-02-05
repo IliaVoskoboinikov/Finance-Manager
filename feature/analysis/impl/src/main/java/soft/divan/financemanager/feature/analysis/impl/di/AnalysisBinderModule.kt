@@ -18,8 +18,12 @@ interface AnalysisBinderModule {
     fun bindTransactionRouter(impl: AnalysisFeatureImpl): AnalysisFeatureApi
 
     @Binds
-    fun bindGetTransactionsByPeriodUseCaseImpl(impl: GetTransactionsByPeriodUseCaseImpl): GetTransactionsByPeriodUseCase
+    fun bindGetTransactionsByPeriodUseCaseImpl(
+        impl: GetTransactionsByPeriodUseCaseImpl
+    ): GetTransactionsByPeriodUseCase
 
     @Binds
-    fun bindGetCategoryPieChartDataUseCase(impl: GetCategoryPieChartDataUseCaseImpl): GetCategoryPieChartDataUseCase
+    fun bindGetCategoryPieChartDataUseCase(
+        impl: GetCategoryPieChartDataUseCaseImpl
+    ): GetCategoryPieChartDataUseCase
 }

@@ -33,7 +33,6 @@ import soft.divan.financemanager.uikit.icons.ArrowBack
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun LanguagesScreenPreview() {
@@ -76,14 +75,16 @@ fun LanguagesContent(
                     title = R.string.languages,
                     navigationIcon = Icons.Filled.ArrowBack,
                     navigationIconClick = onNavigateBack
-                ),
+                )
             )
         }
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is LanguageUiState.Error -> ErrorContent(onClick = { })
+
                 is LanguageUiState.Loading -> LoadingProgressBar()
+
                 is LanguageUiState.Success -> LanguageSection(
                     selected = uiState.language,
                     onSelect = onLanguageSelected
@@ -121,7 +122,6 @@ fun LanguageSection(
         )
     }
 }
-
 
 @Composable
 fun LanguageItem(

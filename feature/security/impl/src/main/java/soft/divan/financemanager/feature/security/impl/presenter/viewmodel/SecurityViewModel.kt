@@ -46,5 +46,4 @@ open class SecurityViewModel @Inject constructor(
             _uiState.update { SecurityUiState.Success(pin = "", hasPin = false) }
         }
     }
-
 }

@@ -17,7 +17,6 @@ import soft.divan.financemanager.feature.security.impl.presenter.viewmodel.Secur
 import soft.divan.financemanager.uikit.components.ErrorContent
 import soft.divan.financemanager.uikit.components.LoadingProgressBar
 
-
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun PreviewPinLockScreen() {
@@ -29,7 +28,6 @@ fun PinLockScreen(
     onPinCorrect: () -> Unit,
     viewModel: SecurityViewModel = hiltViewModel()
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val authenticationCallback =
         @RequiresApi(Build.VERSION_CODES.P)
@@ -49,14 +47,15 @@ fun PinLockScreen(
 
     when (uiState) {
         is SecurityUiState.Error -> ErrorContent(onClick = {})
+
         is SecurityUiState.Loading -> LoadingProgressBar()
+
         is SecurityUiState.Success -> PinLockScreenContent(
             pin = (uiState as SecurityUiState.Success).pin,
             onPinCorrect = onPinCorrect,
             authenticationCallback = authenticationCallback
         )
     }
-    
 }
 
 @Composable
@@ -65,7 +64,6 @@ fun PinLockScreenContent(
     onPinCorrect: () -> Unit,
     authenticationCallback: BiometricPrompt.AuthenticationCallback? = null
 ) {
-
     var errorMessage by remember { mutableStateOf("") }
     PinEntryCommonScreen(
         titleId = R.string.input_password,
@@ -82,4 +80,3 @@ fun PinLockScreenContent(
         authenticationCallback = authenticationCallback
     )
 }
-

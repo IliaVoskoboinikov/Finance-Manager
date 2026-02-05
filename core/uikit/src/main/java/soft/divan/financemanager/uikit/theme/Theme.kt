@@ -42,7 +42,6 @@ fun baseDarkColorScheme(primaryColor: Color): ColorScheme = darkColorScheme(
     surfaceContainerHigh = LavenderMistDark
 )
 
-
 @Composable
 fun FinanceManagerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -58,7 +57,13 @@ fun FinanceManagerTheme(
 
         accentColor == AccentColor.CUSTOM -> {
             val resolvedColor = customColor ?: Color.Magenta
-            if (darkTheme) baseDarkColorScheme(resolvedColor) else baseLightColorScheme(resolvedColor)
+            if (darkTheme) {
+                baseDarkColorScheme(
+                    resolvedColor
+                )
+            } else {
+                baseLightColorScheme(resolvedColor)
+            }
         }
 
         else -> {

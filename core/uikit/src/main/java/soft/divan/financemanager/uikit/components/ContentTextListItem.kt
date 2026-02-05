@@ -22,14 +22,10 @@ fun ContentTextListItem(
             textAlign = TextAlign.Center,
             lineHeight = MaterialTheme.typography.bodyLarge.lineHeight,
             letterSpacing = MaterialTheme.typography.bodyLarge.letterSpacing,
-            color = color,
+            color = color
         ),
         modifier = modifier,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis
     )
 }
-
-
-
-

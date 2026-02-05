@@ -29,7 +29,7 @@ class AvoidDateDetectorTest : LintDetectorTest() {
                   val calendar = Calendar.getInstance()
               }
               """
-            ).indented(),
+            ).indented()
         ).allowMissingSdk()
             .run()
             .expect(

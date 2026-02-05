@@ -8,7 +8,6 @@ class SecurityRepositoryImpl @Inject constructor(
     private val securityLocalDataSource: SecurityLocalDataSource
 ) : SecurityRepository {
 
-
     override fun savePin(pin: String) {
         securityLocalDataSource.savePin(pin)
     }

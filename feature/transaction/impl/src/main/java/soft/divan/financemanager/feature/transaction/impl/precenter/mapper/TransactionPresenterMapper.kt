@@ -32,6 +32,6 @@ fun TransactionUi.toDomain(): Transaction {
         comment = comment,
         createdAt = UiDateFormatter.parse(createdAt),
         updatedAt = UiDateFormatter.parse(updatedAt),
-        currencyCode = currencyCode,
+        currencyCode = currencyCode
     )
 }

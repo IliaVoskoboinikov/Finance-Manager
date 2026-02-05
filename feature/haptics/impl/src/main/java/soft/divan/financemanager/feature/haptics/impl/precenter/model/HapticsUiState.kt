@@ -7,7 +7,7 @@ import androidx.compose.runtime.Immutable
 sealed interface HapticsUiState {
     data object Loading : HapticsUiState
     data class Success(
-        val isEnabled: Boolean,
+        val isEnabled: Boolean
     ) : HapticsUiState
 
     data class Error(@field:StringRes val messageRes: Int) : HapticsUiState

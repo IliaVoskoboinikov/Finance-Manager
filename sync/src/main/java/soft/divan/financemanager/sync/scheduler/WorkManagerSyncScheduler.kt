@@ -42,7 +42,6 @@ class WorkManagerSyncScheduler @Inject constructor(
     }
 
     override fun scheduleOneTimeSync() {
-
         val request = OneTimeWorkRequestBuilder<DelegatingWorker>()
             .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .setConstraints(SyncConstraints)

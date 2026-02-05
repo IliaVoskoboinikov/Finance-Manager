@@ -39,7 +39,6 @@ object UiDateFormatter {
     fun formatDateTime(instant: Instant): String =
         instant.atZone(zoneId).toLocalDateTime().format(dateTimeFormatter)
 
-
     /* ---------- LocalDate ---------- */
 
     fun formatDate(date: LocalDate): String =
@@ -54,7 +53,7 @@ object UiDateFormatter {
         dateTime.format(timeFormatter)
 
     fun formateOfDay(
-        date: LocalDate,
+        date: LocalDate
     ): Instant =
         date.atStartOfDay(zoneId).toInstant()
 

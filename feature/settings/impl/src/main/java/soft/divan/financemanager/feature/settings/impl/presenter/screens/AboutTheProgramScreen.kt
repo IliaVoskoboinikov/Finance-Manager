@@ -25,10 +25,10 @@ fun AboutTheProgramScreenPreview() {
 
 @Composable
 fun AboutTheProgramScreen(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
-        topBar = { TopBar(topBar = TopBarModel(title = R.string.settings)) },
+        topBar = { TopBar(topBar = TopBarModel(title = R.string.settings)) }
     ) { paddingValues ->
         Column(
             modifier = modifier

@@ -2,7 +2,6 @@
 
 package soft.divan.financemanager.feature.analysis.impl.precenter.model
 
-
 import androidx.compose.ui.graphics.Color
 import co.yml.charts.common.model.PlotType
 import co.yml.charts.ui.piechart.models.PieChartData
@@ -25,7 +24,7 @@ val mockTransactionUiStateSuccess = AnalysisUiState.Success(
 
         ),
         plotType = PlotType.Bar
-    ),
+    )
 )
 
 val mockTransactionUiStateLoading = AnalysisUiState.Loading
