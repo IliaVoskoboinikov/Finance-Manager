@@ -14,9 +14,9 @@ Android‑приложение для учёта личных финансов: 
 
 ### Screenshots
 
-| Dashboard                       | My Accounts                       | History / Analytics           |
-|---------------------------------|-----------------------------------|-------------------------------|
-| ![](docs/screens/dashboard.png) | ![](docs/screens/my_accounts.png) | ![](docs/screens/history.png) |
+| Expenses                      | My Accounts                      | Analytics                       | Category                       | Settings                       |
+|-------------------------------|----------------------------------|---------------------------------|--------------------------------|--------------------------------|
+| ![](docs/images/expenses.png) | ![](docs/images/my_accounts.png) | ![](docs/screens/analytics.png) | ![](docs/screens/category.png) | ![](docs/screens/settings.png) |
 
 ---
 
