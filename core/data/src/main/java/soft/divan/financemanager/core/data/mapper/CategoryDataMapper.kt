@@ -17,3 +17,4 @@ fun CategoryEntity.toDomain(): Category = Category(
     emoji = emoji,
     isIncome = isIncome
 )
+// Revue me>>

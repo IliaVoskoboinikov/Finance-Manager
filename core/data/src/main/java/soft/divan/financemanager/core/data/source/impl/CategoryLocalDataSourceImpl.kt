@@ -18,3 +18,4 @@ class CategoryLocalDataSourceImpl @Inject constructor(
     override suspend fun getByType(isIncome: Boolean): Flow<List<CategoryEntity>> =
         categoryDao.getByType(isIncome)
 }
+// Revue me>>

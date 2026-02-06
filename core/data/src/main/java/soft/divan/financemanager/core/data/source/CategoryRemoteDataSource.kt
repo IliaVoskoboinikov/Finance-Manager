@@ -7,3 +7,4 @@ interface CategoryRemoteDataSource {
     suspend fun getAll(): Response<List<CategoryDto>>
     suspend fun getByType(isIncome: Boolean): Response<List<CategoryDto>>
 }
+// Revue me>>

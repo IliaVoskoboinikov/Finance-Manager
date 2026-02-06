@@ -5,3 +5,4 @@ import kotlinx.coroutines.flow.Flow
 interface ObserveHapticsEnabledUseCase {
     operator fun invoke(): Flow<Boolean>
 }
+// Revue me>>

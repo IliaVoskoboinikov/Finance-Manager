@@ -6,3 +6,4 @@ import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
 interface GetThemeModeUseCase {
     operator fun invoke(): Flow<ThemeMode>
 }
+// Revue me>>

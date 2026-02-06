@@ -14,3 +14,4 @@ class CrashlyticsLogger @Inject constructor() : ErrorLogger {
         crashlytics.recordException(Exception(message))
     }
 }
+// Revue me>>

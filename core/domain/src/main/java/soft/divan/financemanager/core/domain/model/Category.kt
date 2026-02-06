@@ -6,3 +6,4 @@ data class Category(
     val emoji: String,
     val isIncome: Boolean
 )
+// Revue me>>

@@ -5,3 +5,4 @@ import kotlinx.coroutines.flow.Flow
 interface ObserveLastSyncTimeUseCase {
     operator fun invoke(): Flow<Long?>
 }
+// Revue me>>

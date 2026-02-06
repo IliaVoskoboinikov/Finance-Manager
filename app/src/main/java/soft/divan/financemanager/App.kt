@@ -32,3 +32,4 @@ class App : Application() {
         applicationScope.cancel()
     }
 }
+// Revue me>>

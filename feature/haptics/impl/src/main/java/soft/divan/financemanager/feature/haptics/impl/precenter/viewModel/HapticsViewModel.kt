@@ -46,3 +46,4 @@ class HapticsViewModel @Inject constructor(
         }
     }
 }
+// Revue me>>

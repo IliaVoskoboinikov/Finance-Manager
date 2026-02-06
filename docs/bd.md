@@ -58,4 +58,4 @@ erDiagram
 
     ACCOUNT ||--o{ TRANSACTION: "localId → accountLocalId (FK)"
     CATEGORY ||--o{ TRANSACTION: "id → categoryId (FK)"
-```
+```// Revue me>>

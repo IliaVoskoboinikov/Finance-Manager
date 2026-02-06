@@ -30,3 +30,4 @@ class FmIssueRegistry : IssueRegistry() {
             contact = "https://github.com/googlesamples/android-custom-lint-rules"
         )
 }
+// Revue me>>

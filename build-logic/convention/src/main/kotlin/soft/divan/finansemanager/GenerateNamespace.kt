@@ -12,3 +12,4 @@ fun generateNamespace(project: Project): String {
         .joinToString(separator = ".") { it.replace("-", "_") }
         .let { if (it.isEmpty()) root else "$root.$it" }
 }
+// Revue me>>

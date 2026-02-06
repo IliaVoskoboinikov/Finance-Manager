@@ -12,3 +12,4 @@ sealed interface SoundsUiState {
 
     data class Error(@field:StringRes val messageRes: Int) : SoundsUiState
 }
+// Revue me>>

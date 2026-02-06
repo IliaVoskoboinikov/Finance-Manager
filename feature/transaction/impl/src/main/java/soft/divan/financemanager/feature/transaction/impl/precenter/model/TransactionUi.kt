@@ -13,3 +13,4 @@ data class TransactionUi(
     val updatedAt: String,
     val mode: TransactionMode
 )
+// Revue me>>

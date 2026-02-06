@@ -7,3 +7,4 @@ import soft.divan.financemanager.core.domain.result.DomainResult
 interface GetCategoriesByTypeUseCase {
     operator fun invoke(isIncome: Boolean): Flow<DomainResult<List<Category>>>
 }
+// Revue me>>

@@ -121,3 +121,4 @@ private fun provideSettings(
         SettingsModel(R.string.program_notes) { onNavigateToAboutTheProgram() }
     )
 }
+// Revue me>>

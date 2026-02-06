@@ -15,3 +15,4 @@ sealed interface DesignUiState {
 
     data class Error(@field:StringRes val messageRes: Int) : DesignUiState
 }
+// Revue me>>

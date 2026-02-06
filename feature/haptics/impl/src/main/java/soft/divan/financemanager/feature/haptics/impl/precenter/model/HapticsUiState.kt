@@ -12,3 +12,4 @@ sealed interface HapticsUiState {
 
     data class Error(@field:StringRes val messageRes: Int) : HapticsUiState
 }
+// Revue me>>

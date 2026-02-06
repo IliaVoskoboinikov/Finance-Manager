@@ -16,3 +16,4 @@ enum class SyncStatus {
 | PENDING_DELETE | not null | delete remote → delete local |
 | SYNCED         | not null | nothing                      |
  */
+// Revue me>>

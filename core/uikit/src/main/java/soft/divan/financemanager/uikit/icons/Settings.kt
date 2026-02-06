@@ -48,3 +48,4 @@ val Icons.Filled.Settings: ImageVector
 
 @Suppress("ObjectPropertyName")
 private var _Settings: ImageVector? = null
+// Revue me>>

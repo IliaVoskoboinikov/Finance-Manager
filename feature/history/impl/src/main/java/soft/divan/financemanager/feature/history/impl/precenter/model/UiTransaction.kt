@@ -7,3 +7,4 @@ data class UiTransaction(
     val transactionDateTime: String,
     val comment: String
 )
+// Revue me>>

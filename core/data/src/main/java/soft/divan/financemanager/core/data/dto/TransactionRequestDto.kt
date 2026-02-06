@@ -18,3 +18,4 @@ data class TransactionRequestDto(
     @SerializedName("comment")
     val comment: String? = null
 )
+// Revue me>>

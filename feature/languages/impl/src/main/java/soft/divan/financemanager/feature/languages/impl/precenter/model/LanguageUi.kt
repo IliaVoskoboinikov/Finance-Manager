@@ -7,3 +7,4 @@ enum class LanguageUi(@field:StringRes val title: Int) {
     ENGLISH(R.string.english),
     RUSSIAN(R.string.russian)
 }
+// Revue me>>

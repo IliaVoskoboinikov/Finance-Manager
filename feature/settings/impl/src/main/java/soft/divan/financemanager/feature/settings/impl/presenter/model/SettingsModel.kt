@@ -4,3 +4,4 @@ data class SettingsModel(
     val title: Int,
     val onClick: () -> Unit
 )
+// Revue me>>

@@ -15,3 +15,4 @@ sealed interface HistoryUiState {
     data class Error(@field:StringRes val message: Int) : HistoryUiState
     data object EmptyData : HistoryUiState
 }
+// Revue me>>

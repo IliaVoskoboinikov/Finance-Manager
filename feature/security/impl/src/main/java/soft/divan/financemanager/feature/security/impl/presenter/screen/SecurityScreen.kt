@@ -121,3 +121,4 @@ private fun Btn(textRes: Int, onClick: () -> Unit) {
         Text(text = stringResource(textRes))
     }
 }
+// Revue me>>

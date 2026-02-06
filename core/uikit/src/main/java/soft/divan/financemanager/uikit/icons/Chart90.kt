@@ -60,3 +60,4 @@ val Icons.Filled.Chart90: ImageVector
 
 @Suppress("ObjectPropertyName")
 private var _Chart90: ImageVector? = null
+// Revue me>>

@@ -12,3 +12,4 @@
 - [DomainResult & errors](./domain-result.md) — подход к доменным результатам и обработке ошибок.
 - [Bd](./bd.md) — локальная база данных.
 
+// Revue me>>

@@ -6,3 +6,4 @@ data class MyAccountsUiModel(
     val balance: String,
     val currency: String
 )
+// Revue me>>

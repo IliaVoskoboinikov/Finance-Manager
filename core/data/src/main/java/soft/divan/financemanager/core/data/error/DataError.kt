@@ -28,3 +28,4 @@ sealed interface DataError : AppError {
         override val cause: Throwable?
     ) : DataError
 }
+// Revue me>>

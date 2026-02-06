@@ -5,4 +5,4 @@ object Const {
     const val JAVA_VERSION = "11"
     const val VERSION_CODE = 1
     const val VERSION_NAME = "1.0"
-}
+}// Revue me>>

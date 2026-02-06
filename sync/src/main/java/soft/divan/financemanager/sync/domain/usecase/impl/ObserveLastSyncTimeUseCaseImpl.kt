@@ -10,3 +10,4 @@ class ObserveLastSyncTimeUseCaseImpl @Inject constructor(
 ) : ObserveLastSyncTimeUseCase {
     override fun invoke(): Flow<Long?> = repository.observeLastSyncTime()
 }
+// Revue me>>

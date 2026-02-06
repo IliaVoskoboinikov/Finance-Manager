@@ -6,3 +6,4 @@ interface HapticsRepository {
     fun observeHapticsEnabled(): Flow<Boolean>
     suspend fun setHapticsEnabled(isEnabled: Boolean)
 }
+// Revue me>>

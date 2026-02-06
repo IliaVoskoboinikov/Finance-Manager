@@ -10,3 +10,4 @@ class ObserveSyncIntervalHoursUseCaseImpl @Inject constructor(
 ) : ObserveSyncIntervalHoursUseCase {
     override fun invoke(): Flow<Int?> = repository.observeSyncIntervalHours()
 }
+// Revue me>>

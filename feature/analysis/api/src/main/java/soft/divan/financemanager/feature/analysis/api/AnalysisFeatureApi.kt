@@ -5,3 +5,4 @@ import soft.divan.financemanager.core.featureapi.FeatureApi
 interface AnalysisFeatureApi : FeatureApi {
     fun analysisRouteWithArgs(isIncome: Boolean): String
 }
+// Revue me>>

@@ -4,3 +4,4 @@ data class UiCategory(
     val name: String,
     val emoji: String
 )
+// Revue me>>

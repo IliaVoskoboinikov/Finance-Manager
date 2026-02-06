@@ -56,3 +56,4 @@ private fun getRandomColorForCategory(seed: Int): Color {
     )
     return colors[seed % colors.size]
 }
+// Revue me>>

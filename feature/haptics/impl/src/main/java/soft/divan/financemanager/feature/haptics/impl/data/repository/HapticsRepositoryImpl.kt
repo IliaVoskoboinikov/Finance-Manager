@@ -17,3 +17,4 @@ class HapticsRepositoryImpl @Inject constructor(
         hapticsLocalSource.setHapticsEnabled(isEnabled)
     }
 }
+// Revue me>>

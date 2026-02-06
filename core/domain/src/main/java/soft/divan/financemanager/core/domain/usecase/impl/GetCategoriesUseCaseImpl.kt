@@ -14,3 +14,4 @@ class GetCategoriesUseCaseImpl @Inject constructor(
         return categoryRepository.getAll()
     }
 }
+// Revue me>>

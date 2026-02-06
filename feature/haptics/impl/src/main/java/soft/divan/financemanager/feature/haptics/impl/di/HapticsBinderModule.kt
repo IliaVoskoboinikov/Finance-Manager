@@ -33,3 +33,4 @@ interface HapticsBinderModule {
     @Binds
     fun bindSetHapticsEnabledUseCase(impl: SetHapticsEnabledUseCaseImpl): SetHapticsEnabledUseCase
 }
+// Revue me>>

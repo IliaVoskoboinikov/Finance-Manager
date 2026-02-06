@@ -21,3 +21,4 @@ data class TransactionEntity(
     val updatedAt: String,
     val syncStatus: SyncStatus
 )
+// Revue me>>

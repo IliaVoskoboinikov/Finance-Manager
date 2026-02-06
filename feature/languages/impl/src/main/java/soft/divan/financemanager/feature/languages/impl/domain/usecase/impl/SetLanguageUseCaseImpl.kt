@@ -15,3 +15,4 @@ class SetLanguageUseCaseImpl @Inject constructor(
         appLocaleManager.apply(language)
     }
 }
+// Revue me>>

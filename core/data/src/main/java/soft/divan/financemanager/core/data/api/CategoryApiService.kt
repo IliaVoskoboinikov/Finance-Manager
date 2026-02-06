@@ -12,3 +12,4 @@ interface CategoryApiService {
     @GET("v1/categories/type/{isIncome}")
     suspend fun getByType(@Path("isIncome") isIncome: Boolean): Response<List<CategoryDto>>
 }
+// Revue me>>

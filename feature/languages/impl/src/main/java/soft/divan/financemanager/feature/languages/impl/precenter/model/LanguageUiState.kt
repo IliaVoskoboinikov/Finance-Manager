@@ -9,3 +9,4 @@ sealed interface LanguageUiState {
     data class Success(val language: LanguageUi) : LanguageUiState
     data class Error(@field:StringRes val messageRes: Int) : LanguageUiState
 }
+// Revue me>>

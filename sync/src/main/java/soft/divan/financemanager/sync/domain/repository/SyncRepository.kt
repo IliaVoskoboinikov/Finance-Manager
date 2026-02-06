@@ -8,3 +8,4 @@ interface SyncRepository {
     fun observeSyncIntervalHours(): Flow<Int?>
     suspend fun setSyncIntervalHours(hours: Int)
 }
+// Revue me>>

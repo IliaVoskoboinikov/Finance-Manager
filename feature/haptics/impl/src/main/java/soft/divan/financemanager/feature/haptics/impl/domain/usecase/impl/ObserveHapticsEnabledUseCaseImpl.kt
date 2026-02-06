@@ -10,3 +10,4 @@ class ObserveHapticsEnabledUseCaseImpl @Inject constructor(
 ) : ObserveHapticsEnabledUseCase {
     override operator fun invoke(): Flow<Boolean> = repository.observeHapticsEnabled()
 }
+// Revue me>>

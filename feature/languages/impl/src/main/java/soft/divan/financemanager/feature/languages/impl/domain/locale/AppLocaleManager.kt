@@ -6,3 +6,4 @@ interface AppLocaleManager {
     fun apply(language: Language)
     fun getCurrent(): Language
 }
+// Revue me>>

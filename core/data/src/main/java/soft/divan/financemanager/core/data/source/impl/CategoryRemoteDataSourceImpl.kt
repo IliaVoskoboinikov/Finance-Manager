@@ -15,3 +15,4 @@ class CategoryRemoteDataSourceImpl @Inject constructor(
     override suspend fun getByType(isIncome: Boolean): Response<List<CategoryDto>> =
         categoryApiService.getByType(isIncome)
 }
+// Revue me>>

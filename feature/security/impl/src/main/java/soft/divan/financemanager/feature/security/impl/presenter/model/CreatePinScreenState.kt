@@ -8,3 +8,4 @@ sealed class CreatePinScreenState {
     data object PinCreatedState : CreatePinScreenState()
     data class ErrorState(val errorMessage: String) : CreatePinScreenState()
 }
+// Revue me>>

@@ -56,3 +56,4 @@ object HapticsModule {
     ): HapticsLocalSource =
         HapticsLocalSourceImpl(dataStore)
 }
+// Revue me>>

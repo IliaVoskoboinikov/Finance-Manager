@@ -24,3 +24,4 @@ interface CategoryBinderModule {
     @Binds
     fun bindGetCategoriesUseCase(impl: GetCategoriesUseCaseImpl): GetCategoriesUseCase
 }
+// Revue me>>

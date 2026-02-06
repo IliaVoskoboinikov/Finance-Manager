@@ -9,3 +9,4 @@ data class CategoryPieSlice(
     val totalAmount: BigDecimal,
     val percent: Float
 )
+// Revue me>>

@@ -11,3 +11,4 @@ class SetHapticsEnabledUseCaseImpl @Inject constructor(
         repository.setHapticsEnabled(isEnabled)
     }
 }
+// Revue me>>

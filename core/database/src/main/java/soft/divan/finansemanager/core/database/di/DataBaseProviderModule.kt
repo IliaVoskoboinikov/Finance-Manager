@@ -37,3 +37,4 @@ object DataBaseProviderModule {
     @Singleton
     fun provideAccountDao(db: FinanceManagerDatabase): AccountDao = db.accountDao()
 }
+// Revue me>>

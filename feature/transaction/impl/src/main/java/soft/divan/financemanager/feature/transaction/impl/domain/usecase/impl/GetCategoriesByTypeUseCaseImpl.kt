@@ -14,3 +14,4 @@ class GetCategoriesByTypeUseCaseImpl @Inject constructor(
         return categoryRepository.getByType(isIncome)
     }
 }
+// Revue me>>

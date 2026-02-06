@@ -11,3 +11,4 @@ class GetAccentColorUseCaseImpl @Inject constructor(
 ) : GetAccentColorUseCase {
     override fun invoke(): Flow<AccentColor> = repository.getAccentColor()
 }
+// Revue me>>

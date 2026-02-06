@@ -5,3 +5,4 @@ import soft.divan.financemanager.core.domain.model.CurrencySymbol
 interface UpdateCurrencyUseCase {
     suspend operator fun invoke(currency: CurrencySymbol)
 }
+// Revue me>>

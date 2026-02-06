@@ -10,3 +10,4 @@ class SetAccentColorUseCaseImpl @Inject constructor(
 ) : SetAccentColorUseCase {
     override suspend fun invoke(color: AccentColor) = repository.setAccentColor(color)
 }
+// Revue me>>

@@ -16,3 +16,4 @@ sealed interface CategoriesUiState {
 
     data object EmptyData : CategoriesUiState
 }
+// Revue me>>

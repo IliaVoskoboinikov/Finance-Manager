@@ -12,3 +12,4 @@ fun DataError.toDomainError(): DomainError =
         is DataError.LocalDb -> DomainError.Unknown(cause)
         is DataError.Unknown -> DomainError.Unknown(cause)
     }
+// Revue me>>

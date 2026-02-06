@@ -32,3 +32,4 @@ class CurrencyLocalDataSourceImpl @Inject constructor(
         return enumValues<T>().firstOrNull { it.name.equals(this, ignoreCase = true) }
     }
 }
+// Revue me>>

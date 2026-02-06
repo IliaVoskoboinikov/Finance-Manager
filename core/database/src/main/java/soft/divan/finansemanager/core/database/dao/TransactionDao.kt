@@ -51,3 +51,4 @@ interface TransactionDao {
     @Query("DELETE FROM transactions WHERE localId = :localId")
     suspend fun delete(localId: String)
 }
+// Revue me>>

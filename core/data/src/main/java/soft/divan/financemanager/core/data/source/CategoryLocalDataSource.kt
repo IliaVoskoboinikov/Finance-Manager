@@ -8,3 +8,4 @@ interface CategoryLocalDataSource {
     suspend fun getAll(): Flow<List<CategoryEntity>>
     suspend fun getByType(isIncome: Boolean): Flow<List<CategoryEntity>>
 }
+// Revue me>>

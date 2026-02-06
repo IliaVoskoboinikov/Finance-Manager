@@ -33,3 +33,4 @@ class MainViewModel @Inject constructor(
         hapticsManager.perform(HapticType.TOGGLE)
     }
 }
+// Revue me>>
