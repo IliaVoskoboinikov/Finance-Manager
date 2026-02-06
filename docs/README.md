@@ -7,6 +7,8 @@
 
 - [Architecture](./architecture.md) — архитектура приложения, слои, потоки данных, ключевые паттерны.
 - [Modularization](./modularization.md) — структура модулей, зависимости, принципы разбиения.
+- [Modules](./modules.md) — список всех модулей с сылками на их структуру.
 - [Synchronization](./synchronization.md) — как устроена фоновая синхронизация данных.
 - [DomainResult & errors](./domain-result.md) — подход к доменным результатам и обработке ошибок.
+- [Bd](./bd.md) — локальная база данных.
 
