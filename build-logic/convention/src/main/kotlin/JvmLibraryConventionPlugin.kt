@@ -15,6 +15,7 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
         with(project) {
             applyPlugin("java-library")
             applyPlugin("jetbrains-kotlin-jvm")
+            applyPlugin("ktlint")
 
             extensions.configure<JavaPluginExtension> {
                 sourceCompatibility = JavaVersion.toVersion(Const.JAVA_VERSION)

@@ -4,6 +4,7 @@ plugins {
     `java-library`
     alias(libs.plugins.jetbrains.kotlin.jvm)
     alias(libs.plugins.android.lint)
+    alias(libs.plugins.ktlint)
 }
 
 java {
