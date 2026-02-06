@@ -1,4 +1,3 @@
-```md
 # Modules documentation index
 
 В этом документе собраны ссылки на подробные описания всех модулей проекта
@@ -67,4 +66,3 @@
 ## Utility modules
 
 - [sync](../sync/README.md)
-```
