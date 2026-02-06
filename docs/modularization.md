@@ -306,7 +306,7 @@ graph LR
 
 ### Список всех модулей проекта
 
-- [core:common](../core/common/README.md)
+- [modules list](modules.md)
 
 ### Типы модулей
 
