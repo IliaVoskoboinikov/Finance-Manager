@@ -10,7 +10,7 @@ class AndroidBaseConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
             applyPlugin("kotlin-android")
-
+            applyPlugin("ktlint")
 
             pluginManager.withPlugin("com.android.application") {
                 addLintChecksDependency()
