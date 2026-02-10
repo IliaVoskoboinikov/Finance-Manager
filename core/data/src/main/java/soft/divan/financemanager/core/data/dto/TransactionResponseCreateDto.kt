@@ -20,3 +20,4 @@ data class TransactionResponseCreateDto(
     @SerializedName("updatedAt")
     val updatedAt: String
 )
+// Revue me>>

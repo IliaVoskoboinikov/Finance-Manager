@@ -6,3 +6,4 @@ import soft.divan.financemanager.core.domain.result.DomainResult
 interface UpdateAccountUseCase {
     suspend operator fun invoke(account: Account): DomainResult<Unit>
 }
+// Revue me>>

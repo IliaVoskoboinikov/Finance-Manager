@@ -9,3 +9,4 @@ interface AccountSyncManager {
     suspend fun syncUpdate(accountEntity: AccountEntity)
     suspend fun syncDelete(accountEntity: AccountEntity)
 }
+// Revue me>>

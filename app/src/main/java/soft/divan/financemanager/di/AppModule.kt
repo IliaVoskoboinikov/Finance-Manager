@@ -40,3 +40,4 @@ object AppModule {
             Log.e("AppCoroutineException", "Unhandled exception: ${throwable.message}", throwable)
         }
 }
+// Revue me>>

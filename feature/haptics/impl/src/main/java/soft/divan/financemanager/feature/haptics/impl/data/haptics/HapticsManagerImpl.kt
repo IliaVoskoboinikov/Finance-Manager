@@ -77,3 +77,4 @@ class HapticsManagerImpl @Inject constructor(
         val ERROR_AMPLITUDES = intArrayOf(0, 150, 0, 150)
     }
 }
+// Revue me>>

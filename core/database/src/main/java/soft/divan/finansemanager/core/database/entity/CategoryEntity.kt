@@ -11,3 +11,4 @@ data class CategoryEntity(
     val emoji: String,
     val isIncome: Boolean
 )
+// Revue me>>

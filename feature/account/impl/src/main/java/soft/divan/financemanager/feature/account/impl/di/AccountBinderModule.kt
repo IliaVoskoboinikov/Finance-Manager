@@ -34,3 +34,4 @@ interface AccountBinderModule {
     @Binds
     fun bindGetAccountByIdUserCase(impl: GetAccountByIdUseCaseImpl): GetAccountByIdUseCase
 }
+// Revue me>>

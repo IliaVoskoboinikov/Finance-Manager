@@ -12,3 +12,4 @@ fun Project.addDefaultComposeDependencies() {
         add(Conf.IMPLEMENTATION, lib("hilt-navigation-compose"))
     }
 }
+// Revue me>>

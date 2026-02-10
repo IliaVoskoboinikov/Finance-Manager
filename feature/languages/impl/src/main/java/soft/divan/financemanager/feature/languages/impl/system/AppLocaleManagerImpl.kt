@@ -49,3 +49,4 @@ class AppLocaleManagerImpl @Inject constructor(
         return appLocales.takeIf { !it.isEmpty }?.get(0) ?: Locale.getDefault()
     }
 }
+// Revue me>>

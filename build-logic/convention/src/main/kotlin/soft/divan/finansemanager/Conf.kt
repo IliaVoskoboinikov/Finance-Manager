@@ -5,4 +5,4 @@ object Conf {
     const val DEBUG_IMPLEMENTATION = "debugImplementation"
     const val KSP = "ksp"
     const val API = "api"
-}
+}// Revue me>>

@@ -14,3 +14,4 @@ sealed interface AccountUiState {
 
     data class Error(@field:StringRes val message: Int) : AccountUiState
 }
+// Revue me>>

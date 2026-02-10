@@ -7,3 +7,4 @@ import soft.divan.financemanager.core.domain.result.DomainResult
 interface GetAccountsUseCase {
     operator fun invoke(): Flow<DomainResult<List<Account>>>
 }
+// Revue me>>

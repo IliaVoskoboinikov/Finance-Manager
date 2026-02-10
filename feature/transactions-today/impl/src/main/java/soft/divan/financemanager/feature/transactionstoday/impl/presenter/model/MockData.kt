@@ -105,3 +105,4 @@ val mockTransactionsTodayUiStateLoading = TransactionsTodayUiState.Loading
 val mockTransactionsTodayUiStateError = TransactionsTodayUiState.Error(
     messageRes = R.string.error_loading
 )
+// Revue me>>

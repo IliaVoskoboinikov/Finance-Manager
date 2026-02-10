@@ -61,3 +61,4 @@ val Icons.Filled.Downtrend: ImageVector
 
 @Suppress("ObjectPropertyName")
 private var _DowntrenIcon: ImageVector? = null
+// Revue me>>

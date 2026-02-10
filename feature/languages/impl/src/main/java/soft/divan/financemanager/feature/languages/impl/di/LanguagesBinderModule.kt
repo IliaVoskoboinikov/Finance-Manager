@@ -36,3 +36,4 @@ interface LanguagesBinderModule {
     @Binds
     fun bindAppLocaleManager(impl: AppLocaleManagerImpl): AppLocaleManager
 }
+// Revue me>>

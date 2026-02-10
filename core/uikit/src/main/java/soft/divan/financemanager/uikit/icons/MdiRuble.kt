@@ -58,3 +58,4 @@ val Icons.Filled.MdiRuble: ImageVector
 
 @Suppress("ObjectPropertyName")
 private var _MdiRuble: ImageVector? = null
+// Revue me>>

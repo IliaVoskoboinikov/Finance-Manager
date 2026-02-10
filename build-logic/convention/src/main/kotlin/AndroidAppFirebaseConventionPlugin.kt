@@ -28,3 +28,4 @@ class AndroidAppFirebaseConventionPlugin : Plugin<Project> {
         }
     }
 }
+// Revue me>>

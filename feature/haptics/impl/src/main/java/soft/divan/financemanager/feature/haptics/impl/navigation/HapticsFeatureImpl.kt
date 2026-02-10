@@ -29,3 +29,4 @@ class HapticFeatureImpl @Inject constructor() : HapticsFeatureApi {
         }
     }
 }
+// Revue me>>

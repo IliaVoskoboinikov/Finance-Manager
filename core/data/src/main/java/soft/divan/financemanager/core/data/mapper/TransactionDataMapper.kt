@@ -84,3 +84,4 @@ fun TransactionResponseCreateDto.toEntity(
     updatedAt = updatedAt,
     syncStatus = syncStatus
 )
+// Revue me>>

@@ -59,3 +59,4 @@ val Icons.Filled.MdiEuro: ImageVector
 
 @Suppress("ObjectPropertyName")
 private var _MdiEuro: ImageVector? = null
+// Revue me>>

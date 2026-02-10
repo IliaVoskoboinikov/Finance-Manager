@@ -6,3 +6,4 @@ import soft.divan.financemanager.uikit.theme.AccentColor
 interface GetAccentColorUseCase {
     operator fun invoke(): Flow<AccentColor>
 }
+// Revue me>>

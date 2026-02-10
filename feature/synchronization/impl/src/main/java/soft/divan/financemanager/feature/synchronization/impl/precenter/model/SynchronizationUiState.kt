@@ -13,3 +13,4 @@ sealed interface SynchronizationUiState {
 
     data class Error(@field:StringRes val messageRes: Int) : SynchronizationUiState
 }
+// Revue me>>

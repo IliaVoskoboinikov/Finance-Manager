@@ -47,3 +47,4 @@ interface SecurityBinderModule {
     @Binds
     fun bindDeletePinUseCase(impl: DeletePinUseCaseImpl): DeletePinUseCase
 }
+// Revue me>>

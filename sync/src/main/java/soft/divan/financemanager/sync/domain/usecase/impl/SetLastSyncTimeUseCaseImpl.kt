@@ -11,3 +11,4 @@ class SetLastSyncTimeUseCaseImpl @Inject constructor(
         repository.setLastSyncTime(timeMillis)
     }
 }
+// Revue me>>

@@ -29,3 +29,4 @@ class NetworkConnectionInterceptor(
 }
 
 class NoInternetException(message: String = "No internet connection") : IOException(message)
+// Revue me>>

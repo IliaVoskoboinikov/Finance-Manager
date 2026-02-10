@@ -25,3 +25,4 @@ val mockMyAccountsUiStateLoading = MyAccountsUiState.Loading
 val mockMyAccountsUiStateError = MyAccountsUiState.Error(
     message = R.string.error_loading
 )
+// Revue me>>

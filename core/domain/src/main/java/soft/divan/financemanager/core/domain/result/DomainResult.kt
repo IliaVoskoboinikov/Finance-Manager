@@ -38,3 +38,4 @@ fun <T> DomainResult<T>.getOrNull(): T? =
         is DomainResult.Success -> data
         is DomainResult.Failure -> null
     }
+// Revue me>>

@@ -9,3 +9,4 @@ object Dimens {
     val keyBoardButtonSize = 50.dp
     val keyBoardButtonFontSize = 25.sp
 }
+// Revue me>>

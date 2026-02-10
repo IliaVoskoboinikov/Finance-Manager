@@ -35,3 +35,4 @@ interface AccountDao {
     @Query("DELETE FROM account WHERE localId = :id")
     suspend fun delete(id: String)
 }
+// Revue me>>

@@ -24,3 +24,4 @@ class SyncInitializer @Inject constructor(
         syncScheduler.schedulePeriodicSync(interval)
     }
 }
+// Revue me>>

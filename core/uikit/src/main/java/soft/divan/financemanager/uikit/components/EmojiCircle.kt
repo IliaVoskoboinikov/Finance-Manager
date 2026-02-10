@@ -25,3 +25,4 @@ fun EmojiCircle(emoji: String, modifier: Modifier = Modifier) {
         Text(text = emoji, textAlign = TextAlign.Center)
     }
 }
+// Revue me>>

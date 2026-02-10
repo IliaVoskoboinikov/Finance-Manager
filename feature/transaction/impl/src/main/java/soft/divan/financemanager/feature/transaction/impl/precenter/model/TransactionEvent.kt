@@ -7,3 +7,4 @@ sealed interface TransactionEvent {
     data object TransactionSaved : TransactionEvent
     data class ShowError(@field:StringRes val messageRes: Int) : TransactionEvent
 }
+// Revue me>>

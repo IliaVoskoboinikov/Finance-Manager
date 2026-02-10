@@ -32,3 +32,4 @@ val mockTransactionUiStateLoading = AnalysisUiState.Loading
 val mockTransactionUiStateError = AnalysisUiState.Error(
     messageRes = R.string.error_loading
 )
+// Revue me>>

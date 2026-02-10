@@ -7,3 +7,4 @@ sealed interface AccountEvent {
     data object Deleted : AccountEvent
     data class ShowError(@field:StringRes val messageRes: Int) : AccountEvent
 }
+// Revue me>>

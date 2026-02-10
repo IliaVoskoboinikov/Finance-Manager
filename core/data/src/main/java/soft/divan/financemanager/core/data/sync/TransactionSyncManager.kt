@@ -14,3 +14,4 @@ interface TransactionSyncManager {
     suspend fun syncUpdate(transactionEntity: TransactionEntity)
     suspend fun syncDelete(transactionEntity: TransactionEntity)
 }
+// Revue me>>

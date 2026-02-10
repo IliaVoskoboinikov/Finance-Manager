@@ -53,3 +53,4 @@ fun SplashContent() {
         modifier = Modifier.fillMaxSize()
     )
 }
+// Revue me>>

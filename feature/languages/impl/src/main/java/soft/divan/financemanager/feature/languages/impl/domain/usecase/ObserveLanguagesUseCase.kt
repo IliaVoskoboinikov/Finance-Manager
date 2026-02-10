@@ -6,3 +6,4 @@ import soft.divan.financemanager.feature.languages.impl.domain.model.Language
 interface ObserveLanguagesUseCase {
     operator fun invoke(): Flow<Language>
 }
+// Revue me>>

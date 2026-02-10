@@ -20,3 +20,4 @@ data class AccountEntity(
     val updatedAt: String,
     val syncStatus: SyncStatus
 )
+// Revue me>>

@@ -14,3 +14,4 @@ class SetSyncIntervalHoursUseCaseImpl @Inject constructor(
         syncScheduler.schedulePeriodicSync(hours)
     }
 }
+// Revue me>>

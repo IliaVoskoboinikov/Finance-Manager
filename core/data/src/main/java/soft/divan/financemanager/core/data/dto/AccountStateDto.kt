@@ -12,3 +12,4 @@ data class AccountStateDto(
     @SerializedName("currency")
     val currency: String
 )
+// Revue me>>

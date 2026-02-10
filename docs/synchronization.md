@@ -161,3 +161,4 @@ WorkManager.getInstance(context)
 - Фичевая часть (`feature:synchronization:*`) работает только с use case’ами/репозиторием
   и не знает деталей реализации сетевых запросов или Room.
 
+// Revue me>>

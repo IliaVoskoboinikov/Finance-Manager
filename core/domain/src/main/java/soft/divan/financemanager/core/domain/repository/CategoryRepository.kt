@@ -8,3 +8,4 @@ interface CategoryRepository {
     fun getAll(): Flow<DomainResult<List<Category>>>
     fun getByType(isIncome: Boolean): Flow<DomainResult<List<Category>>>
 }
+// Revue me>>

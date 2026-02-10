@@ -13,3 +13,4 @@ sealed interface SecurityUiState {
 
     data class Error(@field:StringRes val messageRes: Int) : SecurityUiState
 }
+// Revue me>>

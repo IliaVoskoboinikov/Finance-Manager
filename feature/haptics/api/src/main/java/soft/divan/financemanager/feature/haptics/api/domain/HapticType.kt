@@ -7,3 +7,4 @@ enum class HapticType {
     ERROR,
     LONG_PRESS
 }
+// Revue me>>

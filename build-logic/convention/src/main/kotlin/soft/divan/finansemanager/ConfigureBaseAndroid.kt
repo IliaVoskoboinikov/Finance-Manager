@@ -25,3 +25,4 @@ fun BaseExtension.configureBaseAndroid(project: Project) {
         targetCompatibility = JavaVersion.toVersion(Const.JAVA_VERSION)
     }
 }
+// Revue me>>

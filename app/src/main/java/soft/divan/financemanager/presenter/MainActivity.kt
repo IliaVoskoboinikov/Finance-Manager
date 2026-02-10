@@ -133,3 +133,4 @@ class MainActivity : ComponentActivity() {
         ProcessLifecycleOwner.get().lifecycle.removeObserver(autoLockObserver)
     }
 }
+// Revue me>>

@@ -26,3 +26,4 @@ abstract class FinanceManagerDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun accountDao(): AccountDao
 }
+// Revue me>>

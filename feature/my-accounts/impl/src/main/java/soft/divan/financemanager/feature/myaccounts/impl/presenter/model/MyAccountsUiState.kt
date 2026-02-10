@@ -8,3 +8,4 @@ sealed interface MyAccountsUiState {
     data class Error(@field:StringRes val message: Int) : MyAccountsUiState
     data object EmptyData : MyAccountsUiState
 }
+// Revue me>>

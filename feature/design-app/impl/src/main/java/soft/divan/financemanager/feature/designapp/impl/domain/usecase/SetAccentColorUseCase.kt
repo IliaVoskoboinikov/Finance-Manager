@@ -5,3 +5,4 @@ import soft.divan.financemanager.uikit.theme.AccentColor
 interface SetAccentColorUseCase {
     suspend operator fun invoke(color: AccentColor)
 }
+// Revue me>>

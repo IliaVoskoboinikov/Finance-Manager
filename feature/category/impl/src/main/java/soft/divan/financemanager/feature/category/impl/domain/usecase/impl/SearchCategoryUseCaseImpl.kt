@@ -12,3 +12,4 @@ class SearchCategoryUseCaseImpl @Inject constructor() : SearchCategoryUseCase {
         return categories.filter { it.name.contains(query, ignoreCase = true) }
     }
 }
+// Revue me>>

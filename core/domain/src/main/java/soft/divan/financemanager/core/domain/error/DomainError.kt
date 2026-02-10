@@ -22,3 +22,4 @@ sealed interface DomainError : AppError {
         override val cause: Throwable?
     ) : DomainError
 }
+// Revue me>>

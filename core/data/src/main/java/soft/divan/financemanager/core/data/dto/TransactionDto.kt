@@ -20,3 +20,4 @@ data class TransactionDto(
     @SerializedName("updatedAt")
     val updatedAt: String
 )
+// Revue me>>

@@ -35,3 +35,4 @@ val Icons.Filled.Triangle: ImageVector
 
 @Suppress("ObjectPropertyName")
 private var _Tringle: ImageVector? = null
+// Revue me>>

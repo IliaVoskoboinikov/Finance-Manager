@@ -12,3 +12,4 @@ data class CategoryDto(
     @SerializedName("isIncome")
     val isIncome: Boolean
 )
+// Revue me>>

@@ -27,3 +27,4 @@ class HapticsLocalSourceImpl @Inject constructor(
         }
     }
 }
+// Revue me>>
