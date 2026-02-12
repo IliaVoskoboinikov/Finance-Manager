@@ -40,7 +40,7 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
         isIncome: Boolean,
         period: Period
     ): Flow<DomainResult<Triple<List<Transaction>, CurrencySymbol, List<Category>>>> {
-        /**
+        /*
          * Базовый combine независимых источников:
          * - аккаунты
          * - категории
@@ -50,7 +50,7 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
          * Любое изменение любого из них → пересчёт downstream логики.
          */
         return baseDataFlow()
-            /**
+            /*
              * flatMapLatest:
              * - при любом изменении аккаунтов / категорий / валюты
              * - отменяем старые подписки
@@ -59,10 +59,7 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
             .flatMapLatest { baseResult ->
                 handleBaseResult(baseResult, period, isIncome)
             }
-            /**
-             * Защита от повторных эмитов одинакового состояния.
-             */
-            .distinctUntilChanged()
+            .distinctUntilChanged() // Защита от повторных эмитов одинакового состояния.
     }
 
     private fun baseDataFlow(): Flow<DomainResult<Triple<List<Account>, CurrencySymbol, List<Category>>>> =
@@ -107,16 +104,14 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
 
             is DomainResult.Success -> {
                 val (accounts, currency, categories) = baseResult.data
-                /**
+                /*
                  * Нет аккаунтов → нет транзакций
                  * Это SUCCESS с пустым списком
                  */
                 if (accounts.isEmpty()) {
                     emptyTransactionsResult(currency, categories)
                 } else {
-                    /**
-                     * Подписка на транзакции по каждому аккаунту
-                     */
+                    // Подписка на транзакции по каждому аккаунту
                     transactionsFlow(
                         accounts,
                         period,
@@ -153,10 +148,7 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
                 )
             }
         ) { results ->
-
-            /**
-             * Любая ошибка → ошибка всего use case
-             */
+            // Любая ошибка → ошибка всего use case
             val failure = results.firstOrNull { it is DomainResult.Failure }
 
             if (failure != null) {
@@ -178,17 +170,11 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
         categoriesMap: Map<Int, Category>,
         isIncome: Boolean
     ): List<Transaction> {
-        /**
-         * Агрегация всех транзакций
-         */
+        // Агрегация всех транзакций
         val allTransactions = results
             .filterIsInstance<DomainResult.Success<List<Transaction>>>()
             .flatMap { it.data }
-
-        /**
-         * Фильтрация по типу
-         * + сортировка по дате
-         */
+        // Фильтрация по типу + сортировка по дате
         val filteredTransactions = allTransactions
             .filter { transaction ->
                 categoriesMap[transaction.categoryId]?.isIncome == isIncome

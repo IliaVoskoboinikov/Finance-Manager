@@ -88,7 +88,7 @@ class AccountRepositoryImpl @Inject constructor(
                     }
                 }
             } else {
-                /** аккаунт не синхронизирован с сервером то создаем на сервере*/
+                // Аккаунт не синхронизирован с сервером то создаем на сервере
                 syncManager.syncCreate(accountDto = accountEntity.toDto(), localId = id)
             }
         }
@@ -107,8 +107,7 @@ class AccountRepositoryImpl @Inject constructor(
 
         appCoroutineContext.launch {
             if (accountEntity.serverId == null) {
-                /** если аккаунт не синхронизирован с сервером (нету serverId) то создать на сервере и
-                 *  обновить локально*/
+                // Если аккаунт не синхронизирован с сервером (нет serverId), то создать на сервере и
                 syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
             } else {
                 syncManager.syncUpdate(
@@ -140,7 +139,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Получаем аккаунт из БД и и проверяем есть ли у него транзакции если нет то помечаем в БД
      * как удаленный и запускаем синхронизацию удаления,
-     * если на сервере аккаунта нету то просто удалем, если есть то удаляем на сервере и локально */
+     * если на сервере аккаунта нет то просто удалем, если есть то удаляем на сервере и локально */
     @Suppress("ReturnCount")
     override suspend fun delete(id: String): DomainResult<Unit> {
         val localResult = getLocalOrFail(id)

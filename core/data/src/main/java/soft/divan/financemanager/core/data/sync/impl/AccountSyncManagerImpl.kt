@@ -50,7 +50,7 @@ class AccountSyncManagerImpl @Inject constructor(
                 val localAccount = localMap[accountDto.id]
 
                 if (localAccount == null) {
-                    /** Локального аккаунта нет → создаём */
+                    // Локального аккаунта нет → создаём
                     safeDbCall(errorLogger) {
                         localDataSource.create(
                             accountDto.toEntity(
@@ -60,7 +60,7 @@ class AccountSyncManagerImpl @Inject constructor(
                         )
                     }
                 } else if (accountDto.updatedAt > localAccount.updatedAt) {
-                    /** Конфликт → побеждает тот, кто обновлялся позже */
+                    // Конфликт → побеждает тот, кто обновлялся позже
                     updateLocalFromRemote(
                         accountDto = accountDto,
                         localId = localAccount.localId
