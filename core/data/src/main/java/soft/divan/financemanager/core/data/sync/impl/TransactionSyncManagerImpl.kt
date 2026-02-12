@@ -8,7 +8,6 @@ import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
-import soft.divan.financemanager.core.data.sync.util.Syncable
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
@@ -27,7 +26,7 @@ class TransactionSyncManagerImpl @Inject constructor(
     private val localDataSource: TransactionLocalDataSource,
     private val accountLocalDataSource: AccountLocalDataSource,
     private val errorLogger: ErrorLogger
-) : TransactionSyncManager, Syncable {
+) : TransactionSyncManager {
 
     /** Запуск синхронизации через workManager */
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
