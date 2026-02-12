@@ -7,7 +7,6 @@ import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
-import soft.divan.financemanager.core.data.sync.util.Syncable
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
@@ -23,7 +22,7 @@ class AccountSyncManagerImpl @Inject constructor(
     private val remoteDataSource: AccountRemoteDataSource,
     private val localDataSource: AccountLocalDataSource,
     private val errorLogger: ErrorLogger
-) : AccountSyncManager, Syncable {
+) : AccountSyncManager {
 
     /** Запуск синхронизации через workManager */
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
