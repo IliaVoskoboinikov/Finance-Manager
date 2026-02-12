@@ -93,7 +93,8 @@ jobs:
         uses: ./.github/actions/init-gradle
 
       - name: Run Detekt
-        run: ./gradlew detekt $gradleFlags --continue || true
+        run: ./gradlew detekt $gradleFlags --continue
+        continue-on-error: true
 
       - name: Generate Markdown report
         if: always()
@@ -115,7 +116,12 @@ jobs:
       - name: Fail if Detekt found issues
         if: always()
         run: |
-          grep -q "FAILURE" build/reports/detekt/detekt.xml && exit 1 || echo "No Detekt failures"
+          if grep -q "<error" build/reports/detekt/detekt.xml; then
+            echo "Detekt found issues!"
+            exit 1
+          else
+            echo "No Detekt issues."
+          fi
 
 
   run-ktlint:
