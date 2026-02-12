@@ -30,7 +30,7 @@ tasks.withType<Detekt>().configureEach {
 
     buildUponDefaultConfig = true
     parallel = true
-    ignoreFailures = true
+    ignoreFailures = false
 
     config.setFrom(file(File(rootDir, "config/detekt/detekt.yml")))
     setSource(files(rootDir))
