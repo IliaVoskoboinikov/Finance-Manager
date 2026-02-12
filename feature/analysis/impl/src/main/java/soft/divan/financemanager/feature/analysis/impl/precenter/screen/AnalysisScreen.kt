@@ -69,12 +69,12 @@ fun AnalysisScreenPreview() {
                 onRetry = {},
                 onNavigateBack = { },
                 onUpdateStartDate = {},
-                onUpdateEndDate = {},
+                onUpdateEndDate = {}
             ),
             startDate = today,
             endDate = today,
-            snackbarHostState = remember { SnackbarHostState() },
-            )
+            snackbarHostState = remember { SnackbarHostState() }
+        )
     }
 }
 
@@ -100,7 +100,7 @@ fun AnalysisScreen(
             onUpdateStartDate = viewModel::updateStartDate,
             onUpdateEndDate = viewModel::updateEndDate
         ),
-        snackbarHostState = snackbarHostState,
+        snackbarHostState = snackbarHostState
     )
 }
 
