@@ -25,7 +25,7 @@ interface TransactionDao {
     fun getByAccountAndPeriod(
         accountId: String,
         startDate: String, // "2025-10-24"
-        endDate: String // "2025-10-24"
+        endDate: String
     ): Flow<List<TransactionEntity>>
 
     @Query("SELECT * FROM transactions WHERE localId = :localId")

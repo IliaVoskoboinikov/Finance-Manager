@@ -45,8 +45,7 @@ class DesignAppViewModel @Inject constructor(
     }
 
     private fun load() {
-        combine(getThemeModeUseCase(), getAccentColorUseCase())
-        { themeMode, accentColor ->
+        combine(getThemeModeUseCase(), getAccentColorUseCase()) { themeMode, accentColor ->
             _uiState.update {
                 DesignUiState.Success(
                     themeMode = themeMode,

@@ -1,4 +1,5 @@
 import io.gitlab.arturbosch.detekt.Detekt
+import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
@@ -16,6 +17,25 @@ plugins {
     alias(libs.plugins.firebase.crashlytics) apply false
     alias(libs.plugins.android.lint)
     alias(libs.plugins.ktlint) apply false
+}
+
+subprojects {
+    plugins.withId("org.jlleitschuh.gradle.ktlint") {
+        configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+            version.set("1.8.0")
+            debug.set(true)
+            verbose.set(true)
+            android.set(true)
+            outputToConsole.set(true)
+            ignoreFailures.set(false)
+
+            reporters {
+                reporter(ReporterType.PLAIN)
+                reporter(ReporterType.HTML)
+                reporter(ReporterType.SARIF)
+            }
+        }
+    }
 }
 
 detekt {

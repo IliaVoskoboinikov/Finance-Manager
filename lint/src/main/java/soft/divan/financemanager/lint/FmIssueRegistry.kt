@@ -18,8 +18,9 @@ class FmIssueRegistry : IssueRegistry() {
     override val api: Int
         get() = CURRENT_API
 
+    // works with Studio 4.1 or later; see com.android.tools.lint.detector.api.Api / ApiKt
     override val minApi: Int
-        get() = MIN_SUPPORTED_API // works with Studio 4.1 or later; see com.android.tools.lint.detector.api.Api / ApiKt
+        get() = MIN_SUPPORTED_API
 
     // Requires lint API 30.0+; if you're still building for something
     // older, just remove this property.
