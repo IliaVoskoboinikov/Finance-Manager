@@ -5,6 +5,9 @@ on:
     paths-ignore:
       - '**.md'
 
+env:
+  API_TOKEN: ${{ secrets.API_TOKEN }}
+
 jobs:
   build-app:
     uses: ./.github/workflows/build-app.yml
