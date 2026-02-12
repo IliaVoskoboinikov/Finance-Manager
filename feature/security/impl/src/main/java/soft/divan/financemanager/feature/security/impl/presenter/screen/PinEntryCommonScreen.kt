@@ -89,7 +89,10 @@ fun PinEntryCommonScreen(
             }
         )
 
-        if (showBiometricScreen && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && authenticationCallback != null) {
+        if (showBiometricScreen &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+            authenticationCallback != null
+        ) {
             BiometricScreen(authenticationCallback = authenticationCallback)
             showBiometricScreen = false
         }
