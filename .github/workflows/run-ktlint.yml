@@ -1,0 +1,36 @@
+name: Run KtLint
+on:
+  workflow_call:
+
+env:
+  gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
+
+jobs:
+  run-ktlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/init-gradle
+      - name: Run KtLint
+        run: ./gradlew ktlintCheck --continue ${{ env.gradleFlags }}
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ktlint-html
+          path: '**/build/reports/ktlint/*/*.html'
+
+      #      - name: Collect SARIF files
+      #        id: sarif
+      #        run: |
+      #          mkdir -p sarif-to-upload
+      #          find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} sarif-to-upload/ \;
+      #          echo "SARIF_FILES<<EOF" >> $GITHUB_ENV
+      #          find sarif-to-upload -type f >> $GITHUB_ENV
+      #          echo "EOF" >> $GITHUB_ENV
+      #
+      #      - name: Upload SARIF to GitHub
+      #        uses: github/codeql-action/upload-sarif@v4
+      #        with:
+      #          sarif_file: ${{ env.SARIF_FILES }}
+      #          category: ktlint
