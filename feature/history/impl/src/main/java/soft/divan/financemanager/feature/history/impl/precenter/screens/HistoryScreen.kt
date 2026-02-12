@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.history.impl.R
+import soft.divan.financemanager.feature.history.impl.precenter.model.HistoryActions
 import soft.divan.financemanager.feature.history.impl.precenter.model.HistoryUiState
 import soft.divan.financemanager.feature.history.impl.precenter.model.UiTransaction
 import soft.divan.financemanager.feature.history.impl.precenter.model.mockHistoryUiStateSuccess
@@ -57,12 +58,14 @@ fun HistoryScreenPreview() {
             uiState = mockHistoryUiStateSuccess,
             startDate = today,
             endDate = today,
-            onUpdateStartDate = {},
-            onUpdateEndDate = {},
-            onNavigateToTransaction = {},
-            onNavigateBack = {},
-            onNavigateToAnalysis = {},
-            onRetry = {}
+            actions = HistoryActions(
+                onUpdateStartDate = {},
+                onUpdateEndDate = {},
+                onNavigateToTransaction = {},
+                onNavigateBack = {},
+                onNavigateToAnalysis = {},
+                onRetry = {}
+            )
         )
     }
 }
@@ -84,12 +87,14 @@ fun HistoryScreen(
         uiState = uiState,
         startDate = startDate,
         endDate = endDate,
-        onRetry = viewModel::reloadData,
-        onUpdateStartDate = viewModel::updateStartDate,
-        onUpdateEndDate = viewModel::updateEndDate,
-        onNavigateToTransaction = onNavigateToTransaction,
-        onNavigateBack = onNavigateBack,
-        onNavigateToAnalysis = onNavigateToAnalysis
+        actions = HistoryActions(
+            onRetry = viewModel::reloadData,
+            onUpdateStartDate = viewModel::updateStartDate,
+            onUpdateEndDate = viewModel::updateEndDate,
+            onNavigateToTransaction = onNavigateToTransaction,
+            onNavigateBack = onNavigateBack,
+            onNavigateToAnalysis = onNavigateToAnalysis
+        )
     )
 }
 
@@ -99,19 +104,14 @@ private fun HistoryContent(
     uiState: HistoryUiState,
     startDate: LocalDate,
     endDate: LocalDate,
-    onRetry: () -> Unit,
-    onUpdateStartDate: (LocalDate) -> Unit,
-    onUpdateEndDate: (LocalDate) -> Unit,
-    onNavigateToTransaction: (String) -> Unit,
-    onNavigateBack: () -> Unit,
-    onNavigateToAnalysis: () -> Unit,
+    actions: HistoryActions,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
         topBar = {
             HistoryTopBar(
-                onNavigateBack = onNavigateBack,
-                onNavigateToAnalysis = onNavigateToAnalysis
+                onNavigateBack = actions.onNavigateBack,
+                onNavigateToAnalysis = actions.onNavigateToAnalysis
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -120,14 +120,14 @@ private fun HistoryContent(
             PeriodSelector(
                 startDate = startDate,
                 endDate = endDate,
-                onUpdateStartDate = onUpdateStartDate,
-                onUpdateEndDate = onUpdateEndDate
+                onUpdateStartDate = actions.onUpdateStartDate,
+                onUpdateEndDate = actions.onUpdateEndDate
             )
 
             HistoryStatefulContent(
                 uiState = uiState,
-                onRetry = onRetry,
-                onNavigateToTransaction = onNavigateToTransaction
+                onRetry = actions.onRetry,
+                onNavigateToTransaction = actions.onNavigateToTransaction
             )
         }
     }

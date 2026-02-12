@@ -48,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.feature.transaction.impl.R
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.CategoryUi
+import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionActions
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionUiState
@@ -80,15 +81,17 @@ fun TransactionScreenPreview() {
         TransactionContent(
             uiState = mockTransactionUiStateSuccess,
             isIncome = false,
-            onNavigateBack = { },
-            onSave = { },
-            onAmountChange = { },
-            onCommentChange = { },
-            onDateChange = { },
-            onTimeChange = { },
-            onCategoryChange = {},
-            onAccountChange = {},
-            onDelete = {},
+            actions = TransactionActions(
+                onNavigateBack = { },
+                onSave = { },
+                onAmountChange = { },
+                onCommentChange = { },
+                onDateChange = { },
+                onTimeChange = { },
+                onCategoryChange = { },
+                onAccountChange = { },
+                onDelete = { }
+            ),
             snackbarHostState = remember { SnackbarHostState() }
         )
     }
@@ -142,15 +145,17 @@ fun TransactionScreen(
         modifier = modifier,
         uiState = uiState,
         isIncome = isIncome,
-        onNavigateBack = onNavigateBack,
-        onSave = viewModel::save,
-        onAmountChange = viewModel::onAmountInputChanged,
-        onCommentChange = viewModel::updateComment,
-        onDateChange = viewModel::updateDate,
-        onTimeChange = viewModel::updateTime,
-        onCategoryChange = viewModel::updateCategory,
-        onAccountChange = viewModel::updateAccount,
-        onDelete = { viewModel.delete() },
+        actions = TransactionActions(
+            onNavigateBack = onNavigateBack,
+            onSave = viewModel::save,
+            onAmountChange = viewModel::onAmountInputChanged,
+            onCommentChange = viewModel::updateComment,
+            onDateChange = viewModel::updateDate,
+            onTimeChange = viewModel::updateTime,
+            onCategoryChange = viewModel::updateCategory,
+            onAccountChange = viewModel::updateAccount,
+            onDelete = viewModel::delete
+        ),
         snackbarHostState = snackbarHostState
     )
 }
@@ -160,37 +165,23 @@ fun TransactionContent(
     modifier: Modifier = Modifier,
     isIncome: Boolean,
     uiState: TransactionUiState,
-    onNavigateBack: () -> Unit,
-    onSave: () -> Unit,
-    onAmountChange: (String) -> Unit,
-    onCommentChange: (String) -> Unit,
-    onDateChange: (LocalDate) -> Unit,
-    onTimeChange: (LocalTime) -> Unit,
-    onCategoryChange: (CategoryUi) -> Unit,
-    onAccountChange: (AccountUi) -> Unit,
-    onDelete: () -> Unit,
+    actions: TransactionActions,
     snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
-        topBar = { TopBarTransaction(isIncome, onNavigateBack, onSave) },
+        topBar = { TopBarTransaction(isIncome, actions.onNavigateBack, actions.onSave) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
                 is TransactionUiState.Loading -> LoadingProgressBar()
 
-                is TransactionUiState.Error -> ErrorContent(onClick = onSave)
+                is TransactionUiState.Error -> ErrorContent(onClick = actions.onSave)
 
                 is TransactionUiState.Success -> TransactionForm(
                     modifier = modifier,
                     uiState = uiState,
-                    onAmountChange = onAmountChange,
-                    onCommentChange = onCommentChange,
-                    onDateChange = onDateChange,
-                    onTimeChange = onTimeChange,
-                    onCategoryChange = onCategoryChange,
-                    onAccountChange = onAccountChange,
-                    onDelete = onDelete
+                    actions = actions
                 )
             }
         }
@@ -218,13 +209,7 @@ private fun TopBarTransaction(
 fun TransactionForm(
     modifier: Modifier = Modifier,
     uiState: TransactionUiState.Success,
-    onAmountChange: (String) -> Unit,
-    onCommentChange: (String) -> Unit,
-    onDateChange: (LocalDate) -> Unit,
-    onTimeChange: (LocalTime) -> Unit,
-    onCategoryChange: (CategoryUi) -> Unit,
-    onAccountChange: (AccountUi) -> Unit,
-    onDelete: () -> Unit
+    actions: TransactionActions
 ) {
     val isShowAccountsSheet = remember { mutableStateOf(false) }
     val isShowDatePicker = remember { mutableStateOf(false) }
@@ -232,20 +217,20 @@ fun TransactionForm(
     val isShowCategorySheet = remember { mutableStateOf(false) }
     val isShowDeleteDialog = remember { mutableStateOf(false) }
 
-    ShowDataPickerDialog(isShowDatePicker = isShowDatePicker, onDateChange = onDateChange)
-    ShowTimePickerDialog(isShowTimePicker = isShowTimePicker, onTimeChange = onTimeChange)
+    ShowDataPickerDialog(isShowDatePicker = isShowDatePicker, onDateChange = actions.onDateChange)
+    ShowTimePickerDialog(isShowTimePicker = isShowTimePicker, onTimeChange = actions.onTimeChange)
     ShowCategoryBottomSheet(
         isShowCategorySheet = isShowCategorySheet,
         categories = uiState.categories,
-        onCategoryChange = onCategoryChange
+        onCategoryChange = actions.onCategoryChange
     )
     ShowAccountsBottomSheet(
         isShowAccountsSheet = isShowAccountsSheet,
         accounts = uiState.accounts,
-        onAccountChange = onAccountChange
+        onAccountChange = actions.onAccountChange
     )
 
-    ShowDeleteDialog(isShowDeleteDialog, onDelete)
+    ShowDeleteDialog(isShowDeleteDialog, actions.onDelete)
 
     Column(
         modifier = modifier
@@ -259,7 +244,7 @@ fun TransactionForm(
             onClick = { isShowCategorySheet.value = true }
         )
         FMDriver()
-        Amount(amount = uiState.transaction.amount, onAmountChange = onAmountChange)
+        Amount(amount = uiState.transaction.amount, onAmountChange = actions.onAmountChange)
         FMDriver()
         Data(
             transactionDate = uiState.transaction.date,
@@ -274,13 +259,13 @@ fun TransactionForm(
         CommentInputField(
             value = uiState.transaction.comment,
             onValueChange = {
-                onCommentChange(it)
+                actions.onCommentChange(it)
             }
         )
         FMDriver()
         Spacer(modifier = Modifier.height(24.dp))
         if (uiState.transaction.mode is TransactionMode.Edit) {
-            DeleteButton({ isShowDeleteDialog.value = true })
+            DeleteButton { isShowDeleteDialog.value = true }
         }
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import soft.divan.financemanager.feature.settings.impl.R
 import soft.divan.financemanager.feature.settings.impl.presenter.model.SettingsModel
+import soft.divan.financemanager.feature.settings.impl.presenter.model.SettingsActions
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.FMDriver
 import soft.divan.financemanager.uikit.components.ListItem
@@ -32,13 +33,15 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 fun SettingsScreenPreview() {
     FinanceManagerTheme {
         SettingsScreen(
-            onNavigateToAboutTheProgram = {},
-            onNavigateToSecurity = {},
-            onNavigateToDesignApp = {},
-            onNavigateToHaptic = {},
-            onNavigateToSounds = {},
-            onNavigateToLanguages = {},
-            onNavigateToSynchronization = {}
+            actions = SettingsActions(
+                onNavigateToAboutTheProgram = {},
+                onNavigateToSecurity = {},
+                onNavigateToDesignApp = {},
+                onNavigateToHaptic = {},
+                onNavigateToSounds = {},
+                onNavigateToLanguages = {},
+                onNavigateToSynchronization = {}
+            )
         )
     }
 }
@@ -46,24 +49,10 @@ fun SettingsScreenPreview() {
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
-    onNavigateToAboutTheProgram: () -> Unit,
-    onNavigateToSecurity: () -> Unit,
-    onNavigateToDesignApp: () -> Unit,
-    onNavigateToHaptic: () -> Unit,
-    onNavigateToSounds: () -> Unit,
-    onNavigateToLanguages: () -> Unit,
-    onNavigateToSynchronization: () -> Unit
+    actions: SettingsActions
 ) {
-    val settingsItems = remember {
-        provideSettings(
-            onNavigateToAboutTheProgram = onNavigateToAboutTheProgram,
-            onNavigateToSecurity = onNavigateToSecurity,
-            onNavigateToDesignApp = onNavigateToDesignApp,
-            onNavigateToHaptic = onNavigateToHaptic,
-            onNavigateToSounds = onNavigateToSounds,
-            onNavigateToLanguages = onNavigateToLanguages,
-            onNavigateToSynchronization = onNavigateToSynchronization
-        )
+    val settingsItems = remember(actions) {
+        provideSettings(actions)
     }
 
     Scaffold(
@@ -103,21 +92,15 @@ private fun SettingsItem(model: SettingsModel) {
 }
 
 private fun provideSettings(
-    onNavigateToAboutTheProgram: () -> Unit,
-    onNavigateToSecurity: () -> Unit,
-    onNavigateToDesignApp: () -> Unit,
-    onNavigateToHaptic: () -> Unit,
-    onNavigateToSounds: () -> Unit,
-    onNavigateToLanguages: () -> Unit,
-    onNavigateToSynchronization: () -> Unit
+    navigation: SettingsActions
 ): List<SettingsModel> {
     return listOf(
-        SettingsModel(R.string.design) { onNavigateToDesignApp() },
-        SettingsModel(R.string.sounds) { onNavigateToSounds() },
-        SettingsModel(R.string.haptics) { onNavigateToHaptic() },
-        SettingsModel(R.string.passcode) { onNavigateToSecurity() },
-        SettingsModel(R.string.synchronization) { onNavigateToSynchronization() },
-        SettingsModel(R.string.language) { onNavigateToLanguages() },
-        SettingsModel(R.string.program_notes) { onNavigateToAboutTheProgram() }
+        SettingsModel(R.string.design) { navigation.onNavigateToDesignApp() },
+        SettingsModel(R.string.sounds) { navigation.onNavigateToSounds() },
+        SettingsModel(R.string.haptics) { navigation.onNavigateToHaptic() },
+        SettingsModel(R.string.passcode) { navigation.onNavigateToSecurity() },
+        SettingsModel(R.string.synchronization) { navigation.onNavigateToSynchronization() },
+        SettingsModel(R.string.language) { navigation.onNavigateToLanguages() },
+        SettingsModel(R.string.program_notes) { navigation.onNavigateToAboutTheProgram() }
     )
 }
