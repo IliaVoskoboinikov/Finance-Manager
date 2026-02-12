@@ -4,7 +4,6 @@ import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
 import soft.divan.financemanager.core.data.sync.CategorySyncManager
-import soft.divan.financemanager.core.data.sync.util.Syncable
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
@@ -16,7 +15,7 @@ class CategorySyncManagerImpl @Inject constructor(
     private val remoteDataSource: CategoryRemoteDataSource,
     private val localDataSource: CategoryLocalDataSource,
     private val errorLogger: ErrorLogger
-) : CategorySyncManager, Syncable {
+) : CategorySyncManager {
 
     /** Запуск синхронизации через workManager */
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {

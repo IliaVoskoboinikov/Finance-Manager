@@ -12,6 +12,8 @@ import soft.divan.financemanager.sync.domain.usecase.impl.ObserveSyncIntervalHou
 import soft.divan.financemanager.sync.domain.usecase.impl.SetLastSyncTimeUseCaseImpl
 import soft.divan.financemanager.sync.scheduler.SyncScheduler
 import soft.divan.financemanager.sync.scheduler.WorkManagerSyncScheduler
+import soft.divan.financemanager.sync.worker.SyncCoordinator
+import soft.divan.financemanager.sync.worker.SyncCoordinatorImpl
 import javax.inject.Singleton
 
 @Module
@@ -33,4 +35,7 @@ interface SyncBinderModule {
     fun bindObserveSyncIntervalHoursUseCase(
         impl: ObserveSyncIntervalHoursUseCaseImpl
     ): ObserveSyncIntervalHoursUseCase
+
+    @Binds
+    fun bindSyncCoordinator(impl: SyncCoordinatorImpl): SyncCoordinator
 }
