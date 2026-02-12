@@ -1,0 +1,197 @@
+name: Android CI
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+
+env:
+  gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
+  API_TOKEN: ${{ secrets.API_TOKEN }}
+  GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
+      - name: Create google-services.json
+        run: |
+          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+
+      - name: Build project $gradleFlags
+        run: ./gradlew assembleDebug
+
+      - name: Generate build time report
+        uses: ./.github/actions/build-time-report
+        with:
+          file: app/build/reports/buildTimeTracker/build.csv
+          output-file: buildTime.csv
+
+
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
+      - name: Create google-services.json
+        run: |
+          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+
+      - name: Run unit tests (Debug only)
+        run: ./gradlew testDebugUnitTest $gradleFlags
+
+
+  run-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
+      - name: Create google-services.json
+        run: |
+          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+
+      - name: Run Android Lint
+        run: ./gradlew lint
+
+      - name: Upload Lint HTML reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-html
+          path: |
+            **/build/reports/lint-results*.html
+
+  #      - name: Upload SARIF to GitHub Code Scanning
+  #        if: always()
+  #        uses: github/codeql-action/upload-sarif@v4
+  #        with:
+  #          sarif_file: |
+  #            lint/build/reports/lint-results.sarif
+
+
+  run-detekt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
+      - name: Run Detekt
+        run: ./gradlew detekt $gradleFlags --continue
+        continue-on-error: true
+
+      - name: Generate Markdown report
+        if: always()
+        run: cat build/reports/detekt/detekt.md > $GITHUB_STEP_SUMMARY
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: build/reports/detekt/detekt.sarif
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detekt.html
+          path: build/reports/detekt/detekt.html
+
+      - name: Fail if Detekt found issues
+        if: always()
+        run: |
+          if grep -q "<error" build/reports/detekt/detekt.xml; then
+            echo "Detekt found issues!"
+            exit 1
+          else
+            echo "No Detekt issues."
+          fi
+
+
+  run-ktlint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
+      - name: Run KtLint
+        run: ./gradlew --continue ktlintCheck $gradleFlags
+
+      #      - name: Collect SARIF files
+      #        id: sarif
+      #        run: |
+      #          mkdir -p sarif-to-upload
+      #          find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} sarif-to-upload/ \;
+      #          echo "SARIF_FILES<<EOF" >> $GITHUB_ENV
+      #          find sarif-to-upload -type f >> $GITHUB_ENV
+      #          echo "EOF" >> $GITHUB_ENV
+      #
+      #      - name: Upload SARIF to GitHub
+      #        uses: github/codeql-action/upload-sarif@v4
+      #        with:
+      #          sarif_file: ${{ env.SARIF_FILES }}
+      #          category: ktlint
+
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ktlint-html
+          path: '**/build/reports/ktlint/*/*.html'
+
+
+  check-module-graph:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
+      - name: Check Graph
+        run: ./gradlew :app:assertModuleGraph $gradleFlags
+
+      - name: Generate graph
+        run: ./gradlew :app:generateModulesGraphvizText -Pmodules.graph.output.gv=all_modules $gradleFlags
+
+      - name: Generate Markdown report
+        run: |
+          set -e
+          echo '```' > $GITHUB_STEP_SUMMARY
+          cat all_modules >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Draw graph
+        uses: ./.github/actions/draw-graph
+
+        with:
+          input-file: all_modules
+          output-file: all_modules.png
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: all_modules.png
+          path: all_modules.png
