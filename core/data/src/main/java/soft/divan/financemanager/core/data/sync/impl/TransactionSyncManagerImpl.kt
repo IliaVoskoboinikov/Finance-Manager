@@ -44,7 +44,7 @@ class TransactionSyncManagerImpl @Inject constructor(
             pullFromRemoteForAccount(
                 accountLocalId = account.localId,
                 startDate = ApiDateMapper.toApiDate(
-                    Instant.parse(account.createdAt).minus(5, ChronoUnit.DAYS)
+                    Instant.parse(account.createdAt).minus(2, ChronoUnit.DAYS)
                 ),
                 endDate = ApiDateMapper.toApiDate(Instant.now())
             )

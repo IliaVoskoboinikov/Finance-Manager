@@ -42,6 +42,7 @@ import co.yml.charts.ui.piechart.models.PieChartData
 import soft.divan.financemanager.core.domain.extension.pretty
 import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.analysis.impl.R
+import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisActions
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisUiState
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.mockTransactionUiStateError
 import soft.divan.financemanager.feature.analysis.impl.precenter.viewModel.AnalysisViewModel
@@ -64,14 +65,16 @@ fun AnalysisScreenPreview() {
     FinanceManagerTheme {
         AnalysisContent(
             uiState = mockTransactionUiStateError,
-            onRetry = {},
-            onNavigateBack = { },
-            snackbarHostState = remember { SnackbarHostState() },
-            onUpdateStartDate = {},
-            onUpdateEndDate = {},
+            actions = AnalysisActions(
+                onRetry = {},
+                onNavigateBack = { },
+                onUpdateStartDate = {},
+                onUpdateEndDate = {},
+            ),
             startDate = today,
-            endDate = today
-        )
+            endDate = today,
+            snackbarHostState = remember { SnackbarHostState() },
+            )
     }
 }
 
@@ -91,11 +94,13 @@ fun AnalysisScreen(
         uiState = uiState,
         startDate = startDate,
         endDate = endDate,
-        onRetry = viewModel::reloadData,
-        onNavigateBack = onNavigateBack,
+        actions = AnalysisActions(
+            onRetry = viewModel::reloadData,
+            onNavigateBack = onNavigateBack,
+            onUpdateStartDate = viewModel::updateStartDate,
+            onUpdateEndDate = viewModel::updateEndDate
+        ),
         snackbarHostState = snackbarHostState,
-        onUpdateStartDate = viewModel::updateStartDate,
-        onUpdateEndDate = viewModel::updateEndDate
     )
 }
 
@@ -105,28 +110,25 @@ private fun AnalysisContent(
     uiState: AnalysisUiState,
     startDate: LocalDate,
     endDate: LocalDate,
-    onRetry: () -> Unit,
-    onNavigateBack: () -> Unit,
-    onUpdateStartDate: (LocalDate) -> Unit,
-    onUpdateEndDate: (LocalDate) -> Unit,
+    actions: AnalysisActions,
     snackbarHostState: SnackbarHostState
 
 ) {
     Scaffold(
-        topBar = { AnalysisTopBar(onNavigateBack = onNavigateBack) },
+        topBar = { AnalysisTopBar(onNavigateBack = actions.onNavigateBack) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Column(modifier = modifier.padding(paddingValues)) {
             PeriodSelector(
                 startDate = startDate,
                 endDate = endDate,
-                onUpdateStartDate = onUpdateStartDate,
-                onUpdateEndDate = onUpdateEndDate
+                onUpdateStartDate = actions.onUpdateStartDate,
+                onUpdateEndDate = actions.onUpdateEndDate
             )
 
             AnalysisStatefulContent(
                 uiState = uiState,
-                onRetry = onRetry
+                onRetry = actions.onRetry
             )
         }
     }

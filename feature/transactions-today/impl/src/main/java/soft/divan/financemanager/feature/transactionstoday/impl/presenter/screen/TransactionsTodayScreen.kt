@@ -27,6 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.feature.transactions_today.impl.R
 import soft.divan.financemanager.feature.transactionstoday.impl.presenter.model.TransactionUi
+import soft.divan.financemanager.feature.transactionstoday.impl.presenter.model.TransactionsTodayActions
 import soft.divan.financemanager.feature.transactionstoday.impl.presenter.model.TransactionsTodayUiState
 import soft.divan.financemanager.feature.transactionstoday.impl.presenter.model.mockTransactionsTodayUiStateSuccess
 import soft.divan.financemanager.feature.transactionstoday.impl.presenter.viewmodel.TransactionsTodayViewModel
@@ -51,11 +52,13 @@ fun TransactionsTodayPreview() {
         TransactionsTodayContent(
             isIncome = false,
             uiState = mockTransactionsTodayUiStateSuccess,
-            onRetry = {},
-            onNavigateToHistory = {},
-            onNavigateToNewTransaction = {},
-            onNavigateToOldTransaction = {},
-            hapticNavigation = {},
+            actions = TransactionsTodayActions(
+                onRetry = {},
+                onNavigateToHistory = {},
+                onNavigateToNewTransaction = {},
+                onNavigateToOldTransaction = {},
+                onHaptic = {}
+            ),
             snackbarHostState = remember { SnackbarHostState() }
         )
     }
@@ -82,11 +85,13 @@ fun TransactionsTodayScreen(
         modifier = modifier,
         isIncome = isIncome,
         uiState = uiState,
-        onRetry = viewModel::retry,
-        onNavigateToHistory = onNavigateToHistory,
-        onNavigateToNewTransaction = onNavigateToNewTransaction,
-        onNavigateToOldTransaction = onNavigateToOldTransaction,
-        hapticNavigation = viewModel::hapticNavigation,
+        actions = TransactionsTodayActions(
+            onRetry = viewModel::retry,
+            onNavigateToHistory = onNavigateToHistory,
+            onNavigateToNewTransaction = onNavigateToNewTransaction,
+            onNavigateToOldTransaction = onNavigateToOldTransaction,
+            onHaptic = viewModel::hapticNavigation
+        ),
         snackbarHostState = snackbarHostState
     )
 }
@@ -96,11 +101,7 @@ fun TransactionsTodayContent(
     modifier: Modifier = Modifier,
     isIncome: Boolean,
     uiState: TransactionsTodayUiState,
-    onRetry: () -> Unit,
-    onNavigateToHistory: () -> Unit,
-    onNavigateToNewTransaction: () -> Unit,
-    hapticNavigation: () -> Unit,
-    onNavigateToOldTransaction: (idTransaction: String) -> Unit,
+    actions: TransactionsTodayActions,
     snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -109,15 +110,15 @@ fun TransactionsTodayContent(
                 topBar = TopBarModel(
                     title = if (isIncome) R.string.income_today else R.string.expenses_today,
                     actionIcon = Icons.Filled.Clock,
-                    actionIconClick = { onNavigateToHistory() }
+                    actionIconClick = { actions.onNavigateToHistory() }
                 )
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             FloatingButton(onClick = {
-                onNavigateToNewTransaction()
-                hapticNavigation()
+                actions.onNavigateToNewTransaction()
+                actions.onHaptic()
             })
         }
     ) { paddingValues ->
@@ -126,12 +127,12 @@ fun TransactionsTodayContent(
             when (uiState) {
                 is TransactionsTodayUiState.Loading -> LoadingProgressBar()
 
-                is TransactionsTodayUiState.Error -> ErrorContent(onClick = { onRetry() })
+                is TransactionsTodayUiState.Error -> ErrorContent(onClick = { actions.onRetry() })
 
                 is TransactionsTodayUiState.Success -> TransactionsList(
                     modifier = modifier,
                     uiState = uiState,
-                    onNavigateToOldTransaction = onNavigateToOldTransaction
+                    onNavigateToOldTransaction = actions.onNavigateToOldTransaction
                 )
             }
         }
