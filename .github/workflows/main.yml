@@ -8,8 +8,6 @@ on:
 jobs:
   build-app:
     uses: ./.github/workflows/build-app.yml
-    with:
-      api-token: ${{ secrets.API_TOKEN }}
 
   run-tests:
     uses: ./.github/workflows/run-tests.yml

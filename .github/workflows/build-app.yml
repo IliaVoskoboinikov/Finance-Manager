@@ -4,6 +4,7 @@ on:
 
 env:
   gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
+  API_TOKEN: ${{ secrets.API_TOKEN }}
 
 jobs:
   build-app:
