@@ -93,22 +93,29 @@ jobs:
         uses: ./.github/actions/init-gradle
 
       - name: Run Detekt
-        run: ./gradlew detekt $gradleFlags
+        run: ./gradlew detekt $gradleFlags --continue || true
 
       - name: Generate Markdown report
+        if: always()
         run: cat build/reports/detekt/detekt.md > $GITHUB_STEP_SUMMARY
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v4
-        if: success() || failure()
+        if: always()
         with:
           sarif_file: build/reports/detekt/detekt.sarif
 
       - name: Upload report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: detekt.html
           path: build/reports/detekt/detekt.html
+
+      - name: Fail if Detekt found issues
+        if: always()
+        run: |
+          grep -q "FAILURE" build/reports/detekt/detekt.xml && exit 1 || echo "No Detekt failures"
 
 
   run-ktlint:
