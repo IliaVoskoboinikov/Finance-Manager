@@ -114,7 +114,7 @@ class TransactionRepositoryImpl @Inject constructor(
                     }
                 }
             } else {
-                /** транзакция не синхронизирована с сервером то создаем на сервере*/
+                // Транзакция не синхронизирована с сервером то создаем на сервере
                 syncManager.syncCreate(transactionEntity)
             }
         }
