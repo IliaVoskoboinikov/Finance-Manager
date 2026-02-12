@@ -146,7 +146,7 @@ class TransactionSyncManagerImpl @Inject constructor(
                 val localTransaction = localMap[transactionDto.id]
 
                 if (localTransaction == null) {
-                    /**  Локальной транзакции нет → создаём */
+                    //  Локальной транзакции нет → создаём
                     safeDbCall(errorLogger) {
                         localDataSource.create(
                             transactionDto.toEntity(
@@ -157,7 +157,7 @@ class TransactionSyncManagerImpl @Inject constructor(
                         )
                     }
                 } else if (transactionDto.updatedAt > localTransaction.updatedAt) {
-                    /** Если есть то разрешаем конфликт, побежадает, так которая менялась позже  */
+                    // Если есть, то разрешаем конфликт, побеждает, так которая менялась позже
                     updateLocalFromRemote(
                         transactionDto.toEntity(
                             localId = localTransaction.localId,

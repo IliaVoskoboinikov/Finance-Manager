@@ -16,7 +16,6 @@ dependencies {
     compileOnly(libs.build.time.tracker)
 }
 
-
 gradlePlugin {
     plugins {
         register("androidBaseConventionPlugin") {
