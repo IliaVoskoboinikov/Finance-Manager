@@ -1,0 +1,27 @@
+name: Run Lint
+on:
+  workflow_call:
+
+jobs:
+  run-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/init-gradle
+      - uses: ./.github/actions/create-google-services
+      - name: Run Android Lint
+        run: ./gradlew lint
+      - name: Upload Lint HTML reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-html
+          path: '**/build/reports/lint-results*.html'
+
+
+  #      - name: Upload SARIF to GitHub Code Scanning
+  #        if: always()
+  #        uses: github/codeql-action/upload-sarif@v4
+  #        with:
+  #          sarif_file: |
+  #            lint/build/reports/lint-results.sarif

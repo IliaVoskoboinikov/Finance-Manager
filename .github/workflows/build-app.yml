@@ -1,0 +1,20 @@
+name: Build App
+on:
+  workflow_call:
+
+env:
+  gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+       - uses: actions/checkout@v4
+       - uses: ./.github/actions/init-gradle
+       - uses: ./.github/actions/create-google-services
+       - name: Build project
+         run: ./gradlew assembleDebug ${{ env.gradleFlags }}
+       - uses: ./.github/actions/build-time-report
+         with:
+          file: app/build/reports/buildTimeTracker/build.csv
+          output-file: buildTime.csv
