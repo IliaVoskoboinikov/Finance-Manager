@@ -11,6 +11,7 @@ import soft.divan.financemanager.feature.haptics.api.HapticsFeatureApi
 import soft.divan.financemanager.feature.languages.api.LanguagesFeatureApi
 import soft.divan.financemanager.feature.security.api.SecurityFeatureApi
 import soft.divan.financemanager.feature.settings.api.SettingsFeatureApi
+import soft.divan.financemanager.feature.settings.impl.presenter.model.SettingsActions
 import soft.divan.financemanager.feature.settings.impl.presenter.screens.AboutTheProgramScreen
 import soft.divan.financemanager.feature.settings.impl.presenter.screens.SettingsScreen
 import soft.divan.financemanager.feature.sounds.api.SoundsFeatureApi
@@ -52,43 +53,31 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
         navGraphBuilder.composable(scope.route()) {
             SettingsScreen(
                 modifier = modifier,
-                onNavigateToAboutTheProgram = {
-                    navController.navigate(
-                        scope.route(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE)
-                    )
-                },
-                onNavigateToSecurity = {
-                    navController.navigate(
-                        scope.route(securityFeatureApi.route)
-                    )
-                },
-                onNavigateToDesignApp = {
-                    navController.navigate(
-                        scope.route(designAppFeatureApi.route)
-                    )
-                },
-                onNavigateToHaptic = {
-                    navController.navigate(
-                        scope.route(hapticsFeatureApi.route)
-                    )
-                },
-                onNavigateToSounds = {
-                    navController.navigate(
-                        scope.route(soundsFeatureApi.route)
-                    )
-                },
-                onNavigateToLanguages = {
-                    navController.navigate(
-                        scope.route(languagesFeatureApi.route)
-                    )
-                },
-                onNavigateToSynchronization = {
-                    navController.navigate(
-                        scope.route(
-                            synchronizationFeatureApi.route
+                actions = SettingsActions(
+                    onNavigateToAboutTheProgram = {
+                        navController.navigate(
+                            scope.route(SCREEN_SETTINGS_ABOUT_THE_PROGRAM_SCREEN_ROUTE)
                         )
-                    )
-                }
+                    },
+                    onNavigateToSecurity = {
+                        navController.navigate(scope.route(securityFeatureApi.route))
+                    },
+                    onNavigateToDesignApp = {
+                        navController.navigate(scope.route(designAppFeatureApi.route))
+                    },
+                    onNavigateToHaptic = {
+                        navController.navigate(scope.route(hapticsFeatureApi.route))
+                    },
+                    onNavigateToSounds = {
+                        navController.navigate(scope.route(soundsFeatureApi.route))
+                    },
+                    onNavigateToLanguages = {
+                        navController.navigate(scope.route(languagesFeatureApi.route))
+                    },
+                    onNavigateToSynchronization = {
+                        navController.navigate(scope.route(synchronizationFeatureApi.route))
+                    }
+                )
             )
         }
 

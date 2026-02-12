@@ -9,7 +9,7 @@ import androidx.navigation.navArgument
 import jakarta.inject.Inject
 import soft.divan.financemanager.core.featureapi.RouteScope
 import soft.divan.financemanager.feature.account.api.AccountFeatureApi
-import soft.divan.financemanager.feature.account.impl.precenter.screens.CreateAccountScreenScreen
+import soft.divan.financemanager.feature.account.impl.precenter.screens.AccountScreenScreen
 
 private const val BASE_ROUTE = "account"
 const val ACCOUNT_ID_KEY: String = "accountId"
@@ -27,7 +27,7 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
         modifier: Modifier
     ) {
         navGraphBuilder.composable(scope.route()) {
-            CreateAccountScreenScreen(
+            AccountScreenScreen(
                 modifier = modifier,
                 accountId = null,
                 onNavigateBack = navController::popBackStack
@@ -43,7 +43,7 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
             )
         ) { backStackEntry ->
             val accountId = backStackEntry.arguments?.getString(ACCOUNT_ID_KEY)
-            CreateAccountScreenScreen(
+            AccountScreenScreen(
                 modifier = modifier,
                 accountId = accountId,
                 onNavigateBack = navController::popBackStack

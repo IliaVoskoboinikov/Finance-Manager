@@ -45,6 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.feature.account.impl.R
+import soft.divan.financemanager.feature.account.impl.precenter.model.AccountActions
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountEvent
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountMode
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUiState
@@ -70,17 +71,19 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun CreateAccountScreenPreview() {
+fun AccountScreenPreview() {
     FinanceManagerTheme {
-        CreateAccountContent(
+        AccountContent(
             uiState = mockAccountUiStateSuccess,
             accountId = null,
-            onNavigateBack = { },
-            onUpdateName = {},
-            onUpdateBalance = {},
-            onUpdateCurrency = {},
-            onSave = { },
-            onDelete = { },
+            actions = AccountActions(
+                onNavigateBack = { },
+                onUpdateName = { },
+                onUpdateBalance = { },
+                onUpdateCurrency = { },
+                onSave = { },
+                onDelete = { }
+            ),
             snackbarHostState = remember { SnackbarHostState() }
         )
     }
@@ -95,7 +98,7 @@ fun PreviewCurrencySheet() {
 }
 
 @Composable
-fun CreateAccountScreenScreen(
+fun AccountScreenScreen(
     modifier: Modifier = Modifier,
     accountId: String?,
     onNavigateBack: () -> Unit,
@@ -120,31 +123,28 @@ fun CreateAccountScreenScreen(
         }
     }
 
-    CreateAccountContent(
+    AccountContent(
         modifier = modifier,
         uiState = uiState,
         accountId = accountId,
-        onNavigateBack = onNavigateBack,
-        onUpdateName = viewModel::updateName,
-        onUpdateBalance = viewModel::onBalanceInputChanged,
-        onUpdateCurrency = viewModel::updateCurrency,
-        onSave = viewModel::createAccount,
-        onDelete = viewModel::delete,
+        actions = AccountActions(
+            onNavigateBack = onNavigateBack,
+            onUpdateName = viewModel::updateName,
+            onUpdateBalance = viewModel::onBalanceInputChanged,
+            onUpdateCurrency = viewModel::updateCurrency,
+            onSave = viewModel::createAccount,
+            onDelete = viewModel::delete
+        ),
         snackbarHostState = snackbarHostState
     )
 }
 
 @Composable
-fun CreateAccountContent(
+fun AccountContent(
     modifier: Modifier = Modifier,
     uiState: AccountUiState,
     accountId: String?,
-    onNavigateBack: () -> Unit,
-    onUpdateName: (String) -> Unit,
-    onUpdateBalance: (String) -> Unit,
-    onUpdateCurrency: (String) -> Unit,
-    onSave: () -> Unit,
-    onDelete: () -> Unit,
+    actions: AccountActions,
     snackbarHostState: SnackbarHostState
 ) {
     Scaffold(
@@ -153,9 +153,9 @@ fun CreateAccountContent(
                 topBar = TopBarModel(
                     title = if (accountId == null) R.string.create_account else R.string.edit_account,
                     navigationIcon = Icons.Filled.Cross,
-                    navigationIconClick = onNavigateBack,
+                    navigationIconClick = actions.onNavigateBack,
                     actionIcon = Icons.Filled.ArrowConfirm,
-                    actionIconClick = onSave
+                    actionIconClick = actions.onSave
                 )
             )
         },
@@ -163,17 +163,13 @@ fun CreateAccountContent(
     ) { paddingValues ->
         Box(modifier = modifier.padding(paddingValues)) {
             when (uiState) {
-                is AccountUiState.Error -> ErrorContent(onClick = onSave)
+                is AccountUiState.Error -> ErrorContent(onClick = actions.onSave)
 
                 is AccountUiState.Loading -> LoadingProgressBar()
 
                 is AccountUiState.Success -> CreateAccountForm(
                     uiState = uiState,
-                    onUpdateName = onUpdateName,
-                    onUpdateBalance = onUpdateBalance,
-                    onUpdateCurrency = onUpdateCurrency,
-                    onSave = onSave,
-                    onDelete = onDelete
+                    actions = actions
                 )
             }
         }
@@ -184,11 +180,7 @@ fun CreateAccountContent(
 @Composable
 fun CreateAccountForm(
     uiState: AccountUiState.Success,
-    onUpdateName: (String) -> Unit,
-    onUpdateBalance: (String) -> Unit,
-    onUpdateCurrency: (String) -> Unit,
-    onSave: () -> Unit,
-    onDelete: () -> Unit
+    actions: AccountActions
 ) {
     val currencySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isCurrencySheetOpen = remember { mutableStateOf(false) }
@@ -198,22 +190,22 @@ fun CreateAccountForm(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        Name(uiState.account.name, onUpdateName)
+        Name(uiState.account.name, actions.onUpdateName)
         FMDriver()
-        Balance(uiState.account.balance, onUpdateBalance)
+        Balance(uiState.account.balance, actions.onUpdateBalance)
         FMDriver()
         Currency(
             isSheetOpen = isCurrencySheetOpen,
             currency = CurrencySymbol.fromCode(uiState.account.currency),
             sheetState = currencySheetState,
-            updateCurrency = onUpdateCurrency
+            updateCurrency = actions.onUpdateCurrency
         )
         FMDriver()
         Spacer(modifier = Modifier.height(24.dp))
         if (uiState.mode is AccountMode.Create) {
-            SaveButton(onSave)
+            SaveButton(actions.onSave)
         } else {
-            DeleteButton(onDelete)
+            DeleteButton(actions.onDelete)
         }
     }
 }
@@ -361,7 +353,12 @@ private fun ChoiceCurrency(
 }
 
 @Composable
-fun CurrencyItem(icon: ImageVector, title: Int, symbol: String, onClick: () -> Unit) {
+fun CurrencyItem(
+    icon: ImageVector,
+    title: Int,
+    symbol: String,
+    onClick: () -> Unit
+) {
     ListItem(
         modifier = Modifier.clickable { onClick() },
         lead = {
@@ -376,7 +373,10 @@ fun CurrencyItem(icon: ImageVector, title: Int, symbol: String, onClick: () -> U
 }
 
 @Composable
-fun CurrencySheetContent(onCancel: () -> Unit, updateCurrency: (String) -> Unit) {
+fun CurrencySheetContent(
+    onCancel: () -> Unit,
+    updateCurrency: (String) -> Unit
+) {
     val currencies = listOf(
         Triple(Icons.Filled.MdiRuble, R.string.rub, CurrencySymbol.RUB),
         Triple(Icons.Filled.MdiDollar, R.string.usd, CurrencySymbol.USD),
