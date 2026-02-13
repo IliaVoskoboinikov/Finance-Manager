@@ -152,7 +152,7 @@ jobs:
               runs: [
                 {
                   tool: .[0].runs[0].tool,
-                  results: (map(.runs[].results) | add)
+                  results: (map(.runs[].results) | add | map(. + {"level":"warning"}))
                 }
               ]
             }
