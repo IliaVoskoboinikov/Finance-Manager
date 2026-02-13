@@ -204,7 +204,7 @@ jobs:
 
       - name: Setup pandoc
         if: always()
-        uses: pandoc/actions/setup@v
+        uses: pandoc/actions/setup@v1
 
       - name: Convert Markdown to HTML
         if: always()
