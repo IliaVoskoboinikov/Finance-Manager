@@ -143,11 +143,21 @@ jobs:
           mkdir -p ktlint-sarif
           find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
 
+      - name: Merge SARIF files
+        if: always()
+        run: |
+          jq -s '
+            {
+              version: "2.1.0",
+              runs: map(.runs[]) 
+            }
+          ' ktlint-sarif/*.sarif > merged-ktlint.sarif
+
       - name: Upload SARIF to GitHub Code Scanning
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: ktlint-sarif
+          sarif_file: merged-ktlint.sarif
           category: ktlint
 
       - name: Generate detailed Markdown report
