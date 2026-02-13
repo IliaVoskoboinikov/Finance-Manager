@@ -141,16 +141,56 @@ jobs:
         if: always()
         run: |
           mkdir -p ktlint-sarif
-          find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
+          # Копируем все SARIF-файлы KtLint из всех модулей
+          find . -name "*.sarif" | grep "ktlint" | while read f; do
+            cp "$f" ktlint-sarif/
+          done
 
       - name: Merge SARIF files
-        run: bash .github/ktlint/merge-sarif.sh
+        run: |
+          set -e
+          SARIF_DIR="./ktlint-sarif"
+          MERGED_SARIF="./merged-ktlint.sarif"
+
+          # Собираем уникальные правила
+          RULES=$(jq -s '[.[][] | .runs[].results[] | 
+            {id: .ruleId, name: .ruleId, 
+             shortDescription: {text: .message.text}, 
+             properties: {severity: .level}, 
+             helpUri: "https://ktlint.github.io/rules/"}] | unique_by(.id)' $SARIF_DIR/*.sarif)
+
+          # Объединяем все результаты
+          jq -s --argjson rules "$RULES" \
+            '{
+              version: "2.1.0",
+              runs: [
+                {
+                  tool: {
+                    driver: {
+                      name: "ktlint",
+                      fullName: "ktlint",
+                      informationUri: "https://github.com/pinterest/ktlint/",
+                      semanticVersion: "1.8.0",
+                      rules: $rules
+                    }
+                  },
+                  results: map(.runs[].results[] |
+                    .locations[].physicalLocation.artifactLocation.uri |=
+                    sub("^.*/Finance-Manager/"; ""))
+                }
+              ]
+            }' $SARIF_DIR/*.sarif > $MERGED_SARIF
+
+          echo "✅ Merged SARIF created: $MERGED_SARIF"
+
+      - name: Debug merged SARIF
+        run: ls -la ./merged-ktlint.sarif
 
       - name: Upload SARIF to GitHub Code Scanning
         if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: merged-ktlint.sarif
+          sarif_file: ./merged-ktlint.sarif
           category: ktlint
 
       - name: Generate detailed Markdown report
