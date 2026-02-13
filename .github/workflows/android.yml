@@ -257,7 +257,6 @@ jobs:
             -t html \
             -s \
             --css=style.css \
-            --metadata title="KtLint Report" \
             -o ktlint-report.html
 
       - name: Upload HTML report
