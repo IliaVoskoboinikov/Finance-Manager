@@ -1,0 +1,22 @@
+name: Module Graph
+
+on:
+  workflow_call:
+
+jobs:
+  check-module-graph:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/init-gradle
+      - run: ./gradlew :app:assertModuleGraph --parallel --stacktrace --no-configuration-cache --no-daemon
+      - run: ./gradlew :app:generateModulesGraphvizText -Pmodules.graph.output.gv=all_modules
+      - uses: ./.github/actions/draw-graph
+        with:
+          input-file: all_modules
+          output-file: all_modules.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: all_modules.png
+          path: all_modules.png

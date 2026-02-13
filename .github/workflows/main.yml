@@ -6,20 +6,25 @@ on:
       - '**.md'
 
 jobs:
-  build-app:
-    uses: ./.github/workflows/build-app.yml
+  build:
+    uses: ./.github/workflows/build.yml
 
-  run-tests:
-    uses: ./.github/workflows/run-tests.yml
+  tests:
+    needs: build
+    uses: ./.github/workflows/tests.yml
 
-  run-lint:
-    uses: ./.github/workflows/run-lint.yml
+  android-lint:
+    needs: tests
+    uses: ./.github/workflows/android-lint.yml
 
-  run-detekt:
-    uses: ./.github/workflows/run-detekt.yml
+  ktlint:
+    needs: tests
+    uses: ./.github/workflows/ktlint.yml
 
-  run-ktlint:
-    uses: ./.github/workflows/run-ktlint.yml
+  detekt:
+    needs: tests
+    uses: ./.github/workflows/detekt.yml
 
-  check-module-graph:
-    uses: ./.github/workflows/check-module-graph.yml
+  module-graph:
+    needs: [android-lint, ktlint, detekt]
+    uses: ./.github/workflows/module-graph.yml

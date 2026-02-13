@@ -1,0 +1,20 @@
+name: Build App
+
+on:
+  workflow_call:
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/init-gradle
+      - name: Create google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
+      - name: Build project
+        run: ./gradlew assembleDebug --parallel --stacktrace --no-configuration-cache --no-daemon
+      - name: Generate build time report
+        uses: ./.github/actions/build-time-report
+        with:
+          file: app/build/reports/buildTimeTracker/build.csv
+          output-file: buildTime.csv

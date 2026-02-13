@@ -1,0 +1,16 @@
+name: Run Unit Tests
+
+on:
+  workflow_call:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/init-gradle
+      - name: Create google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
+      - name: Run unit tests
+        run: ./gradlew testDebugUnitTest --parallel --stacktrace --no-configuration-cache --no-daemon

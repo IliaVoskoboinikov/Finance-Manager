@@ -1,0 +1,20 @@
+name: KtLint Check
+
+on:
+  workflow_call:
+
+jobs:
+  run-ktlint:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/init-gradle
+      - name: Run KtLint
+        run: ./gradlew ktlintCheck --parallel --stacktrace --no-configuration-cache --no-daemon
+      - name: Upload SARIF & Markdown reports
+        if: always()
+        run: |
+          mkdir -p ktlint-reports
+          find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-reports/ \;
+          cat ktlint-reports/*.sarif > merged-ktlint.sarif || true

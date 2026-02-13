@@ -1,0 +1,20 @@
+name: Run Detekt
+
+on:
+  workflow_call:
+
+jobs:
+  run-detekt:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/init-gradle
+      - name: Run Detekt
+        run: ./gradlew detekt --parallel --stacktrace --no-configuration-cache --no-daemon --continue
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detekt.html
+          path: build/reports/detekt/detekt.html
