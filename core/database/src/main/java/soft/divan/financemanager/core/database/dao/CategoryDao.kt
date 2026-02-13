@@ -1,11 +1,11 @@
-package soft.divan.finansemanager.core.database.dao
+package soft.divan.financemanager.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
-import soft.divan.finansemanager.core.database.entity.CategoryEntity
+import soft.divan.financemanager.core.database.entity.CategoryEntity
 
 @Dao
 interface CategoryDao {

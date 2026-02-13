@@ -1,4 +1,4 @@
-package soft.divan.finansemanager.core.database.di
+package soft.divan.financemanager.core.database.di
 
 import android.content.Context
 import androidx.room.Room
@@ -7,10 +7,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import soft.divan.finansemanager.core.database.dao.AccountDao
-import soft.divan.finansemanager.core.database.dao.CategoryDao
-import soft.divan.finansemanager.core.database.dao.TransactionDao
-import soft.divan.finansemanager.core.database.db.FinanceManagerDatabase
+import soft.divan.financemanager.core.database.dao.AccountDao
+import soft.divan.financemanager.core.database.dao.CategoryDao
+import soft.divan.financemanager.core.database.dao.TransactionDao
+import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
 import javax.inject.Singleton
 
 @Module

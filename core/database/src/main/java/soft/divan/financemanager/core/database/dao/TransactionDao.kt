@@ -1,4 +1,4 @@
-package soft.divan.finansemanager.core.database.dao
+package soft.divan.financemanager.core.database.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -6,7 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
-import soft.divan.finansemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.entity.TransactionEntity
 
 @Dao
 interface TransactionDao {

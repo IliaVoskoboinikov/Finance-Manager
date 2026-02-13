@@ -1,7 +1,7 @@
 package soft.divan.financemanager.core.data.source
 
 import kotlinx.coroutines.flow.Flow
-import soft.divan.finansemanager.core.database.entity.CategoryEntity
+import soft.divan.financemanager.core.database.entity.CategoryEntity
 
 interface CategoryLocalDataSource {
     suspend fun insert(categories: List<CategoryEntity>)

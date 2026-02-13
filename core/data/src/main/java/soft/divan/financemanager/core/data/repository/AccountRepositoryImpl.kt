@@ -22,8 +22,8 @@ import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
-import soft.divan.finansemanager.core.database.entity.AccountEntity
-import soft.divan.finansemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.database.entity.AccountEntity
+import soft.divan.financemanager.core.database.model.SyncStatus
 import javax.inject.Inject
 
 class AccountRepositoryImpl @Inject constructor(

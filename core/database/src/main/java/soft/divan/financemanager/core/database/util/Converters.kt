@@ -1,7 +1,7 @@
-package soft.divan.finansemanager.core.database.util
+package soft.divan.financemanager.core.database.util
 
 import androidx.room.TypeConverter
-import soft.divan.finansemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.database.model.SyncStatus
 
 class Converters {
 

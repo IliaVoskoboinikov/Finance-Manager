@@ -4,8 +4,8 @@ import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.dto.TransactionRequestDto
 import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
 import soft.divan.financemanager.core.domain.model.Transaction
-import soft.divan.finansemanager.core.database.entity.TransactionEntity
-import soft.divan.finansemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.model.SyncStatus
 
 fun TransactionDto.toEntity(
     localId: String,

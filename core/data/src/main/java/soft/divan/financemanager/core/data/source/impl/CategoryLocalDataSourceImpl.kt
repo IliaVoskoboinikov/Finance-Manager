@@ -2,8 +2,8 @@ package soft.divan.financemanager.core.data.source.impl
 
 import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
-import soft.divan.finansemanager.core.database.dao.CategoryDao
-import soft.divan.finansemanager.core.database.entity.CategoryEntity
+import soft.divan.financemanager.core.database.dao.CategoryDao
+import soft.divan.financemanager.core.database.entity.CategoryEntity
 import javax.inject.Inject
 
 class CategoryLocalDataSourceImpl @Inject constructor(

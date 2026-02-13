@@ -1,8 +1,8 @@
-package soft.divan.finansemanager.core.database.entity
+package soft.divan.financemanager.core.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import soft.divan.finansemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.database.model.SyncStatus
 
 @Entity(tableName = "transactions")
 data class TransactionEntity(

@@ -1,4 +1,4 @@
-package soft.divan.finansemanager.core.database.entity
+package soft.divan.financemanager.core.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
