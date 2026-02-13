@@ -141,10 +141,7 @@ jobs:
         if: always()
         run: |
           mkdir -p ktlint-sarif
-          # Копируем все SARIF-файлы KtLint из всех модулей
-          find . -name "*.sarif" | grep "ktlint" | while read f; do
-            cp "$f" ktlint-sarif/
-          done
+          find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
 
       - name: Merge SARIF files
         run: |
@@ -183,8 +180,6 @@ jobs:
 
           echo "✅ Merged SARIF created: $MERGED_SARIF"
 
-      - name: Debug merged SARIF
-        run: ls -la ./merged-ktlint.sarif
 
       - name: Upload SARIF to GitHub Code Scanning
         if: always()
