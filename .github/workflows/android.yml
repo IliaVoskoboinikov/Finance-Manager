@@ -33,6 +33,11 @@ jobs:
           file: app/build/reports/buildTimeTracker/build.csv
           output-file: buildTime.csv
 
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
 
   run-tests:
     runs-on: ubuntu-latest
