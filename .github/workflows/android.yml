@@ -143,13 +143,18 @@ jobs:
           mkdir -p ktlint-sarif
           find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
 
-      - name: Merge SARIF files
+      - name: Merge SARIF files into single run
         if: always()
         run: |
           jq -s '
             {
               version: "2.1.0",
-              runs: map(.runs[]) 
+              runs: [
+                {
+                  tool: .[0].runs[0].tool,
+                  results: (map(.runs[].results) | add)
+                }
+              ]
             }
           ' ktlint-sarif/*.sarif > merged-ktlint.sarif
 
