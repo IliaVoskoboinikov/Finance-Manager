@@ -3,6 +3,9 @@ name: Build App
 on:
   workflow_call:
 
+env:
+  API_TOKEN: ${{ secrets.API_TOKEN }}
+
 jobs:
   build-app:
     runs-on: ubuntu-latest
