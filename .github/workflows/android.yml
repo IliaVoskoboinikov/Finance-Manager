@@ -202,6 +202,10 @@ jobs:
 
           cat ktlint-report.md >> $GITHUB_STEP_SUMMARY
 
+      - name: Setup pandoc
+        if: always()
+        uses: pandoc/actions/setup@v
+
       - name: Convert Markdown to HTML
         if: always()
         run: |
