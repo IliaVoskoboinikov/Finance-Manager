@@ -142,32 +142,27 @@ jobs:
           mkdir -p ktlint-sarif
           find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
 
-      - name: Generate Markdown report
+      - name: Generate detailed Markdown report
         if: always()
         run: |
-          echo "# 🧹 KtLint Report" > ktlint-report.md
+          echo "# KtLint Detailed Report" > ktlint-report.md
           echo "" >> ktlint-report.md
+          echo "| Module | Issues |" >> ktlint-report.md
+          echo "|--------|--------|" >> ktlint-report.md
 
           total=0
-          for file in ktlint-sarif/*.sarif; do
-            if [ -f "$file" ]; then
-              count=$(grep -o '"ruleId"' "$file" | wc -l)
-              total=$((total + count))
-            fi
+
+          for file in $(find . -type f -path "*/build/reports/ktlint/*/*.sarif"); do
+            module=$(echo "$file" | cut -d'/' -f2)
+            count=$(jq '[.runs[].results[]] | length' "$file")
+            echo "| $module | $count |" >> ktlint-report.md
+            total=$((total + count))
           done
 
-          echo "## Summary" >> ktlint-report.md
-          echo "- Total issues: **$total**" >> ktlint-report.md
+          echo "" >> ktlint-report.md
+          echo "### 🔎 Total issues: $total" >> ktlint-report.md
 
           cat ktlint-report.md >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload Markdown artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ktlint-markdown-report
-          path: ktlint-report.md
-
 
       - name: Upload HTML report
         if: always()
