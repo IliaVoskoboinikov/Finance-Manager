@@ -1,4 +1,4 @@
-package soft.divan.finansemanager
+package soft.divan.financemanager
 
 import Const
 import org.gradle.api.Project

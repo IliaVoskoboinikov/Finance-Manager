@@ -2,9 +2,9 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
-import soft.divan.finansemanager.addDefaultComposeDependencies
-import soft.divan.finansemanager.applyPlugin
-import soft.divan.finansemanager.configureBaseAndroid
+import soft.divan.financemanager.addDefaultComposeDependencies
+import soft.divan.financemanager.applyPlugin
+import soft.divan.financemanager.configureBaseAndroid
 
 class AndroidAppConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {

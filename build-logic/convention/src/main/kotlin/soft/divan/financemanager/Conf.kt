@@ -1,4 +1,4 @@
-package soft.divan.finansemanager
+package soft.divan.financemanager
 
 object Conf {
     const val IMPLEMENTATION = "implementation"
