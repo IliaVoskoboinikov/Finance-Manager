@@ -4,7 +4,7 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
-import soft.divan.finansemanager.applyPlugin
+import soft.divan.financemanager.applyPlugin
 
 class AndroidBaseConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -33,5 +33,4 @@ class AndroidBaseConventionPlugin : Plugin<Project> {
             add("lintChecks", project(":lint"))
         }
     }
-
 }

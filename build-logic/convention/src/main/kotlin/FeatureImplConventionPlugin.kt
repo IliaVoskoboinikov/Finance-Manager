@@ -3,11 +3,11 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
-import soft.divan.finansemanager.Conf
-import soft.divan.finansemanager.addDefaultComposeDependencies
-import soft.divan.finansemanager.applyPlugin
-import soft.divan.finansemanager.configureBaseAndroid
-import soft.divan.finansemanager.lib
+import soft.divan.financemanager.Conf
+import soft.divan.financemanager.addDefaultComposeDependencies
+import soft.divan.financemanager.applyPlugin
+import soft.divan.financemanager.configureBaseAndroid
+import soft.divan.financemanager.lib
 
 class FeatureImplConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
