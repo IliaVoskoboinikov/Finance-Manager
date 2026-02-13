@@ -143,33 +143,35 @@ jobs:
           mkdir -p ktlint-sarif
           find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
 
-      - name: Merge SARIF files with rules
+      - name: Merge SARIF files with proper rules
         if: always()
         run: |
           jq -s '
-            {
-              version: "2.1.0",
-              runs: [
-                {
-                  tool: {
-                    driver: {
-                      name: "ktlint",
-                      version: "1.8.0",
-                      rules: (
-                        map(.runs[].results[] | {
-                          id: .ruleId,
-                          name: .ruleId,
-                          shortDescription: {text: .message.text},
-                          properties: {severity: .level},
-                          helpUri: "https://ktlint.github.io/rules/standard/#" + (.ruleId | ascii_downcase)
-                        }) | unique_by(.id)
-                      )
-                    }
-                  },
-                  results: (map(.runs[].results[]) | add)
-                }
-              ]
-            }
+          {
+            version: "2.1.0",
+            runs: [
+              {
+                tool: {
+                  driver: {
+                    name: "ktlint",
+                    fullName: "KtLint Kotlin Linter",
+                    version: "1.8.0",
+                    informationUri: "https://ktlint.github.io/",
+                    rules: (
+                      map(.runs[].results[] | {
+                        id: .ruleId,
+                        name: .ruleId,
+                        shortDescription: { text: .message.text },
+                        helpUri: "https://ktlint.github.io/rules/standard/#" + (.ruleId|ascii_downcase),
+                        properties: { severity: .level }
+                      }) | unique_by(.id)
+                    )
+                  }
+                },
+                results: (map(.runs[].results[]) | add)
+              }
+            ]
+          }
           ' ktlint-sarif/*.sarif > merged-ktlint.sarif
 
       - name: Upload SARIF to GitHub Code Scanning
@@ -191,13 +193,11 @@ jobs:
 
           for file in $(find . -type f -path "*/build/reports/ktlint/*/*.sarif"); do
             module=$(echo "$file" | sed -E 's#^\./##' | sed -E 's#/build/reports/ktlint/.*##' | sed 's#/#:#g')
-
             count=$(jq '[.runs[].results[]] | length' "$file")
 
             if [ "$count" -gt 0 ]; then
               moduleIssues["$module"]=$(( ${moduleIssues["$module"]} + count ))
               total=$((total + count))
-
               details=$(jq -r '
                 .runs[].results[] |
                 "- `" + .locations[0].physicalLocation.artifactLocation.uri + ":" +
