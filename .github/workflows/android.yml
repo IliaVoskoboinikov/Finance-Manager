@@ -147,22 +147,61 @@ jobs:
         run: |
           echo "# KtLint Detailed Report" > ktlint-report.md
           echo "" >> ktlint-report.md
-          echo "| Module | Issues |" >> ktlint-report.md
-          echo "|--------|--------|" >> ktlint-report.md
 
           total=0
+          declare -A moduleIssues
+          declare -A moduleDetails
 
           for file in $(find . -type f -path "*/build/reports/ktlint/*/*.sarif"); do
-            module=$(echo "$file" | cut -d'/' -f2)
+            module=$(echo "$file" | sed -E 's#^\./##' | cut -d'/' -f1-3 | sed 's#/#:#g' | sed 's#:build:reports:ktlint##')
+
             count=$(jq '[.runs[].results[]] | length' "$file")
-            echo "| $module | $count |" >> ktlint-report.md
-            total=$((total + count))
+
+            if [ "$count" -gt 0 ]; then
+              moduleIssues["$module"]=$(( ${moduleIssues["$module"]} + count ))
+              total=$((total + count))
+
+              details=$(jq -r '
+                .runs[].results[] |
+                "- `" + .locations[0].physicalLocation.artifactLocation.uri + ":" +
+                (.locations[0].physicalLocation.region.startLine|tostring) + ":" +
+                (.locations[0].physicalLocation.region.startColumn|tostring) +
+                "`  \n  " + .message.text +
+                " (" + .ruleId + ")"' "$file")
+
+              moduleDetails["$module"]+="$details"$'\n'
+            fi
           done
 
+          echo "## 🔎 Total issues: $total" >> ktlint-report.md
           echo "" >> ktlint-report.md
-          echo "### 🔎 Total issues: $total" >> ktlint-report.md
+
+          if [ "$total" -gt 0 ]; then
+            echo "## 📦 Issues by module" >> ktlint-report.md
+            echo "" >> ktlint-report.md
+            echo "| Module | Issues |" >> ktlint-report.md
+            echo "|--------|--------|" >> ktlint-report.md
+
+            for module in "${!moduleIssues[@]}"; do
+              echo "| $module | ${moduleIssues[$module]} |" >> ktlint-report.md
+            done
+
+            echo "" >> ktlint-report.md
+            echo "## 📝 Detailed issues" >> ktlint-report.md
+            echo "" >> ktlint-report.md
+
+            for module in "${!moduleDetails[@]}"; do
+              echo "### $module" >> ktlint-report.md
+              echo "" >> ktlint-report.md
+              echo "${moduleDetails[$module]}" >> ktlint-report.md
+              echo "" >> ktlint-report.md
+            done
+          else
+            echo "✅ No issues found 🎉" >> ktlint-report.md
+          fi
 
           cat ktlint-report.md >> $GITHUB_STEP_SUMMARY
+      
 
       - name: Upload HTML report
         if: always()
