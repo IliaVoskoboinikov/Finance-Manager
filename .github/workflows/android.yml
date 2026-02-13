@@ -105,6 +105,7 @@ jobs:
         if: always()
         with:
           sarif_file: build/reports/detekt/detekt.sarif
+          category: detekt
 
       - name: Upload report
         if: always()
@@ -141,6 +142,13 @@ jobs:
         run: |
           mkdir -p ktlint-sarif
           find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
+
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: ktlint-sarif
+          category: ktlint
 
       - name: Generate detailed Markdown report
         if: always()
