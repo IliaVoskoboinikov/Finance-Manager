@@ -143,7 +143,7 @@ jobs:
           mkdir -p ktlint-sarif
           find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
 
-      - name: Merge SARIF files into single run
+      - name: Merge SARIF files with rules
         if: always()
         run: |
           jq -s '
@@ -151,8 +151,22 @@ jobs:
               version: "2.1.0",
               runs: [
                 {
-                  tool: .[0].runs[0].tool,
-                  results: (map(.runs[].results) | add | map(. + {"level":"warning"}))
+                  tool: {
+                    driver: {
+                      name: "ktlint",
+                      version: "1.8.0",
+                      rules: (
+                        map(.runs[].results[] | {
+                          id: .ruleId,
+                          name: .ruleId,
+                          shortDescription: {text: .message.text},
+                          properties: {severity: .level},
+                          helpUri: "https://ktlint.github.io/rules/standard/#" + (.ruleId | ascii_downcase)
+                        }) | unique_by(.id)
+                      )
+                    }
+                  },
+                  results: (map(.runs[].results[]) | add)
                 }
               ]
             }
