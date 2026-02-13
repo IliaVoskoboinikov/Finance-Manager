@@ -1,4 +1,4 @@
-package soft.divan.finansemanager
+package soft.divan.financemanager
 
 import Const
 import com.android.build.gradle.BaseExtension

@@ -5,7 +5,7 @@ import com.asarkar.gradle.buildtimetracker.Sort
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
-import soft.divan.finansemanager.applyPlugin
+import soft.divan.financemanager.applyPlugin
 import java.time.Duration
 
 class BuildTimeTrackerConventionPlugin : Plugin<Project> {
