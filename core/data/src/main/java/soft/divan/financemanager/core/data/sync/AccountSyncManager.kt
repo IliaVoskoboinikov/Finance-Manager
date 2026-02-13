@@ -2,7 +2,7 @@ package soft.divan.financemanager.core.data.sync
 
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.data.sync.util.Syncable
-import soft.divan.finansemanager.core.database.entity.AccountEntity
+import soft.divan.financemanager.core.database.entity.AccountEntity
 
 interface AccountSyncManager : Syncable {
     suspend fun pullServerData()

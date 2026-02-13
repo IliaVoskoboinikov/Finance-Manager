@@ -1,4 +1,4 @@
-package soft.divan.finansemanager.core.database.model
+package soft.divan.financemanager.core.database.model
 
 /**
  * Правила синхронизации статусов:

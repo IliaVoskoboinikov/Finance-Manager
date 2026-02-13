@@ -4,8 +4,8 @@ import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.domain.model.Account
-import soft.divan.finansemanager.core.database.entity.AccountEntity
-import soft.divan.finansemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.database.entity.AccountEntity
+import soft.divan.financemanager.core.database.model.SyncStatus
 
 fun AccountDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity = AccountEntity(
     localId = localId,

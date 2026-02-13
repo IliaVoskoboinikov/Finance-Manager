@@ -1,7 +1,7 @@
 package soft.divan.financemanager.core.data.sync
 
 import soft.divan.financemanager.core.data.sync.util.Syncable
-import soft.divan.finansemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.entity.TransactionEntity
 
 interface TransactionSyncManager : Syncable {
     suspend fun pullServerData()
