@@ -134,22 +134,39 @@ jobs:
         uses: ./.github/actions/init-gradle
 
       - name: Run KtLint
-        run: ./gradlew --continue ktlintCheck $gradleFlags
+        run: ./gradlew ktlintCheck --continue $gradleFlags
 
-      #      - name: Collect SARIF files
-      #        id: sarif
-      #        run: |
-      #          mkdir -p sarif-to-upload
-      #          find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} sarif-to-upload/ \;
-      #          echo "SARIF_FILES<<EOF" >> $GITHUB_ENV
-      #          find sarif-to-upload -type f >> $GITHUB_ENV
-      #          echo "EOF" >> $GITHUB_ENV
-      #
-      #      - name: Upload SARIF to GitHub
-      #        uses: github/codeql-action/upload-sarif@v4
-      #        with:
-      #          sarif_file: ${{ env.SARIF_FILES }}
-      #          category: ktlint
+      - name: Collect SARIF files
+        if: always()
+        run: |
+          mkdir -p ktlint-sarif
+          find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
+
+      - name: Generate Markdown report
+        if: always()
+        run: |
+          echo "# 🧹 KtLint Report" > ktlint-report.md
+          echo "" >> ktlint-report.md
+
+          total=0
+          for file in ktlint-sarif/*.sarif; do
+            if [ -f "$file" ]; then
+              count=$(grep -o '"ruleId"' "$file" | wc -l)
+              total=$((total + count))
+            fi
+          done
+
+          echo "## Summary" >> ktlint-report.md
+          echo "- Total issues: **$total**" >> ktlint-report.md
+
+          cat ktlint-report.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Markdown artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ktlint-markdown-report
+          path: ktlint-report.md
 
 
       - name: Upload HTML report
