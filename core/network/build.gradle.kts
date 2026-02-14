@@ -31,7 +31,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
         }
 
