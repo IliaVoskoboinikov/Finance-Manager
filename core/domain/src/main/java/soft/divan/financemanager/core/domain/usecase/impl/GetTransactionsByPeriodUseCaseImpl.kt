@@ -62,7 +62,9 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
             .distinctUntilChanged() // Защита от повторных эмитов одинакового состояния.
     }
 
-    private fun baseDataFlow(): Flow<DomainResult<Triple<List<Account>, CurrencySymbol, List<Category>>>> =
+    private fun baseDataFlow(): Flow<
+        DomainResult<Triple<List<Account>, CurrencySymbol, List<Category>>>
+        > =
         combine(
             accountRepository.getAll(),
             categoryRepository.getAll(),

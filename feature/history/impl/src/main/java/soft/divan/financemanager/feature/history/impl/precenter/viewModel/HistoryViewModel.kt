@@ -77,7 +77,8 @@ class HistoryViewModel @Inject constructor(
                             _uiState.update {
                                 HistoryUiState.Success(
                                     transactions = uiTransactions,
-                                    sumTransaction = sumTransactions.toString() + " " + data.second.symbol
+                                    sumTransaction =
+                                        sumTransactions.toString() + " " + data.second.symbol
                                 )
                             }
                         }
