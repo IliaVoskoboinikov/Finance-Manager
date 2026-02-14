@@ -4,6 +4,7 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.dependencies
 import soft.divan.financemanager.Conf
+import soft.divan.financemanager.FmBuildType
 import soft.divan.financemanager.applyPlugin
 import soft.divan.financemanager.lib
 import soft.divan.financemanager.libs
@@ -21,8 +22,14 @@ class AndroidAppFirebaseConventionPlugin : Plugin<Project> {
             }
             extensions.configure<ApplicationExtension> {
                 buildTypes {
-                    debug { manifestPlaceholders["crashlyticsCollectionEnabled"] = "false" }
-                    release { manifestPlaceholders["crashlyticsCollectionEnabled"] = "true" }
+                    debug {
+                        applicationIdSuffix = FmBuildType.DEBUG.applicationIdSuffix
+                        manifestPlaceholders["crashlyticsCollectionEnabled"] = "false"
+                    }
+                    release {
+                        applicationIdSuffix = FmBuildType.RELEASE.applicationIdSuffix
+                        manifestPlaceholders["crashlyticsCollectionEnabled"] = "true"
+                    }
                 }
             }
         }

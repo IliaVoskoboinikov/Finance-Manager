@@ -17,6 +17,7 @@ fun BaseExtension.configureBaseAndroid(project: Project) {
         getByName("release") {
             isMinifyEnabled = false
             isShrinkResources = false
+            signingConfig = signingConfigs.named("debug").get()
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
