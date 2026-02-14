@@ -205,7 +205,7 @@ fun CreateAccountForm(
         if (uiState.mode is AccountMode.Create) {
             SaveButton(actions.onSave)
         } else {
-            DeleteButton(actions.onDelete)
+            DeleteButton(onClick = actions.onDelete)
         }
     }
 }
