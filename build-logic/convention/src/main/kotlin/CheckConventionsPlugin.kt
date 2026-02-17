@@ -1,3 +1,8 @@
+import ModuleType.isApp
+import ModuleType.isCore
+import ModuleType.isFeature
+import ModuleType.isFeatureApi
+import ModuleType.isFeatureImpl
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -15,29 +20,60 @@ import org.gradle.api.artifacts.ProjectDependency
  *    - Feature API не может зависеть от Feature Impl
  *    - Feature Impl не может зависеть от Feature Impl
  */
-
 class CheckConventionsPlugin : Plugin<Project> {
 
+    private val pluginChecks = PluginChecks()
+    private val dependencyChecks = DependencyChecks()
+
+    /**
+     * Основная точка входа плагина. Итерирует все подпроекты и выполняет проверки:
+     * - Core-модули
+     * - Feature-модули
+     * - App-модуль
+     * - Архитектурные зависимости
+     *
+     * @param project Корневой проект, к которому применяется плагин
+     */
     override fun apply(project: Project) {
         project.gradle.projectsEvaluated {
             project.rootProject.allprojects.forEach { child ->
                 when {
-                    child.isCoreModule() -> checkCoreModule(child)
-                    child.isFeatureModule() -> checkFeatureModule(child)
-                    child.isAppModule() -> checkAppModule(child)
+                    child.isCore() -> pluginChecks.checkCoreModule(child)
+                    child.isFeature() -> pluginChecks.checkFeatureModule(child)
+                    child.isApp() -> pluginChecks.checkAppModule(child)
                 }
 
-                validateArchitecture(child)
+                dependencyChecks.validateArchitecture(child)
             }
         }
     }
+}
 
-    /** Определение типа модуля ======= */
-    private fun Project.isCoreModule() = path.startsWith(":core:")
-    private fun Project.isFeatureModule() = path.startsWith(":feature:")
-    private fun Project.isFeatureApi() = isFeatureModule() && path.endsWith(":api")
-    private fun Project.isFeatureImpl() = isFeatureModule() && path.endsWith(":impl")
-    private fun Project.isAppModule() = path == ":app"
+/**
+ * Утилиты для определения типа модуля по пути.
+ */
+object ModuleType {
+
+    /** Проверяет, является ли модуль core. */
+    fun Project.isCore() = path.startsWith(":core:")
+
+    /** Проверяет, является ли модуль feature (API или Impl). */
+    fun Project.isFeature() = path.startsWith(":feature:")
+
+    /** Проверяет, является ли модуль feature API. */
+    fun Project.isFeatureApi() = isFeature() && path.endsWith(":api")
+
+    /** Проверяет, является ли модуль feature Impl. */
+    fun Project.isFeatureImpl() = isFeature() && path.endsWith(":impl")
+
+    /** Проверяет, является ли модуль app. */
+    fun Project.isApp() = path == ":app"
+}
+
+/**
+ * Класс для проверки правильного применения плагинов в модулях.
+ */
+class PluginChecks {
 
     /**
      * Проверяет корректность применения плагинов в core-модуле.
@@ -48,26 +84,19 @@ class CheckConventionsPlugin : Plugin<Project> {
      * @param project Core-модуль для проверки
      * @throws GradleException при нарушении правил
      */
-    private fun checkCoreModule(project: Project) {
+    fun checkCoreModule(project: Project) {
         val hasAndroidCore = project.pluginManager.hasPlugin("soft.divan.core")
         val hasJvmCore = project.pluginManager.hasPlugin("soft.divan.jvm.library")
 
-        when {
-            !hasAndroidCore && !hasJvmCore -> throw GradleException(
-                """
-                Core modules must apply one of:
-                - soft.divan.core (Android core)
-                - soft.divan.jvm.library (JVM core)
-                Module: ${project.path}
-                """.trimIndent()
+        if (!hasAndroidCore && !hasJvmCore) {
+            throw violation(
+                project,
+                "Core modules must apply one of: soft.divan.core or soft.divan.jvm.library"
             )
+        }
 
-            hasAndroidCore && hasJvmCore -> throw GradleException(
-                """
-                Core module cannot apply both Android and JVM conventions.
-                Module: ${project.path}
-                """.trimIndent()
-            )
+        if (hasAndroidCore && hasJvmCore) {
+            throw violation(project, "Core module cannot apply both Android and JVM conventions")
         }
     }
 
@@ -81,58 +110,48 @@ class CheckConventionsPlugin : Plugin<Project> {
      * @param project Feature-модуль для проверки
      * @throws GradleException при нарушении правил
      */
-    private fun checkFeatureModule(project: Project) {
+    fun checkFeatureModule(project: Project) {
         val hasApi = project.pluginManager.hasPlugin("soft.divan.feature.api")
         val hasImpl = project.pluginManager.hasPlugin("soft.divan.feature.impl")
 
-        if (!hasApi && !hasImpl) return
+        val violationMessage = when {
+            hasApi && hasImpl ->
+                "Feature module cannot apply both api and impl plugins"
 
-        when {
-            hasApi && !project.isFeatureApi() -> throw GradleException(
-                """
-                Feature API plugin applied to wrong module.
-                Module: ${project.path}
-                Expected suffix: :api
-                """.trimIndent()
-            )
+            hasApi && !project.isFeatureApi() ->
+                "Feature API plugin applied to wrong module. Expected suffix :api"
 
-            hasImpl && !project.isFeatureImpl() -> throw GradleException(
-                """
-                Feature Impl plugin applied to wrong module.
-                Module: ${project.path}
-                Expected suffix: :impl
-                """.trimIndent()
-            )
+            hasImpl && !project.isFeatureImpl() ->
+                "Feature Impl plugin applied to wrong module. Expected suffix :impl"
 
-            hasApi && hasImpl -> throw GradleException(
-                """
-                Feature module cannot apply both api and impl plugins.
-                Module: ${project.path}
-                """.trimIndent()
-            )
+            else -> null
         }
+
+        violationMessage?.let { throw violation(project, it) }
     }
 
     /**
      * Проверяет, что app-модуль применяет обязательный плагин `soft.divan.android.app`.
-     * Выбрано фиксированное значение requiredPlugin и сообщения для всех app-модулей.
      *
      * @param project App-модуль для проверки
      * @throws GradleException если плагин не применён
      */
-    private fun checkAppModule(project: Project) {
+    fun checkAppModule(project: Project) {
         val requiredPlugin = "soft.divan.android.app"
-        val message = "App module must apply soft.divan.android.app"
         if (!project.pluginManager.hasPlugin(requiredPlugin)) {
-            throw GradleException(
-                """
-                $message
-                Module: ${project.path}
-                Required plugin: $requiredPlugin
-                """.trimIndent()
-            )
+            throw violation(project, "App module must apply soft.divan.android.app")
         }
     }
+
+    /** Формирует исключение GradleException с сообщением о нарушении плагина. */
+    private fun violation(project: Project, message: String) =
+        GradleException("Module: ${project.path}\n$message")
+}
+
+/**
+ * Класс для проверки соблюдения архитектурных зависимостей между модулями.
+ */
+class DependencyChecks {
 
     /**
      * Проверяет соблюдение архитектурных границ между модулями.
@@ -144,7 +163,7 @@ class CheckConventionsPlugin : Plugin<Project> {
      * @param project Модуль для проверки зависимостей
      * @throws GradleException при нарушении правил
      */
-    private fun validateArchitecture(project: Project) {
+    fun validateArchitecture(project: Project) {
         val configurationsToCheck = setOf("api", "implementation")
         project.configurations.matching { it.name in configurationsToCheck }
             .forEach { configuration ->
@@ -152,49 +171,24 @@ class CheckConventionsPlugin : Plugin<Project> {
                     .filterIsInstance<ProjectDependency>()
                     .forEach { dependency ->
                         val depProject = dependency.dependencyProject
-
-                        when {
+                        val msg = when {
                             project.isFeatureImpl() && depProject.isFeatureImpl() ->
-                                throw violation(
-                                    project.path,
-                                    depProject.path,
-                                    "Feature impl modules must NOT depend on other feature impl modules"
-                                )
+                                "Feature impl modules must NOT depend on other feature impl modules"
 
                             project.isFeatureApi() && depProject.isFeatureImpl() ->
-                                throw violation(
-                                    project.path,
-                                    depProject.path,
-                                    "Feature api modules must NOT depend on feature impl modules"
-                                )
+                                "Feature api modules must NOT depend on feature impl modules"
 
-                            project.isCoreModule() && depProject.isFeatureModule() ->
-                                throw violation(
-                                    project.path,
-                                    depProject.path,
-                                    "Core modules must NOT depend on feature modules"
-                                )
+                            project.isCore() && depProject.isFeature() ->
+                                "Core modules must NOT depend on feature modules"
+
+                            else -> null
+                        }
+                        msg?.let {
+                            throw GradleException(
+                                "From: ${project.path}\nTo: ${depProject.path}\nRule: $it"
+                            )
                         }
                     }
             }
     }
-
-    /**
-     * Формирует исключение GradleException с подробной информацией о нарушении архитектуры.
-     *
-     * @param from Модуль, который содержит зависимость
-     * @param to Модуль, на который есть зависимость
-     * @param message Описание правила, которое нарушено
-     * @return GradleException с детальной информацией
-     */
-    private fun violation(from: String, to: String, message: String): GradleException =
-        GradleException(
-            """
-            ❌ Architecture violation detected
-            Rule: $message
-            From: $from
-            To:   $to
-            Fix the dependency to respect module boundaries.
-            """.trimIndent()
-        )
 }
