@@ -1,0 +1,23 @@
+name: "Create google-services.json"
+description: "Decodes GOOGLE_SERVICES_JSON secret and writes app/google-services.json"
+
+inputs:
+  output-path:
+    description: "Path where google-services.json will be created"
+    required: false
+    default: "app/google-services.json"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create google-services.json
+      shell: bash
+      run: |
+        if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+          echo "❌ GOOGLE_SERVICES_JSON is not set"
+          exit 1
+        fi
+
+        mkdir -p $(dirname "${{ inputs.output-path }}")
+        echo "$GOOGLE_SERVICES_JSON" | base64 --decode > "${{ inputs.output-path }}"
+        echo "✅ google-services.json created at ${{ inputs.output-path }}"
