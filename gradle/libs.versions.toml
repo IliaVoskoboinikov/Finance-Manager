@@ -172,4 +172,5 @@ soft-divan-jvm-library = { id = "soft.divan.jvm.library" }
 soft-divan-hilt = { id = "soft.divan.hilt" }
 soft-divan-build-time-tracker = { id = "soft.divan.build.time.tracker" }
 soft-divan-firebase = { id = "soft.divan.firebase" }
+soft-divan-check-conventions = { id = "soft.divan.check.conventions" }
 

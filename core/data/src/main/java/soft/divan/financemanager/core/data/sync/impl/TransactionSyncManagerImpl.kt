@@ -14,7 +14,7 @@ import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
-import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
+import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import java.time.Instant

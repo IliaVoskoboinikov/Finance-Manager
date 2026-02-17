@@ -17,7 +17,7 @@ config:
 ---
 graph TB
     :core:data --> :core:common
-    :core:data --> :core:logging-error:api
+    :core:data --> :core:logging-error
     :core:data --> :core:database
     :core:data --> :core:domain
     :core:data --> :core:network
