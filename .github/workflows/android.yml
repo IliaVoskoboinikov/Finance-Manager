@@ -143,7 +143,6 @@ jobs:
         uses: ./.github/actions/ktlint
         with:
           gradle-flags: ${{ env.gradleFlags }}
-          generate-html: "true"
 
       - uses: ./.github/actions/report-renderer
         with:
