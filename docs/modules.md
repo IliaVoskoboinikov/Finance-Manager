@@ -19,8 +19,7 @@
 - [core:network](../core/network/README.md)
 - [core:uikit](../core/uikit/README.md)
 - [core:feature-api](../core/feature-api/README.md)
-- [core:logging-error:api](../core/logging-error/api/README.md)
-- [core:logging-error:impl](../core/logging-error/impl/README.md)
+- [core:logging-error](../core/logging-error/README.md)
 
 ---
 

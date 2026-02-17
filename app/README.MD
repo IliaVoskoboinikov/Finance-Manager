@@ -15,8 +15,7 @@ graph TB
         domain[domain]:::library
         network[network]:::library
         uikit[uikit]:::library
-        logging_api[logging-error:api]:::library
-        logging_impl[logging-error:impl]:::library
+        logging_api[logging-error]:::library
         core_feature_api[core:feature-api]:::library
     end
 
@@ -35,8 +34,7 @@ graph TB
     app --> domain
     app --> network
     app --> uikit
-    app --> logging_api
-    app --> logging_impl
+    app --> logging_error
 
 %% App зависит на Features
     app --> feature_api
@@ -55,9 +53,8 @@ graph TB
     data --> database
     data --> network
     data --> domain
-    data --> logging_api
+    data --> logging_error
 
-    logging_impl --> logging_api
 
     classDef app fill:#CAFFBF,stroke:#000,stroke-width:2px,color:#000;
     classDef feature fill:#FFD6A5,stroke:#000,stroke-width:2px,color:#000;
