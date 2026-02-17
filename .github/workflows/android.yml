@@ -145,6 +145,11 @@ jobs:
           gradle-flags: ${{ env.gradleFlags }}
           generate-html: "true"
 
+      - uses: ./.github/actions/report-renderer
+        with:
+         input-file: ktlint-report.md
+         output-file: ktlint-report.html
+
       - name: Upload SARIF to GitHub Code Scanning
         if: always()
         uses: github/codeql-action/upload-sarif@v4
