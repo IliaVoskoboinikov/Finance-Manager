@@ -14,6 +14,7 @@ dependencies {
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.compose.plugin)
     compileOnly(libs.build.time.tracker)
+    compileOnly(libs.ruler.plugin)
 }
 
 gradlePlugin {
@@ -66,6 +67,11 @@ gradlePlugin {
         plugins.register("checkConventionsPlugin") {
             id = libs.plugins.soft.divan.check.conventions.get().pluginId
             implementationClass = "CheckConventionsPlugin"
+        }
+
+        plugins.register("rulerConventionPlugin") {
+            id = libs.plugins.soft.divan.ruler.get().pluginId
+            implementationClass = "RulerConventionPlugin"
         }
     }
 }

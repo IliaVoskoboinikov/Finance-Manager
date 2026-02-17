@@ -19,6 +19,12 @@ plugins {
     alias(libs.plugins.ktlint) apply false
 }
 
+buildscript {
+    dependencies {
+        classpath(libs.ruler.plugin)
+    }
+}
+
 subprojects {
     plugins.withId("org.jlleitschuh.gradle.ktlint") {
         configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {

@@ -18,6 +18,7 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             applyPlugin("graph")
             applyPlugin("soft-divan-build-time-tracker")
             applyPlugin("soft-divan-check-conventions")
+            applyPlugin("soft-divan-ruler")
 
             extensions.configure<BaseAppModuleExtension> {
                 configureBaseAndroid(project)
