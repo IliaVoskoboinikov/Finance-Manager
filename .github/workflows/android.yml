@@ -21,8 +21,7 @@ jobs:
         uses: ./.github/actions/init-gradle
 
       - name: Create google-services.json
-        run: |
-          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+        uses: ./.github/actions/create-google-services
 
       - name: Build project $gradleFlags
         run: ./gradlew assembleDebug
@@ -49,8 +48,7 @@ jobs:
         uses: ./.github/actions/init-gradle
 
       - name: Create google-services.json
-        run: |
-          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+        uses: ./.github/actions/create-google-services
 
       - name: Run unit tests (Debug only)
         run: ./gradlew testDebugUnitTest $gradleFlags
@@ -66,8 +64,7 @@ jobs:
         uses: ./.github/actions/init-gradle
 
       - name: Create google-services.json
-        run: |
-          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+        uses: ./.github/actions/create-google-services
 
       - name: Run Android Lint
         run: ./gradlew lint
@@ -173,8 +170,8 @@ jobs:
         uses: ./.github/actions/init-gradle
 
       - name: Create google-services.json
-        run: |
-          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
+        uses: ./.github/actions/create-google-services
+
       - name: Analyze size
         run: ./gradlew :app:analyzeDebugBundle $gradleFlags
 
