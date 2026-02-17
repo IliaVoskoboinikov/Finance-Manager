@@ -62,5 +62,10 @@ gradlePlugin {
             id = libs.plugins.soft.divan.firebase.get().pluginId
             implementationClass = "AndroidAppFirebaseConventionPlugin"
         }
+
+        plugins.register("checkConventionsPlugin") {
+            id = libs.plugins.soft.divan.check.conventions.get().pluginId
+            implementationClass = "CheckConventionsPlugin"
+        }
     }
 }

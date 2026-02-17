@@ -6,8 +6,7 @@ digraph G {
 ":app" -> ":core:uikit"
 ":app" -> ":core:domain"
 ":app" -> ":core:data"
-":app" -> ":core:logging-error:api"
-":app" -> ":core:logging-error:impl"
+":app" -> ":core:logging-error"
 ":app" -> ":feature:category:api"
 ":app" -> ":feature:category:impl"
 ":app" -> ":feature:settings:api"
@@ -41,11 +40,10 @@ digraph G {
 ":sync" -> ":core:data" [color=red style=bold]
 ":sync" -> ":core:common"
 ":core:data" -> ":core:common" [color=red style=bold]
-":core:data" -> ":core:logging-error:api"
+":core:data" -> ":core:logging-error"
 ":core:data" -> ":core:database"
 ":core:data" -> ":core:domain"
 ":core:data" -> ":core:network"
-":core:logging-error:impl" -> ":core:logging-error:api"
 ":feature:category:api" -> ":core:feature-api"
 ":feature:category:impl" -> ":feature:category:api"
 ":feature:category:impl" -> ":core:network"

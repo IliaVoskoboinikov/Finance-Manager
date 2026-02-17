@@ -21,7 +21,7 @@ import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.onSuccess
-import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
+import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import java.time.Instant

@@ -29,6 +29,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,8 @@ import soft.divan.financemanager.feature.account.impl.precenter.model.AccountAct
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountEvent
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountMode
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUiState
+import soft.divan.financemanager.feature.account.impl.precenter.model.mockAccountUiStateError
+import soft.divan.financemanager.feature.account.impl.precenter.model.mockAccountUiStateLoading
 import soft.divan.financemanager.feature.account.impl.precenter.model.mockAccountUiStateSuccess
 import soft.divan.financemanager.feature.account.impl.precenter.viewModel.AccountViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem

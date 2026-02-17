@@ -1,9 +1,8 @@
-package soft.divan.financemanager.core.loggingerror.impl
+package soft.divan.financemanager.core.loggingerror
 
 import android.util.Log
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import jakarta.inject.Inject
-import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
 
 class CrashlyticsLogger @Inject constructor() : ErrorLogger {
 

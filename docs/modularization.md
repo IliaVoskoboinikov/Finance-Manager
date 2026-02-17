@@ -26,9 +26,8 @@ graph TB
         domain[domain]:::library
         network[network]:::library
         uikit[uikit]:::library
-        logging_api[logging-error:api]:::library
-        logging_impl[logging-error:impl]:::library
-        core_feature_api[core:feature-api]:::library
+        logging_error[logging-error]:::library
+        feature_api[core:feature-api]:::library
     end
 
     subgraph Features
@@ -46,8 +45,7 @@ graph TB
     app --> domain
     app --> network
     app --> uikit
-    app --> logging_api
-    app --> logging_impl
+    app --> logging_error
 
 %% App зависит на Features
     app --> feature_api
@@ -66,9 +64,8 @@ graph TB
     data --> database
     data --> network
     data --> domain
-    data --> logging_api
+    data --> logging_error
 
-    logging_impl --> logging_api
 
     classDef app fill:#CAFFBF,stroke:#000,stroke-width:2px,color:#000;
     classDef feature fill:#FFD6A5,stroke:#000,stroke-width:2px,color:#000;
@@ -89,8 +86,7 @@ graph LR
     core_data["core:data"]
     core_uikit["core:uikit"]
     core_feature_api["core:feature-api"]
-    core_log_api["core:logging-error:api"]
-    core_log_impl["core:logging-error:impl"]
+    core_logging_error["core:logging-error"]
 
 
     f_category_api["feature:category:api"]
@@ -339,7 +335,7 @@ graph LR
     - Общие контракты для навигации и интеграции фич.
 - `core:uikit`
     - Общие визуальные компоненты, темы, утилиты для UI.
-- `core:logging-error:(api|impl)`
+- `core:logging-error`
     - Общий модуль для логирования и обработки ошибок.
 
 Правила:

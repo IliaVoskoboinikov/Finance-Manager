@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.domain.result.DomainResult
-import soft.divan.financemanager.core.loggingerror.api.ErrorLogger
+import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import kotlin.coroutines.CoroutineContext
 
 fun <T : Any> safeDbFlow(

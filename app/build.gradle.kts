@@ -17,8 +17,7 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
     implementation(projects.core.data)
-    implementation(projects.core.loggingError.api)
-    implementation(projects.core.loggingError.impl)
+    implementation(projects.core.loggingError)
 
     implementation(projects.feature.category.api)
     implementation(projects.feature.category.impl)
