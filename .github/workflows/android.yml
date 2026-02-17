@@ -139,29 +139,11 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/init-gradle
 
-      - name: Run KtLint
-        run: ./gradlew ktlintCheck --continue $gradleFlags
-
-      - name: Collect SARIF files
-        if: always()
-        run: |
-          mkdir -p ktlint-sarif
-          find . -type f -path "*/build/reports/ktlint/*/*.sarif" -exec cp {} ktlint-sarif/ \;
-
-      - name: Merge SARIF files into single run
-        if: always()
-        run: |
-          jq -s '
-            {
-              version: "2.1.0",
-              runs: [
-                {
-                  tool: .[0].runs[0].tool,
-                  results: (map(.runs[].results) | add)
-                }
-              ]
-            }
-          ' ktlint-sarif/*.sarif > merged-ktlint.sarif
+      - name: Run KtLint composite action
+        uses: ./.github/actions/ktlint
+        with:
+          gradle-flags: ${{ env.gradleFlags }}
+          generate-html: "true"
 
       - name: Upload SARIF to GitHub Code Scanning
         if: always()
@@ -170,65 +152,13 @@ jobs:
           sarif_file: merged-ktlint.sarif
           category: ktlint
 
-      - name: Generate detailed Markdown report
+      - name: Upload HTML report
         if: always()
-        run: |
-          echo "# KtLint Detailed Report" > ktlint-report.md
-          echo "" >> ktlint-report.md
+        uses: actions/upload-artifact@v4
+        with:
+          name: ktlint-html-report
+          path: ktlint-report.html
 
-          total=0
-          declare -A moduleIssues
-          declare -A moduleDetails
-
-          for file in $(find . -type f -path "*/build/reports/ktlint/*/*.sarif"); do
-            module=$(echo "$file" | sed -E 's#^\./##' | sed -E 's#/build/reports/ktlint/.*##' | sed 's#/#:#g')
-
-            count=$(jq '[.runs[].results[]] | length' "$file")
-
-            if [ "$count" -gt 0 ]; then
-              moduleIssues["$module"]=$(( ${moduleIssues["$module"]} + count ))
-              total=$((total + count))
-
-              details=$(jq -r '
-                .runs[].results[] |
-                "- `" + .locations[0].physicalLocation.artifactLocation.uri + ":" +
-                (.locations[0].physicalLocation.region.startLine|tostring) + ":" +
-                (.locations[0].physicalLocation.region.startColumn|tostring) +
-                "`  \n  " + .message.text +
-                " (" + .ruleId + ")"' "$file")
-
-              moduleDetails["$module"]+="$details"$'\n'
-            fi
-          done
-
-          echo "## 🔎 Total issues: $total" >> ktlint-report.md
-          echo "" >> ktlint-report.md
-
-          if [ "$total" -gt 0 ]; then
-            echo "## 📦 Issues by module" >> ktlint-report.md
-            echo "" >> ktlint-report.md
-            echo "| Module | Issues |" >> ktlint-report.md
-            echo "|--------|--------|" >> ktlint-report.md
-
-            for module in "${!moduleIssues[@]}"; do
-              echo "| $module | ${moduleIssues[$module]} |" >> ktlint-report.md
-            done
-
-            echo "" >> ktlint-report.md
-            echo "## 📝 Detailed issues" >> ktlint-report.md
-            echo "" >> ktlint-report.md
-
-            for module in "${!moduleDetails[@]}"; do
-              echo "### $module" >> ktlint-report.md
-              echo "" >> ktlint-report.md
-              echo "${moduleDetails[$module]}" >> ktlint-report.md
-              echo "" >> ktlint-report.md
-            done
-          else
-            echo "✅ No issues found 🎉" >> ktlint-report.md
-          fi
-
-          cat ktlint-report.md >> $GITHUB_STEP_SUMMARY
 
       - name: Setup pandoc
         if: always()
