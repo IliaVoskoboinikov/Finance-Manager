@@ -152,14 +152,6 @@ jobs:
           sarif_file: merged-ktlint.sarif
           category: ktlint
 
-      - name: Upload HTML report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ktlint-html-report
-          path: ktlint-report.html
-
-
       - name: Setup pandoc
         if: always()
         uses: pandoc/actions/setup@v1
