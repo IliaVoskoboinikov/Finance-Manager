@@ -299,10 +299,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup environment
         uses: ./.github/actions/init-gradle
+
+      - name: Create google-services.json
+        run: |
+          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
       - name: Analyze size
         run: ./gradlew :app:analyzeDebugBundle $gradleFlags
+
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
