@@ -1,0 +1,14 @@
+name: Android Setup
+description: Checkout + Gradle init + Google Services setup
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Init Gradle
+      uses: ./.github/actions/init-gradle
+
+    - name: Create google-services.json
+      uses: ./.github/actions/create-google-services
