@@ -56,5 +56,6 @@ jobs:
         with:
           tg-token: ${{ secrets.TG_TOKEN }}
           tg-chat: ${{ secrets.TG_CHAT_TEST_BUILD }}
+          thread-id: ${{ secrets.TG_THREAD_TEST }}
           file: app-debug.apk
-          text: "[Test App for debug ${{ github.head_ref }}](https://github.com/IliaVoskoboinikov/Finance-Manager_tmp/actions/runs/${{ github.run_id }})"
+          text: "[Test App for debug ${{ github.ref_name }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
