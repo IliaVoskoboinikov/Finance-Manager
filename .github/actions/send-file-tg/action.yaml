@@ -1,0 +1,27 @@
+name: send-file-tg
+description: Send file to Telegram
+
+inputs:
+  tg-token:
+    description: 'Telegram Token'
+    required: true
+  tg-chat:
+    description: 'Telegram chat id'
+    required: true
+  file:
+    description: 'Path to file'
+    required: true
+  text:
+    description: 'Report message'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Send file
+      shell: bash
+      run: |
+        curl https://api.telegram.org/bot${{ inputs.tg-token }}/sendDocument?chat_id=${{ inputs.tg-chat }} \
+        -F 'document=@${{ inputs.file }}' \
+        -F 'caption=${{ inputs.text }}' \
+        -F 'parse_mode=MarkdownV2'
