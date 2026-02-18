@@ -58,4 +58,11 @@ jobs:
           tg-chat: ${{ secrets.TG_CHAT_TEST_BUILD }}
           thread-id: ${{ secrets.TG_THREAD_TEST }}
           file: app-debug.apk
-          text: "[Test App for debug ${{ github.ref_name }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          text: |
+            🧪 *Test Build*
+
+            📦 Branch: `${{ github.ref_name }}`
+            💬 Commit: _${{ github.event.head_commit.message }}_
+
+            🔗 [Open CI Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
