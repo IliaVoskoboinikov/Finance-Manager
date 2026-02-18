@@ -8,6 +8,9 @@ inputs:
   tg-chat:
     description: 'Telegram chat id'
     required: true
+  thread-id:
+    description: 'Telegram chat id'
+    required: true
   file:
     description: 'Path to file'
     required: true
@@ -21,7 +24,9 @@ runs:
     - name: Send file
       shell: bash
       run: |
-        curl https://api.telegram.org/bot${{ inputs.tg-token }}/sendDocument?chat_id=${{ inputs.tg-chat }} \
-        -F 'document=@${{ inputs.file }}' \
-        -F 'caption=${{ inputs.text }}' \
-        -F 'parse_mode=MarkdownV2'
+        curl -X POST "https://api.telegram.org/bot${{ inputs.tg-token }}/sendDocument" \
+        -F chat_id=${{ inputs.tg-chat }} \
+        -F message_thread_id=${{ inputs.thread-id }} \
+        -F document=@${{ inputs.file }} \
+        -F caption="${{ inputs.text }}"
+
