@@ -14,6 +14,7 @@ jobs:
   build-app:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/android-setup
 
       - name: Build project $gradleFlags
@@ -84,6 +85,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
+
       - name: Run Detekt
         run: ./gradlew detekt $gradleFlags --continue
         continue-on-error: true
@@ -122,6 +126,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
 
       - name: Run KtLint composite action
         uses: ./.github/actions/ktlint
@@ -173,6 +180,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/init-gradle
 
       - name: Check Graph
         run: ./gradlew :app:assertModuleGraph $gradleFlags
