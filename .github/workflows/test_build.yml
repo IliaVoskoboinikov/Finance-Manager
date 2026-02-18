@@ -1,0 +1,58 @@
+name: Build App release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'tests/**'
+    paths-ignore:
+      - '**.md'
+
+env:
+  gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
+  ANDROID_SDK_ROOT: /usr/lib/android-sdk
+  API_TOKEN: ${{ secrets.API_TOKEN }}
+  GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
+      - name: Build
+        run: ./gradlew :app:assembleDebug $gradleFlags
+      - name: Generate build time report
+        uses: ./.github/actions/build-time-report
+        with:
+          file: app/build/reports/buildTimeTracker/build.csv
+          output-file: buildTime.csv
+      - name: Upload apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-unsigned
+          path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload time report
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildTime.csv
+          path: buildTime.csv
+
+  report-telegram:
+    runs-on: ubuntu-latest
+    needs: build-app
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download apk
+        uses: actions/download-artifact@v4
+      - name: Report apk file
+        uses: ./.github/actions/send-file-tg
+        with:
+          tg-token: ${{ secrets.TG_TOKEN }}
+          tg-chat: ${{ secrets.TG_CHAT_TEST_BUILD }}
+          file: app-debug.apk
+          text: "[Test App for debug ${{ github.head_ref }}](https://github.com/IliaVoskoboinikov/Finance-Manager_tmp/actions/runs/${{ github.run_id }})"
