@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="analysis">Анализ</string>
-    <string name="period_start"> Период: начало </string>
+    <string name="period_start">Период: начало </string>
     <string name="period_end">Период: конец</string>
     <string name="summ">Сумма</string>
     <string name="error_loading">Ошибка загрузки</string>
