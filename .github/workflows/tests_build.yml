@@ -61,8 +61,5 @@ jobs:
           text: |
             🧪 *Test Build*
 
-            📦 Branch: `${{ github.ref_name }}`
-            💬 Commit: _${{ github.event.head_commit.message }}_
-
             🔗 [Open CI Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
           
