@@ -94,6 +94,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Download apk
         uses: actions/download-artifact@v4
         with:
@@ -101,6 +103,7 @@ jobs:
       - name: Set branch and commit info
         shell: bash
         run: |
+          echo "Branch: ${GITHUB_REF}"
           # branch
           if [[ "${GITHUB_REF}" == refs/heads/* ]]; then
             echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
@@ -120,7 +123,6 @@ jobs:
 
           # short SHA
           echo "COMMIT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
       - name: Prepare Telegram message
         shell: bash
         run: |
