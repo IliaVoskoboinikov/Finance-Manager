@@ -98,27 +98,43 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name:  app-signed
-      - name: Prepare Telegram message
+      - name: Set branch and commit info
+        shell: bash
         run: |
           # branch
-          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          if [[ "${GITHUB_REF}" == refs/heads/* ]]; then
+            echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "BRANCH_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          else
+            echo "BRANCH_NAME=unknown" >> $GITHUB_ENV
+          fi
+
           # author
           AUTHOR=$(git log -1 --pretty=format:'%an')
+          echo "COMMIT_AUTHOR=$AUTHOR" >> $GITHUB_ENV
+
           # commit message
           MESSAGE=$(git log -1 --pretty=%B | sed 's/"/\\"/g')
+          echo "COMMIT_MESSAGE=$MESSAGE" >> $GITHUB_ENV
+
           # short SHA
-          SHORT_SHA=${GITHUB_SHA::7}
-          # generate Markdown
-          MESSAGE_TEXT="🚀 *Release Build*\n\n"
-          MESSAGE_TEXT+="📦 *Branch:* \`${BRANCH_NAME}\`\n"
-          MESSAGE_TEXT+="👤 *Author:* \`${AUTHOR}\`\n"
-          MESSAGE_TEXT+="🔢 *Commit:* \`${SHORT_SHA}\`\n"
-          MESSAGE_TEXT+="📝 *Message:*\n\`\`\`\n${MESSAGE}\n\`\`\`\n"
-          MESSAGE_TEXT+="🔗 [Open CI Run](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
+          echo "COMMIT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Prepare Telegram message
+        shell: bash
+        run: |
+          TEXT="🚀 *Release Build*\n\n"
+          TEXT+="📦 *Branch:* \`${BRANCH_NAME}\`\n"
+          TEXT+="👤 *Author:* \`${COMMIT_AUTHOR}\`\n"
+          TEXT+="🔢 *Commit:* \`${COMMIT_SHA}\`\n"
+          TEXT+="📝 *Message:*\n\`\`\`\n${COMMIT_MESSAGE}\n\`\`\`\n"
+          TEXT+="🔗 [Open CI Run](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
 
           echo "MESSAGE_TEXT<<EOF" >> $GITHUB_ENV
-          echo "$MESSAGE_TEXT" >> $GITHUB_ENV
+          echo "$TEXT" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+
       - name: Report apk file
         uses: ./.github/actions/send-file-tg
         with:
