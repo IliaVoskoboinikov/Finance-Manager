@@ -98,6 +98,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name:  app-signed
+      - name: Get app version
+        id: get_version
+        run: |
+          VERSION_NAME=$(./gradlew -q printVersionName | tail -n1)
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
       - name: Report apk file
         uses: ./.github/actions/send-file-tg
         with:
@@ -107,8 +112,6 @@ jobs:
           file:  app-signed.apk
           text: |
             🚀 *Release Build*
-            
-            📦 *Branch:* `${{ github.ref_name }}`
-            
+            📦 Version: ${{ env.VERSION_NAME }} (${{ env.VERSION_CODE }})            
             🔗 [Open CI Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
