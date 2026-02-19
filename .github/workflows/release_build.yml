@@ -104,13 +104,6 @@ jobs:
         run: |
           VERSION_NAME=$(./gradlew -q printVersionName | tail -n1)
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-      - name: Get Git info
-        id: git_info
-        run: |
-          BRANCH_NAME=${GITHUB_REF##*/}
-          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-          echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
 
       - name: Report apk file
         uses: ./.github/actions/send-file-tg
@@ -121,9 +114,8 @@ jobs:
           file:  app-signed.apk
           text: |
             🚀 *Release Build*
-            
-            📦 Version: ${{ env.VERSION_NAME }}
-            🌿 Branch: `${{ env.BRANCH_NAME }}`
-            ✏️ Commit: ${{ env.COMMIT_MESSAGE }}
-            🔗 [Open CI Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
+            📦 Version: ${{ env.VERSION_NAME }}
+            🌿 Branch: `${{ github.ref_name }}`
+            ✏️ Commit: ${{ github.event.head_commit.message }}
+            🔗 [Open CI Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
