@@ -87,7 +87,7 @@ jobs:
 
   report-telegram:
     runs-on: ubuntu-latest
-    needs: build-app
+    needs: sign-app
     continue-on-error: true
     steps:
       - name: Checkout
