@@ -11,6 +11,7 @@ on:
 env:
   gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
   ANDROID_SDK_ROOT: /usr/lib/android-sdk
+  GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
 jobs:
   build-app:
