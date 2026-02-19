@@ -4,5 +4,5 @@ object Const {
     const val MIN_SKD = 26
     const val JAVA_VERSION = "11"
     const val VERSION_CODE = 1
-    const val VERSION_NAME = "1.0"
+    const val VERSION_NAME = "0.0.1"
 }

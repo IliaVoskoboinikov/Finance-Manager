@@ -55,7 +55,7 @@ jobs:
         uses: ./.github/actions/send-file-tg
         with:
           tg-token: ${{ secrets.TG_TOKEN }}
-          tg-chat: ${{ secrets.TG_CHAT_TEST_BUILD }}
+          tg-chat: ${{ secrets.TG_CHAT_BUILD }}
           thread-id: ${{ secrets.TG_THREAD_TEST }}
           file: app-debug.apk
           text: |
