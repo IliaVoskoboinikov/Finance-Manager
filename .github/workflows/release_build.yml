@@ -75,7 +75,7 @@ jobs:
         run: |
           set -e
           echo ${{ secrets.JKS_KS }} | base64 -d > release.jks
-          $ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner sign --ks key.jks --in app-aligned.apk --out app-signed.apk --key-pass pass:${{ secrets.JKS_KEY_PASS }} --ks-pass pass:${{ secrets.JKS_KS_PASS }} --ks-key-alias ${{ secrets.JKS_ALIAS }}
+          $ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner sign --ks release.jks --in app-aligned.apk --out app-signed.apk --key-pass pass:${{ secrets.JKS_KEY_PASS }} --ks-pass pass:${{ secrets.JKS_KS_PASS }} --ks-key-alias ${{ secrets.JKS_ALIAS }}
       - name: Verify signature
         shell: bash
         run: |
