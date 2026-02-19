@@ -66,3 +66,9 @@ dependencies {
 
     implementation(libs.androidx.lifecycle.process)
 }
+
+tasks.register("printVersionName") {
+    doLast {
+        println(Const.VERSION_NAME)
+    }
+}
