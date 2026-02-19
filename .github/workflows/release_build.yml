@@ -115,9 +115,9 @@ jobs:
           thread-id: ${{ secrets.TG_THREAD_RELEASE }}
           file:  app-signed.apk
           text: |
-            🚀 *Release Build*
+            🚀 <b>Release Build</b>
 
             📦 Version: ${{ env.VERSION_NAME }}
-            🌿 Branch: `${{ steps.branch-names.outputs.current_branch }}`
+            🌿 Branch: <code>${{ steps.branch-names.outputs.current_branch }}</code>
             ✏️ Commit: ${{ github.event.head_commit.message }}
-            🔗 [Open CI Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            🔗 <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">Open CI Run</a>
