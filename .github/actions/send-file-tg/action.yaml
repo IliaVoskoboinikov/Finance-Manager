@@ -28,6 +28,6 @@ runs:
         -F chat_id=${{ inputs.tg-chat }} \
         -F message_thread_id=${{ inputs.thread-id }} \
         -F document=@${{ inputs.file }} \
-        -F parse_mode="HTML" \
+        -F parse_mode="Markdown" \
         -F caption="${{ inputs.text }}"
 
