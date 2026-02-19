@@ -98,6 +98,27 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name:  app-signed
+      - name: Prepare Telegram message
+        run: |
+          # branch
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          # author
+          AUTHOR=$(git log -1 --pretty=format:'%an')
+          # commit message
+          MESSAGE=$(git log -1 --pretty=%B | sed 's/"/\\"/g')
+          # short SHA
+          SHORT_SHA=${GITHUB_SHA::7}
+          # generate Markdown
+          MESSAGE_TEXT="🚀 *Release Build*\n\n"
+          MESSAGE_TEXT+="📦 *Branch:* \`${BRANCH_NAME}\`\n"
+          MESSAGE_TEXT+="👤 *Author:* \`${AUTHOR}\`\n"
+          MESSAGE_TEXT+="🔢 *Commit:* \`${SHORT_SHA}\`\n"
+          MESSAGE_TEXT+="📝 *Message:*\n\`\`\`\n${MESSAGE}\n\`\`\`\n"
+          MESSAGE_TEXT+="🔗 [Open CI Run](https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
+
+          echo "MESSAGE_TEXT<<EOF" >> $GITHUB_ENV
+          echo "$MESSAGE_TEXT" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Report apk file
         uses: ./.github/actions/send-file-tg
         with:
@@ -105,10 +126,4 @@ jobs:
           tg-chat: ${{ secrets.TG_CHAT_BUILD }}
           thread-id: ${{ secrets.TG_THREAD_RELEASE }}
           file:  app-signed.apk
-          text: |
-            🚀 *Release Build*
-            
-            📦 *Branch:* `${{ github.ref_name }}`
-  
-            🔗 [Open CI Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
+          text: ${{ env.MESSAGE_TEXT }}
