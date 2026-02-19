@@ -107,6 +107,8 @@ jobs:
           file:  app-signed.apk
           text: |
             🚀 *Release Build*
-
+            
+            📦 *Branch:* `${{ github.ref_name }}`
+  
             🔗 [Open CI Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
