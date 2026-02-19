@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          $ANDROID_SDK_ROOT/build-tools/35.0.0/zipalign -v -p 4 app-release-unsigned.apk app-aligned.apk
+          $ANDROID_SDK_ROOT/build-tools/35.0.0/zipalign -v -p 4 app-release.apk app-aligned.apk
       - name: Sign apk
         shell: bash
         run: |
