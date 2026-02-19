@@ -104,9 +104,6 @@ jobs:
         run: |
           VERSION_NAME=$(./gradlew -q printVersionName | tail -n1)
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
-      - name: Get branch name
-        id: branch-names
-        uses: tj-actions/branch-names@v9
       - name: Report apk file
         uses: ./.github/actions/send-file-tg
         with:
@@ -118,6 +115,6 @@ jobs:
             🚀 <b>Release Build</b>
 
             📦 Version: ${{ env.VERSION_NAME }}
-            🌿 Branch: <code>${{ steps.branch-names.outputs.current_branch }}</code>
+            🌿 Branch: <code>${{ github.ref_name }}</code>
             ✏️ Commit: ${{ github.event.head_commit.message }}
             🔗 <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">Open CI Run</a>
