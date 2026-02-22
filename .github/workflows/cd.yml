@@ -39,7 +39,8 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: ${{ secrets.PLAY_PACKAGE_NAME }}
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
-          track: draft
+          track: internal
+          status: draft
 
 
 
