@@ -24,7 +24,7 @@ jobs:
         uses: ./.github/actions/android-setup
 
       - name: Decode Keystore
-        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.jks
+        run: echo "${{ secrets.JKS_KS }}" | base64 -d > app/release.jks
 
       - name: Build Release AAB
         run: ./gradlew bundleRelease
