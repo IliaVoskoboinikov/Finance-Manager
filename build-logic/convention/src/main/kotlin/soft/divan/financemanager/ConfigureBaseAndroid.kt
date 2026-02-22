@@ -4,7 +4,6 @@ import Const
 import com.android.build.gradle.BaseExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
-import java.io.File
 
 fun BaseExtension.configureBaseAndroid(project: Project) {
     namespace = generateNamespace(project)
@@ -16,7 +15,7 @@ fun BaseExtension.configureBaseAndroid(project: Project) {
 
     signingConfigs {
         create("release") {
-            storeFile = File("release.jks")
+            storeFile = project.layout.projectDirectory.file("release.jks").asFile
             storePassword = System.getenv("KEYSTORE_PASSWORD")
             keyAlias = System.getenv("KEY_ALIAS")
             keyPassword = System.getenv("KEY_PASSWORD")
@@ -27,7 +26,7 @@ fun BaseExtension.configureBaseAndroid(project: Project) {
         getByName("release") {
             isMinifyEnabled = false
             isShrinkResources = false
-            signingConfig =  signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
