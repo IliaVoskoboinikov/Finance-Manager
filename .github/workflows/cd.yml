@@ -23,11 +23,33 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/android-setup
 
+      - name: Validate release branch format
+        run: |
+          BRANCH_NAME="${GITHUB_REF_NAME}"
+          echo "Current branch: $BRANCH_NAME"
+            
+          if [[ ! "$BRANCH_NAME" =~ ^v\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Branch name must match format: v.X.Y.Z"
+            exit 1
+          fi
+
+      - name: Extract version from branch
+        run: |
+          BRANCH_NAME="${GITHUB_REF_NAME}"
+          VERSION_NAME=$(echo "$BRANCH_NAME" | sed 's/^v\.//')
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+            
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NAME"
+          VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+
       - name: Decode Keystore
         run: echo "${{ secrets.JKS_KS }}" | base64 -d > app/release.jks
 
       - name: Build Release AAB
-        run: ./gradlew bundleRelease
+        run: ./gradlew bundleRelease \
+         -PversionCode=${{ env.VERSION_CODE }} \
+         -PversionName=${{ env.VERSION_NAME }}
         env:
           KEYSTORE_PASSWORD: ${{ secrets.JKS_KS_PASS }}
           KEY_ALIAS: ${{ secrets.JKS_ALIAS }}

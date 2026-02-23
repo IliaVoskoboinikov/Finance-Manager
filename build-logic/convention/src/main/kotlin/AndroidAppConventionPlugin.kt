@@ -23,9 +23,12 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             extensions.configure<BaseAppModuleExtension> {
                 configureBaseAndroid(project)
 
+                val versionCodeProp = project.findProperty("versionCode")?.toString()?.toInt()
+                val versionNameProp = project.findProperty("versionName")?.toString()
+
                 defaultConfig {
-                    versionCode = Const.VERSION_CODE
-                    versionName = Const.VERSION_NAME
+                    versionCode = versionCodeProp ?: Const.VERSION_CODE
+                    versionName = versionNameProp ?: Const.VERSION_NAME
                     targetSdk = Const.COMPILE_SKD
                 }
 
