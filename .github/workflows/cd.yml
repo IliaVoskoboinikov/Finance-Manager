@@ -59,9 +59,10 @@ jobs:
         run: echo "${{ secrets.JKS_KS }}" | base64 -d > app/release.jks
 
       - name: Build Release AAB
-        run: ./gradlew bundleRelease \
-         -PversionCode=${{ env.VERSION_CODE }} \
-         -PversionName=${{ env.VERSION_NAME }}
+        run: |
+          ./gradlew bundleRelease \
+            -PversionCode=${VERSION_CODE} \
+            -PversionName=${VERSION_NAME}
         env:
           KEYSTORE_PASSWORD: ${{ secrets.JKS_KS_PASS }}
           KEY_ALIAS: ${{ secrets.JKS_ALIAS }}
