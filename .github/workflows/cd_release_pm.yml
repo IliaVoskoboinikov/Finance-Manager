@@ -1,7 +1,7 @@
 name: Build App release
 
 on:
-  workflow_dispatch:
+  workflow_call:
 
 env:
   gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
