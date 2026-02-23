@@ -1,4 +1,4 @@
-name: Build App release
+name: App release
 
 on:
   workflow_dispatch:
