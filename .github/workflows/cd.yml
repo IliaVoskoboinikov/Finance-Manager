@@ -23,13 +23,25 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/android-setup
 
-      - name: Validate release branch format
+      - name: Extract and validate version from branch
         run: |
           BRANCH_NAME="${GITHUB_REF_NAME}"
           echo "Current branch: $BRANCH_NAME"
-            
-          if [[ ! "$BRANCH_NAME" =~ ^v\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "❌ Branch name must match format: v.X.Y.Z"
+          
+          if [[ "$BRANCH_NAME" =~ (v\.[0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            VERSION_WITH_PREFIX="${BASH_REMATCH[1]}"
+            VERSION_NAME="${VERSION_WITH_PREFIX#v.}"
+          
+            echo "Detected version: $VERSION_NAME"
+          
+            echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION_NAME"
+            VERSION_CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+          
+            echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          else
+            echo "❌ Branch must end with v.X.Y.Z"
             exit 1
           fi
 
