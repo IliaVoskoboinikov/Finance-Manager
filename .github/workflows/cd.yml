@@ -60,8 +60,8 @@ jobs:
       - name: Build Release Bundle
         run: |
           ./gradlew bundleRelease \
-            -PversionCode=${{ needs.validate-release.outputs.version_code }} \
-            -PversionName=${{ needs.validate-release.outputs.version_name }} \
+            -PversionCode=${{ needs.validate-versione.outputs.version_code }} \
+            -PversionName=${{ needs.validate-versione.outputs.version_name }} \
             $GRADLE_FLAGS
         env:
           KEYSTORE_PASSWORD: ${{ secrets.JKS_KS_PASS }}
