@@ -41,6 +41,7 @@ jobs:
           path: buildTime.csv
 
   report-telegram:
+    name: Report telegram
     runs-on: ubuntu-latest
     needs: build-app
     continue-on-error: true
