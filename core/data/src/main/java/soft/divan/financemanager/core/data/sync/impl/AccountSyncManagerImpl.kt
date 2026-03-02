@@ -62,7 +62,7 @@ class AccountSyncManagerImpl @Inject constructor(
      * Точка входа для полной синхронизации.
      *
      * Порядок выполнения:
-     * 1. pullServerData()  — обновление локальной БД
+     * 1. pullServerData() — обновление локальной БД
      * 2. pushLocalChanges() — отправка pending-изменений
      *
      * Возвращает true, если оба шага завершились без исключений.
