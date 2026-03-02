@@ -12,4 +12,10 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.converter.gson)
+
+    // todo
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.assertj.core)
 }

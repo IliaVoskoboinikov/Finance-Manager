@@ -6,8 +6,7 @@ import androidx.room.PrimaryKey
 import soft.divan.financemanager.core.database.model.SyncStatus
 
 @Entity(
-    tableName = "account",
-    indices = [Index(value = ["serverId"], unique = true)] // todo
+    tableName = "account"
 )
 data class AccountEntity(
     @PrimaryKey

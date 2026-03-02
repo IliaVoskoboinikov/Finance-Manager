@@ -56,9 +56,11 @@ gmsPlugin = "4.4.4"
 firebaseBom = "33.7.0"
 firebaseCrashlyticsPlugin = "3.0.6"
 
-# UNIT TEST
+# TEST
 junit = "4.13.2"
 kotlinxCoroutinesTest = "1.10.2"
+assertjCore = "3.27.7"
+mockk = "1.14.9"
 
 ##############################################
 #                  Libraries
@@ -131,9 +133,11 @@ ruler-plugin = { group = "com.spotify.ruler", name = "ruler-gradle-plugin", vers
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 
-# UNIT TEST
+# TEST
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertjCore" }
 
 ##############################################
 #                  Plugins
