@@ -48,9 +48,9 @@ class TransactionRepositoryImpl @Inject constructor(
             syncStatus = SyncStatus.PENDING_CREATE
         )
 
-        appCoroutineContext.launch {
+       /* appCoroutineContext.launch {
             syncManager.syncCreate(transactionEntity)
-        }
+        }*/
 
         return safeDbCall(errorLogger) {
             localDataSource.create(transactionEntity)
@@ -65,13 +65,13 @@ class TransactionRepositoryImpl @Inject constructor(
     ): Flow<DomainResult<List<Transaction>>> {
         val startDate = ApiDateMapper.toApiDate(startDate)
         val endDate = ApiDateMapper.toApiDate(endDate)
-        appCoroutineContext.launch {
+        /*appCoroutineContext.launch {
             syncManager.pullFromRemoteForAccount(
                 accountLocalId = accountId,
                 startDate = startDate,
                 endDate = endDate
             )
-        }
+        }*/
 
         return safeDbFlow(errorLogger) {
             localDataSource.getByAccountAndPeriod(
@@ -97,7 +97,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (resultDb as DomainResult.Success).data
 
-        appCoroutineContext.launch {
+        /*appCoroutineContext.launch {
             val serverId = transactionEntity.serverId
             if (serverId != null) {
                 safeApiCall(errorLogger) {
@@ -117,7 +117,7 @@ class TransactionRepositoryImpl @Inject constructor(
                 // Транзакция не синхронизирована с сервером то создаем на сервере
                 syncManager.syncCreate(transactionEntity)
             }
-        }
+        }*/
 
         return DomainResult.Success(transactionEntity.toDomain())
     }
@@ -132,7 +132,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (resultDb as DomainResult.Success).data
 
-        appCoroutineContext.launch {
+      /*  appCoroutineContext.launch {
             if (transactionEntity.serverId == null) {
                 syncManager.syncCreate(
                     transaction.toEntity(
@@ -150,7 +150,7 @@ class TransactionRepositoryImpl @Inject constructor(
                     )
                 )
             }
-        }
+        }*/
 
         return safeDbCall(errorLogger) {
             localDataSource.update(
@@ -178,9 +178,9 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (localResult as DomainResult.Success).data
 
-        appCoroutineContext.launch {
+       /* appCoroutineContext.launch {
             syncManager.syncDelete(transactionEntity)
-        }
+        }*/
 
         return safeDbCall(errorLogger) {
             localDataSource.update(

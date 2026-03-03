@@ -37,9 +37,9 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Создаем аккаунт в БД и сразу запускаем синхронизацию */
     override suspend fun create(account: Account): DomainResult<Unit> {
-        appCoroutineContext.launch {
+      /*  appCoroutineContext.launch {
             syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
-        }
+        }*/
         return safeDbCall(errorLogger) {
             localDataSource.create(
                 account.toEntity(serverId = null, syncStatus = SyncStatus.PENDING_CREATE)
@@ -49,9 +49,9 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию */
     override fun getAll(): Flow<DomainResult<List<Account>>> {
-        appCoroutineContext.launch {
+      /*  appCoroutineContext.launch {
             syncManager.pullServerData()
-        }
+        }*/
         return safeDbFlow(errorLogger) {
             localDataSource.getAll().map { list ->
                 list.filter { it.syncStatus != SyncStatus.PENDING_DELETE }.map { it.toDomain() }
@@ -72,7 +72,7 @@ class AccountRepositoryImpl @Inject constructor(
 
         val accountEntity = (localResult as DomainResult.Success).data
 
-        appCoroutineContext.launch {
+        /*appCoroutineContext.launch {
             val serverId = accountEntity.serverId
             if (serverId != null) {
                 safeApiCall(errorLogger) {
@@ -91,7 +91,7 @@ class AccountRepositoryImpl @Inject constructor(
                 // Аккаунт не синхронизирован с сервером то создаем на сервере
                 syncManager.syncCreate(accountDto = accountEntity.toDto(), localId = id)
             }
-        }
+        }*/
 
         return DomainResult.Success(accountEntity.toDomain())
     }
@@ -105,7 +105,7 @@ class AccountRepositoryImpl @Inject constructor(
 
         val accountEntity = (resultDb as DomainResult.Success).data
 
-        appCoroutineContext.launch {
+       /* appCoroutineContext.launch {
             if (accountEntity.serverId == null) {
                 // Если аккаунт не синхронизирован с сервером (нет serverId), то создать на сервере и
                 syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
@@ -118,7 +118,7 @@ class AccountRepositoryImpl @Inject constructor(
                 )
             }
         }
-
+*/
         return safeDbCall(errorLogger) {
             localDataSource.update(
                 accountEntity.copy(
@@ -158,9 +158,9 @@ class AccountRepositoryImpl @Inject constructor(
             )
         }
 
-        appCoroutineContext.launch {
+       /* appCoroutineContext.launch {
             syncManager.syncDelete(accountEntity)
-        }
+        }*/
 
         return safeDbCall(errorLogger) {
             localDataSource.update(
