@@ -23,7 +23,9 @@ object DataBaseProviderModule {
         @ApplicationContext context: Context
     ): FinanceManagerDatabase =
         Room.databaseBuilder(context, FinanceManagerDatabase::class.java, "finance_manager_db.db")
-            .fallbackToDestructiveMigration(false).build()
+            .fallbackToDestructiveMigration(false)
+            .createFromAsset("database/category_db.db")
+            .build()
 
     @Provides
     @Singleton
