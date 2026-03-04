@@ -1,6 +1,7 @@
 package soft.divan.financemanager.feature.transaction.impl.precenter.model
 
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.feature.transaction.impl.R
 
 // --- MOCK DATA ---
@@ -46,7 +47,9 @@ val mockTransaction = TransactionUi(
     currencyCode = CurrencySymbol.RUB.symbol,
     mode = TransactionMode.Create,
     date = "dd.MM.yyyy",
-    time = " HH:mm "
+    time = " HH:mm ",
+    targetAccountLocalId = null,
+    type = TransactionType.EXPENSE
 )
 
 val mockTransactionUiStateSuccess = TransactionUiState.Success(

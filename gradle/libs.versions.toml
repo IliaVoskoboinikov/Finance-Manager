@@ -24,7 +24,7 @@ biometricKtx = "1.2.0-alpha05"
 
 # Datastore & Storage
 datastore = "1.1.7"
-room = "2.7.2"
+room = "2.8.4"
 workManager = "2.10.0"
 
 # Compose

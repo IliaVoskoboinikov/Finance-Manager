@@ -6,8 +6,9 @@ import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.domain.model.TransactionType
 
-fun TransactionDto.toEntity(
+/*fun TransactionDto.toEntity(
     localId: String,
     accountLocalId: String,
     syncStatus: SyncStatus
@@ -23,8 +24,10 @@ fun TransactionDto.toEntity(
     comment = comment,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    syncStatus = syncStatus
-)
+    syncStatus = syncStatus,
+    type = TODO(),
+    targetAccountLocalId = TODO()
+)*/
 
 fun TransactionEntity.toDto(accountServerId: Int): TransactionRequestDto = TransactionRequestDto(
     accountId = accountServerId,
@@ -37,9 +40,11 @@ fun TransactionEntity.toDto(accountServerId: Int): TransactionRequestDto = Trans
 fun TransactionEntity.toDomain(): Transaction = Transaction(
     id = localId,
     accountLocalId = accountLocalId,
+    targetAccountLocalId = targetAccountLocalId,
     currencyCode = currencyCode,
     categoryId = categoryId,
     amount = amount.toBigDecimal(),
+    type = TransactionType.valueOf(type),
     transactionDate = TimeMapper.fromApi(transactionDate),
     comment = comment,
     createdAt = TimeMapper.fromApi(createdAt),
@@ -54,7 +59,9 @@ fun Transaction.toEntity(
     localId = id,
     serverId = serverId,
     accountLocalId = accountLocalId,
+    targetAccountLocalId = targetAccountLocalId,
     accountServerId = accountServerId,
+    type = type.name,
     categoryId = categoryId,
     currencyCode = currencyCode,
     amount = amount.toPlainString(),
@@ -65,6 +72,7 @@ fun Transaction.toEntity(
     syncStatus = syncStatus
 )
 
+/*
 fun TransactionResponseCreateDto.toEntity(
     localId: String,
     accountLocalId: String,
@@ -84,3 +92,4 @@ fun TransactionResponseCreateDto.toEntity(
     updatedAt = updatedAt,
     syncStatus = syncStatus
 )
+*/
