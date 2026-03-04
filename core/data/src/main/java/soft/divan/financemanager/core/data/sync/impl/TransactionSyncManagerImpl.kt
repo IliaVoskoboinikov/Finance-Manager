@@ -95,6 +95,7 @@ class TransactionSyncManagerImpl @Inject constructor(
             safeApiCall(errorLogger) {
                 remoteDataSource.create(transactionEntity.toDto(accountServerId))
             }.onSuccess { transactionRequestDto ->
+                // todo
                /* updateLocalFromRemote(
                     transactionRequestDto.toEntity(
                         localId = transactionEntity.localId,
@@ -125,6 +126,7 @@ class TransactionSyncManagerImpl @Inject constructor(
                         transaction = transactionEntity.toDto(accountServerId)
                     )
                 }.onSuccess { transactionDto ->
+                    // todo
                     /*updateLocalFromRemote(
                         transactionDto.toEntity(
                             localId = transactionEntity.localId,
@@ -226,6 +228,7 @@ class TransactionSyncManagerImpl @Inject constructor(
                 if (localTransaction == null) {
                     //  Локальной транзакции нет → создаём
                     safeDbCall(errorLogger) {
+                        // todo
                         /*localDataSource.create(
                             transactionDto.toEntity(
                                 localId = generateUUID(),
@@ -235,6 +238,7 @@ class TransactionSyncManagerImpl @Inject constructor(
                         )*/
                     }
                 } else if (transactionDto.updatedAt > localTransaction.updatedAt) {
+                    // todo
                     // Если есть, то разрешаем конфликт, побеждает, так которая менялась позже
                    /* updateLocalFromRemote(
                         transactionDto.toEntity(

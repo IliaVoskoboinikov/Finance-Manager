@@ -37,6 +37,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Создаем аккаунт в БД и сразу запускаем синхронизацию */
     override suspend fun create(account: Account): DomainResult<Unit> {
+        // todo
       /*  appCoroutineContext.launch {
             syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
         }*/
@@ -49,6 +50,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию */
     override fun getAll(): Flow<DomainResult<List<Account>>> {
+        // todo
       /*  appCoroutineContext.launch {
             syncManager.pullServerData()
         }*/
@@ -72,6 +74,7 @@ class AccountRepositoryImpl @Inject constructor(
 
         val accountEntity = (localResult as DomainResult.Success).data
 
+        // todo
         /*appCoroutineContext.launch {
             val serverId = accountEntity.serverId
             if (serverId != null) {
@@ -104,7 +107,7 @@ class AccountRepositoryImpl @Inject constructor(
         if (resultDb is DomainResult.Failure) return resultDb
 
         val accountEntity = (resultDb as DomainResult.Success).data
-
+// todo
        /* appCoroutineContext.launch {
             if (accountEntity.serverId == null) {
                 // Если аккаунт не синхронизирован с сервером (нет serverId), то создать на сервере и
@@ -157,7 +160,7 @@ class AccountRepositoryImpl @Inject constructor(
                 DataError.LocalDb(Throwable("Account has transactions")).toDomainError()
             )
         }
-
+// todo
        /* appCoroutineContext.launch {
             syncManager.syncDelete(accountEntity)
         }*/
