@@ -38,26 +38,22 @@ class TransactionRepositoryImpl @Inject constructor(
 
     /** Создаем транзакцию в БД и сразу запускаем синхронизацию */
     override suspend fun create(transaction: Transaction): DomainResult<Unit> {
-        val accountServerId = accountLocalDataSource.getByLocalId(
-            transaction.accountLocalId
-        )?.serverId
-
         val transactionEntity = transaction.toEntity(
             serverId = null,
-            accountServerId = accountServerId,
+            accountServerId = accountLocalDataSource.getByLocalId(transaction.accountLocalId)?.serverId,
             syncStatus = SyncStatus.PENDING_CREATE
         )
 
-       /* appCoroutineContext.launch {
-            syncManager.syncCreate(transactionEntity)
-        }*/
+        /* appCoroutineContext.launch {
+             syncManager.syncCreate(transactionEntity)
+         }*/
 
         return safeDbCall(errorLogger) {
             localDataSource.create(transactionEntity)
         }
     }
 
-    /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию на получение этих данныъ с сервера */
+    /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию на получение этих данных с сервера */
     override fun getByAccountAndPeriod(
         accountId: String,
         startDate: Instant,
@@ -132,25 +128,25 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (resultDb as DomainResult.Success).data
 
-      /*  appCoroutineContext.launch {
-            if (transactionEntity.serverId == null) {
-                syncManager.syncCreate(
-                    transaction.toEntity(
-                        serverId = null,
-                        accountServerId = transactionEntity.accountServerId,
-                        syncStatus = SyncStatus.PENDING_CREATE
-                    )
-                )
-            } else {
-                syncManager.syncUpdate(
-                    transaction.toEntity(
-                        serverId = transactionEntity.serverId,
-                        accountServerId = transactionEntity.accountServerId,
-                        syncStatus = SyncStatus.PENDING_UPDATE
-                    )
-                )
-            }
-        }*/
+        /*  appCoroutineContext.launch {
+              if (transactionEntity.serverId == null) {
+                  syncManager.syncCreate(
+                      transaction.toEntity(
+                          serverId = null,
+                          accountServerId = transactionEntity.accountServerId,
+                          syncStatus = SyncStatus.PENDING_CREATE
+                      )
+                  )
+              } else {
+                  syncManager.syncUpdate(
+                      transaction.toEntity(
+                          serverId = transactionEntity.serverId,
+                          accountServerId = transactionEntity.accountServerId,
+                          syncStatus = SyncStatus.PENDING_UPDATE
+                      )
+                  )
+              }
+          }*/
 
         return safeDbCall(errorLogger) {
             localDataSource.update(
@@ -178,9 +174,9 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (localResult as DomainResult.Success).data
 
-       /* appCoroutineContext.launch {
-            syncManager.syncDelete(transactionEntity)
-        }*/
+        /* appCoroutineContext.launch {
+             syncManager.syncDelete(transactionEntity)
+         }*/
 
         return safeDbCall(errorLogger) {
             localDataSource.update(

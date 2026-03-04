@@ -95,14 +95,14 @@ class TransactionSyncManagerImpl @Inject constructor(
             safeApiCall(errorLogger) {
                 remoteDataSource.create(transactionEntity.toDto(accountServerId))
             }.onSuccess { transactionRequestDto ->
-                updateLocalFromRemote(
+               /* updateLocalFromRemote(
                     transactionRequestDto.toEntity(
                         localId = transactionEntity.localId,
                         accountLocalId = transactionEntity.accountLocalId,
                         currencyCode = transactionEntity.currencyCode,
                         syncStatus = SyncStatus.SYNCED
                     )
-                )
+                )*/
             }
         }
     }
@@ -125,13 +125,13 @@ class TransactionSyncManagerImpl @Inject constructor(
                         transaction = transactionEntity.toDto(accountServerId)
                     )
                 }.onSuccess { transactionDto ->
-                    updateLocalFromRemote(
+                    /*updateLocalFromRemote(
                         transactionDto.toEntity(
                             localId = transactionEntity.localId,
                             accountLocalId = transactionEntity.accountLocalId,
                             syncStatus = SyncStatus.SYNCED
                         )
-                    )
+                    )*/
                 }
             }
         }
@@ -226,23 +226,23 @@ class TransactionSyncManagerImpl @Inject constructor(
                 if (localTransaction == null) {
                     //  Локальной транзакции нет → создаём
                     safeDbCall(errorLogger) {
-                        localDataSource.create(
+                        /*localDataSource.create(
                             transactionDto.toEntity(
                                 localId = generateUUID(),
                                 accountLocalId = accountLocalId,
                                 syncStatus = SyncStatus.SYNCED
                             )
-                        )
+                        )*/
                     }
                 } else if (transactionDto.updatedAt > localTransaction.updatedAt) {
                     // Если есть, то разрешаем конфликт, побеждает, так которая менялась позже
-                    updateLocalFromRemote(
+                   /* updateLocalFromRemote(
                         transactionDto.toEntity(
                             localId = localTransaction.localId,
                             accountLocalId = localTransaction.accountLocalId,
                             syncStatus = SyncStatus.SYNCED
                         )
-                    )
+                    )*/
                 }
             }
         }
