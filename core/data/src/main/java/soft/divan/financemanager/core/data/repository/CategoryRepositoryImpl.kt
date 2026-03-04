@@ -27,6 +27,7 @@ class CategoryRepositoryImpl @Inject constructor(
 ) : CategoryRepository {
 
     override fun getAll(): Flow<DomainResult<List<Category>>> {
+        // todo
       /*  appCoroutineContext.launch {
             syncManager.pullServerData()
         }*/
@@ -36,6 +37,7 @@ class CategoryRepositoryImpl @Inject constructor(
     }
 
     override fun getByType(isIncome: Boolean): Flow<DomainResult<List<Category>>> {
+        // todo
       /*  appCoroutineContext.launch {
             safeApiCall(errorLogger) {
                 remoteDataSource.getByType(isIncome)

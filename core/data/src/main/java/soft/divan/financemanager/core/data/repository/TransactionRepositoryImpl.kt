@@ -43,7 +43,7 @@ class TransactionRepositoryImpl @Inject constructor(
             accountServerId = accountLocalDataSource.getByLocalId(transaction.accountLocalId)?.serverId,
             syncStatus = SyncStatus.PENDING_CREATE
         )
-
+// todo
         /* appCoroutineContext.launch {
              syncManager.syncCreate(transactionEntity)
          }*/
@@ -61,6 +61,7 @@ class TransactionRepositoryImpl @Inject constructor(
     ): Flow<DomainResult<List<Transaction>>> {
         val startDate = ApiDateMapper.toApiDate(startDate)
         val endDate = ApiDateMapper.toApiDate(endDate)
+        // todo
         /*appCoroutineContext.launch {
             syncManager.pullFromRemoteForAccount(
                 accountLocalId = accountId,
@@ -92,7 +93,7 @@ class TransactionRepositoryImpl @Inject constructor(
         if (resultDb is DomainResult.Failure) return resultDb
 
         val transactionEntity = (resultDb as DomainResult.Success).data
-
+// todo
         /*appCoroutineContext.launch {
             val serverId = transactionEntity.serverId
             if (serverId != null) {
@@ -127,7 +128,7 @@ class TransactionRepositoryImpl @Inject constructor(
         if (resultDb is DomainResult.Failure) return resultDb
 
         val transactionEntity = (resultDb as DomainResult.Success).data
-
+// todo
         /*  appCoroutineContext.launch {
               if (transactionEntity.serverId == null) {
                   syncManager.syncCreate(
@@ -173,7 +174,7 @@ class TransactionRepositoryImpl @Inject constructor(
         if (localResult is DomainResult.Failure) return localResult
 
         val transactionEntity = (localResult as DomainResult.Success).data
-
+// todo
         /* appCoroutineContext.launch {
              syncManager.syncDelete(transactionEntity)
          }*/

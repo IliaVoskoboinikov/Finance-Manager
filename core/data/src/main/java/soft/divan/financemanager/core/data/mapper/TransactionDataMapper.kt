@@ -7,7 +7,7 @@ import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.TransactionType
-
+// todo
 /*fun TransactionDto.toEntity(
     localId: String,
     accountLocalId: String,
@@ -71,7 +71,7 @@ fun Transaction.toEntity(
     updatedAt = TimeMapper.toApi(updatedAt),
     syncStatus = syncStatus
 )
-
+// todo
 /*
 fun TransactionResponseCreateDto.toEntity(
     localId: String,
