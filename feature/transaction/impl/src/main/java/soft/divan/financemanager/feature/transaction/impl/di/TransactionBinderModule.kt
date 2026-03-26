@@ -5,16 +5,16 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.CreateTransactionUseCase
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteTransactionUseCase
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.CreateTransactionAndUpdateAccountUseCase
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteTransactionAndUpdateAccountUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetTransactionUseCase
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.UpdateTransactionUseCase
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.impl.CreateTransactionUseCaseImpl
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.impl.DeleteTransactionUseCaseImpl
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.UpdateTransactionAndUpdateAccountUseCase
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.impl.CreateTransactionAndUpdateAccountUseCaseImpl
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.impl.DeleteTransactionAndUpdateAccountUseCaseImpl
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.impl.GetCategoriesByTypeUseCaseImpl
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.impl.GetTransactionUseCaseImpl
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.impl.UpdateTransactionUseCaseImpl
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.impl.UpdateTransactionAndUpdateAccountUseCaseImpl
 import soft.divan.financemanager.feature.transaction.impl.navigation.TransactionFeatureImpl
 
 @Module
@@ -25,7 +25,9 @@ interface TransactionBinderModule {
     fun bindTransactionRouter(impl: TransactionFeatureImpl): TransactionFeatureApi
 
     @Binds
-    fun bindCreateTransactionUseCase(impl: CreateTransactionUseCaseImpl): CreateTransactionUseCase
+    fun bindCreateTransactionUseCase(
+        impl: CreateTransactionAndUpdateAccountUseCaseImpl
+    ): CreateTransactionAndUpdateAccountUseCase
 
     @Binds
     fun bindGetTransactionUseCase(impl: GetTransactionUseCaseImpl): GetTransactionUseCase
@@ -36,8 +38,12 @@ interface TransactionBinderModule {
     ): GetCategoriesByTypeUseCase
 
     @Binds
-    fun bindDeleteTransactionUseCase(impl: DeleteTransactionUseCaseImpl): DeleteTransactionUseCase
+    fun bindDeleteTransactionUseCase(
+        impl: DeleteTransactionAndUpdateAccountUseCaseImpl
+    ): DeleteTransactionAndUpdateAccountUseCase
 
     @Binds
-    fun bindUpdateTransactionUseCase(impl: UpdateTransactionUseCaseImpl): UpdateTransactionUseCase
+    fun bindUpdateTransactionUseCase(
+        impl: UpdateTransactionAndUpdateAccountUseCaseImpl
+    ): UpdateTransactionAndUpdateAccountUseCase
 }
