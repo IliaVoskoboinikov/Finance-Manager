@@ -26,11 +26,11 @@ import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
 import soft.divan.financemanager.feature.sounds.api.domain.SoundPlayer
 import soft.divan.financemanager.feature.sounds.api.domain.SoundType
 import soft.divan.financemanager.feature.transaction.impl.R
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.CreateTransactionUseCase
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteTransactionUseCase
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.CreateTransactionAndUpdateAccountUseCase
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteTransactionAndUpdateAccountUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetTransactionUseCase
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.UpdateTransactionUseCase
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.UpdateTransactionAndUpdateAccountUseCase
 import soft.divan.financemanager.feature.transaction.impl.navigation.IS_INCOME_KEY
 import soft.divan.financemanager.feature.transaction.impl.navigation.TRANSACTION_ID_KEY
 import soft.divan.financemanager.feature.transaction.impl.precenter.mapper.toDomain
@@ -49,12 +49,12 @@ import javax.inject.Inject
 @HiltViewModel
 @Suppress("LongParameterList", "TooManyFunctions")
 class TransactionViewModel @Inject constructor(
-    private val createTransactionUseCase: CreateTransactionUseCase,
+    private val createTransactionAndUpdateAccountUseCase: CreateTransactionAndUpdateAccountUseCase,
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getTransactionUseCase: GetTransactionUseCase,
     private val getCategoriesUseCase: GetCategoriesByTypeUseCase,
-    private val updateTransactionUseCase: UpdateTransactionUseCase,
-    private val deleteTransactionUseCase: DeleteTransactionUseCase,
+    private val updateTransactionAndUpdateAccountUseCase: UpdateTransactionAndUpdateAccountUseCase,
+    private val deleteTransactionAndUpdateAccountUseCase: DeleteTransactionAndUpdateAccountUseCase,
     private val hapticsManager: HapticsManager,
     private val soundPlayer: SoundPlayer,
     savedStateHandle: SavedStateHandle
@@ -168,8 +168,8 @@ class TransactionViewModel @Inject constructor(
             ).toDomain()
 
             val result = when (mode) {
-                is TransactionMode.Create -> createTransactionUseCase(updated)
-                is TransactionMode.Edit -> updateTransactionUseCase(updated)
+                is TransactionMode.Create -> createTransactionAndUpdateAccountUseCase(updated)
+                is TransactionMode.Edit -> updateTransactionAndUpdateAccountUseCase(updated)
             }
 
             result.fold(
@@ -235,7 +235,7 @@ class TransactionViewModel @Inject constructor(
             val transaction = transactionUi ?: return@launch
             if (mode !is TransactionMode.Edit) return@launch
 
-            deleteTransactionUseCase(transaction.toDomain()).fold(
+            deleteTransactionAndUpdateAccountUseCase(transaction.toDomain()).fold(
                 onSuccess = {
                     hapticsManager.perform(HapticType.SUCCESS)
                     _eventFlow.emit(TransactionEvent.TransactionDeleted)

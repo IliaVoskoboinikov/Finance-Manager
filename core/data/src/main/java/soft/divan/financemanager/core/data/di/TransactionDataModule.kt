@@ -4,6 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import soft.divan.financemanager.core.data.RoomTransactionRunner
+import soft.divan.financemanager.core.data.TransactionRunner
 import soft.divan.financemanager.core.data.repository.TransactionRepositoryImpl
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
@@ -33,4 +35,10 @@ interface TransactionDataModule {
     fun bindTransactionRepository(
         impl: TransactionRepositoryImpl
     ): TransactionRepository
+
+    @Binds
+    @Singleton
+    fun bindTransactionRunner(
+        impl: RoomTransactionRunner
+    ): TransactionRunner
 }
