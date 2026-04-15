@@ -1,5 +1,7 @@
 package soft.divan.financemanager.presenter
 
+import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,6 +16,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import dagger.hilt.android.AndroidEntryPoint
 import soft.divan.financemanager.feature.category.api.CategoryFeatureApi
 import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
@@ -76,6 +81,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalPermissionsApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -98,6 +104,18 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(shouldLock.value) {
                 if (shouldLock.value) {
                     isPinVerified = false
+                }
+            }
+
+            // Request notification permission for Android 13+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                val notificationPermissionState = rememberPermissionState(
+                    Manifest.permission.POST_NOTIFICATIONS
+                )
+                LaunchedEffect(Unit) {
+                    if (!notificationPermissionState.status.isGranted) {
+                        notificationPermissionState.launchPermissionRequest()
+                    }
                 }
             }
 

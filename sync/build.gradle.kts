@@ -6,11 +6,8 @@ plugins {
 dependencies {
     implementation(projects.core.data)
     implementation(projects.core.common)
-
-    ksp(libs.hilt.ext.compiler)
+    implementation(projects.core.workmanager)
     implementation(libs.androidx.tracing.ktx)
-    implementation(libs.hilt.ext.work)
-    implementation(libs.androidx.work.ktx)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.core)
 }

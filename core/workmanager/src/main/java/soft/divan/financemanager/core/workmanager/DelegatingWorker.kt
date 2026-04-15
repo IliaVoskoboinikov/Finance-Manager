@@ -1,7 +1,6 @@
-package soft.divan.financemanager.sync.worker
+package soft.divan.financemanager.core.workmanager
 
 import android.content.Context
-import android.util.Log
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.CoroutineWorker
 import androidx.work.Data
@@ -22,13 +21,13 @@ interface HiltWorkerFactoryEntryPoint {
     fun hiltWorkerFactory(): HiltWorkerFactory
 }
 
-const val WORKER_CLASS_NAME = "RouterWorkerDelegateClassName"
+private const val WORKER_CLASS_NAME = "RouterWorkerDelegateClassName"
 
 /**
  * Adds metadata to a WorkRequest to identify what [CoroutineWorker] the [DelegatingWorker] should
  * delegate to
  */
-internal fun KClass<out CoroutineWorker>.delegatedData() =
+fun KClass<out CoroutineWorker>.delegatedData() =
     Data.Builder()
         .putString(WORKER_CLASS_NAME, java.name)
         .build()
@@ -47,17 +46,13 @@ class DelegatingWorker(
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
 
-    init {
-        Log.d("DelegatingWorker", "created, class=$WORKER_CLASS_NAME")
-    }
-
     private val workerClassName = workerParams.inputData.getString(WORKER_CLASS_NAME) ?: ""
 
     private val delegateWorker =
         EntryPointAccessors.fromApplication<HiltWorkerFactoryEntryPoint>(appContext)
             .hiltWorkerFactory()
             .createWorker(appContext, workerClassName, workerParams) as? CoroutineWorker
-            ?: throw IllegalArgumentException("Unable to find appropriate worker")
+            ?: throw IllegalArgumentException("Unable to find appropriate worker for $workerClassName")
 
     override suspend fun getForegroundInfo(): ForegroundInfo = delegateWorker.getForegroundInfo()
 

@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.soft.divan.android.app)
+    // alias(libs.plugins.gms)
 }
 
 android {
@@ -18,6 +19,8 @@ dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.data)
     implementation(projects.core.loggingError)
+    implementation(projects.core.notifications)
+    implementation(projects.core.workmanager)
 
     implementation(projects.feature.category.api)
     implementation(projects.feature.category.impl)
@@ -65,6 +68,7 @@ dependencies {
     implementation(projects.feature.synchronization.impl)
 
     implementation(libs.androidx.lifecycle.process)
+    implementation(libs.accompanist.permissions)
 }
 
 tasks.register("printVersionName") {

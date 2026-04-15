@@ -31,6 +31,7 @@ workManager = "2.10.0"
 composeBom = "2024.04.01"
 materialIconsExtended = "1.7.8"
 navigationCompose = "2.8.9"
+accompanistPermissions = "0.34.0"
 
 # UI Libraries
 lottieCompose = "6.3.0"
@@ -54,6 +55,7 @@ lint = "32.0.0"
 #Firebase
 gmsPlugin = "4.4.4"
 firebaseBom = "33.7.0"
+firebaseMessaging = "24.1.0"
 firebaseCrashlyticsPlugin = "3.0.6"
 
 # TEST
@@ -61,6 +63,8 @@ junit = "4.13.2"
 kotlinxCoroutinesTest = "1.10.2"
 assertjCore = "3.27.7"
 mockk = "1.14.9"
+robolectric = "4.14.1"
+androidxTestCore = "1.6.1"
 
 ##############################################
 #                  Libraries
@@ -97,6 +101,7 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 
 # UI Libraries
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
@@ -131,6 +136,7 @@ ruler-plugin = { group = "com.spotify.ruler", name = "ruler-gradle-plugin", vers
 
 #Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessaging" }
 crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 
 # TEST
@@ -138,6 +144,8 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertjCore" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 
 ##############################################
 #                  Plugins
@@ -181,5 +189,3 @@ soft-divan-build-time-tracker = { id = "soft.divan.build.time.tracker" }
 soft-divan-firebase = { id = "soft.divan.firebase" }
 soft-divan-check-conventions = { id = "soft.divan.check.conventions" }
 soft-divan-ruler = { id = "soft.divan.ruler" }
-
-
