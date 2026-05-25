@@ -15,7 +15,7 @@ fun Project.getSecret(name: String): String {
         properties.getProperty(name)?.let { return it }
     }
 
-    error("Secret '$name' is not defined")
+    return "" // Сделаем пустую строку по умолчанию, так как теперь токен будет в SessionDataStore
 }
 
 val apiToken: String = project.getSecret("API_TOKEN")
@@ -32,16 +32,17 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
+            buildConfigField("String", "HOST", "\"http://yourflow.pro/api/\"")
         }
 
         debug {
-            buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
+            buildConfigField("String", "HOST", "\"http://192.168.0.82:8080/api/\"")
         }
     }
 }
 
 dependencies {
+    implementation(projects.core.auth)
     implementation(libs.retrofit)
     implementation(libs.logging.interceptor)
     implementation(libs.converter.gson)

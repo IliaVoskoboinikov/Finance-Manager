@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.core.domain)
     implementation(projects.core.data)
     implementation(projects.core.loggingError)
+    implementation(projects.core.auth)
 
     implementation(projects.feature.category.api)
     implementation(projects.feature.category.impl)
@@ -63,6 +64,9 @@ dependencies {
 
     implementation(projects.feature.synchronization.api)
     implementation(projects.feature.synchronization.impl)
+
+    implementation(projects.feature.auth.api)
+    implementation(projects.feature.auth.impl)
 
     implementation(libs.androidx.lifecycle.process)
 }

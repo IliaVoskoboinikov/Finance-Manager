@@ -14,30 +14,30 @@ import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
 
 interface TransactionApiService {
 
-    @POST("v1/transactions")
+    @POST("v1/transaction")
     suspend fun createTransaction(
         @Body request: TransactionRequestDto
     ): Response<TransactionResponseCreateDto>
 
-    @GET("v1/transactions/account/{accountId}/period")
+    @GET("v1/transactions/{accountId}/period")
     suspend fun getTransactionsByAccountAndPeriod(
         @Path("accountId") accountId: Int,
         @Query("startDate") startDate: String? = null,
         @Query("endDate") endDate: String? = null
     ): Response<List<TransactionDto>>
 
-    @GET("v1/transactions/{id}")
+    @GET("v1/transaction/{id}")
     suspend fun getTransaction(
         @Path("id") id: Int
     ): Response<TransactionDto>
 
-    @PUT("v1/transactions/{id}")
+    @PUT("v1/transaction/{id}")
     suspend fun updateTransaction(
         @Path("id") id: Int,
         @Body request: TransactionRequestDto
     ): Response<TransactionDto>
 
-    @DELETE("v1/transactions/{id}")
+    @DELETE("v1/transaction/{id}")
     suspend fun deleteTransaction(
         @Path("id") id: Int
     ): Response<Unit>

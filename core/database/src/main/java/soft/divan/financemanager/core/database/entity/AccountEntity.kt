@@ -1,7 +1,6 @@
 package soft.divan.financemanager.core.database.entity
 
 import androidx.room.Entity
-import androidx.room.Index
 import androidx.room.PrimaryKey
 import soft.divan.financemanager.core.database.model.SyncStatus
 

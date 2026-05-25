@@ -38,8 +38,8 @@ class AccountSyncManagerRaceTest {
     @Test
     fun `pullServerData should not create duplicate with mutex`() = runTest {
         val dto = AccountDto(
-            id = 1,
-            userId = 1,
+            id = "1",
+            userId = "443",
             name = "Test",
             balance = "100",
             currency = "USD",
