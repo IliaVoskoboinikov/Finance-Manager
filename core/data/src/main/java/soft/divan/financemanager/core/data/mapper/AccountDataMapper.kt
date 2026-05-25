@@ -9,7 +9,7 @@ import soft.divan.financemanager.core.database.model.SyncStatus
 
 fun AccountDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity = AccountEntity(
     localId = localId,
-    serverId = id,
+    serverId = 2,//id, todo to String
     name = name,
     balance = balance,
     currency = currency,
@@ -40,14 +40,16 @@ fun AccountEntity.toDomain(): Account = Account(
 
 fun Account.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
     name = name,
-    balance = balance.toString(),
-    currency = currency
+    balance = balance.toDouble(),
+    //todo
+    currency = "4e94f6f5-abe9-40d4-9e21-63f7bf487c0b"
 )
 
 fun AccountEntity.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
     name = name,
-    balance = balance,
-    currency = currency
+    balance = balance.toDouble(),
+    //todo зашить валюту
+    currency = "4e94f6f5-abe9-40d4-9e21-63f7bf487c0b"
 )
 
 fun AccountWithStatsDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity = AccountEntity(

@@ -7,5 +7,6 @@ data class SettingsActions(
     val onNavigateToHaptic: () -> Unit,
     val onNavigateToSounds: () -> Unit,
     val onNavigateToLanguages: () -> Unit,
-    val onNavigateToSynchronization: () -> Unit
+    val onNavigateToSynchronization: () -> Unit,
+    val onNavigateToProfile: () -> Unit
 )

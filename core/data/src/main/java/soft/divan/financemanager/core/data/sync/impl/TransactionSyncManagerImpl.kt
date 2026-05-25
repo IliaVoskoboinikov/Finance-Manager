@@ -1,15 +1,14 @@
 package soft.divan.financemanager.core.data.sync.impl
 
 import kotlinx.coroutines.flow.first
+import soft.divan.financemanager.core.auth.data.source.SessionLocalDataSource
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
 import soft.divan.financemanager.core.data.mapper.toDto
-import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
-import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.TransactionEntity
@@ -17,6 +16,7 @@ import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
+import soft.divan.financemanager.core.auth.domain.model.AuthStatus
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject

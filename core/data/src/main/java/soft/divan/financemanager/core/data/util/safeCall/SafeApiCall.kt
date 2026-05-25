@@ -7,6 +7,7 @@ import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
+import soft.divan.financemanager.core.auth.data.interceptor.GuestModeException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -56,6 +57,11 @@ suspend fun <T : Any> safeApiCall(
                 }
             },
             onFailure = { error ->
+                // Если это специальное исключение гостевого режима - не логируем его как ошибку
+                if (error is GuestModeException) {
+                    return@fold DomainResult.Failure(DataError.Unauthorized.toDomainError())
+                }
+
                 errorLogger.recordError(error.message)
                 when (error) {
                     is UnknownHostException,

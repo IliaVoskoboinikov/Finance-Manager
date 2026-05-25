@@ -13,17 +13,15 @@ import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
 import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
-import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbFlow
+import soft.divan.financemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
-import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
-import soft.divan.financemanager.core.database.entity.TransactionEntity
-import soft.divan.financemanager.core.database.model.SyncStatus
 import java.time.Instant
 import javax.inject.Inject
 
@@ -43,10 +41,10 @@ class TransactionRepositoryImpl @Inject constructor(
             accountServerId = accountLocalDataSource.getByLocalId(transaction.accountLocalId)?.serverId,
             syncStatus = SyncStatus.PENDING_CREATE
         )
-// todo
-        /* appCoroutineContext.launch {
-             syncManager.syncCreate(transactionEntity)
-         }*/
+
+        appCoroutineContext.launch {
+            syncManager.syncCreate(transactionEntity)
+        }
 
         return safeDbCall(errorLogger) {
             localDataSource.create(transactionEntity)
@@ -61,14 +59,14 @@ class TransactionRepositoryImpl @Inject constructor(
     ): Flow<DomainResult<List<Transaction>>> {
         val startDate = ApiDateMapper.toApiDate(startDate)
         val endDate = ApiDateMapper.toApiDate(endDate)
-        // todo
-        /*appCoroutineContext.launch {
+
+        appCoroutineContext.launch {
             syncManager.pullFromRemoteForAccount(
                 accountLocalId = accountId,
                 startDate = startDate,
                 endDate = endDate
             )
-        }*/
+        }
 
         return safeDbFlow(errorLogger) {
             localDataSource.getByAccountAndPeriod(
@@ -128,26 +126,25 @@ class TransactionRepositoryImpl @Inject constructor(
         if (resultDb is DomainResult.Failure) return resultDb
 
         val transactionEntity = (resultDb as DomainResult.Success).data
-// todo
-        /*  appCoroutineContext.launch {
-              if (transactionEntity.serverId == null) {
-                  syncManager.syncCreate(
-                      transaction.toEntity(
-                          serverId = null,
-                          accountServerId = transactionEntity.accountServerId,
-                          syncStatus = SyncStatus.PENDING_CREATE
-                      )
-                  )
-              } else {
-                  syncManager.syncUpdate(
-                      transaction.toEntity(
-                          serverId = transactionEntity.serverId,
-                          accountServerId = transactionEntity.accountServerId,
-                          syncStatus = SyncStatus.PENDING_UPDATE
-                      )
-                  )
-              }
-          }*/
+        appCoroutineContext.launch {
+            if (transactionEntity.serverId == null) {
+                syncManager.syncCreate(
+                    transaction.toEntity(
+                        serverId = null,
+                        accountServerId = transactionEntity.accountServerId,
+                        syncStatus = SyncStatus.PENDING_CREATE
+                    )
+                )
+            } else {
+                syncManager.syncUpdate(
+                    transaction.toEntity(
+                        serverId = transactionEntity.serverId,
+                        accountServerId = transactionEntity.accountServerId,
+                        syncStatus = SyncStatus.PENDING_UPDATE
+                    )
+                )
+            }
+        }
 
         return safeDbCall(errorLogger) {
             localDataSource.update(
@@ -174,10 +171,10 @@ class TransactionRepositoryImpl @Inject constructor(
         if (localResult is DomainResult.Failure) return localResult
 
         val transactionEntity = (localResult as DomainResult.Success).data
-// todo
-        /* appCoroutineContext.launch {
-             syncManager.syncDelete(transactionEntity)
-         }*/
+
+        appCoroutineContext.launch {
+            syncManager.syncDelete(transactionEntity)
+        }
 
         return safeDbCall(errorLogger) {
             localDataSource.update(

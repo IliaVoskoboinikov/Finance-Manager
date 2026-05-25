@@ -16,14 +16,14 @@ import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbFlow
+import soft.divan.financemanager.core.database.entity.AccountEntity
+import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
-import soft.divan.financemanager.core.database.entity.AccountEntity
-import soft.divan.financemanager.core.database.model.SyncStatus
 import javax.inject.Inject
 
 class AccountRepositoryImpl @Inject constructor(
@@ -37,10 +37,9 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Создаем аккаунт в БД и сразу запускаем синхронизацию */
     override suspend fun create(account: Account): DomainResult<Unit> {
-        // todo
-      /*  appCoroutineContext.launch {
+        appCoroutineContext.launch {
             syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
-        }*/
+        }
         return safeDbCall(errorLogger) {
             localDataSource.create(
                 account.toEntity(serverId = null, syncStatus = SyncStatus.PENDING_CREATE)
@@ -50,10 +49,9 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию */
     override fun getAll(): Flow<DomainResult<List<Account>>> {
-        // todo
-      /*  appCoroutineContext.launch {
+        appCoroutineContext.launch {
             syncManager.pullServerData()
-        }*/
+        }
         return safeDbFlow(errorLogger) {
             localDataSource.getAll().map { list ->
                 list.filter { it.syncStatus != SyncStatus.PENDING_DELETE }.map { it.toDomain() }
@@ -74,8 +72,7 @@ class AccountRepositoryImpl @Inject constructor(
 
         val accountEntity = (localResult as DomainResult.Success).data
 
-        // todo
-        /*appCoroutineContext.launch {
+        appCoroutineContext.launch {
             val serverId = accountEntity.serverId
             if (serverId != null) {
                 safeApiCall(errorLogger) {
@@ -94,7 +91,7 @@ class AccountRepositoryImpl @Inject constructor(
                 // Аккаунт не синхронизирован с сервером то создаем на сервере
                 syncManager.syncCreate(accountDto = accountEntity.toDto(), localId = id)
             }
-        }*/
+        }
 
         return DomainResult.Success(accountEntity.toDomain())
     }
@@ -107,8 +104,8 @@ class AccountRepositoryImpl @Inject constructor(
         if (resultDb is DomainResult.Failure) return resultDb
 
         val accountEntity = (resultDb as DomainResult.Success).data
-// todo
-       /* appCoroutineContext.launch {
+
+        appCoroutineContext.launch {
             if (accountEntity.serverId == null) {
                 // Если аккаунт не синхронизирован с сервером (нет serverId), то создать на сервере и
                 syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
@@ -121,7 +118,7 @@ class AccountRepositoryImpl @Inject constructor(
                 )
             }
         }
-*/
+
         return safeDbCall(errorLogger) {
             localDataSource.update(
                 accountEntity.copy(
@@ -160,10 +157,10 @@ class AccountRepositoryImpl @Inject constructor(
                 DataError.LocalDb(Throwable("Account has transactions")).toDomainError()
             )
         }
-// todo
-       /* appCoroutineContext.launch {
+
+        appCoroutineContext.launch {
             syncManager.syncDelete(accountEntity)
-        }*/
+        }
 
         return safeDbCall(errorLogger) {
             localDataSource.update(
