@@ -50,4 +50,7 @@ interface TransactionDao {
 
     @Query("DELETE FROM transactions WHERE localId = :localId")
     suspend fun delete(localId: String)
+
+    @Query("DELETE FROM transactions")
+    suspend fun deleteAll()
 }

@@ -10,12 +10,10 @@ import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
-import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
-import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import javax.inject.Inject
@@ -115,7 +113,7 @@ class AccountSyncManagerImpl @Inject constructor(
         safeApiCall(errorLogger) {
             remoteDataSource.getAll()
         }.onSuccess { accountDtos ->
-
+/* todo serverIds to string
             val serverIds = accountDtos.map { it.id }
 
             val localAccounts = safeDbCall(errorLogger) {
@@ -144,7 +142,7 @@ class AccountSyncManagerImpl @Inject constructor(
                         localId = localAccount.localId
                     )
                 }
-            }
+            }*/
         }
     }
 
