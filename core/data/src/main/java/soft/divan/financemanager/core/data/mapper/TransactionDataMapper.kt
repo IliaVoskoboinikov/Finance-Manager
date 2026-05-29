@@ -2,38 +2,49 @@ package soft.divan.financemanager.core.data.mapper
 
 import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.dto.TransactionRequestDto
-import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
+import soft.divan.financemanager.core.data.dto.UpdateTransactionRequestDto
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.TransactionType
-// todo
-/*fun TransactionDto.toEntity(
+
+fun TransactionDto.toEntity(
     localId: String,
     accountLocalId: String,
+    currencyCode: String,
+    type: TransactionType,
     syncStatus: SyncStatus
 ): TransactionEntity = TransactionEntity(
     localId = localId,
     serverId = id,
     accountLocalId = accountLocalId,
-    accountServerId = account.id,
-    categoryId = category.id,
-    currencyCode = account.currency,
-    amount = amount,
-    transactionDate = transactionDate,
-    comment = comment,
+    accountServerId = accountId,
+    categoryId = categoryId,
+    currencyCode = currencyCode,
+    amount = amount.toString(),
+    transactionDate = dateTime,
+    comment = comment.orEmpty(),
     createdAt = createdAt,
     updatedAt = updatedAt,
     syncStatus = syncStatus,
-    type = TODO(),
-    targetAccountLocalId = TODO()
-)*/
+    type = type.name,
+    targetAccountLocalId = null
+)
 
-fun TransactionEntity.toDto(accountServerId: String): TransactionRequestDto = TransactionRequestDto(
+fun TransactionEntity.toUpdateDto(accountServerId: String): UpdateTransactionRequestDto = UpdateTransactionRequestDto(
     accountId = accountServerId,
     categoryId = categoryId,
-    amount = amount,
-    transactionDate = transactionDate,
+    amount = amount.toDouble(),
+    dateTime = transactionDate,
+    comment = comment
+)
+
+fun TransactionEntity.toDto(accountServerId: String): TransactionRequestDto = TransactionRequestDto(
+    id = serverId,
+    accountId = accountServerId,
+    categoryId = categoryId,
+    amount = amount.toDouble(),
+    dateTime = transactionDate,
     comment = comment
 )
 
@@ -71,25 +82,3 @@ fun Transaction.toEntity(
     updatedAt = TimeMapper.toApi(updatedAt),
     syncStatus = syncStatus
 )
-// todo
-/*
-fun TransactionResponseCreateDto.toEntity(
-    localId: String,
-    accountLocalId: String,
-    currencyCode: String,
-    syncStatus: SyncStatus
-): TransactionEntity = TransactionEntity(
-    localId = localId,
-    serverId = id,
-    accountLocalId = accountLocalId,
-    accountServerId = accountId,
-    categoryId = categoryId,
-    currencyCode = currencyCode,
-    amount = amount,
-    transactionDate = transactionDate,
-    comment = comment.orEmpty(),
-    createdAt = createdAt,
-    updatedAt = updatedAt,
-    syncStatus = syncStatus
-)
-*/

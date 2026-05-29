@@ -6,9 +6,9 @@ import retrofit2.http.Path
 import soft.divan.financemanager.core.data.dto.CategoryDto
 
 interface CategoryApiService {
-    @GET("v1/category")
+    @GET("api/v1/category")
     suspend fun getAll(): Response<List<CategoryDto>>
 
-    @GET("v1/category/type/{isIncome}")
+    @GET("api/v1/category/type/{isIncome}")
     suspend fun getByType(@Path("isIncome") isIncome: Boolean): Response<List<CategoryDto>>
 }

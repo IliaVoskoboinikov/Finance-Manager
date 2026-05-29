@@ -3,24 +3,27 @@ package soft.divan.financemanager.core.data.source.impl
 import retrofit2.Response
 import soft.divan.financemanager.core.data.api.AccountApiService
 import soft.divan.financemanager.core.data.dto.AccountDto
-import soft.divan.financemanager.core.data.dto.AccountWithStatsDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
+import soft.divan.financemanager.core.data.dto.UpdateAccountRequestDto
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import javax.inject.Inject
 
 class AccountRemoteDataSourceImpl @Inject constructor(
-    private val accountApiService: AccountApiService
+    private val apiService: AccountApiService
 ) : AccountRemoteDataSource {
 
-    override suspend fun create(createAccountRequestDto: CreateAccountRequestDto): Response<AccountDto> =
-        accountApiService.createAccount(createAccountRequestDto)
+    override suspend fun create(request: CreateAccountRequestDto): Response<AccountDto> =
+        apiService.createAccount(request)
 
-    override suspend fun getAll(): Response<List<AccountDto>> = accountApiService.getAccounts()
+    override suspend fun getAll(): Response<List<AccountDto>> =
+        apiService.getAccounts()
 
-    override suspend fun getById(id: String): Response<AccountWithStatsDto> = accountApiService.getById(id)
+    override suspend fun getById(id: String): Response<AccountDto> =
+        apiService.getById(id)
 
-    override suspend fun update(id: String, account: CreateAccountRequestDto): Response<AccountDto> =
-        accountApiService.updateAccount(id, account)
+    override suspend fun update(id: String, account: UpdateAccountRequestDto): Response<Unit> =
+        apiService.updateAccount(id, account)
 
-    override suspend fun delete(id: String): Response<Unit> = accountApiService.delete(id)
+    override suspend fun delete(id: String): Response<Unit> =
+        apiService.delete(id)
 }

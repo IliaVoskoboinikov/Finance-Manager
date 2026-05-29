@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.core.database.entity.AccountEntity
 
 interface AccountLocalDataSource {
-    suspend fun insert(account: AccountEntity)
+    suspend fun create(account: AccountEntity)
     fun getAll(): Flow<List<AccountEntity>>
     suspend fun getByLocalId(id: String): AccountEntity?
     suspend fun getByServerId(id: String): AccountEntity?

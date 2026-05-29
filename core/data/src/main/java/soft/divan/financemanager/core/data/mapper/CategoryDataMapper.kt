@@ -6,6 +6,8 @@ import soft.divan.financemanager.core.database.entity.CategoryEntity
 
 fun CategoryDto.toEntity(): CategoryEntity = CategoryEntity(
     id = id,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
     name = name,
     emoji = emoji,
     isIncome = isIncome
@@ -13,6 +15,8 @@ fun CategoryDto.toEntity(): CategoryEntity = CategoryEntity(
 
 fun CategoryEntity.toDomain(): Category = Category(
     id = id,
+    createdAt = TimeMapper.fromApi(createdAt),
+    updatedAt = TimeMapper.fromApi(updatedAt),
     name = name,
     emoji = emoji,
     isIncome = isIncome
