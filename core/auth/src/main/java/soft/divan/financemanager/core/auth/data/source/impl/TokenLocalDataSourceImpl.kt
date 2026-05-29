@@ -12,7 +12,9 @@ import javax.inject.Inject
 
 private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
 private val REFRESH_TOKEN_KEY = stringPreferencesKey("refresh_token")
-private const val AUTH_ALIAS_KEY = "auth_token_key"
+
+private const val ACCESS_TOKEN_ALIAS = "access_token_alias"
+private const val REFRESH_TOKEN_ALIAS = "refresh_token_alias"
 
 class TokenLocalDataSourceImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>,
@@ -24,7 +26,7 @@ class TokenLocalDataSourceImpl @Inject constructor(
             .map { preferences ->
                 preferences[ACCESS_TOKEN_KEY]?.let { encrypted ->
                     try {
-                        cryptoManager.decrypt(encrypted, AUTH_ALIAS_KEY)
+                        cryptoManager.decrypt(encrypted, ACCESS_TOKEN_ALIAS)
                     } catch (_: Exception) {
                         null
                     }
@@ -35,7 +37,7 @@ class TokenLocalDataSourceImpl @Inject constructor(
     override suspend fun updateAccessToken(token: String?) {
         dataStore.edit { preferences ->
             if (token != null) {
-                val encrypted = cryptoManager.encrypt(token, AUTH_ALIAS_KEY)
+                val encrypted = cryptoManager.encrypt(token, ACCESS_TOKEN_ALIAS)
                 preferences[ACCESS_TOKEN_KEY] = encrypted
             } else {
                 preferences.remove(ACCESS_TOKEN_KEY)
@@ -48,7 +50,7 @@ class TokenLocalDataSourceImpl @Inject constructor(
             .map { preferences ->
                 preferences[REFRESH_TOKEN_KEY]?.let { encrypted ->
                     try {
-                        cryptoManager.decrypt(encrypted, AUTH_ALIAS_KEY)
+                        cryptoManager.decrypt(encrypted, REFRESH_TOKEN_ALIAS)
                     } catch (_: Exception) {
                         null
                     }
@@ -59,7 +61,7 @@ class TokenLocalDataSourceImpl @Inject constructor(
     override suspend fun updateRefreshToken(token: String?) {
         dataStore.edit { preferences ->
             if (token != null) {
-                val encrypted = cryptoManager.encrypt(token, AUTH_ALIAS_KEY)
+                val encrypted = cryptoManager.encrypt(token, REFRESH_TOKEN_ALIAS)
                 preferences[REFRESH_TOKEN_KEY] = encrypted
             } else {
                 preferences.remove(REFRESH_TOKEN_KEY)
