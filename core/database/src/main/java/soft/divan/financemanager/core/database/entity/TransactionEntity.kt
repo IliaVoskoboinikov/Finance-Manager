@@ -14,7 +14,7 @@ data class TransactionEntity(
     val targetAccountLocalId: String?,
     val accountServerId: String?,
     val categoryId: String,
-    val currencyCode: String,
+    val currencyId: String,
     val amount: String,
     val transactionDate: String,
     val comment: String,

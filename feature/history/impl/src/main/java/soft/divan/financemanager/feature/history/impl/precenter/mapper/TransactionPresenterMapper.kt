@@ -10,8 +10,8 @@ fun Transaction.toUi(category: Category): UiTransaction {
     return UiTransaction(
         id = id,
         category = category.toUi(),
-        amountFormatted = amount.stripTrailingZeros().toPlainString() + " " + CurrencySymbol.fromCode(
-            currencyCode
+        amountFormatted = amount.stripTrailingZeros().toPlainString() + " " + CurrencySymbol.fromId(
+            currencyId
         ),
         transactionDateTime = UiDateFormatter.formatDateTime(transactionDate),
         comment = comment.toString()
