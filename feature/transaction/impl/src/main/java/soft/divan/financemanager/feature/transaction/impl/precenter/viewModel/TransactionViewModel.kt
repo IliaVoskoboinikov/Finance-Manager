@@ -130,7 +130,7 @@ class TransactionViewModel @Inject constructor(
             time = UiDateFormatter.formatTime(LocalTime.now()),
             createdAt = UiDateFormatter.formatDateTime(now),
             updatedAt = UiDateFormatter.formatDateTime(now),
-            currencyCode = account.currencyId,
+            currencyId = account.currencyId,
             comment = "",
             mode = TransactionMode.Create,
             targetAccountLocalId = null,
@@ -225,7 +225,7 @@ class TransactionViewModel @Inject constructor(
     fun updateAccount(account: AccountUi) {
         transactionUi = transactionUi?.copy(
             accountId = account.id,
-            currencyCode = account.currencyId
+            currencyId = account.currencyId
         )
         publishSuccess()
     }

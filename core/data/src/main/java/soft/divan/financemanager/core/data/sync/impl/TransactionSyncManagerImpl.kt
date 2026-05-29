@@ -103,7 +103,7 @@ class TransactionSyncManagerImpl @Inject constructor(
                     transactionDto.toEntity(
                         localId = transactionEntity.localId,
                         accountLocalId = transactionEntity.accountLocalId,
-                        currencyCode = transactionEntity.currencyCode,
+                        currencyId = transactionEntity.currencyId,
                         type = TransactionType.valueOf(transactionEntity.type),
                         syncStatus = SyncStatus.SYNCED
                     )
@@ -234,7 +234,7 @@ class TransactionSyncManagerImpl @Inject constructor(
                 val entity = transactionDto.toEntity(
                     localId = localTransaction?.localId ?: generateUUID(),
                     accountLocalId = accountLocalId,
-                    currencyCode = account.currencyId,
+                    currencyId = account.currencyId,
                     type = type,
                     syncStatus = SyncStatus.SYNCED
                 )

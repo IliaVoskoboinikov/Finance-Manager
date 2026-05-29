@@ -21,13 +21,13 @@ class CurrencyLocalDataSourceImpl @Inject constructor(
 
     override fun getSelectedCurrency(): Flow<CurrencySymbol> {
         return dataStore.data.map { prefs ->
-            prefs[key]?.toEnumOrNull<CurrencySymbol>() ?: CurrencySymbol.RUB
+            prefs[key]?.let { CurrencySymbol.getById(it) } ?: CurrencySymbol.RUB
         }
     }
 
     override suspend fun updateSelectedCurrency(currency: CurrencySymbol) {
         dataStore.edit { prefs ->
-            prefs[key] = currency.code
+            prefs[key] = currency.id
         }
     }
 
@@ -39,8 +39,4 @@ class CurrencyLocalDataSourceImpl @Inject constructor(
 
     override suspend fun getCurrencyById(id: String): CurrencyEntity? =
         currencyDao.getCurrencyById(id)
-
-    private inline fun <reified T : Enum<T>> String.toEnumOrNull(): T? {
-        return enumValues<T>().firstOrNull { it.name.equals(this, ignoreCase = true) }
-    }
 }

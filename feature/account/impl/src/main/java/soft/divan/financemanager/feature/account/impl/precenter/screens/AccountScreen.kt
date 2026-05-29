@@ -199,7 +199,7 @@ fun CreateAccountForm(
         FMDriver()
         Currency(
             isSheetOpen = isCurrencySheetOpen,
-            currency = CurrencySymbol.fromCode(uiState.account.currencyId),
+            currency = CurrencySymbol.fromId(uiState.account.currencyId),
             sheetState = currencySheetState,
             updateCurrency = actions.onUpdateCurrency
         )
@@ -389,7 +389,7 @@ fun CurrencySheetContent(
     Column(modifier = Modifier.fillMaxWidth()) {
         currencies.forEach { (icon, name, symbol) ->
             CurrencyItem(icon = icon, title = name, symbol.symbol, onClick = {
-                updateCurrency(symbol.code)
+                updateCurrency(symbol.id)
                 onCancel()
             })
             FMDriver()
