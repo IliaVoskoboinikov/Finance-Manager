@@ -10,5 +10,5 @@ data class CreateAccountRequestDto(
     @SerializedName("balance")
     val balance: Double,
     @SerializedName("currencyId")
-    val currency: String
+    val currencyId: String
 )

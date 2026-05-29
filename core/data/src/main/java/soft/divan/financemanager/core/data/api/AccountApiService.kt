@@ -23,17 +23,17 @@ interface AccountApiService {
 
     @GET("v1/account/{id}")
     suspend fun getById(
-        @Path("id") id: Int
+        @Path("id") id: String
     ): Response<AccountWithStatsDto>
 
     @PUT("v1/account/{id}")
     suspend fun updateAccount(
-        @Path("id") accountId: Int,
+        @Path("id") id: String,
         @Body request: CreateAccountRequestDto
     ): Response<AccountDto>
 
     @DELETE("v1/account/{id}")
     suspend fun delete(
-        @Path("id") id: Int
+        @Path("id") id: String
     ): Response<Unit>
 }

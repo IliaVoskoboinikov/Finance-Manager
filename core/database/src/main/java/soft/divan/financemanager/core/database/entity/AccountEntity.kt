@@ -10,10 +10,10 @@ import soft.divan.financemanager.core.database.model.SyncStatus
 data class AccountEntity(
     @PrimaryKey
     val localId: String,
-    val serverId: Int?,
+    val serverId: String?,
     val name: String,
     val balance: String,
-    val currency: String,
+    val currencyId: String,
     val createdAt: String,
     val updatedAt: String,
     val syncStatus: SyncStatus

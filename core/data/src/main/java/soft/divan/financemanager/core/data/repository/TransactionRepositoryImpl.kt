@@ -47,7 +47,7 @@ class TransactionRepositoryImpl @Inject constructor(
         }
 
         return safeDbCall(errorLogger) {
-            localDataSource.create(transactionEntity)
+            localDataSource.insert(transactionEntity)
         }
     }
 
@@ -57,22 +57,22 @@ class TransactionRepositoryImpl @Inject constructor(
         startDate: Instant,
         endDate: Instant
     ): Flow<DomainResult<List<Transaction>>> {
-        val startDate = ApiDateMapper.toApiDate(startDate)
-        val endDate = ApiDateMapper.toApiDate(endDate)
+        val startDateStr = ApiDateMapper.toApiDate(startDate)
+        val endDateStr = ApiDateMapper.toApiDate(endDate)
 
         appCoroutineContext.launch {
             syncManager.pullFromRemoteForAccount(
                 accountLocalId = accountId,
-                startDate = startDate,
-                endDate = endDate
+                startDate = startDateStr,
+                endDate = endDateStr
             )
         }
 
         return safeDbFlow(errorLogger) {
             localDataSource.getByAccountAndPeriod(
                 accountId = accountId,
-                startDate = startDate,
-                endDate = endDate
+                startDate = startDateStr,
+                endDate = endDateStr
             ).map { list ->
                 list.filter { it.syncStatus != SyncStatus.PENDING_DELETE }.map { it.toDomain() }
             }

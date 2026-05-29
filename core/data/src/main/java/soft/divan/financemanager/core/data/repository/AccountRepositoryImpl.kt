@@ -41,7 +41,7 @@ class AccountRepositoryImpl @Inject constructor(
             syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
         }
         return safeDbCall(errorLogger) {
-            localDataSource.create(
+            localDataSource.insert(
                 account.toEntity(serverId = null, syncStatus = SyncStatus.PENDING_CREATE)
             )
         }
@@ -124,7 +124,7 @@ class AccountRepositoryImpl @Inject constructor(
                 accountEntity.copy(
                     name = account.name,
                     balance = account.balance.toPlainString(),
-                    currency = account.currency,
+                    currencyId = account.currencyId,
                     createdAt = TimeMapper.toApi(account.createdAt),
                     updatedAt = TimeMapper.toApi(account.updatedAt),
                     syncStatus = if (accountEntity.serverId == null) {

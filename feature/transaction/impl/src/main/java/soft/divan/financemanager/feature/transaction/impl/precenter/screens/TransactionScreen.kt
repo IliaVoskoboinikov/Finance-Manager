@@ -459,7 +459,7 @@ private fun AccountSheetContent(
                         },
                     content = {
                         Text(
-                            text = account.name + " " + account.balance + " " + account.currency,
+                            text = account.name + " " + account.balance + " " + account.currencyId,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }

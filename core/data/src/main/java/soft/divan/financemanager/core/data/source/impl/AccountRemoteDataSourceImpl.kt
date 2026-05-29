@@ -17,11 +17,10 @@ class AccountRemoteDataSourceImpl @Inject constructor(
 
     override suspend fun getAll(): Response<List<AccountDto>> = accountApiService.getAccounts()
 
-    override suspend fun getById(id: Int): Response<AccountWithStatsDto> =
-        accountApiService.getById(id)
+    override suspend fun getById(id: String): Response<AccountWithStatsDto> = accountApiService.getById(id)
 
-    override suspend fun update(id: Int, account: CreateAccountRequestDto): Response<AccountDto> =
+    override suspend fun update(id: String, account: CreateAccountRequestDto): Response<AccountDto> =
         accountApiService.updateAccount(id, account)
 
-    override suspend fun delete(id: Int): Response<Unit> = accountApiService.delete(id)
+    override suspend fun delete(id: String): Response<Unit> = accountApiService.delete(id)
 }

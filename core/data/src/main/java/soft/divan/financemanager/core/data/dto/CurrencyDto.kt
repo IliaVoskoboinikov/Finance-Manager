@@ -2,13 +2,9 @@ package soft.divan.financemanager.core.data.dto
 
 import com.google.gson.annotations.SerializedName
 
-data class CategoryDto(
+data class CurrencyDto(
     @SerializedName("id")
     val id: String,
     @SerializedName("name")
-    val name: String,
-    @SerializedName("emoji")
-    val emoji: String,
-    @SerializedName("isIncome")
-    val isIncome: Boolean
+    val name: String
 )

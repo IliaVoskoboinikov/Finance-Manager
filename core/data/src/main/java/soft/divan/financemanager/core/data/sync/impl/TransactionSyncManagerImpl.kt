@@ -283,7 +283,7 @@ class TransactionSyncManagerImpl @Inject constructor(
      * Если аккаунт ещё не синхронизирован (serverId == null),
      * pull транзакций не выполняется.
      */
-    private suspend fun getServerAccountIdByLocalId(id: String): Int? {
+    private suspend fun getServerAccountIdByLocalId(id: String): String? {
         return safeDbCall(errorLogger) {
             accountLocalDataSource.getByLocalId(id)
         }.getOrNull()?.serverId
