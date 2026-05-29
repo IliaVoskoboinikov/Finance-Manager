@@ -199,7 +199,7 @@ fun CreateAccountForm(
         FMDriver()
         Currency(
             isSheetOpen = isCurrencySheetOpen,
-            currency = CurrencySymbol.fromCode(uiState.account.currency),
+            currency = CurrencySymbol.fromCode(uiState.account.currencyId),
             sheetState = currencySheetState,
             updateCurrency = actions.onUpdateCurrency
         )

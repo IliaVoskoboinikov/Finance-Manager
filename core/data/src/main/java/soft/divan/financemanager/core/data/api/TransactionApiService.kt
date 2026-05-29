@@ -21,24 +21,24 @@ interface TransactionApiService {
 
     @GET("v1/transactions/{accountId}/period")
     suspend fun getTransactionsByAccountAndPeriod(
-        @Path("accountId") accountId: Int,
+        @Path("accountId") accountId: String,
         @Query("startDate") startDate: String? = null,
         @Query("endDate") endDate: String? = null
     ): Response<List<TransactionDto>>
 
     @GET("v1/transaction/{id}")
     suspend fun getTransaction(
-        @Path("id") id: Int
+        @Path("id") id: String
     ): Response<TransactionDto>
 
     @PUT("v1/transaction/{id}")
     suspend fun updateTransaction(
-        @Path("id") id: Int,
+        @Path("id") id: String,
         @Body request: TransactionRequestDto
     ): Response<TransactionDto>
 
     @DELETE("v1/transaction/{id}")
     suspend fun deleteTransaction(
-        @Path("id") id: Int
+        @Path("id") id: String
     ): Response<Unit>
 }

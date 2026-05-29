@@ -4,5 +4,5 @@ data class AccountUi(
     val id: String,
     val name: String,
     val balance: String,
-    val currency: String
+    val currencyId: String
 )

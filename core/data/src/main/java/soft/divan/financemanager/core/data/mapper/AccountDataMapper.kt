@@ -9,21 +9,21 @@ import soft.divan.financemanager.core.database.model.SyncStatus
 
 fun AccountDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity = AccountEntity(
     localId = localId,
-    serverId = 2,//id, todo to String
+    serverId = id,
     name = name,
     balance = balance,
-    currency = currency,
+    currencyId = currencyId,
     createdAt = createdAt,
     updatedAt = updatedAt,
     syncStatus = syncStatus
 )
 
-fun Account.toEntity(serverId: Int?, syncStatus: SyncStatus): AccountEntity = AccountEntity(
+fun Account.toEntity(serverId: String?, syncStatus: SyncStatus): AccountEntity = AccountEntity(
     localId = id,
     serverId = serverId,
     name = name,
     balance = balance.toString(),
-    currency = currency,
+    currencyId = currencyId,
     createdAt = TimeMapper.toApi(createdAt),
     updatedAt = TimeMapper.toApi(updatedAt),
     syncStatus = syncStatus
@@ -33,7 +33,7 @@ fun AccountEntity.toDomain(): Account = Account(
     id = localId,
     name = name,
     balance = balance.toBigDecimal(),
-    currency = currency,
+    currencyId = currencyId,
     createdAt = TimeMapper.fromApi(createdAt),
     updatedAt = TimeMapper.fromApi(updatedAt)
 )
@@ -41,15 +41,13 @@ fun AccountEntity.toDomain(): Account = Account(
 fun Account.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
     name = name,
     balance = balance.toDouble(),
-    //todo
-    currency = "4e94f6f5-abe9-40d4-9e21-63f7bf487c0b"
+    currencyId = currencyId
 )
 
 fun AccountEntity.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
     name = name,
     balance = balance.toDouble(),
-    //todo зашить валюту
-    currency = "4e94f6f5-abe9-40d4-9e21-63f7bf487c0b"
+    currencyId = currencyId
 )
 
 fun AccountWithStatsDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity = AccountEntity(
@@ -57,7 +55,7 @@ fun AccountWithStatsDto.toEntity(localId: String, syncStatus: SyncStatus): Accou
     serverId = id,
     name = name,
     balance = balance,
-    currency = currency,
+    currencyId = currencyId,
     createdAt = createdAt,
     updatedAt = updatedAt,
     syncStatus = syncStatus

@@ -27,18 +27,16 @@ class CategoryRepositoryImpl @Inject constructor(
 ) : CategoryRepository {
 
     override fun getAll(): Flow<DomainResult<List<Category>>> {
-        // todo
-      /*  appCoroutineContext.launch {
+        appCoroutineContext.launch {
             syncManager.pullServerData()
-        }*/
+        }
         return safeDbFlow(errorLogger) {
             localDataSource.getAll().map { list -> list.map { it.toDomain() } }
         }
     }
 
     override fun getByType(isIncome: Boolean): Flow<DomainResult<List<Category>>> {
-        // todo
-      /*  appCoroutineContext.launch {
+        appCoroutineContext.launch {
             safeApiCall(errorLogger) {
                 remoteDataSource.getByType(isIncome)
             }.onSuccess { categoryDtos ->
@@ -46,7 +44,7 @@ class CategoryRepositoryImpl @Inject constructor(
                     localDataSource.insert(categoryDtos.map { it.toEntity() })
                 }
             }
-        }*/
+        }
         return safeDbFlow(errorLogger) {
             localDataSource.getByType(isIncome).map { list -> list.map { it.toDomain() } }
         }

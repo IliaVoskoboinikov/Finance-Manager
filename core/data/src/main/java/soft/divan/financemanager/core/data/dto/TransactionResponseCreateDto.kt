@@ -4,11 +4,11 @@ import com.google.gson.annotations.SerializedName
 
 data class TransactionResponseCreateDto(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("accountId")
-    val accountId: Int,
+    val accountId: String,
     @SerializedName("categoryId")
-    val categoryId: Int,
+    val categoryId: String,
     @SerializedName("amount")
     val amount: String,
     @SerializedName("transactionDate")

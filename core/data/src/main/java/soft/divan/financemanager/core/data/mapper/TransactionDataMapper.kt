@@ -29,7 +29,7 @@ import soft.divan.financemanager.core.domain.model.TransactionType
     targetAccountLocalId = TODO()
 )*/
 
-fun TransactionEntity.toDto(accountServerId: Int): TransactionRequestDto = TransactionRequestDto(
+fun TransactionEntity.toDto(accountServerId: String): TransactionRequestDto = TransactionRequestDto(
     accountId = accountServerId,
     categoryId = categoryId,
     amount = amount,
@@ -52,8 +52,8 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
 )
 
 fun Transaction.toEntity(
-    serverId: Int?,
-    accountServerId: Int?,
+    serverId: String?,
+    accountServerId: String?,
     syncStatus: SyncStatus
 ): TransactionEntity = TransactionEntity(
     localId = id,

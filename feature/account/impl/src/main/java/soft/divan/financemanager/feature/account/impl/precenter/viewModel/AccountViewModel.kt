@@ -92,7 +92,7 @@ class AccountViewModel @Inject constructor(
             id = UUID.randomUUID().toString(),
             name = "",
             balance = "0",
-            currency = CurrencySymbol.RUB.symbol,
+            currencyId = CurrencySymbol.RUB.code,
             createdAt = UiDateFormatter.formatDateTime(now),
             updatedAt = UiDateFormatter.formatDateTime(now)
         )
@@ -132,8 +132,8 @@ class AccountViewModel @Inject constructor(
         publishSuccess()
     }
 
-    fun updateCurrency(currency: String) {
-        account = account?.copy(currency = currency)
+    fun updateCurrency(currencyId: String) {
+        account = account?.copy(currencyId = currencyId)
         publishSuccess()
     }
 

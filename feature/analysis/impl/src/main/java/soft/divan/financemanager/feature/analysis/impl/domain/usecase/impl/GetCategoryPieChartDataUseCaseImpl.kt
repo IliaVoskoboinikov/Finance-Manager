@@ -25,9 +25,9 @@ class GetCategoryPieChartDataUseCaseImpl @Inject constructor() : GetCategoryPieC
         return transactions
             .groupBy { it.categoryId }
             .map { (categoryId, grouped) ->
-                val category = category.find { it.id == grouped.first().categoryId }!!
+                val category = category.find { it.id == categoryId }!!
                 val sum = grouped.fold(BigDecimal.ZERO) { acc, t -> acc + t.amount.abs() }
-                val percent = sum
+                val percentage = sum
                     .multiply(BigDecimal(PERCENT_MULTIPLIER))
                     .divide(total, PERCENT_SCALE, RoundingMode.HALF_UP)
                     .toFloat()
@@ -36,8 +36,8 @@ class GetCategoryPieChartDataUseCaseImpl @Inject constructor() : GetCategoryPieC
                     categoryId = categoryId,
                     categoryName = category.name,
                     emoji = category.emoji,
-                    totalAmount = sum,
-                    percent = percent
+                    amount = sum,
+                    percentage = percentage
                 )
             }
     }

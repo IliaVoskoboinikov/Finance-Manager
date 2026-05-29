@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class CategoryStatDto(
     @SerializedName("categoryId")
-    val categoryId: Int,
+    val categoryId: String,
     @SerializedName("categoryName")
     val categoryName: String,
     @SerializedName("emoji")

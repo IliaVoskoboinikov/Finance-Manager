@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class TransactionDto(
     @SerializedName("id")
-    val id: Int,
+    val id: String,
     @SerializedName("account")
     val account: AccountStateDto,
     @SerializedName("category")

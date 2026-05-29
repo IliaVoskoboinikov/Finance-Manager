@@ -1,45 +1,37 @@
 package soft.divan.financemanager.feature.category.impl.presenter.model
 
-import soft.divan.financemanager.feature.category.impl.R
-
 val mockCategories = listOf(
     UiCategory(
-        id = 1,
-        name = "Продукты",
-        emoji = "🛒",
-        isIncome = false
-    ),
-    UiCategory(
-        id = 2,
-        name = "Транспорт",
-        emoji = "🚌",
-        isIncome = false
-    ),
-    UiCategory(
-        id = 3,
-        name = "Развлечения",
-        emoji = "🎮",
-        isIncome = false
-    ),
-    UiCategory(
-        id = 4,
-        name = "Зарплата",
+        id = "1",
+        name = "Salary",
         emoji = "💰",
         isIncome = true
     ),
     UiCategory(
-        id = 5,
-        name = "Подарки",
+        id = "2",
+        name = "Gift",
         emoji = "🎁",
         isIncome = true
+    ),
+    UiCategory(
+        id = "3",
+        name = "Food",
+        emoji = "🍕",
+        isIncome = false
+    ),
+    UiCategory(
+        id = "4",
+        name = "Rent",
+        emoji = "🏠",
+        isIncome = false
+    ),
+    UiCategory(
+        id = "5",
+        name = "Transport",
+        emoji = "🚌",
+        isIncome = false
     )
 )
-
-val mockCategoriesUiStateError = CategoriesUiState.Error(
-    message = R.string.error_loading
-)
-
-val mockCategoriesUiStateLoading = CategoriesUiState.Loading
 
 val mockCategoriesUiStateSuccess = CategoriesUiState.Success(
     categories = mockCategories,

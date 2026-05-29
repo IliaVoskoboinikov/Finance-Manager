@@ -10,6 +10,6 @@ class UpdateCurrencyUseCaseIml @Inject constructor(
 ) : UpdateCurrencyUseCase {
 
     override suspend fun invoke(currency: CurrencySymbol) {
-        currencyRepository.update(currency)
+        currencyRepository.updateSelectedCurrency(currency)
     }
 }

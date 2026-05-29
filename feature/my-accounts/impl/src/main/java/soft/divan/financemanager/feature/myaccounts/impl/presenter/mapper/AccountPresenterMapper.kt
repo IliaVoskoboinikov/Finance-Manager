@@ -5,7 +5,7 @@ import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.feature.myaccounts.impl.presenter.model.MyAccountsUiModel
 
 fun Account.toUiModel(): MyAccountsUiModel {
-    val currencySymbol = CurrencySymbol.fromCode(currency)
+    val currencySymbol = CurrencySymbol.fromCode(currencyId)
     return MyAccountsUiModel(
         id = id,
         name = name,
