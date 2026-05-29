@@ -41,7 +41,7 @@ class AccountRepositoryImpl @Inject constructor(
             syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
         }
         return safeDbCall(errorLogger) {
-            localDataSource.insert(
+            localDataSource.create(
                 account.toEntity(serverId = null, syncStatus = SyncStatus.PENDING_CREATE)
             )
         }

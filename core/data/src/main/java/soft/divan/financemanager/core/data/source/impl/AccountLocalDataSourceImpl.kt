@@ -9,7 +9,7 @@ import javax.inject.Inject
 class AccountLocalDataSourceImpl @Inject constructor(
     private val accountDao: AccountDao
 ) : AccountLocalDataSource {
-    override suspend fun insert(account: AccountEntity) = accountDao.insert(account)
+    override suspend fun create(account: AccountEntity) = accountDao.insert(account)
 
     override fun getAll(): Flow<List<AccountEntity>> = accountDao.getAll()
 

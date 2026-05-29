@@ -6,14 +6,17 @@ import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.data.mapper.toDto
 import soft.divan.financemanager.core.data.mapper.toEntity
+import soft.divan.financemanager.core.data.mapper.toUpdateDto
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import javax.inject.Inject
@@ -113,7 +116,6 @@ class AccountSyncManagerImpl @Inject constructor(
         safeApiCall(errorLogger) {
             remoteDataSource.getAll()
         }.onSuccess { accountDtos ->
-/* todo serverIds to string
             val serverIds = accountDtos.map { it.id }
 
             val localAccounts = safeDbCall(errorLogger) {
@@ -142,7 +144,7 @@ class AccountSyncManagerImpl @Inject constructor(
                         localId = localAccount.localId
                     )
                 }
-            }*/
+            }
         }
     }
 
@@ -157,8 +159,8 @@ class AccountSyncManagerImpl @Inject constructor(
     override suspend fun syncCreate(accountDto: CreateAccountRequestDto, localId: String) {
         safeApiCall(errorLogger) {
             remoteDataSource.create(accountDto)
-        }.onSuccess { accountDto ->
-            updateLocalFromRemote(accountDto = accountDto, localId = localId)
+        }.onSuccess { dto ->
+            updateLocalFromRemote(accountDto = dto, localId = localId)
         }
     }
 
@@ -173,10 +175,12 @@ class AccountSyncManagerImpl @Inject constructor(
             safeApiCall(errorLogger) {
                 remoteDataSource.update(
                     id = idAccount,
-                    account = accountEntity.toDto()
+                    account = accountEntity.toUpdateDto()
                 )
-            }.onSuccess { accountDto ->
-                updateLocalFromRemote(accountDto = accountDto, localId = accountEntity.localId)
+            }.onSuccess {
+                safeDbCall(errorLogger) {
+                    localDataSource.update(accountEntity.copy(syncStatus = SyncStatus.SYNCED))
+                }
             }
         }
     }

@@ -9,7 +9,7 @@ data class TransactionEntity(
     @PrimaryKey
     val localId: String,
     val serverId: String?,
-    val accountLocalId: String,// todo может быть не хранить accountServerId тут вообще
+    val accountLocalId: String, // todo может быть не хранить accountServerId тут вообще
     val type: String,
     val targetAccountLocalId: String?,
     val accountServerId: String?,

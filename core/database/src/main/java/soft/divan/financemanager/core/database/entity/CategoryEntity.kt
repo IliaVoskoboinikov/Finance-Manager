@@ -7,6 +7,8 @@ import androidx.room.PrimaryKey
 data class CategoryEntity(
     @PrimaryKey
     val id: String,
+    val createdAt: String,
+    val updatedAt: String,
     val name: String,
     val emoji: String,
     val isIncome: Boolean

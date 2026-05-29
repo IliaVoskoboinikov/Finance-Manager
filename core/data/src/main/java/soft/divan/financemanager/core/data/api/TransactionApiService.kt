@@ -10,34 +10,34 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.dto.TransactionRequestDto
-import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
+import soft.divan.financemanager.core.data.dto.UpdateTransactionRequestDto
 
 interface TransactionApiService {
 
-    @POST("v1/transaction")
+    @POST("api/v1/transaction")
     suspend fun createTransaction(
         @Body request: TransactionRequestDto
-    ): Response<TransactionResponseCreateDto>
+    ): Response<TransactionDto>
 
-    @GET("v1/transactions/{accountId}/period")
+    @GET("api/v1/transaction/{accountId}/period")
     suspend fun getTransactionsByAccountAndPeriod(
         @Path("accountId") accountId: String,
         @Query("startDate") startDate: String? = null,
         @Query("endDate") endDate: String? = null
     ): Response<List<TransactionDto>>
 
-    @GET("v1/transaction/{id}")
+    @GET("api/v1/transaction/{id}")
     suspend fun getTransaction(
         @Path("id") id: String
     ): Response<TransactionDto>
 
-    @PUT("v1/transaction/{id}")
+    @PUT("api/v1/transaction/{id}")
     suspend fun updateTransaction(
         @Path("id") id: String,
-        @Body request: TransactionRequestDto
-    ): Response<TransactionDto>
+        @Body request: UpdateTransactionRequestDto
+    ): Response<Unit>
 
-    @DELETE("v1/transaction/{id}")
+    @DELETE("api/v1/transaction/{id}")
     suspend fun deleteTransaction(
         @Path("id") id: String
     ): Response<Unit>
