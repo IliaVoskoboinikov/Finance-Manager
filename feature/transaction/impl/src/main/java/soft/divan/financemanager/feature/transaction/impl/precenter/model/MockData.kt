@@ -34,7 +34,7 @@ val mockCategories = listOf(
     )
 )
 
-val mockAccounts = listOf(AccountUi("1", "Основной счёт", "1000", CurrencySymbol.RUB.code))
+val mockAccounts = listOf(AccountUi("1", "Основной счёт", "1000", CurrencySymbol.RUB.id))
 
 val mockTransaction = TransactionUi(
     id = "1001",
@@ -44,7 +44,7 @@ val mockTransaction = TransactionUi(
     comment = "Обед в кафе с коллегами",
     createdAt = "dd.MM.yyyy HH:mm ",
     updatedAt = "dd.MM.yyyy HH:mm ",
-    currencyCode = CurrencySymbol.RUB.symbol,
+    currencyId = CurrencySymbol.RUB.id,
     mode = TransactionMode.Create,
     date = "dd.MM.yyyy",
     time = " HH:mm ",

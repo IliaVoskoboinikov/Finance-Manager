@@ -7,7 +7,7 @@ data class TransactionUi(
     val accountId: String,
     val targetAccountLocalId: String?, // только для transfer
     val category: CategoryUi,
-    val currencyCode: String,
+    val currencyId: String,
     val amount: String,
     val type: TransactionType,
     val date: String,

@@ -11,7 +11,7 @@ import soft.divan.financemanager.core.domain.model.TransactionType
 fun TransactionDto.toEntity(
     localId: String,
     accountLocalId: String,
-    currencyCode: String,
+    currencyId: String,
     type: TransactionType,
     syncStatus: SyncStatus
 ): TransactionEntity = TransactionEntity(
@@ -20,7 +20,7 @@ fun TransactionDto.toEntity(
     accountLocalId = accountLocalId,
     accountServerId = accountId,
     categoryId = categoryId,
-    currencyCode = currencyCode,
+    currencyId = currencyId,
     amount = amount.toString(),
     transactionDate = dateTime,
     comment = comment.orEmpty(),
@@ -52,7 +52,7 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
     id = localId,
     accountLocalId = accountLocalId,
     targetAccountLocalId = targetAccountLocalId,
-    currencyCode = currencyCode,
+    currencyId = currencyId,
     categoryId = categoryId,
     amount = amount.toBigDecimal(),
     type = TransactionType.valueOf(type),
@@ -74,7 +74,7 @@ fun Transaction.toEntity(
     accountServerId = accountServerId,
     type = type.name,
     categoryId = categoryId,
-    currencyCode = currencyCode,
+    currencyId = currencyId,
     amount = amount.toPlainString(),
     transactionDate = TimeMapper.toApi(transactionDate),
     comment = comment.orEmpty(),

@@ -7,7 +7,7 @@ data class Transaction(
     val id: String,
     val accountLocalId: String,
     val targetAccountLocalId: String?, // только для transfer
-    val currencyCode: String,
+    val currencyId: String,
     val categoryId: String,
     val amount: BigDecimal,
     val type: TransactionType,

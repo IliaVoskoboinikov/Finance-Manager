@@ -92,7 +92,7 @@ class AccountViewModel @Inject constructor(
             id = UUID.randomUUID().toString(),
             name = "",
             balance = "0",
-            currencyId = CurrencySymbol.RUB.code,
+            currencyId = CurrencySymbol.RUB.id,
             createdAt = UiDateFormatter.formatDateTime(now),
             updatedAt = UiDateFormatter.formatDateTime(now)
         )

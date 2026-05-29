@@ -112,7 +112,7 @@ class TransactionRepositoryImpl @Inject constructor(
                             transactionDto.toEntity(
                                 localId = transactionEntity.localId,
                                 accountLocalId = transactionEntity.accountLocalId,
-                                currencyCode = transactionEntity.currencyCode,
+                                currencyId = transactionEntity.currencyId,
                                 type = type,
                                 syncStatus = SyncStatus.SYNCED
                             )
@@ -161,7 +161,7 @@ class TransactionRepositoryImpl @Inject constructor(
             localDataSource.update(
                 transactionEntity.copy(
                     categoryId = transaction.categoryId,
-                    currencyCode = transaction.currencyCode,
+                    currencyId = transaction.currencyId,
                     amount = transaction.amount.toPlainString(),
                     transactionDate = TimeMapper.toApi(transaction.transactionDate),
                     comment = transaction.comment.orEmpty(),
