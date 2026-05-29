@@ -9,26 +9,32 @@ import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
+import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
 import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
+import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbFlow
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.Transaction
+import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.time.Instant
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 class TransactionRepositoryImpl @Inject constructor(
     private val remoteDataSource: TransactionRemoteDataSource,
     private val localDataSource: TransactionLocalDataSource,
     private val accountLocalDataSource: AccountLocalDataSource,
+    private val categoryLocalDataSource: CategoryLocalDataSource,
     private val syncManager: TransactionSyncManager,
     private val appCoroutineContext: AppCoroutineContext,
     private val errorLogger: ErrorLogger
@@ -91,18 +97,23 @@ class TransactionRepositoryImpl @Inject constructor(
         if (resultDb is DomainResult.Failure) return resultDb
 
         val transactionEntity = (resultDb as DomainResult.Success).data
-// todo
-        /*appCoroutineContext.launch {
+
+        appCoroutineContext.launch {
             val serverId = transactionEntity.serverId
             if (serverId != null) {
                 safeApiCall(errorLogger) {
                     remoteDataSource.get(serverId)
                 }.onSuccess { transactionDto ->
+                    val category = categoryLocalDataSource.getById(transactionDto.categoryId) ?: return@onSuccess
+                    val type = if (category.isIncome) TransactionType.INCOME else TransactionType.EXPENSE
+                    
                     safeDbCall(errorLogger) {
                         localDataSource.update(
                             transactionDto.toEntity(
                                 localId = transactionEntity.localId,
                                 accountLocalId = transactionEntity.accountLocalId,
+                                currencyCode = transactionEntity.currencyCode,
+                                type = type,
                                 syncStatus = SyncStatus.SYNCED
                             )
                         )
@@ -112,7 +123,7 @@ class TransactionRepositoryImpl @Inject constructor(
                 // Транзакция не синхронизирована с сервером то создаем на сервере
                 syncManager.syncCreate(transactionEntity)
             }
-        }*/
+        }
 
         return DomainResult.Success(transactionEntity.toDomain())
     }

@@ -36,7 +36,7 @@ android {
         }
 
         debug {
-            buildConfigField("String", "HOST", "\"http://yourflow.pro/api/\"")
+            buildConfigField("String", "HOST", "\"http://yourflow.pro/\"")
         }
     }
 }

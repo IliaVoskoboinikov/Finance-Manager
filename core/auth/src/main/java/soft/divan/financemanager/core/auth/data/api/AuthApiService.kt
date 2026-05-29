@@ -9,20 +9,20 @@ import soft.divan.financemanager.core.auth.data.dto.UserCredentialsDto
 
 interface AuthApiService {
 
-    @POST("v1/auth/register")
+    @POST("api/v1/auth/register")
     suspend fun register(
         @Body credentials: UserCredentialsDto
     ): Response<AuthResponseDto>
 
-    @POST("v1/auth/login")
+    @POST("api/v1/auth/login")
     suspend fun login(
         @Body credentials: UserCredentialsDto
     ): Response<AuthResponseDto>
 
-    @POST("v1/auth/logout")
+    @POST("api/v1/auth/logout")
     suspend fun logout(): Response<Unit>
 
-    @POST("v1/auth/refresh")
+    @POST("api/v1/auth/refresh")
     suspend fun refresh(
         @Body request: RefreshRequestDto
     ): Response<AuthResponseDto>
