@@ -9,25 +9,28 @@ import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import javax.inject.Inject
 
 class TransactionRemoteDataSourceImpl @Inject constructor(
-    private val transactionApiService: TransactionApiService
+    private val apiService: TransactionApiService
 ) : TransactionRemoteDataSource {
 
     override suspend fun create(request: TransactionRequestDto): Response<TransactionResponseCreateDto> =
-        transactionApiService.createTransaction(request)
+        apiService.createTransaction(request)
 
     override suspend fun getByAccountAndPeriod(
-        accountId: Int,
+        accountId: String,
         startDate: String?,
         endDate: String?
     ): Response<List<TransactionDto>> =
-        transactionApiService.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
+        apiService.getTransactionsByAccountAndPeriod(accountId, startDate, endDate)
 
-    override suspend fun get(id: Int): Response<TransactionDto> =
-        transactionApiService.getTransaction(id)
+    override suspend fun get(id: String): Response<TransactionDto> =
+        apiService.getTransaction(id)
 
-    override suspend fun update(id: Int, transaction: TransactionRequestDto): Response<TransactionDto> =
-        transactionApiService.updateTransaction(id, transaction)
+    override suspend fun update(
+        id: String,
+        transaction: TransactionRequestDto
+    ): Response<TransactionDto> =
+        apiService.updateTransaction(id, transaction)
 
-    override suspend fun delete(id: Int): Response<Unit> =
-        transactionApiService.deleteTransaction(id)
+    override suspend fun delete(id: String): Response<Unit> =
+        apiService.deleteTransaction(id)
 }

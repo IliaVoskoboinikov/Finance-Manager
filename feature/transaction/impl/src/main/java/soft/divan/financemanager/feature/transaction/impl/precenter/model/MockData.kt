@@ -8,33 +8,33 @@ import soft.divan.financemanager.feature.transaction.impl.R
 
 val mockCategories = listOf(
     CategoryUi(
-        id = 1,
+        id = "1",
         name = "Еда",
         emoji = "🍔"
     ),
     CategoryUi(
-        id = 2,
+        id = "2",
         name = "Зарплата",
         emoji = "💰"
     ),
     CategoryUi(
-        id = 3,
+        id = "3",
         name = "Транспорт",
         emoji = "🚌"
     ),
     CategoryUi(
-        id = 4,
+        id = "4",
         name = "Подарки",
         emoji = "🎁"
     ),
     CategoryUi(
-        id = 5,
+        id = "5",
         name = "Инвестиции",
         emoji = "📈"
     )
 )
 
-val mockAccounts = listOf(AccountUi("1", "Основной счёт", "1000", CurrencySymbol.RUB.symbol))
+val mockAccounts = listOf(AccountUi("1", "Основной счёт", "1000", CurrencySymbol.RUB.code))
 
 val mockTransaction = TransactionUi(
     id = "1001",

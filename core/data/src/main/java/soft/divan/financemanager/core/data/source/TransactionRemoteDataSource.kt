@@ -8,12 +8,12 @@ import soft.divan.financemanager.core.data.dto.TransactionResponseCreateDto
 interface TransactionRemoteDataSource {
     suspend fun create(request: TransactionRequestDto): Response<TransactionResponseCreateDto>
     suspend fun getByAccountAndPeriod(
-        accountId: Int,
+        accountId: String,
         startDate: String? = null,
         endDate: String? = null
     ): Response<List<TransactionDto>>
 
-    suspend fun get(id: Int): Response<TransactionDto>
-    suspend fun update(id: Int, transaction: TransactionRequestDto): Response<TransactionDto>
-    suspend fun delete(id: Int): Response<Unit>
+    suspend fun get(id: String): Response<TransactionDto>
+    suspend fun update(id: String, transaction: TransactionRequestDto): Response<TransactionDto>
+    suspend fun delete(id: String): Response<Unit>
 }

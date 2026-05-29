@@ -7,7 +7,7 @@ data class Account(
     val id: String,
     val name: String,
     val balance: BigDecimal,
-    val currency: String,
+    val currencyId: String,
     val createdAt: Instant,
     val updatedAt: Instant
 )
