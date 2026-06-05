@@ -27,9 +27,8 @@ internal class SyncWorker @AssistedInject constructor(
     override suspend fun doWork(): Result = withContext(ioDispatcher) {
         traceAsync("Sync", 0) {
             Log.d("SyncWorker", "Sync started")
-            // todo
             val success = true
-            // syncCoordinator.syncAll()
+            syncCoordinator.syncAll()
 
             if (success) {
                 Log.d("SyncWorker", "Sync finished successfully")

@@ -50,7 +50,7 @@ class AndroidCryptoManager @Inject constructor() : CryptoManager {
                     .setEncryptionPaddings(PADDING)
                     .setUserAuthenticationRequired(false)
                     .setRandomizedEncryptionRequired(true)
-                    .setKeySize(256)
+                    .setKeySize(KEY_SIZE)
                     .build()
             )
         }.generateKey()
@@ -106,5 +106,6 @@ class AndroidCryptoManager @Inject constructor() : CryptoManager {
         private const val PADDING = KeyProperties.ENCRYPTION_PADDING_PKCS7
         private const val TRANSFORMATION = "$ALGORITHM/$BLOCK_MODE/$PADDING"
         private const val IV_SIZE = 16 // Размер IV для AES всегда 16 байт
+        private const val KEY_SIZE = 256
     }
 }

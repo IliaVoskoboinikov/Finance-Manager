@@ -20,6 +20,14 @@ sealed interface DataError : AppError {
         override val cause: Throwable? = null
     }
 
+    data object GuestMode : DataError {
+        override val cause: Throwable? = null
+    }
+
+    data object UnauthorizedBlocked : DataError {
+        override val cause: Throwable? = null
+    }
+
     data class LocalDb(
         override val cause: Throwable?
     ) : DataError

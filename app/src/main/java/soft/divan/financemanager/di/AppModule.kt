@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import soft.divan.common.di.ApplicationScope
 import soft.divan.common.di.IoDispatcher
+import soft.divan.common.di.MainImmediateDispatcher
 import javax.inject.Singleton
 
 @Module
@@ -22,16 +23,21 @@ object AppModule {
     @Singleton
     @ApplicationScope
     fun provideApplicationScope(
-        @IoDispatcher ioDispatcher: CoroutineDispatcher,
+        @MainImmediateDispatcher mainImmediateDispatcher: CoroutineDispatcher,
         exceptionHandler: CoroutineExceptionHandler
     ): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + ioDispatcher + exceptionHandler)
+        return CoroutineScope(SupervisorJob() + mainImmediateDispatcher + exceptionHandler)
     }
 
     @Provides
     @Singleton
     @IoDispatcher
     fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
+
+    @Provides
+    @Singleton
+    @MainImmediateDispatcher
+    fun provideMainImmediateDispatcher(): CoroutineDispatcher = Dispatchers.Main.immediate
 
     @Provides
     @Singleton

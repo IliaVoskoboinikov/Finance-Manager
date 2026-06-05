@@ -8,6 +8,8 @@ fun DataError.toDomainError(): DomainError =
         is DataError.Network -> DomainError.NetworkUnavailable
         is DataError.Unauthorized -> DomainError.Unauthorized
         is DataError.NotFound -> DomainError.NoData
+        is DataError.GuestMode -> DomainError.GuestModeBlocked
+        is DataError.UnauthorizedBlocked -> DomainError.Unauthorized
         is DataError.Server -> DomainError.Unknown(null)
         is DataError.LocalDb -> DomainError.Unknown(cause)
         is DataError.Unknown -> DomainError.Unknown(cause)
