@@ -4,10 +4,10 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import soft.divan.financemanager.core.auth.data.provider.AuthStateHolder
+import soft.divan.financemanager.core.auth.domain.provider.AuthStateProvider
 import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
-import soft.divan.financemanager.core.auth.domain.usecase.SetAuthStatusUseCase
 import soft.divan.financemanager.core.auth.domain.usecase.impl.GetAuthStatusUseCaseImpl
-import soft.divan.financemanager.core.auth.domain.usecase.impl.SetAuthStatusUseCaseImpl
 import javax.inject.Singleton
 
 @Module
@@ -16,9 +16,10 @@ interface AuthBinderModule {
 
     @Binds
     @Singleton
-    fun bindGetAuthStatusUseCase(impl: GetAuthStatusUseCaseImpl): GetAuthStatusUseCase
+    fun bindAuthStateProvider(impl: AuthStateHolder): AuthStateProvider
 
     @Binds
     @Singleton
-    fun bindSetAuthStatusUseCase(impl: SetAuthStatusUseCaseImpl): SetAuthStatusUseCase
+    fun bindGetAuthStatusUseCase(impl: GetAuthStatusUseCaseImpl): GetAuthStatusUseCase
+
 }
