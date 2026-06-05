@@ -1,6 +1,5 @@
 package soft.divan.financemanager.core.network.interceptor
 
-import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import soft.divan.financemanager.core.auth.data.authenticator.AuthManager
@@ -15,9 +14,7 @@ class AuthInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        val token = runBlocking {
-            authManagerProvider.get().getAccessToken()
-        }
+        val token = authManagerProvider.get().getAccessToken()
 
         if (token.isNullOrEmpty()) {
             return chain.proceed(originalRequest)

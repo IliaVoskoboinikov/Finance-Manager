@@ -20,6 +20,7 @@ class TokenAuthenticator @Inject constructor(
     private val authManager: AuthManager
 ) : Authenticator {
 
+    @Suppress("ReturnCount")
     override fun authenticate(route: Route?, response: Response): Request? {
         val retryCount = response.request().header(RETRY_HEADER)?.toIntOrNull() ?: 0
         if (retryCount >= MAX_RETRY_COUNT) return null

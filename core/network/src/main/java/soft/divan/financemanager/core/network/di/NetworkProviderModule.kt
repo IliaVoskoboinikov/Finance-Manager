@@ -82,17 +82,16 @@ object NetworkProviderModule {
     @BaseOkHttpClientQualifier
     fun provideBaseOkHttpClient(
         @NetworkInterceptorQualifier network: Interceptor,
-        @GuestInterceptorQualifier guest: Interceptor,
         loggingInterceptor: HttpLoggingInterceptor
     ): OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(network)
-        .addInterceptor(guest)
         .addInterceptor(loggingInterceptor)
         .build()
 
     /**
      * Основной OkHttpClient со всеми перехватчиками и автоматическим обновлением токена.
      */
+    @Suppress("LongParameterList")
     @Provides
     @Singleton
     fun provideOkHttpClient(

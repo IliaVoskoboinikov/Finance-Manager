@@ -19,7 +19,9 @@ import soft.divan.financemanager.core.auth.data.source.SessionLocalDataSource
 import soft.divan.financemanager.core.auth.data.source.TokenLocalDataSource
 import soft.divan.financemanager.core.auth.data.source.impl.SessionLocalDataSourceImpl
 import soft.divan.financemanager.core.auth.data.source.impl.TokenLocalDataSourceImpl
+import soft.divan.financemanager.core.auth.domain.provider.AuthStateProvider
 import soft.divan.financemanager.core.security.CryptoManager
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -41,8 +43,8 @@ object AuthProviderModule {
     @Singleton
     @GuestInterceptorQualifier
     fun provideGuestInterceptor(
-        sessionDataSource: SessionLocalDataSource
-    ): Interceptor = GuestAccessInterceptor(sessionDataSource)
+        authStateProvider: Provider<AuthStateProvider>
+    ): Interceptor = GuestAccessInterceptor(authStateProvider)
 
     @Provides
     @Singleton

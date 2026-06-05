@@ -6,16 +6,18 @@ plugins {
 }
 
 fun Project.getSecret(name: String): String {
-    System.getenv(name)?.let { return it }
+    val env = System.getenv(name)
+    if (env != null) return env
 
     val localPropertiesFile = rootProject.file("local.properties")
+    var secret = ""
     if (localPropertiesFile.exists()) {
         val properties = Properties()
         localPropertiesFile.inputStream().use(properties::load)
-        properties.getProperty(name)?.let { return it }
+        secret = properties.getProperty(name).orEmpty()
     }
 
-    return "" // Сделаем пустую строку по умолчанию, так как теперь токен будет в SessionDataStore
+    return secret
 }
 
 val apiToken: String = project.getSecret("API_TOKEN")

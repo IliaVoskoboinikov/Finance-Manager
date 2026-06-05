@@ -150,6 +150,7 @@ fun LogoutDialog(
     )
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun DialogContentWrapper(
     icon: ImageVector,
