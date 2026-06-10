@@ -1,9 +1,9 @@
 package soft.divan.financemanager.core.domain.model
 
 enum class CurrencySymbol(val id: String, val code: String, val symbol: String) {
-    RUB("00ea073e-6c01-4f21-8c82-d8933e04a5f1", "RUB", "₽"),
-    USD("63f89de5-3eaa-4b14-beed-82590b781db3", "USD", "$"),
-    EUR("7626b80a-b3c6-409b-be72-909635095603", "EUR", "€");
+    RUB("d67bdffe-9f2d-45e4-809a-c566f537dfb7", "RUB", "₽"),
+    USD("0fbe774f-42fd-4814-b3c2-6ea659b4e595", "USD", "$"),
+    EUR("e17d279c-4ac8-4679-894d-5b5f5caed741", "EUR", "€");
 
     companion object {
         fun fromId(id: String): String {

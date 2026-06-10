@@ -61,7 +61,9 @@ junit = "4.13.2"
 kotlinxCoroutinesTest = "1.10.2"
 assertjCore = "3.27.7"
 mockk = "1.14.9"
-
+robolectric = "4.14.1"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
 ##############################################
 #                  Libraries
 ##############################################
@@ -136,9 +138,12 @@ crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 
 # TEST
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertjCore" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
 ##############################################
 #                  Plugins
