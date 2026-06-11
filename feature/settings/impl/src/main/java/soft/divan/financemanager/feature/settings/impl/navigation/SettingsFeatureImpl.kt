@@ -83,7 +83,7 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
                     },
                     onNavigateToProfile = {
                         navController.navigate(scope.route(authFeatureApi.profileRoute))
-                    },
+                    }
                 )
             )
         }
@@ -162,6 +162,5 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
             scope.child(authFeatureApi.profileRoute),
             modifier
         )
-
     }
 }

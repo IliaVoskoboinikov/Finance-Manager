@@ -37,6 +37,7 @@ class AuthRepositoryImpl @Inject constructor(
                 )
                 DomainResult.Success(Unit)
             }
+
             is DomainResult.Failure -> {
                 DomainResult.Failure(result.error)
             }
@@ -64,6 +65,7 @@ class AuthRepositoryImpl @Inject constructor(
                 )
                 DomainResult.Success(Unit)
             }
+
             is DomainResult.Failure -> {
                 DomainResult.Failure(result.error)
             }
