@@ -10,7 +10,7 @@ import soft.divan.financemanager.core.domain.repository.CurrencyRepository
 import javax.inject.Inject
 
 class CurrencyRepositoryImpl @Inject constructor(
-    private val currencyLocalDataSource: CurrencyLocalDataSource,
+    private val currencyLocalDataSource: CurrencyLocalDataSource
 ) : CurrencyRepository {
 
     override fun getSelectedCurrency(): Flow<CurrencySymbol> =
@@ -27,11 +27,8 @@ class CurrencyRepositoryImpl @Inject constructor(
     override suspend fun getCurrencyById(id: String): Currency? =
         currencyLocalDataSource.getCurrencyById(id)?.toDomain()
 
-
     private fun CurrencyEntity.toDomain() = Currency(
         id = id,
         name = name
     )
-
-
 }

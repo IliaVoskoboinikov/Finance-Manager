@@ -55,4 +55,3 @@ fun AccountEntity.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
     balance = balance.toDouble(),
     currencyId = currencyId
 )
-

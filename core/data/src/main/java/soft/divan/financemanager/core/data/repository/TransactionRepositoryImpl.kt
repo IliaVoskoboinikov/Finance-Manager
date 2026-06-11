@@ -104,9 +104,11 @@ class TransactionRepositoryImpl @Inject constructor(
                 safeApiCall(errorLogger) {
                     remoteDataSource.get(serverId)
                 }.onSuccess { transactionDto ->
-                    val category = categoryLocalDataSource.getById(transactionDto.categoryId) ?: return@onSuccess
+                    val category = categoryLocalDataSource.getById(
+                        transactionDto.categoryId
+                    ) ?: return@onSuccess
                     val type = if (category.isIncome) TransactionType.INCOME else TransactionType.EXPENSE
-                    
+
                     safeDbCall(errorLogger) {
                         localDataSource.update(
                             transactionDto.toEntity(
