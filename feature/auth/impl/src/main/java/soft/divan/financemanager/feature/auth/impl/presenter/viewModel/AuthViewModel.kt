@@ -100,7 +100,8 @@ class AuthViewModel @Inject constructor(
                 },
                 onFailure = {
                     _uiState.value = previousContent.copy(
-                        errorMessage = soft.divan.financemanager.feature.auth.impl.R.string.auth_error_failed
+                        errorMessage =
+                            soft.divan.financemanager.feature.auth.impl.R.string.auth_error_failed
                     )
                 }
             )
@@ -150,7 +151,9 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    private fun MutableStateFlow<AuthUiState>.updateContent(update: (AuthUiState.Success) -> AuthUiState.Success) {
+    private fun MutableStateFlow<AuthUiState>.updateContent(
+        update: (AuthUiState.Success) -> AuthUiState.Success
+    ) {
         this.update { currentState ->
             if (currentState is AuthUiState.Success) update(currentState) else currentState
         }

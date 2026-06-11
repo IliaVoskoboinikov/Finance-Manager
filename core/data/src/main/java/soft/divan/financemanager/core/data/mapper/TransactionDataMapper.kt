@@ -3,9 +3,9 @@ package soft.divan.financemanager.core.data.mapper
 import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.dto.TransactionRequestDto
 import soft.divan.financemanager.core.data.dto.UpdateTransactionRequestDto
-import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.model.TransactionType
 
 fun TransactionDto.toEntity(
@@ -31,13 +31,14 @@ fun TransactionDto.toEntity(
     targetAccountLocalId = null
 )
 
-fun TransactionEntity.toUpdateDto(accountServerId: String): UpdateTransactionRequestDto = UpdateTransactionRequestDto(
-    accountId = accountServerId,
-    categoryId = categoryId,
-    amount = amount.toDouble(),
-    dateTime = transactionDate,
-    comment = comment
-)
+fun TransactionEntity.toUpdateDto(accountServerId: String): UpdateTransactionRequestDto =
+    UpdateTransactionRequestDto(
+        accountId = accountServerId,
+        categoryId = categoryId,
+        amount = amount.toDouble(),
+        dateTime = transactionDate,
+        comment = comment
+    )
 
 fun TransactionEntity.toDto(accountServerId: String): TransactionRequestDto = TransactionRequestDto(
     id = serverId,
