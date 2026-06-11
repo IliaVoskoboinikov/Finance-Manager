@@ -84,7 +84,8 @@ fun AuthScreen(
                     Toast.LENGTH_SHORT
                 ).show()
 
-                is AuthEvent.ShowError -> { /* handle error */
+                is AuthEvent.ShowError -> {
+                    /* handle error */
                 }
             }
         }
@@ -125,7 +126,11 @@ fun AuthContent(
             if (uiState is AuthUiState.Success) {
                 TopBar(
                     topBar = TopBarModel(
-                        title = if (uiState.authUi.isLoginMode) R.string.auth_sign_in_button else R.string.auth_sign_up_button,
+                        title = if (uiState.authUi.isLoginMode) {
+                            R.string.auth_sign_in_button
+                        } else {
+                            R.string.auth_sign_up_button
+                        },
                         navigationIcon = null,
                         navigationIconClick = {}
                     )

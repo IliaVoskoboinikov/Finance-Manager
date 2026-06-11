@@ -57,7 +57,7 @@ class AndroidCryptoManager @Inject constructor(
                         .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                         .setUserAuthenticationRequired(false)
                         .setRandomizedEncryptionRequired(true)
-                        .setKeySize(256)
+                        .setKeySize(KEY_SIZE_AES)
                         .build()
                 )
             }.generateKey()
@@ -100,7 +100,7 @@ class AndroidCryptoManager @Inject constructor(
             val encrypted = combined.copyOfRange(IV_SIZE, combined.size)
 
             val cipher = cipherProvider.get()
-            val spec = GCMParameterSpec(GCM_TAG_SIZE * 8, iv)
+            val spec = GCMParameterSpec(GCM_TAG_SIZE_BITS, iv)
             cipher.init(Cipher.DECRYPT_MODE, getKey(alias), spec)
 
             val decryptedBytes = cipher.doFinal(encrypted)
@@ -114,5 +114,7 @@ class AndroidCryptoManager @Inject constructor(
     companion object {
         private const val IV_SIZE = 12 // Рекомендуемый размер IV для GCM
         private const val GCM_TAG_SIZE = 16 // 128 бит (16 байт)
+        private const val KEY_SIZE_AES = 256
+        private const val GCM_TAG_SIZE_BITS = GCM_TAG_SIZE * 8
     }
 }

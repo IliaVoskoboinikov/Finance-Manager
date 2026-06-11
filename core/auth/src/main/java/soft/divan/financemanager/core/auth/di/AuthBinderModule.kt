@@ -21,5 +21,4 @@ interface AuthBinderModule {
     @Binds
     @Singleton
     fun bindGetAuthStatusUseCase(impl: GetAuthStatusUseCaseImpl): GetAuthStatusUseCase
-
 }

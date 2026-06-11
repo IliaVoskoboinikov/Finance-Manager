@@ -135,9 +135,9 @@ fun LogoutDialog(
                 ) {
                     Text(text = stringResource(R.string.profile_clear_all_data))
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 OutlinedButton(
                     onClick = { onConfirm(false) },
                     modifier = Modifier.fillMaxWidth(),
@@ -270,9 +270,9 @@ fun LogoutDialogPreview() {
                         ) {
                             Text(text = stringResource(R.string.profile_clear_all_data))
                         }
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
-                        
+
                         OutlinedButton(
                             onClick = {},
                             modifier = Modifier.fillMaxWidth(),

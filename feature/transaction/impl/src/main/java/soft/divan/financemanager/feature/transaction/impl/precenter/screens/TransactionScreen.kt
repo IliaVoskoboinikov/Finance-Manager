@@ -460,7 +460,8 @@ private fun AccountSheetContent(
                         },
                     content = {
                         Text(
-                            text = account.name + " " + account.balance + " " + CurrencySymbol.fromId(account.currencyId),
+                            text = "${account.name} ${account.balance} " +
+                                CurrencySymbol.fromId(account.currencyId),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }

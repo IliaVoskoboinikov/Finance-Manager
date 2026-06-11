@@ -1,8 +1,20 @@
 package soft.divan.financemanager.feature.auth.impl.presenter.screen
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -29,7 +41,9 @@ fun ProfileScreen(
     onNavigateToAuth: () -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
-    val authStatus by viewModel.authStatus.collectAsStateWithLifecycle(initialValue = AuthStatus.UNAUTHORIZED)
+    val authStatus by viewModel.authStatus.collectAsStateWithLifecycle(
+        initialValue = AuthStatus.UNAUTHORIZED
+    )
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     ProfileContent(
@@ -56,7 +70,7 @@ fun ProfileContent(
                 topBar = TopBarModel(
                     title = R.string.profile_title,
                     navigationIcon = null,
-                    navigationIconClick = {},
+                    navigationIconClick = {}
                 )
             )
         }
@@ -68,7 +82,9 @@ fun ProfileContent(
         ) {
             when (uiState) {
                 is AuthUiState.Loading -> LoadingProgressBar()
+
                 is AuthUiState.Error -> ErrorContent(onClick = { /* retry? */ })
+
                 is AuthUiState.Success -> ProfileSuccessContent(
                     content = uiState,
                     authStatus = authStatus,
@@ -100,7 +116,6 @@ private fun ProfileSuccessContent(
         ProfileInfo(authStatus = authStatus, actions = actions)
     }
 }
-
 
 @Composable
 private fun ProfileInfo(authStatus: AuthStatus, actions: ProfileActions) {

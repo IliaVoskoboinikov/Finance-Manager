@@ -15,7 +15,6 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.androidx.room.ktx)
 
-
     // todo
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

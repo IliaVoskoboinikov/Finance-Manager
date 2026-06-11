@@ -41,7 +41,7 @@ fun SettingsScreenPreview() {
                 onNavigateToSounds = {},
                 onNavigateToLanguages = {},
                 onNavigateToSynchronization = {},
-                onNavigateToProfile = {},
+                onNavigateToProfile = {}
             )
         )
     }
@@ -96,7 +96,7 @@ private fun provideSettings(
     navigation: SettingsActions
 ): List<SettingsModel> {
     return listOf(
-        //todo
+        // todo
         SettingsModel(R.string.synchronization) { navigation.onNavigateToProfile() },
         SettingsModel(R.string.design) { navigation.onNavigateToDesignApp() },
         SettingsModel(R.string.sounds) { navigation.onNavigateToSounds() },
