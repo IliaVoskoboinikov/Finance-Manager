@@ -41,8 +41,8 @@ class AccountSyncManagerRaceTest {
             id = "1",
             userId = "443",
             name = "Test",
-            balance = "100",
-            currency = "USD",
+            balance = 100.0,
+            currencyId = "USD",
             createdAt = "2024-01-01T00:00:00Z",
             updatedAt = "2024-01-01T00:00:00Z"
         )
