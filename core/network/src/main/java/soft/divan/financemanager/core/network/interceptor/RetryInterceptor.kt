@@ -19,11 +19,11 @@ class RetryInterceptor(
             response = chain.proceed(request)
             if (response.isSuccessful) return response
 
-            if (response.code() !in SERVER_ERROR_RANGE || attempt >= maxRetries) return response
+            if (response.code !in SERVER_ERROR_RANGE || attempt >= maxRetries) return response
 
             response.close()
             attempt++
-            Log.d(TAG, "Retry attempt $attempt after error ${response.code()}")
+            Log.d(TAG, "Retry attempt $attempt after error ${response.code}")
             SystemClock.sleep(delayMillis)
         }
     }
