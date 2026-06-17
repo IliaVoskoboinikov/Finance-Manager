@@ -14,6 +14,7 @@ class HiltConventionPlugin : Plugin<Project> {
             dependencies {
                 add(Conf.IMPLEMENTATION, lib("hilt-android"))
                 add(Conf.KSP, lib("hilt-compiler"))
+                add(Conf.KSP, lib("kotlin-metadata-jvm"))
             }
         }
     }
