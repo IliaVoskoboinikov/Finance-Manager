@@ -55,19 +55,24 @@ class CheckConventionsPlugin : Plugin<Project> {
 object ModuleType {
 
     /** Проверяет, является ли модуль core. */
-    fun Project.isCore() = path.startsWith(":core:")
+    fun Project.isCore() = path.isCore()
 
     /** Проверяет, является ли модуль feature (API или Impl). */
-    fun Project.isFeature() = path.startsWith(":feature:")
+    fun Project.isFeature() = path.isFeature()
 
     /** Проверяет, является ли модуль feature API. */
-    fun Project.isFeatureApi() = isFeature() && path.endsWith(":api")
+    fun Project.isFeatureApi() = path.isFeatureApi()
 
     /** Проверяет, является ли модуль feature Impl. */
-    fun Project.isFeatureImpl() = isFeature() && path.endsWith(":impl")
+    fun Project.isFeatureImpl() = path.isFeatureImpl()
 
     /** Проверяет, является ли модуль app. */
     fun Project.isApp() = path == ":app"
+
+    fun String.isCore() = startsWith(":core:")
+    fun String.isFeature() = startsWith(":feature:")
+    fun String.isFeatureApi() = isFeature() && endsWith(":api")
+    fun String.isFeatureImpl() = isFeature() && endsWith(":impl")
 }
 
 /**
@@ -170,22 +175,22 @@ class DependencyChecks {
                 configuration.dependencies
                     .filterIsInstance<ProjectDependency>()
                     .forEach { dependency ->
-                        val depProject = dependency.dependencyProject
+                        val depPath = dependency.path
                         val msg = when {
-                            project.isFeatureImpl() && depProject.isFeatureImpl() ->
+                            project.isFeatureImpl() && depPath.isFeatureImpl() ->
                                 "Feature impl modules must NOT depend on other feature impl modules"
 
-                            project.isFeatureApi() && depProject.isFeatureImpl() ->
+                            project.isFeatureApi() && depPath.isFeatureImpl() ->
                                 "Feature api modules must NOT depend on feature impl modules"
 
-                            project.isCore() && depProject.isFeature() ->
+                            project.isCore() && depPath.isFeature() ->
                                 "Core modules must NOT depend on feature modules"
 
                             else -> null
                         }
                         msg?.let {
                             throw GradleException(
-                                "From: ${project.path}\nTo: ${depProject.path}\nRule: $it"
+                                "From: ${project.path}\nTo: $depPath\nRule: $it"
                             )
                         }
                     }
