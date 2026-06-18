@@ -37,7 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -123,7 +123,7 @@ fun TransactionScreen(
 
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
+    val resources = LocalResources.current
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
@@ -132,7 +132,7 @@ fun TransactionScreen(
 
                 is TransactionEvent.ShowError ->
                     snackbarHostState.showSnackbar(
-                        message = context.getString(event.messageRes),
+                        message = resources.getString(event.messageRes),
                         withDismissAction = true
                     )
 
