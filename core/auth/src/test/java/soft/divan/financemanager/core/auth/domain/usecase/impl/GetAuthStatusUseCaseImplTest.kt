@@ -8,22 +8,22 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
-import soft.divan.financemanager.core.auth.data.source.SessionLocalDataSource
 import soft.divan.financemanager.core.auth.domain.model.AuthStatus
+import soft.divan.financemanager.core.auth.domain.provider.AuthStateProvider
 
 class GetAuthStatusUseCaseImplTest {
 
-    private val sessionLocalDataSource = mockk<SessionLocalDataSource>()
+    private val authStateProvider = mockk<AuthStateProvider>()
     private lateinit var useCase: GetAuthStatusUseCaseImpl
 
     @Before
     fun setup() {
-        useCase = GetAuthStatusUseCaseImpl(sessionLocalDataSource)
+        useCase = GetAuthStatusUseCaseImpl(authStateProvider)
     }
 
     @Test
-    fun `invoke should return status from dataSource`() = runTest {
-        every { sessionLocalDataSource.getAuthStatus() } returns flowOf(AuthStatus.AUTHORIZED)
+    fun `invoke should return status from state provider`() = runTest {
+        every { authStateProvider.observeStatus() } returns flowOf(AuthStatus.AUTHORIZED)
 
         val status = useCase().first()
 

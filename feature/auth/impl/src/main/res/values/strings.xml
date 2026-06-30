@@ -24,5 +24,7 @@
     <string name="profile_guest_message">You are currently using the app as a Guest.</string>
     <string name="profile_sign_in_register">Sign In or Register</string>
     <string name="profile_authorized_message">You are logged in.</string>
-    <string name="auth_error_failed">Authentication failed. Please check your credentials.</string>
+    <string name="auth_error_failed">Authentication failed. Please try again.</string>
+    <string name="auth_error_invalid_credentials">Invalid name or password.</string>
+    <string name="auth_error_network">No internet connection. Check your network and try again.</string>
 </resources>

@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.auth.impl.presenter.viewModel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,8 +14,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.auth.domain.model.AuthStatus
 import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
+import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.repository.AuthRepository
 import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.feature.auth.impl.R
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthAction
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthEvent
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthUiState
@@ -98,14 +101,22 @@ class AuthViewModel @Inject constructor(
                         performInitialSync(previousContent)
                     }
                 },
-                onFailure = {
-                    _uiState.value = previousContent.copy(
-                        errorMessage =
-                            soft.divan.financemanager.feature.auth.impl.R.string.auth_error_failed
-                    )
+                onFailure = { error ->
+                    _uiState.value = previousContent.copy(errorMessage = error.toMessageRes())
                 }
             )
         }
+    }
+
+    /**
+     * Маппинг доменной ошибки в конкретное сообщение, чтобы пользователь видел причину
+     * (неверные данные / нет сети), а не один обобщённый текст на все случаи.
+     */
+    @StringRes
+    private fun DomainError.toMessageRes(): Int = when (this) {
+        is DomainError.Unauthorized -> R.string.auth_error_invalid_credentials
+        is DomainError.NetworkUnavailable -> R.string.auth_error_network
+        else -> R.string.auth_error_failed
     }
 
     private fun performInitialSync(successState: AuthUiState.Success) {
