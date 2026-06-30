@@ -13,6 +13,14 @@ import soft.divan.financemanager.core.auth.domain.model.SessionState
  */
 interface AuthStateProvider {
     /**
+     * Реактивный поток статуса авторизации — единый источник истины для UI и навигации.
+     *
+     * Эмитит значения только после восстановления состояния из хранилища, поэтому
+     * не отдаёт промежуточный дефолт и согласован с тем, что видят сетевые интерцепторы.
+     */
+    fun observeStatus(): Flow<AuthStatus>
+
+    /**
      * Возвращает текущий статус авторизации синхронно.
      */
     fun currentStatus(): AuthStatus

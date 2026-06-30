@@ -32,9 +32,13 @@ android {
     }
 
     buildTypes {
+        // ВАЖНО: все пути в Retrofit-интерфейсах уже содержат префикс "api/v1/..."
+        // (см. AuthApiService и остальные *ApiService), поэтому HOST должен быть
+        // корнем сервера без "/api". Иначе в URL получается двойной сегмент
+        // ("/api/api/v1/...") и все сетевые запросы, включая login/register, падают с 404.
         release {
             isMinifyEnabled = false
-            buildConfigField("String", "HOST", "\"http://yourflow.pro/api/\"")
+            buildConfigField("String", "HOST", "\"http://yourflow.pro/\"")
         }
 
         debug {
