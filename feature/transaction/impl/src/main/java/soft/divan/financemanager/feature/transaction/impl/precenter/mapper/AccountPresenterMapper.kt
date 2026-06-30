@@ -8,6 +8,6 @@ fun Account.toUi(): AccountUi {
         id = id,
         name = name,
         balance = balance.toString(),
-        currency = currency
+        currencyId = currencyId
     )
 }

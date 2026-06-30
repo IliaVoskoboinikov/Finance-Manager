@@ -9,7 +9,7 @@ fun AccountUi.toDomain(): Account {
         id = id,
         name = name,
         balance = balance.toBigDecimal(),
-        currency = currency,
+        currencyId = currencyId,
         createdAt = UiDateFormatter.parse(createdAt),
         updatedAt = UiDateFormatter.parse(updatedAt)
     )
@@ -20,7 +20,7 @@ fun Account.toUi(): AccountUi {
         id = id,
         name = name,
         balance = balance.stripTrailingZeros().toPlainString(),
-        currency = currency,
+        currencyId = currencyId,
         createdAt = UiDateFormatter.formatDateTime(createdAt),
         updatedAt = UiDateFormatter.formatDateTime(updatedAt)
     )

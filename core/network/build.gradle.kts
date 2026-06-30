@@ -6,16 +6,18 @@ plugins {
 }
 
 fun Project.getSecret(name: String): String {
-    System.getenv(name)?.let { return it }
+    val env = System.getenv(name)
+    if (env != null) return env
 
     val localPropertiesFile = rootProject.file("local.properties")
+    var secret = ""
     if (localPropertiesFile.exists()) {
         val properties = Properties()
         localPropertiesFile.inputStream().use(properties::load)
-        properties.getProperty(name)?.let { return it }
+        secret = properties.getProperty(name).orEmpty()
     }
 
-    error("Secret '$name' is not defined")
+    return secret
 }
 
 val apiToken: String = project.getSecret("API_TOKEN")
@@ -30,18 +32,23 @@ android {
     }
 
     buildTypes {
+        // ВАЖНО: все пути в Retrofit-интерфейсах уже содержат префикс "api/v1/..."
+        // (см. AuthApiService и остальные *ApiService), поэтому HOST должен быть
+        // корнем сервера без "/api". Иначе в URL получается двойной сегмент
+        // ("/api/api/v1/...") и все сетевые запросы, включая login/register, падают с 404.
         release {
             isMinifyEnabled = false
-            buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
+            buildConfigField("String", "HOST", "\"http://yourflow.pro/\"")
         }
 
         debug {
-            buildConfigField("String", "HOST", "\"https://shmr-finance.ru/api/\"")
+            buildConfigField("String", "HOST", "\"http://yourflow.pro/\"")
         }
     }
 }
 
 dependencies {
+    implementation(projects.core.auth)
     implementation(libs.retrofit)
     implementation(libs.logging.interceptor)
     implementation(libs.converter.gson)

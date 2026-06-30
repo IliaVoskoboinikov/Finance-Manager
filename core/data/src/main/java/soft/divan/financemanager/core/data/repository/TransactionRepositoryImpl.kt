@@ -9,6 +9,7 @@ import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
+import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
@@ -16,21 +17,24 @@ import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbFlow
+import soft.divan.financemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.Transaction
+import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
-import soft.divan.financemanager.core.database.entity.TransactionEntity
-import soft.divan.financemanager.core.database.model.SyncStatus
 import java.time.Instant
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 class TransactionRepositoryImpl @Inject constructor(
     private val remoteDataSource: TransactionRemoteDataSource,
     private val localDataSource: TransactionLocalDataSource,
     private val accountLocalDataSource: AccountLocalDataSource,
+    private val categoryLocalDataSource: CategoryLocalDataSource,
     private val syncManager: TransactionSyncManager,
     private val appCoroutineContext: AppCoroutineContext,
     private val errorLogger: ErrorLogger
@@ -38,13 +42,9 @@ class TransactionRepositoryImpl @Inject constructor(
 
     /** Создаем транзакцию в БД и сразу запускаем синхронизацию */
     override suspend fun create(transaction: Transaction): DomainResult<Unit> {
-        val accountServerId = accountLocalDataSource.getByLocalId(
-            transaction.accountLocalId
-        )?.serverId
-
         val transactionEntity = transaction.toEntity(
             serverId = null,
-            accountServerId = accountServerId,
+            accountServerId = accountLocalDataSource.getByLocalId(transaction.accountLocalId)?.serverId,
             syncStatus = SyncStatus.PENDING_CREATE
         )
 
@@ -53,31 +53,32 @@ class TransactionRepositoryImpl @Inject constructor(
         }
 
         return safeDbCall(errorLogger) {
-            localDataSource.create(transactionEntity)
+            localDataSource.insert(transactionEntity)
         }
     }
 
-    /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию на получение этих данныъ с сервера */
+    /** Сразу получаем поток данных с БД и сразу запускаем синхронизацию на получение этих данных с сервера */
     override fun getByAccountAndPeriod(
         accountId: String,
         startDate: Instant,
         endDate: Instant
     ): Flow<DomainResult<List<Transaction>>> {
-        val startDate = ApiDateMapper.toApiDate(startDate)
-        val endDate = ApiDateMapper.toApiDate(endDate)
+        val startDateStr = ApiDateMapper.toApiDate(startDate)
+        val endDateStr = ApiDateMapper.toApiDate(endDate)
+
         appCoroutineContext.launch {
             syncManager.pullFromRemoteForAccount(
                 accountLocalId = accountId,
-                startDate = startDate,
-                endDate = endDate
+                startDate = startDateStr,
+                endDate = endDateStr
             )
         }
 
         return safeDbFlow(errorLogger) {
             localDataSource.getByAccountAndPeriod(
                 accountId = accountId,
-                startDate = startDate,
-                endDate = endDate
+                startDate = startDateStr,
+                endDate = endDateStr
             ).map { list ->
                 list.filter { it.syncStatus != SyncStatus.PENDING_DELETE }.map { it.toDomain() }
             }
@@ -103,11 +104,18 @@ class TransactionRepositoryImpl @Inject constructor(
                 safeApiCall(errorLogger) {
                     remoteDataSource.get(serverId)
                 }.onSuccess { transactionDto ->
+                    val category = categoryLocalDataSource.getById(
+                        transactionDto.categoryId
+                    ) ?: return@onSuccess
+                    val type = if (category.isIncome) TransactionType.INCOME else TransactionType.EXPENSE
+
                     safeDbCall(errorLogger) {
                         localDataSource.update(
                             transactionDto.toEntity(
                                 localId = transactionEntity.localId,
                                 accountLocalId = transactionEntity.accountLocalId,
+                                currencyId = transactionEntity.currencyId,
+                                type = type,
                                 syncStatus = SyncStatus.SYNCED
                             )
                         )
@@ -131,7 +139,6 @@ class TransactionRepositoryImpl @Inject constructor(
         if (resultDb is DomainResult.Failure) return resultDb
 
         val transactionEntity = (resultDb as DomainResult.Success).data
-
         appCoroutineContext.launch {
             if (transactionEntity.serverId == null) {
                 syncManager.syncCreate(
@@ -156,7 +163,7 @@ class TransactionRepositoryImpl @Inject constructor(
             localDataSource.update(
                 transactionEntity.copy(
                     categoryId = transaction.categoryId,
-                    currencyCode = transaction.currencyCode,
+                    currencyId = transaction.currencyId,
                     amount = transaction.amount.toPlainString(),
                     transactionDate = TimeMapper.toApi(transaction.transactionDate),
                     comment = transaction.comment.orEmpty(),

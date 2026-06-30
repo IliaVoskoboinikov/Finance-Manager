@@ -18,7 +18,7 @@ fun List<CategoryPieSlice>.toPieChartData(): PieChartData {
     val slices = this.map { slice ->
         PieChartData.Slice(
             label = "${slice.emoji} ${slice.categoryName}",
-            value = slice.percent,
+            value = slice.percentage,
             color = getRandomColorForCategory(slice.categoryId)
         )
     }
@@ -29,7 +29,7 @@ fun List<CategoryPieSlice>.toPieChartData(): PieChartData {
     )
 }
 
-private fun getRandomColorForCategory(seed: Int): Color {
+private fun getRandomColorForCategory(seed: String): Color {
     val colors = listOf(
         Purple, // #9C27B0 — фиолетовый
         Purple80, // #F50000 — красный акцент
@@ -54,5 +54,6 @@ private fun getRandomColorForCategory(seed: Int): Color {
         Color(0xFFFF1744), // красный неон
         Color(0xFF00E5FF) // ледяная бирюза
     )
-    return colors[seed % colors.size]
+    val index = seed.hashCode().let { if (it < 0) -it else it } % colors.size
+    return colors[index]
 }

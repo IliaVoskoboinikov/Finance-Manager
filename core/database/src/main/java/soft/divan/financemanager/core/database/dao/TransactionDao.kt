@@ -32,10 +32,10 @@ interface TransactionDao {
     suspend fun getByLocalId(localId: String): TransactionEntity?
 
     @Query("SELECT * FROM transactions WHERE serverId = :serverId")
-    suspend fun getByServerId(serverId: Int): TransactionEntity?
+    suspend fun getByServerId(serverId: String): TransactionEntity?
 
     @Query("SELECT * FROM transactions WHERE serverId IN (:serverIds)")
-    suspend fun getByServerIds(serverIds: List<Int>): List<TransactionEntity>
+    suspend fun getByServerIds(serverIds: List<String>): List<TransactionEntity>
 
     @Query(
         "SELECT * FROM transactions WHERE accountLocalId = :accountId ORDER BY transactionDate DESC"
@@ -50,4 +50,7 @@ interface TransactionDao {
 
     @Query("DELETE FROM transactions WHERE localId = :localId")
     suspend fun delete(localId: String)
+
+    @Query("DELETE FROM transactions")
+    suspend fun deleteAll()
 }

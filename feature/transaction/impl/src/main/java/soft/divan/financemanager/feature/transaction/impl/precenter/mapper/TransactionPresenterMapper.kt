@@ -17,8 +17,10 @@ fun Transaction.toUi(category: CategoryUi): TransactionUi {
         comment = comment.toString(),
         createdAt = UiDateFormatter.formatDateTime(createdAt),
         updatedAt = UiDateFormatter.formatDateTime(updatedAt),
-        currencyCode = currencyCode,
-        mode = TransactionMode.Edit(id)
+        currencyId = currencyId,
+        mode = TransactionMode.Edit(id),
+        targetAccountLocalId = targetAccountLocalId,
+        type = type
     )
 }
 
@@ -32,6 +34,8 @@ fun TransactionUi.toDomain(): Transaction {
         comment = comment,
         createdAt = UiDateFormatter.parse(createdAt),
         updatedAt = UiDateFormatter.parse(updatedAt),
-        currencyCode = currencyCode
+        currencyId = currencyId,
+        targetAccountLocalId = targetAccountLocalId,
+        type = type
     )
 }

@@ -9,8 +9,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.core.database.dao.AccountDao
 import soft.divan.financemanager.core.database.dao.CategoryDao
+import soft.divan.financemanager.core.database.dao.CurrencyDao
 import soft.divan.financemanager.core.database.dao.TransactionDao
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
+import soft.divan.financemanager.core.database.util.DatabaseCleanupManager
+import soft.divan.financemanager.core.database.util.DatabaseCleanupManagerImpl
 import javax.inject.Singleton
 
 @Module
@@ -23,7 +26,9 @@ object DataBaseProviderModule {
         @ApplicationContext context: Context
     ): FinanceManagerDatabase =
         Room.databaseBuilder(context, FinanceManagerDatabase::class.java, "finance_manager_db.db")
-            .fallbackToDestructiveMigration(false).build()
+            .fallbackToDestructiveMigration(true)
+            .createFromAsset("database/category_db.db")
+            .build()
 
     @Provides
     @Singleton
@@ -36,4 +41,15 @@ object DataBaseProviderModule {
     @Provides
     @Singleton
     fun provideAccountDao(db: FinanceManagerDatabase): AccountDao = db.accountDao()
+
+    @Provides
+    @Singleton
+    fun provideCurrencyDao(db: FinanceManagerDatabase): CurrencyDao = db.currencyDao()
+
+    @Provides
+    @Singleton
+    fun provideDatabaseCleanupManager(
+        accountDao: AccountDao,
+        transactionDao: TransactionDao
+    ): DatabaseCleanupManager = DatabaseCleanupManagerImpl(accountDao, transactionDao)
 }
