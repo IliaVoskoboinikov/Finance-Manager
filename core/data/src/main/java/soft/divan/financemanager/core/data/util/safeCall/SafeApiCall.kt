@@ -7,6 +7,8 @@ import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
+import soft.divan.financemanager.core.auth.data.interceptor.GuestModeNetworkBlockedException
+import soft.divan.financemanager.core.auth.data.interceptor.UnauthorizedNetworkBlockedException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -56,16 +58,26 @@ suspend fun <T : Any> safeApiCall(
                 }
             },
             onFailure = { error ->
-                errorLogger.recordError(error.message)
+                // Если это специальные исключения блокировки — мапим их в соответствующие DataError
                 when (error) {
+                    is GuestModeNetworkBlockedException -> {
+                        return@fold DomainResult.Failure(DataError.GuestMode.toDomainError())
+                    }
+
+                    is UnauthorizedNetworkBlockedException -> {
+                        return@fold DomainResult.Failure(DataError.UnauthorizedBlocked.toDomainError())
+                    }
+
                     is UnknownHostException,
                     is ConnectException,
                     is SocketTimeoutException -> DomainResult.Failure(
                         DataError.Network.toDomainError()
                     )
 
-                    else ->
+                    else -> {
+                        errorLogger.recordError(error.message)
                         DomainResult.Failure(DataError.Unknown(error).toDomainError())
+                    }
                 }
             }
         )

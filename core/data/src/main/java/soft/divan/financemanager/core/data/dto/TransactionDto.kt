@@ -4,19 +4,19 @@ import com.google.gson.annotations.SerializedName
 
 data class TransactionDto(
     @SerializedName("id")
-    val id: Int,
-    @SerializedName("account")
-    val account: AccountStateDto,
-    @SerializedName("category")
-    val category: CategoryDto,
-    @SerializedName("amount")
-    val amount: String,
-    @SerializedName("transactionDate")
-    val transactionDate: String,
-    @SerializedName("comment")
-    val comment: String,
+    val id: String,
     @SerializedName("createdAt")
     val createdAt: String,
     @SerializedName("updatedAt")
-    val updatedAt: String
+    val updatedAt: String,
+    @SerializedName("accountId")
+    val accountId: String,
+    @SerializedName("categoryId")
+    val categoryId: String,
+    @SerializedName("amount")
+    val amount: Double,
+    @SerializedName("dateTime")
+    val dateTime: String,
+    @SerializedName("comment")
+    val comment: String?
 )

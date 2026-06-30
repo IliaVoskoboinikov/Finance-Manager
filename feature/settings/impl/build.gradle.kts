@@ -11,4 +11,5 @@ dependencies {
     implementation(projects.feature.sounds.api)
     implementation(projects.feature.languages.api)
     implementation(projects.feature.synchronization.api)
+    implementation(projects.feature.auth.api)
 }

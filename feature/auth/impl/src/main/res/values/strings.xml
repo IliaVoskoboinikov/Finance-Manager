@@ -1,0 +1,30 @@
+<resources>
+    <string name="auth_welcome_back">Welcome Back</string>
+    <string name="auth_create_account">Create Account</string>
+    <string name="auth_sign_in_continue">Sign in to continue</string>
+    <string name="auth_sign_up_start">Sign up to start managing your finance</string>
+    <string name="auth_name_label">Name</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_sign_in_button">Sign In</string>
+    <string name="auth_sign_up_button">Sign Up</string>
+    <string name="auth_no_account_register">Don\'t have an account? Register</string>
+    <string name="auth_have_account_login">Already have an account? Login</string>
+    <string name="auth_continue_as_guest">Continue as Guest</string>
+    <string name="auth_or_divider">OR</string>
+    <string name="auth_sync_dialog_title">Sync Local Data?</string>
+    <string name="auth_sync_dialog_text">You have local transactions from your guest session. Do you want to sync them with your account or start fresh?</string>
+    <string name="auth_sync_data_button">Sync Data</string>
+    <string name="auth_clear_data_button">Clear Local Data</string>
+    <string name="auth_syncing_overlay">Syncing your data...</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_logout">Logout</string>
+    <string name="profile_logout_confirm_text">Are you sure you want to log out? You can choose to clear your local data or keep it for offline use.</string>
+    <string name="profile_clear_all_data">Clear All Data</string>
+    <string name="profile_keep_data_offline">Keep Data (Offline Mode)</string>
+    <string name="profile_guest_message">You are currently using the app as a Guest.</string>
+    <string name="profile_sign_in_register">Sign In or Register</string>
+    <string name="profile_authorized_message">You are logged in.</string>
+    <string name="auth_error_failed">Authentication failed. Please try again.</string>
+    <string name="auth_error_invalid_credentials">Invalid name or password.</string>
+    <string name="auth_error_network">No internet connection. Check your network and try again.</string>
+</resources>

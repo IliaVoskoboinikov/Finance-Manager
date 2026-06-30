@@ -17,4 +17,7 @@ interface CategoryDao {
 
     @Query("SELECT * FROM categories WHERE isIncome = :isIncome ORDER BY name ASC")
     fun getByType(isIncome: Boolean): Flow<List<CategoryEntity>>
+
+    @Query("SELECT * FROM categories WHERE id = :id")
+    suspend fun getById(id: String): CategoryEntity?
 }

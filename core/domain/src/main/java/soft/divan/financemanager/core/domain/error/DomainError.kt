@@ -18,6 +18,10 @@ sealed interface DomainError : AppError {
         override val cause: Throwable? = null
     }
 
+    data object GuestModeBlocked : DomainError {
+        override val cause: Throwable? = null
+    }
+
     data class Unknown(
         override val cause: Throwable?
     ) : DomainError

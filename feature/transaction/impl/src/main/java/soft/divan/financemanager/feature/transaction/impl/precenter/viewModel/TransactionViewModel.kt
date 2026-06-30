@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
+import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
@@ -25,11 +26,11 @@ import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
 import soft.divan.financemanager.feature.sounds.api.domain.SoundPlayer
 import soft.divan.financemanager.feature.sounds.api.domain.SoundType
 import soft.divan.financemanager.feature.transaction.impl.R
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.CreateTransactionUseCase
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteTransactionUseCase
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.CreateTransactionAndUpdateAccountUseCase
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteTransactionAndUpdateAccountUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetTransactionUseCase
-import soft.divan.financemanager.feature.transaction.impl.domain.usecase.UpdateTransactionUseCase
+import soft.divan.financemanager.feature.transaction.impl.domain.usecase.UpdateTransactionAndUpdateAccountUseCase
 import soft.divan.financemanager.feature.transaction.impl.navigation.IS_INCOME_KEY
 import soft.divan.financemanager.feature.transaction.impl.navigation.TRANSACTION_ID_KEY
 import soft.divan.financemanager.feature.transaction.impl.precenter.mapper.toDomain
@@ -48,12 +49,12 @@ import javax.inject.Inject
 @HiltViewModel
 @Suppress("LongParameterList", "TooManyFunctions")
 class TransactionViewModel @Inject constructor(
-    private val createTransactionUseCase: CreateTransactionUseCase,
+    private val createTransactionAndUpdateAccountUseCase: CreateTransactionAndUpdateAccountUseCase,
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getTransactionUseCase: GetTransactionUseCase,
     private val getCategoriesUseCase: GetCategoriesByTypeUseCase,
-    private val updateTransactionUseCase: UpdateTransactionUseCase,
-    private val deleteTransactionUseCase: DeleteTransactionUseCase,
+    private val updateTransactionAndUpdateAccountUseCase: UpdateTransactionAndUpdateAccountUseCase,
+    private val deleteTransactionAndUpdateAccountUseCase: DeleteTransactionAndUpdateAccountUseCase,
     private val hapticsManager: HapticsManager,
     private val soundPlayer: SoundPlayer,
     savedStateHandle: SavedStateHandle
@@ -73,7 +74,7 @@ class TransactionViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<TransactionEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    private var transaction: TransactionUi? = null
+    private var transactionUi: TransactionUi? = null
     private var categories: List<CategoryUi> = emptyList()
     private var accounts: List<AccountUi> = emptyList()
 
@@ -84,7 +85,7 @@ class TransactionViewModel @Inject constructor(
         Regex("^(0|[1-9]\\d*)(\\.\\d{0,2})?$")
 
     private fun publishSuccess() {
-        val currentTransaction = transaction ?: return
+        val currentTransaction = transactionUi ?: return
         _uiState.update {
             TransactionUiState.Success(
                 transaction = currentTransaction,
@@ -120,7 +121,7 @@ class TransactionViewModel @Inject constructor(
         val account = accounts.firstOrNull() ?: return
         val category = categories.firstOrNull() ?: return
 
-        transaction = TransactionUi(
+        transactionUi = TransactionUi(
             id = generateUUID(),
             accountId = account.id,
             category = category,
@@ -129,9 +130,11 @@ class TransactionViewModel @Inject constructor(
             time = UiDateFormatter.formatTime(LocalTime.now()),
             createdAt = UiDateFormatter.formatDateTime(now),
             updatedAt = UiDateFormatter.formatDateTime(now),
-            currencyCode = account.currency,
+            currencyId = account.currencyId,
             comment = "",
-            mode = TransactionMode.Create
+            mode = TransactionMode.Create,
+            targetAccountLocalId = null,
+            type = if (isIncome) TransactionType.INCOME else TransactionType.EXPENSE
         )
 
         publishSuccess()
@@ -143,7 +146,7 @@ class TransactionViewModel @Inject constructor(
                 val category = categories.firstOrNull { it.id == domainTransaction.categoryId }
                     ?: return@fold
 
-                transaction = domainTransaction.toUi(category)
+                transactionUi = domainTransaction.toUi(category)
                 publishSuccess()
             },
             onFailure = {
@@ -156,7 +159,7 @@ class TransactionViewModel @Inject constructor(
 
     fun save() {
         viewModelScope.launch {
-            val current = transaction ?: return@launch
+            val current = transactionUi ?: return@launch
 
             _uiState.update { TransactionUiState.Loading }
 
@@ -165,8 +168,8 @@ class TransactionViewModel @Inject constructor(
             ).toDomain()
 
             val result = when (mode) {
-                is TransactionMode.Create -> createTransactionUseCase(updated)
-                is TransactionMode.Edit -> updateTransactionUseCase(updated)
+                is TransactionMode.Create -> createTransactionAndUpdateAccountUseCase(updated)
+                is TransactionMode.Edit -> updateTransactionAndUpdateAccountUseCase(updated)
             }
 
             result.fold(
@@ -185,23 +188,23 @@ class TransactionViewModel @Inject constructor(
     }
 
     fun updateComment(comment: String) {
-        transaction = transaction?.copy(comment = comment)
+        transactionUi = transactionUi?.copy(comment = comment)
         publishSuccess()
     }
 
     fun updateDate(date: LocalDate) {
-        transaction =
-            transaction?.copy(date = UiDateFormatter.formatDate(date))
+        transactionUi =
+            transactionUi?.copy(date = UiDateFormatter.formatDate(date))
         publishSuccess()
     }
 
     fun updateTime(time: LocalTime) {
-        transaction = transaction?.copy(time = UiDateFormatter.formatTime(time))
+        transactionUi = transactionUi?.copy(time = UiDateFormatter.formatTime(time))
         publishSuccess()
     }
 
     fun onAmountInputChanged(input: String) {
-        val current = transaction?.amount ?: "0"
+        val current = transactionUi?.amount ?: "0"
 
         val newAmount = when {
             input.isEmpty() -> "0"
@@ -210,29 +213,29 @@ class TransactionViewModel @Inject constructor(
             else -> return
         }
 
-        transaction = transaction?.copy(amount = newAmount)
+        transactionUi = transactionUi?.copy(amount = newAmount)
         publishSuccess()
     }
 
     fun updateCategory(category: CategoryUi) {
-        transaction = transaction?.copy(category = category)
+        transactionUi = transactionUi?.copy(category = category)
         publishSuccess()
     }
 
     fun updateAccount(account: AccountUi) {
-        transaction = transaction?.copy(
+        transactionUi = transactionUi?.copy(
             accountId = account.id,
-            currencyCode = account.currency
+            currencyId = account.currencyId
         )
         publishSuccess()
     }
 
     fun delete() {
         viewModelScope.launch {
-            val id = transaction?.id ?: return@launch
+            val transaction = transactionUi ?: return@launch
             if (mode !is TransactionMode.Edit) return@launch
 
-            deleteTransactionUseCase(id).fold(
+            deleteTransactionAndUpdateAccountUseCase(transaction.toDomain()).fold(
                 onSuccess = {
                     hapticsManager.perform(HapticType.SUCCESS)
                     _eventFlow.emit(TransactionEvent.TransactionDeleted)

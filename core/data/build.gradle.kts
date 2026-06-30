@@ -9,9 +9,11 @@ dependencies {
     implementation(projects.core.database)
     implementation(projects.core.domain)
     implementation(projects.core.network)
+    implementation(projects.core.auth)
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.converter.gson)
+    implementation(libs.androidx.room.ktx)
 
     // todo
     testImplementation(libs.junit)
