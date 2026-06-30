@@ -1,9 +1,13 @@
 package soft.divan.financemanager.core.data.repository
 
+import retrofit2.Response
 import soft.divan.financemanager.core.auth.data.api.AuthApiService
+import soft.divan.financemanager.core.auth.data.dto.AuthResponseDto
 import soft.divan.financemanager.core.auth.data.dto.UserCredentialsDto
 import soft.divan.financemanager.core.auth.domain.model.AuthEvent
 import soft.divan.financemanager.core.auth.domain.provider.AuthStateProvider
+import soft.divan.financemanager.core.data.error.DataError
+import soft.divan.financemanager.core.data.mapper.toDomainError
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.domain.repository.AuthRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
@@ -20,55 +24,57 @@ class AuthRepositoryImpl @Inject constructor(
         name: String,
         password: String,
         shouldMergeData: Boolean
-    ): DomainResult<Unit> {
-        val result = safeApiCall(errorLogger) {
-            authApi.login(UserCredentialsDto(name, password))
-        }
-
-        return when (result) {
-            is DomainResult.Success -> {
-                val response = result.data
-                authStateProvider.sendEvent(
-                    AuthEvent.OnLoginSuccess(
-                        accessToken = response.accessToken ?: "",
-                        refreshToken = response.refreshToken ?: "",
-                        shouldMergeData = shouldMergeData
-                    )
-                )
-                DomainResult.Success(Unit)
-            }
-
-            is DomainResult.Failure -> {
-                DomainResult.Failure(result.error)
-            }
-        }
+    ): DomainResult<Unit> = authenticate(shouldMergeData) {
+        authApi.login(UserCredentialsDto(name, password))
     }
 
     override suspend fun register(
         name: String,
         password: String,
         shouldMergeData: Boolean
+    ): DomainResult<Unit> = authenticate(shouldMergeData) {
+        authApi.register(UserCredentialsDto(name, password))
+    }
+
+    /**
+     * Общая логика входа/регистрации.
+     *
+     * Сервер по контракту (Swagger) может вернуть 200 с null-токенами
+     * (accessToken/refreshToken помечены nullable). Такой ответ НЕ является валидной сессией:
+     * с пустым токеном [soft.divan.financemanager.core.network.interceptor.AuthInterceptor]
+     * не добавит заголовок Authorization, все запросы будут отклоняться (401),
+     * а пользователь останется в статусе AUTHORIZED без возможности нормально работать.
+     * Поэтому пустые/отсутствующие токены трактуются как ошибка авторизации.
+     */
+    private suspend fun authenticate(
+        shouldMergeData: Boolean,
+        apiCall: suspend () -> Response<AuthResponseDto>
     ): DomainResult<Unit> {
-        val result = safeApiCall(errorLogger) {
-            authApi.register(UserCredentialsDto(name, password))
-        }
-
-        return when (result) {
+        return when (val result = safeApiCall(errorLogger) { apiCall() }) {
             is DomainResult.Success -> {
-                val response = result.data
-                authStateProvider.sendEvent(
-                    AuthEvent.OnLoginSuccess(
-                        accessToken = response.accessToken ?: "",
-                        refreshToken = response.refreshToken ?: "",
-                        shouldMergeData = shouldMergeData
+                val accessToken = result.data.accessToken
+                val refreshToken = result.data.refreshToken
+
+                if (accessToken.isNullOrBlank() || refreshToken.isNullOrBlank()) {
+                    errorLogger.recordError("Auth succeeded (200) but tokens are null/blank")
+                    DomainResult.Failure(
+                        DataError.Unknown(
+                            IllegalStateException("Auth response contained empty tokens")
+                        ).toDomainError()
                     )
-                )
-                DomainResult.Success(Unit)
+                } else {
+                    authStateProvider.sendEvent(
+                        AuthEvent.OnLoginSuccess(
+                            accessToken = accessToken,
+                            refreshToken = refreshToken,
+                            shouldMergeData = shouldMergeData
+                        )
+                    )
+                    DomainResult.Success(Unit)
+                }
             }
 
-            is DomainResult.Failure -> {
-                DomainResult.Failure(result.error)
-            }
+            is DomainResult.Failure -> DomainResult.Failure(result.error)
         }
     }
 

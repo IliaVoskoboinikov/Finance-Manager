@@ -1,12 +1,17 @@
 package soft.divan.financemanager.core.auth.data.provider
 
 import android.util.Log
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import soft.divan.common.di.ApplicationScope
@@ -44,20 +49,61 @@ class AuthStateHolder @Inject constructor(
      */
     private val _sessionState = MutableStateFlow<SessionState>(SessionState.Unauthorized)
 
+    /**
+     * Сигнал завершения первичного восстановления состояния из хранилища.
+     * Пока он не завершён, [_sessionState] содержит дефолт [SessionState.Unauthorized],
+     * который не отражает реальную сессию пользователя.
+     */
+    private val initialization = CompletableDeferred<Unit>()
+
     init {
         // Восстановление состояния из персистентного хранилища при холодном старте.
         scope.launch {
-            val status = sessionDataSource.getAuthStatus().first()
-            val access = tokenDataSource.getAccessToken().first()
-            val refresh = tokenDataSource.getRefreshToken().first()
+            try {
+                val status = sessionDataSource.getAuthStatus().first()
+                val access = tokenDataSource.getAccessToken().first()
+                val refresh = tokenDataSource.getRefreshToken().first()
 
-            _sessionState.value = mapToSessionState(status, access, refresh)
+                _sessionState.value = mapToSessionState(status, access, refresh)
+            } finally {
+                initialization.complete(Unit)
+            }
         }
     }
 
-    override fun currentStatus(): AuthStatus = _sessionState.value.status
+    /**
+     * Гарантирует, что состояние восстановлено перед синхронным чтением.
+     *
+     * Вызывается только из сетевых интерцепторов ([currentStatus]/[currentSessionState]),
+     * которые работают на фоновых потоках OkHttp, поэтому короткая блокировка здесь безопасна
+     * и исключает гонку, когда запрос уходит до восстановления сессии (без токена/со статусом
+     * UNAUTHORIZED, что приводило бы к ложной блокировке запроса авторизованного пользователя).
+     */
+    private fun awaitRestore() {
+        if (!initialization.isCompleted) {
+            runBlocking { initialization.await() }
+        }
+    }
 
-    override fun currentSessionState(): SessionState = _sessionState.value
+    override fun currentStatus(): AuthStatus {
+        awaitRestore()
+        return _sessionState.value.status
+    }
+
+    override fun currentSessionState(): SessionState {
+        awaitRestore()
+        return _sessionState.value
+    }
+
+    /**
+     * Реактивный статус из in-memory состояния (единый источник истины).
+     * Сначала дожидается восстановления, затем транслирует изменения [_sessionState],
+     * чтобы UI/навигация не реагировали на промежуточный дефолт при холодном старте.
+     */
+    override fun observeStatus(): Flow<AuthStatus> = flow {
+        initialization.await()
+        emitAll(_sessionState.map { it.status }.distinctUntilChanged())
+    }
 
     /**
      * Основная точка входа для изменения состояния сессии.
@@ -84,7 +130,9 @@ class AuthStateHolder @Inject constructor(
      * и мгновенная активация сессии в памяти.
      */
     private suspend fun handleLogin(event: AuthEvent.OnLoginSuccess) {
-        val previousStatus = currentStatus()
+        // Читаем состояние напрямую: метод уже выполняется внутри mutex на скоупе приложения,
+        // а awaitRestore()/currentStatus() предназначены только для сетевых (фоновых) потоков.
+        val previousStatus = _sessionState.value.status
 
         if (previousStatus == AuthStatus.GUEST && !event.shouldMergeData) {
             Log.i("AuthState", "Clearing database as requested (Login with data wipe)")

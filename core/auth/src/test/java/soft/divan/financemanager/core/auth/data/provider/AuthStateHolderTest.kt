@@ -7,6 +7,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -63,6 +64,16 @@ class AuthStateHolderTest {
         assertThat(
             authStateHolder.currentSessionState()
         ).isInstanceOf(SessionState.Authorized::class.java)
+    }
+
+    @Test
+    fun `observeStatus emits restored status after initialization`() = runTest {
+        every { sessionDataSource.getAuthStatus() } returns flowOf(AuthStatus.GUEST)
+
+        createHolder()
+        testScope.runCurrent()
+
+        assertThat(authStateHolder.observeStatus().first()).isEqualTo(AuthStatus.GUEST)
     }
 
     @Test
