@@ -6,9 +6,11 @@ import java.time.Instant
 data class Transaction(
     val id: String,
     val accountLocalId: String,
-    val currencyCode: String,
-    val categoryId: Int,
+    val targetAccountLocalId: String?, // только для transfer
+    val currencyId: String,
+    val categoryId: String,
     val amount: BigDecimal,
+    val type: TransactionType,
     val transactionDate: Instant,
     val comment: String?,
     val createdAt: Instant,

@@ -1,7 +1,7 @@
 package soft.divan.financemanager.feature.transaction.impl.precenter.model
 
 data class CategoryUi(
-    val id: Int,
+    val id: String,
     val name: String,
     val emoji: String
 )

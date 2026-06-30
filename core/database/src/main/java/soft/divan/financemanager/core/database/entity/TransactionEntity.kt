@@ -8,12 +8,13 @@ import soft.divan.financemanager.core.database.model.SyncStatus
 data class TransactionEntity(
     @PrimaryKey
     val localId: String,
-    val serverId: Int?,
-    val accountLocalId: String,
-    // todo может быть не хранить accountServerId тут вообще
-    val accountServerId: Int?,
-    val categoryId: Int,
-    val currencyCode: String,
+    val serverId: String?,
+    val accountLocalId: String, // todo может быть не хранить accountServerId тут вообще
+    val type: String,
+    val targetAccountLocalId: String?,
+    val accountServerId: String?,
+    val categoryId: String,
+    val currencyId: String,
     val amount: String,
     val transactionDate: String,
     val comment: String,

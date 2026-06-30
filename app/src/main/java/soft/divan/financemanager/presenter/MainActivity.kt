@@ -15,6 +15,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
 import dagger.hilt.android.AndroidEntryPoint
+import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
+import soft.divan.financemanager.feature.auth.api.AuthFeatureApi
 import soft.divan.financemanager.feature.category.api.CategoryFeatureApi
 import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetAccentColorUseCase
@@ -39,6 +41,9 @@ class MainActivity : ComponentActivity() {
     lateinit var splashFeatureApi: SplashScreenFeatureApi
 
     @Inject
+    lateinit var authFeatureApi: AuthFeatureApi
+
+    @Inject
     lateinit var transactionsTodayFeatureApi: TransactionsTodayFeatureApi
 
     @Inject
@@ -49,6 +54,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var settingsFeatureApi: SettingsFeatureApi
+
+    @Inject
+    lateinit var getAuthStatusUseCase: GetAuthStatusUseCase
 
     @Inject
     lateinit var getThemeModeUseCase: GetThemeModeUseCase
@@ -114,6 +122,8 @@ class MainActivity : ComponentActivity() {
                 } else {
                     RootNavGraph(
                         splashFeatureApi = splashFeatureApi,
+                        authFeatureApi = authFeatureApi,
+                        getAuthStatusUseCase = getAuthStatusUseCase,
                         mainScreen = {
                             MainScreen(
                                 transactionsTodayFeatureApi = transactionsTodayFeatureApi,

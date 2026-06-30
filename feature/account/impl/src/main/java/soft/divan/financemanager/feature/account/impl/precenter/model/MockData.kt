@@ -9,7 +9,7 @@ val mockAccountUiStateSuccess = AccountUiState.Success(
         id = "1",
         name = "счет1",
         balance = "1000",
-        currency = "Rub",
+        currencyId = "Rub",
         createdAt = "dd.MM.yyyy HH:mm ",
         updatedAt = "dd.MM.yyyy HH:mm "
     ),

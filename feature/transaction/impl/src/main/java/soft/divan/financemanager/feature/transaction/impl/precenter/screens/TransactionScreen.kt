@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.feature.transaction.impl.R
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.CategoryUi
@@ -459,7 +460,8 @@ private fun AccountSheetContent(
                         },
                     content = {
                         Text(
-                            text = account.name + " " + account.balance + " " + account.currency,
+                            text = "${account.name} ${account.balance} " +
+                                CurrencySymbol.fromId(account.currencyId),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }

@@ -5,17 +5,15 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.error.DomainError
-import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetCategoriesUseCase
 import soft.divan.financemanager.feature.category.impl.R
@@ -32,13 +30,11 @@ class CategoriesViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CategoriesUiState>(CategoriesUiState.Loading)
-    val uiState: StateFlow<CategoriesUiState> = _uiState
-        .onStart { loadCategories() }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(DEFAULT_STOP_TIMEOUT_MS),
-            CategoriesUiState.Loading
-        )
+    val uiState: StateFlow<CategoriesUiState> = _uiState.asStateFlow()
+
+    init {
+        loadCategories()
+    }
 
     fun loadCategories() {
         getCategoriesUseCase()

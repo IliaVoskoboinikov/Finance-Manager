@@ -16,14 +16,14 @@ import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbFlow
+import soft.divan.financemanager.core.database.entity.AccountEntity
+import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
-import soft.divan.financemanager.core.database.entity.AccountEntity
-import soft.divan.financemanager.core.database.model.SyncStatus
 import javax.inject.Inject
 
 class AccountRepositoryImpl @Inject constructor(
@@ -124,7 +124,7 @@ class AccountRepositoryImpl @Inject constructor(
                 accountEntity.copy(
                     name = account.name,
                     balance = account.balance.toPlainString(),
-                    currency = account.currency,
+                    currencyId = account.currencyId,
                     createdAt = TimeMapper.toApi(account.createdAt),
                     updatedAt = TimeMapper.toApi(account.updatedAt),
                     syncStatus = if (accountEntity.serverId == null) {

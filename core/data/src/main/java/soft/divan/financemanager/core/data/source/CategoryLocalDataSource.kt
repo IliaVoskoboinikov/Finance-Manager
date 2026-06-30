@@ -7,4 +7,5 @@ interface CategoryLocalDataSource {
     suspend fun insert(categories: List<CategoryEntity>)
     suspend fun getAll(): Flow<List<CategoryEntity>>
     suspend fun getByType(isIncome: Boolean): Flow<List<CategoryEntity>>
+    suspend fun getById(id: String): CategoryEntity?
 }

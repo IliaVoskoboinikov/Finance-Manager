@@ -9,32 +9,36 @@ import javax.inject.Inject
 class TransactionLocalDataSourceImpl @Inject constructor(
     private val transactionDao: TransactionDao
 ) : TransactionLocalDataSource {
+    override suspend fun insert(transaction: TransactionEntity) = transactionDao.insert(transaction)
 
-    override suspend fun create(transaction: TransactionEntity) =
-        transactionDao.insert(transaction)
-
-    override suspend fun getByAccountAndPeriod(
+    override fun getByAccountAndPeriod(
         accountId: String,
         startDate: String,
         endDate: String
     ): Flow<List<TransactionEntity>> =
         transactionDao.getByAccountAndPeriod(accountId, startDate, endDate)
 
-    override suspend fun getByAccountId(accountId: String): List<TransactionEntity> =
-        transactionDao.getByAccountId(accountId)
-
     override suspend fun getByLocalId(localId: String): TransactionEntity? =
         transactionDao.getByLocalId(localId)
 
-    override suspend fun getByServerId(id: Int): TransactionEntity? =
+    override suspend fun getByServerId(id: String): TransactionEntity? =
         transactionDao.getByServerId(id)
 
-    override suspend fun getByServerIds(serverIds: List<Int>): List<TransactionEntity> =
-        if (serverIds.isEmpty()) emptyList() else transactionDao.getByServerIds(serverIds)
+    override suspend fun getByServerIds(serverIds: List<String>): List<TransactionEntity> =
+        transactionDao.getByServerIds(serverIds)
 
-    override suspend fun getPendingSync(): List<TransactionEntity> = transactionDao.getPendingSync()
+    override suspend fun getByAccountId(accountId: String): List<TransactionEntity> =
+        transactionDao.getByAccountId(accountId)
 
-    override suspend fun update(transaction: TransactionEntity) = transactionDao.update(transaction)
+    override suspend fun getPendingSync(): List<TransactionEntity> =
+        transactionDao.getPendingSync()
 
-    override suspend fun delete(localId: String) = transactionDao.delete(localId)
+    override suspend fun update(transaction: TransactionEntity) =
+        transactionDao.update(transaction)
+
+    override suspend fun delete(localId: String) =
+        transactionDao.delete(localId)
+
+    override suspend fun deleteAll() =
+        transactionDao.deleteAll()
 }

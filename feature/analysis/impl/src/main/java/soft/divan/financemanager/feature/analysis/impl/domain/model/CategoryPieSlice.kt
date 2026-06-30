@@ -3,9 +3,9 @@ package soft.divan.financemanager.feature.analysis.impl.domain.model
 import java.math.BigDecimal
 
 data class CategoryPieSlice(
-    val categoryId: Int,
+    val categoryId: String,
     val categoryName: String,
     val emoji: String,
-    val totalAmount: BigDecimal,
-    val percent: Float
+    val amount: BigDecimal,
+    val percentage: Float
 )

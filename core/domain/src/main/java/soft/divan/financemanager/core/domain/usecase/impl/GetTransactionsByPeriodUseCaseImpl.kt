@@ -68,7 +68,7 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
         combine(
             accountRepository.getAll(),
             categoryRepository.getAll(),
-            currencyRepository.get()
+            currencyRepository.getSelectedCurrency()
         ) { accountsResult, categoriesResult, currency ->
 
             when {
@@ -169,7 +169,7 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
 
     private fun filterAndSortTransactions(
         results: Array<DomainResult<List<Transaction>>>,
-        categoriesMap: Map<Int, Category>,
+        categoriesMap: Map<String, Category>,
         isIncome: Boolean
     ): List<Transaction> {
         // Агрегация всех транзакций

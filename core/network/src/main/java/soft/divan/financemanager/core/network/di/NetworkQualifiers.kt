@@ -13,3 +13,7 @@ annotation class NetworkInterceptorQualifier
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class RetryInterceptorQualifier
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class BaseOkHttpClientQualifier

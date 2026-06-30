@@ -1,7 +1,7 @@
 package soft.divan.financemanager.feature.category.impl.presenter.model
 
 data class UiCategory(
-    val id: Int,
+    val id: String,
     val name: String,
     val emoji: String,
     val isIncome: Boolean

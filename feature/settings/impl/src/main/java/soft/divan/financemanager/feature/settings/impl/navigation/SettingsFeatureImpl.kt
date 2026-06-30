@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
 import soft.divan.financemanager.core.featureapi.RouteScope
+import soft.divan.financemanager.feature.auth.api.AuthFeatureApi
 import soft.divan.financemanager.feature.designapp.api.DesignAppFeatureApi
 import soft.divan.financemanager.feature.haptics.api.HapticsFeatureApi
 import soft.divan.financemanager.feature.languages.api.LanguagesFeatureApi
@@ -44,6 +45,9 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
     @Inject
     lateinit var synchronizationFeatureApi: SynchronizationFeatureApi
 
+    @Inject
+    lateinit var authFeatureApi: AuthFeatureApi
+
     override fun registerGraph(
         navGraphBuilder: NavGraphBuilder,
         navController: NavHostController,
@@ -76,6 +80,9 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
                     },
                     onNavigateToSynchronization = {
                         navController.navigate(scope.route(synchronizationFeatureApi.route))
+                    },
+                    onNavigateToProfile = {
+                        navController.navigate(scope.route(authFeatureApi.profileRoute))
                     }
                 )
             )
@@ -146,6 +153,13 @@ class SettingsFeatureImpl @Inject constructor() : SettingsFeatureApi {
             navGraphBuilder,
             navController,
             scope.child(languagesFeatureApi.route),
+            modifier
+        )
+
+        authFeatureApi.registerGraph(
+            navGraphBuilder,
+            navController,
+            scope.child(authFeatureApi.profileRoute),
             modifier
         )
     }

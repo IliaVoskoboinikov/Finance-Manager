@@ -4,6 +4,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
 import soft.divan.financemanager.core.domain.model.Category
+import java.time.Instant
 
 class SearchCategoryUseCaseImplTest {
 
@@ -14,10 +15,10 @@ class SearchCategoryUseCaseImplTest {
         // Arrange
         val query = "foo"
         val categories = listOf(
-            Category(id = 1, name = "Food", emoji = "🍔", isIncome = false),
-            Category(id = 2, name = "Football", emoji = "⚽", isIncome = false),
-            Category(id = 3, name = "Salary", emoji = "💰", isIncome = true),
-            Category(id = 4, name = "Transport", emoji = "🚗", isIncome = false)
+            createCategory("1", "Food", "🍔", false),
+            createCategory("2", "Football", "⚽", false),
+            createCategory("3", "Salary", "💰", true),
+            createCategory("4", "Transport", "🚗", false)
         )
 
         // Act
@@ -33,8 +34,8 @@ class SearchCategoryUseCaseImplTest {
         // Arrange
         val query = "Taxi"
         val categories = listOf(
-            Category(1, "Food", "🍔", false),
-            Category(2, "Salary", "💰", true)
+            createCategory("1", "Food", "🍔", false),
+            createCategory("2", "Salary", "💰", true)
         )
 
         // Act
@@ -49,8 +50,8 @@ class SearchCategoryUseCaseImplTest {
         // Arrange
         val query = ""
         val categories = listOf(
-            Category(1, "Food", "🍔", false),
-            Category(2, "Salary", "💰", true)
+            createCategory("1", "Food", "🍔", false),
+            createCategory("2", "Salary", "💰", true)
         )
 
         // Act
@@ -78,8 +79,8 @@ class SearchCategoryUseCaseImplTest {
         // Arrange
         val query = "Salary"
         val categories = listOf(
-            Category(1, "Food", "🍔", false),
-            Category(2, "Salary", "💰", true)
+            createCategory("1", "Food", "🍔", false),
+            createCategory("2", "Salary", "💰", true)
         )
 
         // Act
@@ -95,8 +96,8 @@ class SearchCategoryUseCaseImplTest {
         // Arrange
         val query = "VeryLongQueryThatDoesNotMatch"
         val categories = listOf(
-            Category(1, "Food", "🍔", false),
-            Category(2, "Rent", "🏠", false)
+            createCategory("1", "Food", "🍔", false),
+            createCategory("2", "Rent", "🏠", false)
         )
 
         // Act
@@ -105,4 +106,18 @@ class SearchCategoryUseCaseImplTest {
         // Assert
         Assert.assertEquals(emptyList<Category>(), result)
     }
+
+    private fun createCategory(
+        id: String,
+        name: String,
+        emoji: String,
+        isIncome: Boolean
+    ) = Category(
+        id = id,
+        name = name,
+        emoji = emoji,
+        isIncome = isIncome,
+        createdAt = Instant.now(),
+        updatedAt = Instant.now()
+    )
 }
