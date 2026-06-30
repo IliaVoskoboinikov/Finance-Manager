@@ -47,12 +47,12 @@ class GuestAccessInterceptor @Inject constructor(
             AuthStatus.AUTHORIZED -> chain.proceed(request)
 
             AuthStatus.GUEST -> {
-                Log.w("NetworkSafety", "Request blocked: Guest mode is active for ${request.url()}")
+                Log.w("NetworkSafety", "Request blocked: Guest mode is active for ${request.url}")
                 throw GuestModeNetworkBlockedException()
             }
 
             AuthStatus.UNAUTHORIZED -> {
-                Log.e("NetworkSafety", "Request blocked: User is UNAUTHORIZED for ${request.url()}")
+                Log.e("NetworkSafety", "Request blocked: User is UNAUTHORIZED for ${request.url}")
                 throw UnauthorizedNetworkBlockedException()
             }
         }

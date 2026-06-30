@@ -22,17 +22,17 @@ class TokenAuthenticator @Inject constructor(
 
     @Suppress("ReturnCount")
     override fun authenticate(route: Route?, response: Response): Request? {
-        val retryCount = response.request().header(RETRY_HEADER)?.toIntOrNull() ?: 0
+        val retryCount = response.request.header(RETRY_HEADER)?.toIntOrNull() ?: 0
         if (retryCount >= MAX_RETRY_COUNT) return null
 
         // Токен, с которым был отправлен исходный запрос
-        val oldToken = response.request().header(AUTH_HEADER)?.removePrefix(BEARER_PREFIX)
+        val oldToken = response.request.header(AUTH_HEADER)?.removePrefix(BEARER_PREFIX)
 
         val newToken = runBlocking {
             authManager.refreshTokenIfNeeded(oldToken)
         } ?: return null
 
-        return response.request().newBuilder()
+        return response.request.newBuilder()
             .header(AUTH_HEADER, "$BEARER_PREFIX$newToken")
             .header(RETRY_HEADER, (retryCount + 1).toString())
             .build()
