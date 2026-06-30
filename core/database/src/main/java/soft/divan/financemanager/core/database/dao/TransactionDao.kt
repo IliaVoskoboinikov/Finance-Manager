@@ -18,7 +18,7 @@ interface TransactionDao {
         """
     SELECT * FROM transactions
     WHERE accountLocalId = :accountId
-      AND date(transactionDate) BETWEEN date(:startDate) AND date(:endDate)
+      AND date(transactionDate, 'localtime') BETWEEN date(:startDate) AND date(:endDate)
     ORDER BY transactionDate ASC
 """
     )
