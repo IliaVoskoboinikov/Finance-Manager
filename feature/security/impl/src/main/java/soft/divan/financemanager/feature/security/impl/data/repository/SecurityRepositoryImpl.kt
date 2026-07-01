@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.security.impl.data.repository
 
+import soft.divan.financemanager.feature.security.impl.data.crypto.PinHasher
 import soft.divan.financemanager.feature.security.impl.data.sourse.SecurityLocalDataSource
 import soft.divan.financemanager.feature.security.impl.domain.repository.SecurityRepository
 import javax.inject.Inject
@@ -9,11 +10,12 @@ class SecurityRepositoryImpl @Inject constructor(
 ) : SecurityRepository {
 
     override fun savePin(pin: String) {
-        securityLocalDataSource.savePin(pin)
+        securityLocalDataSource.savePin(PinHasher.hash(pin))
     }
 
-    override fun getPin(): String? {
-        return securityLocalDataSource.getPin()
+    override fun verifyPin(pin: String): Boolean {
+        val storedHash = securityLocalDataSource.getPin() ?: return false
+        return PinHasher.verify(pin, storedHash)
     }
 
     override fun isPinSet(): Boolean {

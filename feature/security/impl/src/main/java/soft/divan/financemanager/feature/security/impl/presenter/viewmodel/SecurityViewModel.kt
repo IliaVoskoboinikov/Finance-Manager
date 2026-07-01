@@ -11,14 +11,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.feature.security.impl.domain.usecase.DeletePinUseCase
-import soft.divan.financemanager.feature.security.impl.domain.usecase.GetSavedPinUseCase
 import soft.divan.financemanager.feature.security.impl.domain.usecase.IsPinSetUseCase
+import soft.divan.financemanager.feature.security.impl.domain.usecase.VerifyPinUseCase
 import soft.divan.financemanager.feature.security.impl.presenter.model.SecurityUiState
 import javax.inject.Inject
 
 @HiltViewModel
 open class SecurityViewModel @Inject constructor(
-    private val getSavedPinUseCase: GetSavedPinUseCase,
+    private val verifyPinUseCase: VerifyPinUseCase,
     private val isPinSetUseCase: IsPinSetUseCase,
     private val deletePinUseCase: DeletePinUseCase
 ) : ViewModel() {
@@ -33,9 +33,8 @@ open class SecurityViewModel @Inject constructor(
         )
 
     fun loadPin() {
-        val savedPin = getSavedPinUseCase() ?: ""
         _uiState.update {
-            SecurityUiState.Success(pin = savedPin, hasPin = isPinSetUseCase())
+            SecurityUiState.Success(hasPin = isPinSetUseCase())
         }
     }
 
@@ -43,7 +42,9 @@ open class SecurityViewModel @Inject constructor(
         val currentState = uiState.value
         if (currentState is SecurityUiState.Success) {
             deletePinUseCase()
-            _uiState.update { SecurityUiState.Success(pin = "", hasPin = false) }
+            _uiState.update { SecurityUiState.Success(hasPin = false) }
         }
     }
+
+    fun verifyPin(pin: String): Boolean = verifyPinUseCase(pin)
 }

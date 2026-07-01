@@ -10,13 +10,13 @@ import soft.divan.financemanager.feature.security.impl.data.sourse.SecurityLocal
 import soft.divan.financemanager.feature.security.impl.data.sourse.impl.SecurityLocalDataSourceImpl
 import soft.divan.financemanager.feature.security.impl.domain.repository.SecurityRepository
 import soft.divan.financemanager.feature.security.impl.domain.usecase.DeletePinUseCase
-import soft.divan.financemanager.feature.security.impl.domain.usecase.GetSavedPinUseCase
 import soft.divan.financemanager.feature.security.impl.domain.usecase.IsPinSetUseCase
 import soft.divan.financemanager.feature.security.impl.domain.usecase.SavePinUseCase
+import soft.divan.financemanager.feature.security.impl.domain.usecase.VerifyPinUseCase
 import soft.divan.financemanager.feature.security.impl.domain.usecase.impl.DeletePinUseCaseImpl
-import soft.divan.financemanager.feature.security.impl.domain.usecase.impl.GetSavedPinUseCaseImpl
 import soft.divan.financemanager.feature.security.impl.domain.usecase.impl.IsPinSetUseCaseImpl
 import soft.divan.financemanager.feature.security.impl.domain.usecase.impl.SavePinUseCaseImpl
+import soft.divan.financemanager.feature.security.impl.domain.usecase.impl.VerifyPinUseCaseImpl
 import soft.divan.financemanager.feature.security.impl.navigation.SecurityFeatureImpl
 import javax.inject.Singleton
 
@@ -39,7 +39,7 @@ interface SecurityBinderModule {
     fun bindSavePinUseCase(impl: SavePinUseCaseImpl): SavePinUseCase
 
     @Binds
-    fun bindGetSavedPinUseCase(impl: GetSavedPinUseCaseImpl): GetSavedPinUseCase
+    fun bindVerifyPinUseCase(impl: VerifyPinUseCaseImpl): VerifyPinUseCase
 
     @Binds
     fun bindIsPinSetUseCase(impl: IsPinSetUseCaseImpl): IsPinSetUseCase

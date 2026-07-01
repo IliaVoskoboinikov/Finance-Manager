@@ -11,4 +11,5 @@
     <string name="delete_pin">удалить пин-код</string>
     <string name="security">Безопасность</string>
     <string name="pin_codes_do_not_match">PIN-коды не совпадают</string>
+    <string name="wrong_pin">Неверный PIN, попробуйте снова</string>
 </resources>

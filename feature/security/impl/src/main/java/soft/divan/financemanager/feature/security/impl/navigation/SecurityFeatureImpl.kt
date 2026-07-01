@@ -37,8 +37,8 @@ class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
 
         /* Nested graph for internal scenario */
         navGraphBuilder.navigation(
-            route = SCENARIO_SECURITY_ROUTE,
-            startDestination = SCREEN_CREATE_ROUTE
+            route = scope.route(SCENARIO_SECURITY_ROUTE),
+            startDestination = scope.route(SCREEN_CREATE_ROUTE)
         ) {
             composable(route = scope.route(SCREEN_CREATE_ROUTE)) {
                 CreatePinScreen(

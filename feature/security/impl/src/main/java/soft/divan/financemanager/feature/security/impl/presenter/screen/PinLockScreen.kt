@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -20,7 +21,7 @@ import soft.divan.financemanager.uikit.components.LoadingProgressBar
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun PreviewPinLockScreen() {
-    PinLockScreenContent(pin = "1234", onPinCorrect = { }, null)
+    PinLockScreenContent(onVerifyPin = { it == "1234" }, onPinCorrect = { }, null)
 }
 
 @Composable
@@ -33,7 +34,7 @@ fun PinLockScreen(
         @RequiresApi(Build.VERSION_CODES.P)
         object : BiometricPrompt.AuthenticationCallback() {
             override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                ""
+                // no-op: пользователь остаётся на экране ввода PIN
             }
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
@@ -41,7 +42,7 @@ fun PinLockScreen(
             }
 
             override fun onAuthenticationFailed() {
-                ""
+                // no-op: неуспешная попытка биометрии — можно повторить или ввести PIN
             }
         }
 
@@ -51,7 +52,7 @@ fun PinLockScreen(
         is SecurityUiState.Loading -> LoadingProgressBar()
 
         is SecurityUiState.Success -> PinLockScreenContent(
-            pin = (uiState as SecurityUiState.Success).pin,
+            onVerifyPin = viewModel::verifyPin,
             onPinCorrect = onPinCorrect,
             authenticationCallback = authenticationCallback
         )
@@ -60,21 +61,22 @@ fun PinLockScreen(
 
 @Composable
 fun PinLockScreenContent(
-    pin: String,
+    onVerifyPin: (String) -> Boolean,
     onPinCorrect: () -> Unit,
     authenticationCallback: BiometricPrompt.AuthenticationCallback? = null
 ) {
     var errorMessage by remember { mutableStateOf("") }
+    val wrongPinMessage = stringResource(R.string.wrong_pin)
     PinEntryCommonScreen(
         titleId = R.string.input_password,
         errorMessage = errorMessage,
         showBiometricButton = true,
         onPinEntered = { enteredPin ->
-            if (enteredPin == pin) {
+            if (onVerifyPin(enteredPin)) {
                 errorMessage = ""
                 onPinCorrect()
             } else {
-                errorMessage = "Неверный PIN, попробуйте снова"
+                errorMessage = wrongPinMessage
             }
         },
         authenticationCallback = authenticationCallback

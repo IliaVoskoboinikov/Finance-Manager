@@ -11,5 +11,6 @@
     <string name="delete_pin">remove pin code</string>
     <string name="security">Security</string>
     <string name="pin_codes_do_not_match">PIN codes do not match</string>
+    <string name="wrong_pin">Wrong PIN, try again</string>
 
 </resources>

@@ -32,7 +32,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 fun PreviewSecurityScreen() {
     FinanceManagerTheme {
         SecurityContent(
-            uiState = SecurityUiState.Success(pin = "2122", hasPin = true),
+            uiState = SecurityUiState.Success(hasPin = true),
             deletePin = {},
             onNavigateBack = {},
             onNavigateToCreatePin = {}

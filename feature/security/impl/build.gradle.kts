@@ -7,7 +7,13 @@ dependencies {
     implementation(projects.core.network)
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
+    implementation(projects.core.security)
 
-    implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.biometric.ktx)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.assertj.core)
 }

@@ -7,7 +7,6 @@ import androidx.compose.runtime.Immutable
 sealed interface SecurityUiState {
     data object Loading : SecurityUiState
     data class Success(
-        val pin: String = "",
         val hasPin: Boolean = false
     ) : SecurityUiState
 
