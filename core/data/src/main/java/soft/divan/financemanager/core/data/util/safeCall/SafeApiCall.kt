@@ -14,71 +14,91 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import kotlin.coroutines.CoroutineContext
 
-suspend fun <T : Any> safeApiCall(
+private const val HTTP_NOT_FOUND = 404
+private const val HTTP_UNAUTHORIZED = 401
+private const val HTTP_SERVER_ERROR_MIN = 500
+private const val HTTP_SERVER_ERROR_MAX = 599
+
+/**
+ * Безопасный вызов API.
+ *
+ * Поведение при успешном ответе без тела зависит от типа [T]:
+ * - если [T] это [Unit] (no-content эндпоинты: update/delete/logout) — возвращается `Success(Unit)`;
+ * - иначе пустое тело трактуется как отсутствие данных (`Failure(NotFound)`), а не приводится
+ *   к [Unit] небезопасным кастом (иначе у типизированного эндпоинта был бы «сломанный» Success
+ *   и ClassCastException у вызывающего).
+ */
+suspend inline fun <reified T : Any> safeApiCall(
     errorLogger: ErrorLogger,
     ctx: CoroutineContext = Dispatchers.IO,
-    call: suspend () -> Response<T>
-): DomainResult<T> = withContext(ctx) {
-    runCatching { call() }
-        .fold(
-            onSuccess = { response ->
-                when {
-                    response.isSuccessful -> {
-                        val body = response.body()
-                        if (body != null) {
-                            DomainResult.Success(body)
-                        } else {
-                            DomainResult.Success(Unit as T)
-                        }
-                    }
+    noinline call: suspend () -> Response<T>
+): DomainResult<T> {
+    @Suppress("UNCHECKED_CAST")
+    return safeApiCallInternal(
+        errorLogger = errorLogger,
+        ctx = ctx,
+        allowEmptyBody = T::class == Unit::class,
+        call = call
+    ) as DomainResult<T>
+}
 
-                    response.code() == 404 -> {
-                        errorLogger.recordError(response.message())
+@PublishedApi
+internal suspend fun safeApiCallInternal(
+    errorLogger: ErrorLogger,
+    ctx: CoroutineContext,
+    allowEmptyBody: Boolean,
+    call: suspend () -> Response<*>
+): DomainResult<Any> = withContext(ctx) {
+    runCatching { call() }.fold(
+        onSuccess = { response ->
+            if (response.isSuccessful) {
+                val body = response.body()
+                when {
+                    body != null -> DomainResult.Success(body)
+
+                    allowEmptyBody -> DomainResult.Success(Unit)
+
+                    else -> {
+                        errorLogger.recordError("Empty body for successful response ${response.code()}")
                         DomainResult.Failure(DataError.NotFound.toDomainError())
                     }
-
-                    response.code() == 401 -> {
-                        errorLogger.recordError(response.message())
-                        DomainResult.Failure(DataError.Unauthorized.toDomainError())
-                    }
-
-                    response.code() in 500..599 -> {
-                        errorLogger.recordError(response.message())
-                        DomainResult.Failure(DataError.Server.toDomainError())
-                    }
-
-                    else -> {
-                        errorLogger.recordError(response.message())
-                        DomainResult.Failure(
-                            DataError.Unknown(
-                                Throwable(response.message())
-                            ).toDomainError()
-                        )
-                    }
                 }
-            },
-            onFailure = { error ->
-                // Если это специальные исключения блокировки — мапим их в соответствующие DataError
-                when (error) {
-                    is GuestModeNetworkBlockedException -> {
-                        return@fold DomainResult.Failure(DataError.GuestMode.toDomainError())
-                    }
-
-                    is UnauthorizedNetworkBlockedException -> {
-                        return@fold DomainResult.Failure(DataError.UnauthorizedBlocked.toDomainError())
-                    }
-
-                    is UnknownHostException,
-                    is ConnectException,
-                    is SocketTimeoutException -> DomainResult.Failure(
-                        DataError.Network.toDomainError()
-                    )
-
-                    else -> {
-                        errorLogger.recordError(error.message)
-                        DomainResult.Failure(DataError.Unknown(error).toDomainError())
-                    }
-                }
+            } else {
+                response.toFailure(errorLogger)
             }
-        )
+        },
+        onFailure = { it.toFailure(errorLogger) }
+    )
 }
+
+/** Маппит неуспешный HTTP-ответ в доменную ошибку. */
+private fun Response<*>.toFailure(errorLogger: ErrorLogger): DomainResult.Failure {
+    errorLogger.recordError(message())
+    val dataError = when {
+        code() == HTTP_NOT_FOUND -> DataError.NotFound
+        code() == HTTP_UNAUTHORIZED -> DataError.Unauthorized
+        code() in HTTP_SERVER_ERROR_MIN..HTTP_SERVER_ERROR_MAX -> DataError.Server
+        else -> DataError.Unknown(Throwable(message()))
+    }
+    return DomainResult.Failure(dataError.toDomainError())
+}
+
+/** Маппит исключение сетевого вызова в доменную ошибку. */
+private fun Throwable.toFailure(errorLogger: ErrorLogger): DomainResult.Failure =
+    when (this) {
+        is GuestModeNetworkBlockedException ->
+            DomainResult.Failure(DataError.GuestMode.toDomainError())
+
+        is UnauthorizedNetworkBlockedException ->
+            DomainResult.Failure(DataError.UnauthorizedBlocked.toDomainError())
+
+        is UnknownHostException,
+        is ConnectException,
+        is SocketTimeoutException ->
+            DomainResult.Failure(DataError.Network.toDomainError())
+
+        else -> {
+            errorLogger.recordError(message)
+            DomainResult.Failure(DataError.Unknown(this).toDomainError())
+        }
+    }
