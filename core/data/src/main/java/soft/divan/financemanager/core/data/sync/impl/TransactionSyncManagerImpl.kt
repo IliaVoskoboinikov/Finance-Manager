@@ -2,6 +2,7 @@ package soft.divan.financemanager.core.data.sync.impl
 
 import kotlinx.coroutines.flow.first
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
+import soft.divan.financemanager.core.data.mapper.TimeMapper
 import soft.divan.financemanager.core.data.mapper.toDto
 import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.mapper.toUpdateDto
@@ -242,8 +243,8 @@ class TransactionSyncManagerImpl @Inject constructor(
                 if (localTransaction == null) {
                     //  Локальной транзакции нет → создаём
                     safeDbCall(errorLogger) { localDataSource.insert(entity) }
-                } else if (transactionDto.updatedAt > localTransaction.updatedAt) {
-                    // Если есть, то разрешаем конфликт, побеждает, так которая менялась позже
+                } else if (TimeMapper.isAfter(transactionDto.updatedAt, localTransaction.updatedAt)) {
+                    // Если есть, то разрешаем конфликт: побеждает та, что менялась позже
                     updateLocalFromRemote(entity)
                 }
             }

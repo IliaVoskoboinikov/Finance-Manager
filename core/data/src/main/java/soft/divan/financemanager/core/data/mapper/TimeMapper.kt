@@ -14,4 +14,17 @@ object TimeMapper {
 
     fun toApi(value: Instant): String =
         value.atOffset(ZoneOffset.UTC).format(formatter)
+
+    /**
+     * true, если метка [a] позже [b].
+     *
+     * Сравнивает распарсенные [Instant], а не строки: лексикографическое сравнение
+     * ISO-8601 некорректно при разных смещениях/точности
+     * (например, "...+03:00" < "...Z", хотя по UTC это более раннее время).
+     *
+     * При ошибке парсинга возвращает false — консервативно не считаем удалённую
+     * версию новее и не перезаписываем локальную.
+     */
+    fun isAfter(a: String, b: String): Boolean =
+        runCatching { fromApi(a).isAfter(fromApi(b)) }.getOrDefault(false)
 }

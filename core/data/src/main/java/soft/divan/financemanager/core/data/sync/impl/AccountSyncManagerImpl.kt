@@ -4,6 +4,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
+import soft.divan.financemanager.core.data.mapper.TimeMapper
 import soft.divan.financemanager.core.data.mapper.toDto
 import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.mapper.toUpdateDto
@@ -137,7 +138,7 @@ class AccountSyncManagerImpl @Inject constructor(
                             )
                         )
                     }
-                } else if (accountDto.updatedAt > localAccount.updatedAt) {
+                } else if (TimeMapper.isAfter(accountDto.updatedAt, localAccount.updatedAt)) {
                     // Конфликт → побеждает тот, кто обновлялся позже
                     updateLocalFromRemote(
                         accountDto = accountDto,
