@@ -26,17 +26,19 @@
 erDiagram
     ACCOUNT {
         string localId PK
-        int serverId
+        string serverId
         string name
         string balance
-        string currency
+        string currencyId
         string createdAt
         string updatedAt
         string syncStatus
     }
 
     CATEGORY {
-        int id PK
+        string id PK
+        string createdAt
+        string updatedAt
         string name
         string emoji
         boolean isIncome
@@ -44,10 +46,10 @@ erDiagram
 
     TRANSACTION {
         string localId PK
-        int serverId
-        string accountLocalId FK
-        int categoryId FK
-        string currencyCode
+        string serverId
+        string accountLocalId
+        string categoryId
+        string currencyId
         string amount
         string transactionDate
         string comment
@@ -56,6 +58,22 @@ erDiagram
         string syncStatus
     }
 
-    ACCOUNT ||--o{ TRANSACTION: "localId → accountLocalId (FK)"
-    CATEGORY ||--o{ TRANSACTION: "id → categoryId (FK)"
+    ACCOUNT ||--o{ TRANSACTION: "localId → accountLocalId"
+    CATEGORY ||--o{ TRANSACTION: "id → categoryId"
 ```
+
+> **Связи логические, а не enforced-FK.** В Room-сущностях намеренно **не**
+> используются `@ForeignKey` и `@Index`:
+>
+> - **offline-first:** транзакция ссылается на счёт по `accountLocalId`, при этом
+>   счёт может быть создан офлайн и ещё не иметь `serverId` — жёсткий FK мешал бы
+>   промежуточным состояниям;
+> - **мягкие удаления:** записи не удаляются сразу, а помечаются
+>   `syncStatus = PENDING_DELETE` до подтверждения сервером;
+> - **порядок синка** (категории → счета → транзакции) и разрешение конфликтов
+>   (last-write-wins) реализованы в коде, а не констрейнтами БД.
+>
+> Целостность данных обеспечивают репозитории и sync-менеджеры. Индексы
+> (например, `transactions(accountLocalId, transactionDate)` и `transactions(serverId)`)
+> имеет смысл добавить как оптимизацию при росте объёма транзакций — с
+> обязательным увеличением версии схемы.
