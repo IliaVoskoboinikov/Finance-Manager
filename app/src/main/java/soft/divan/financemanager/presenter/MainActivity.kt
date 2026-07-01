@@ -14,7 +14,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
 import soft.divan.financemanager.feature.auth.api.AuthFeatureApi
 import soft.divan.financemanager.feature.category.api.CategoryFeatureApi
@@ -72,10 +76,17 @@ class MainActivity : ComponentActivity() {
 
     private val shouldLock = mutableStateOf(false)
 
+    // Кешируем «установлен ли PIN». Раньше значение читалось синхронно прямо
+    // в composition (disk I/O + crypto на главном потоке на каждой рекомпозиции).
+    // Теперь читаем вне главного потока и обновляем по жизненному циклу.
+    private val isPinSet = mutableStateOf(false)
+
     private val autoLockObserver = LifecycleEventObserver { _, event ->
         when (event) {
+            Lifecycle.Event.ON_START -> refreshPinSet()
+
             Lifecycle.Event.ON_STOP -> {
-                if (isPinSetUseCase()) {
+                if (isPinSet.value) {
                     shouldLock.value = true
                 }
             }
@@ -84,10 +95,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun refreshPinSet() {
+        lifecycleScope.launch {
+            isPinSet.value = withContext(Dispatchers.IO) { isPinSetUseCase() }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        refreshPinSet()
         ProcessLifecycleOwner.get().lifecycle.addObserver(autoLockObserver)
 
         setContent {
@@ -114,7 +132,7 @@ class MainActivity : ComponentActivity() {
                 accentColor = accentColor,
                 customColor = customColor
             ) {
-                if (isPinSetUseCase() && !isPinVerified) {
+                if (isPinSet.value && !isPinVerified) {
                     PinLockScreen(onPinCorrect = {
                         isPinVerified = true
                         shouldLock.value = false
