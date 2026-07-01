@@ -20,7 +20,7 @@ import soft.divan.financemanager.core.database.util.Converters
         AccountEntity::class,
         CurrencyEntity::class
     ],
-    version = 3,
+    version = 1,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
