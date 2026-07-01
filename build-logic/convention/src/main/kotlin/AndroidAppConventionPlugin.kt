@@ -23,6 +23,15 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             extensions.configure<BaseAppModuleExtension> {
                 configureBaseAndroid(project)
 
+                // Минификация R8 + шринк ресурсов только для application-модуля:
+                // isShrinkResources недопустим для library-модулей и требует isMinifyEnabled.
+                buildTypes {
+                    getByName("release") {
+                        isMinifyEnabled = true
+                        isShrinkResources = true
+                    }
+                }
+
                 val versionCodeProp = project.findProperty("versionCode")?.toString()?.toInt()
                 val versionNameProp = project.findProperty("versionName")?.toString()
 
