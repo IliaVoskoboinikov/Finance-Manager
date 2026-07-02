@@ -4,7 +4,6 @@ import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import soft.divan.common.di.ApplicationScope
 import soft.divan.financemanager.sync.initializers.SyncInitializer
@@ -22,13 +21,8 @@ class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        CoroutineScope(Dispatchers.Default).launch {
+        applicationScope.launch(Dispatchers.Default) {
             syncInitializer.initialize()
         }
-    }
-
-    override fun onTerminate() {
-        super.onTerminate()
-        applicationScope.cancel()
     }
 }
