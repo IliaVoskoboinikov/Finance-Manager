@@ -43,7 +43,7 @@ class RetryInterceptorTest {
     @Test
     fun `returns immediately on success without retrying`() {
         val chain = chainReturning(HttpTestFactory.response(request, 200))
-        val interceptor = RetryInterceptor(maxRetries = 3, delayMillis = 0)
+        val interceptor = RetryInterceptor(maxRetries = 3, baseDelayMillis = 0)
 
         val result = interceptor.intercept(chain)
 
@@ -57,7 +57,7 @@ class RetryInterceptorTest {
             HttpTestFactory.response(request, 503),
             HttpTestFactory.response(request, 200)
         )
-        val interceptor = RetryInterceptor(maxRetries = 3, delayMillis = 0)
+        val interceptor = RetryInterceptor(maxRetries = 3, baseDelayMillis = 0)
 
         val result = interceptor.intercept(chain)
 
@@ -72,7 +72,7 @@ class RetryInterceptorTest {
             HttpTestFactory.response(request, 500),
             HttpTestFactory.response(request, 500)
         )
-        val interceptor = RetryInterceptor(maxRetries = 2, delayMillis = 0)
+        val interceptor = RetryInterceptor(maxRetries = 2, baseDelayMillis = 0)
 
         val result = interceptor.intercept(chain)
 
@@ -84,7 +84,7 @@ class RetryInterceptorTest {
     @Test
     fun `does not retry on client error`() {
         val chain = chainReturning(HttpTestFactory.response(request, 404))
-        val interceptor = RetryInterceptor(maxRetries = 3, delayMillis = 0)
+        val interceptor = RetryInterceptor(maxRetries = 3, baseDelayMillis = 0)
 
         val result = interceptor.intercept(chain)
 
@@ -98,7 +98,7 @@ class RetryInterceptorTest {
             HttpTestFactory.response(request, 500),
             HttpTestFactory.response(request, 200)
         )
-        val interceptor = RetryInterceptor(maxRetries = 0, delayMillis = 0)
+        val interceptor = RetryInterceptor(maxRetries = 0, baseDelayMillis = 0)
 
         val result = interceptor.intercept(chain)
 
@@ -107,15 +107,43 @@ class RetryInterceptorTest {
     }
 
     @Test
-    fun `sleeps between retries`() {
+    fun `sleeps between retries within the backoff bounds`() {
         val chain = chainReturning(
             HttpTestFactory.response(request, 502),
             HttpTestFactory.response(request, 200)
         )
-        val interceptor = RetryInterceptor(maxRetries = 3, delayMillis = 1_000)
+        val interceptor = RetryInterceptor(maxRetries = 3, baseDelayMillis = 1_000)
 
         interceptor.intercept(chain)
 
-        verify(exactly = 1) { SystemClock.sleep(1_000) }
+        // first retry: capped = 1000, equal jitter -> sleep in [500, 1000]
+        verify(exactly = 1) { SystemClock.sleep(match { it in 500L..1_000L }) }
+    }
+
+    @Test
+    fun `backoff grows exponentially within equal-jitter bounds`() {
+        val interceptor = RetryInterceptor(baseDelayMillis = 100, maxDelayMillis = 10_000)
+
+        assertThat(interceptor.backoffDelayMillis(1)).isBetween(50L, 100L)
+        assertThat(interceptor.backoffDelayMillis(2)).isBetween(100L, 200L)
+        assertThat(interceptor.backoffDelayMillis(3)).isBetween(200L, 400L)
+        assertThat(interceptor.backoffDelayMillis(4)).isBetween(400L, 800L)
+    }
+
+    @Test
+    fun `backoff is capped at maxDelay`() {
+        val interceptor = RetryInterceptor(baseDelayMillis = 1_000, maxDelayMillis = 1_500)
+
+        repeat(20) {
+            assertThat(interceptor.backoffDelayMillis(10)).isBetween(750L, 1_500L)
+        }
+    }
+
+    @Test
+    fun `backoff is zero when base delay is zero`() {
+        val interceptor = RetryInterceptor(baseDelayMillis = 0)
+
+        assertThat(interceptor.backoffDelayMillis(1)).isZero()
+        assertThat(interceptor.backoffDelayMillis(5)).isZero()
     }
 }
