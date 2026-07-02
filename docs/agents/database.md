@@ -23,9 +23,12 @@
 ## Migrations
 *   For production, schema changes REQUIRE a `Migration` plus a migration test
     (`MigrationTestHelper`); `exportSchema = true` is enabled for this.
-*   **Current pre-release state:** the DB uses `fallbackToDestructiveMigration` with `version = 1`
-    as a clean baseline. This is acceptable only while there are no real users (offline-first, data
-    re-syncs from the server) and MUST be replaced with real migrations before release.
+*   **Current pre-release state:** the DB uses `fallbackToDestructiveMigration`. The `@Database`
+    version MUST stay strictly greater than the prepackaged `category_db.db` asset's `user_version`
+    (currently 1) — with an equal version but a different schema, Room fails at runtime with an
+    identity-hash mismatch. This destructive setup is acceptable only while there are no real users
+    (offline-first, data re-syncs from the server) and MUST be replaced with real migrations before
+    release.
 
 ## Data Isolation
 *   Room `Entity` classes are internal to the data layer.
