@@ -24,10 +24,10 @@ class CurrencySymbolTest {
     }
 
     @Test
-    fun `fromSymbol returns code for known symbol`() {
-        assertThat(CurrencySymbol.fromSymbol("$")).isEqualTo("USD")
-        assertThat(CurrencySymbol.fromSymbol("€")).isEqualTo("EUR")
-        assertThat(CurrencySymbol.fromSymbol("₽")).isEqualTo("RUB")
+    fun `fromSymbol returns id for known symbol`() {
+        assertThat(CurrencySymbol.fromSymbol("$")).isEqualTo(CurrencySymbol.USD.id)
+        assertThat(CurrencySymbol.fromSymbol("€")).isEqualTo(CurrencySymbol.EUR.id)
+        assertThat(CurrencySymbol.fromSymbol("₽")).isEqualTo(CurrencySymbol.RUB.id)
     }
 
     @Test

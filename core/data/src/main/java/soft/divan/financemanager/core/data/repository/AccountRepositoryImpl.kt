@@ -24,6 +24,7 @@ import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
+import java.math.BigDecimal
 import javax.inject.Inject
 
 class AccountRepositoryImpl @Inject constructor(
@@ -134,6 +135,29 @@ class AccountRepositoryImpl @Inject constructor(
                     }
                 )
             )
+        }
+    }
+
+    /**
+     * Обновляет только баланс счёта локально: без пуша на сервер и без смены syncStatus/updatedAt.
+     *
+     * Вызывается из транзакционных use case'ов (создание/изменение/удаление транзакции):
+     * сервер сам пересчитывает баланс при пуше транзакции, а PUT /account с балансом
+     * привёл бы к двойному применению суммы. updatedAt намеренно не трогаем, чтобы
+     * серверная версия счёта (обновлённая сервером после пуша транзакции) гарантированно
+     * выигрывала last-write-wins при следующем pull.
+     */
+    override suspend fun updateBalanceLocal(
+        accountId: String,
+        balance: BigDecimal
+    ): DomainResult<Unit> {
+        val resultDb = getLocalOrFail(accountId)
+        if (resultDb is DomainResult.Failure) return resultDb
+
+        val accountEntity = (resultDb as DomainResult.Success).data
+
+        return safeDbCall(errorLogger) {
+            localDataSource.update(accountEntity.copy(balance = balance.toPlainString()))
         }
     }
 

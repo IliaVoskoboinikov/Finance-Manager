@@ -3,6 +3,7 @@ package soft.divan.financemanager.core.domain.usecase.impl
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import soft.divan.financemanager.core.domain.model.Transaction
+import soft.divan.financemanager.core.domain.model.TransactionType
 import java.math.BigDecimal
 import java.time.Instant
 
@@ -13,9 +14,11 @@ class GetSumTransactionsUseCaseImplTest {
     private fun transaction(amount: String): Transaction = Transaction(
         id = "id-$amount",
         accountLocalId = "acc",
-        currencyCode = "RUB",
-        categoryId = 1,
+        targetAccountLocalId = null,
+        currencyId = "rub-id",
+        categoryId = "1",
         amount = BigDecimal(amount),
+        type = TransactionType.EXPENSE,
         transactionDate = Instant.EPOCH,
         comment = null,
         createdAt = Instant.EPOCH,

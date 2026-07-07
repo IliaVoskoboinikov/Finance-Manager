@@ -25,7 +25,7 @@ class GetAccountsUseCaseImplTest {
         id = id,
         name = "Account $id",
         balance = BigDecimal.TEN,
-        currency = "RUB",
+        currencyId = "rub-id",
         createdAt = Instant.EPOCH,
         updatedAt = Instant.EPOCH
     )

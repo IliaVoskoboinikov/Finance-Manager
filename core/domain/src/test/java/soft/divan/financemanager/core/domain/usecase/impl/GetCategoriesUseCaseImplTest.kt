@@ -12,6 +12,7 @@ import org.junit.Test
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
+import java.time.Instant
 
 class GetCategoriesUseCaseImplTest {
 
@@ -20,7 +21,16 @@ class GetCategoriesUseCaseImplTest {
 
     @Test
     fun `invoke delegates to repository getAll and emits its values`() = runTest {
-        val categories = listOf(Category(1, "Food", "🍔", false))
+        val categories = listOf(
+            Category(
+                id = "1",
+                createdAt = Instant.EPOCH,
+                updatedAt = Instant.EPOCH,
+                name = "Food",
+                emoji = "🍔",
+                isIncome = false
+            )
+        )
         val expected: Flow<DomainResult<List<Category>>> =
             flowOf(DomainResult.Success(categories))
         every { repository.getAll() } returns expected

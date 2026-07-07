@@ -38,8 +38,9 @@ class UpdateTransactionAndUpdateAccountUseCaseImpl @Inject constructor(
                 type = transaction.type
             )
 
-            // 4. Обновляем баланс аккаунта
-            accountRepository.update(account.copy(balance = newBalance)).rollbackOnError()
+            // 4. Обновляем баланс только локально: сервер сам пересчитает его при
+            // PUT /transaction (Replace), PUT /account привёл бы к двойному применению.
+            accountRepository.updateBalanceLocal(account.id, newBalance).rollbackOnError()
 
             // 5. Обновляем саму транзакцию
             transactionRepository.update(transaction).rollbackOnError()

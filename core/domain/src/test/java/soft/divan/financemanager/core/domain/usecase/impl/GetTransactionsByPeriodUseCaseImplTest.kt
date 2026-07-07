@@ -14,6 +14,7 @@ import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.Period
 import soft.divan.financemanager.core.domain.model.Transaction
+import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.CategoryRepository
 import soft.divan.financemanager.core.domain.repository.CurrencyRepository
@@ -41,15 +42,24 @@ class GetTransactionsByPeriodUseCaseImplTest {
         endDate = Instant.parse("2024-01-31T23:59:59Z")
     )
 
-    private val incomeCategory = Category(id = 1, name = "Salary", emoji = "💰", isIncome = true)
-    private val expenseCategory = Category(id = 2, name = "Food", emoji = "🍔", isIncome = false)
+    private val incomeCategory = category(id = "1", name = "Salary", emoji = "💰", isIncome = true)
+    private val expenseCategory = category(id = "2", name = "Food", emoji = "🍔", isIncome = false)
     private val categories = listOf(incomeCategory, expenseCategory)
+
+    private fun category(id: String, name: String, emoji: String, isIncome: Boolean) = Category(
+        id = id,
+        createdAt = Instant.EPOCH,
+        updatedAt = Instant.EPOCH,
+        name = name,
+        emoji = emoji,
+        isIncome = isIncome
+    )
 
     private fun account(id: String) = Account(
         id = id,
         name = "Account $id",
         balance = BigDecimal.ZERO,
-        currency = "RUB",
+        currencyId = "rub-id",
         createdAt = Instant.EPOCH,
         updatedAt = Instant.EPOCH
     )
@@ -57,14 +67,16 @@ class GetTransactionsByPeriodUseCaseImplTest {
     private fun transaction(
         id: String,
         accountId: String,
-        categoryId: Int,
+        categoryId: String,
         date: Instant
     ) = Transaction(
         id = id,
         accountLocalId = accountId,
-        currencyCode = "RUB",
+        targetAccountLocalId = null,
+        currencyId = "rub-id",
         categoryId = categoryId,
         amount = BigDecimal.ONE,
+        type = TransactionType.EXPENSE,
         transactionDate = date,
         comment = null,
         createdAt = Instant.EPOCH,
@@ -78,7 +90,7 @@ class GetTransactionsByPeriodUseCaseImplTest {
     ) {
         every { accountRepository.getAll() } returns flowOf(accounts)
         every { categoryRepository.getAll() } returns flowOf(cats)
-        every { currencyRepository.get() } returns flowOf(currency)
+        every { currencyRepository.getSelectedCurrency() } returns flowOf(currency)
     }
 
     @Test
@@ -205,7 +217,7 @@ class GetTransactionsByPeriodUseCaseImplTest {
         stubBase(accounts = DomainResult.Success(listOf(account("1"))))
 
         val unknownCategory =
-            transaction("t1", "1", categoryId = 999, Instant.parse("2024-01-10T10:00:00Z"))
+            transaction("t1", "1", categoryId = "999", Instant.parse("2024-01-10T10:00:00Z"))
         val expense =
             transaction("t2", "1", expenseCategory.id, Instant.parse("2024-01-11T10:00:00Z"))
 

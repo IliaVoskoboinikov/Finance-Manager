@@ -13,7 +13,7 @@ class ModelsTest {
             id = "1",
             name = "Cash",
             balance = BigDecimal.TEN,
-            currency = "RUB",
+            currencyId = "rub-id",
             createdAt = Instant.EPOCH,
             updatedAt = Instant.EPOCH
         )
@@ -28,8 +28,8 @@ class ModelsTest {
     @Test
     fun `Transaction equality is structural`() {
         val date = Instant.parse("2024-01-01T00:00:00Z")
-        val a = Transaction("1", "acc", "RUB", 2, BigDecimal.ONE, date, "note", date, date)
-        val b = Transaction("1", "acc", "RUB", 2, BigDecimal.ONE, date, "note", date, date)
+        val a = transaction(date)
+        val b = transaction(date)
 
         assertThat(a).isEqualTo(b)
         assertThat(a.hashCode()).isEqualTo(b.hashCode())
@@ -37,26 +37,23 @@ class ModelsTest {
 
     @Test
     fun `Transaction allows null comment`() {
-        val transaction = Transaction(
-            id = "1",
-            accountLocalId = "acc",
-            currencyCode = "RUB",
-            categoryId = 1,
-            amount = BigDecimal.ONE,
-            transactionDate = Instant.EPOCH,
-            comment = null,
-            createdAt = Instant.EPOCH,
-            updatedAt = Instant.EPOCH
-        )
+        val transaction = transaction(Instant.EPOCH, comment = null)
 
         assertThat(transaction.comment).isNull()
     }
 
     @Test
     fun `Category exposes its fields`() {
-        val category = Category(id = 5, name = "Food", emoji = "🍔", isIncome = false)
+        val category = Category(
+            id = "5",
+            createdAt = Instant.EPOCH,
+            updatedAt = Instant.EPOCH,
+            name = "Food",
+            emoji = "🍔",
+            isIncome = false
+        )
 
-        assertThat(category.id).isEqualTo(5)
+        assertThat(category.id).isEqualTo("5")
         assertThat(category.isIncome).isFalse()
     }
 
@@ -75,4 +72,18 @@ class ModelsTest {
     fun `Const exposes default stop timeout`() {
         assertThat(Const.DEFAULT_STOP_TIMEOUT_MS).isEqualTo(5_000L)
     }
+
+    private fun transaction(date: Instant, comment: String? = "note") = Transaction(
+        id = "1",
+        accountLocalId = "acc",
+        targetAccountLocalId = null,
+        currencyId = "rub-id",
+        categoryId = "2",
+        amount = BigDecimal.ONE,
+        type = TransactionType.EXPENSE,
+        transactionDate = date,
+        comment = comment,
+        createdAt = date,
+        updatedAt = date
+    )
 }

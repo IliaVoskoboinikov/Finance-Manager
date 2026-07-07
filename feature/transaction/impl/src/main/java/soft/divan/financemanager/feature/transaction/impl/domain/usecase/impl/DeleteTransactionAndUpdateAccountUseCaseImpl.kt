@@ -29,8 +29,9 @@ class DeleteTransactionAndUpdateAccountUseCaseImpl @Inject constructor(
                 isReverting = true
             )
 
-            // 3. Обновляем баланс
-            accountRepository.update(account.copy(balance = newBalance)).rollbackOnError()
+            // 3. Обновляем баланс только локально: сервер сам откатит сумму при
+            // DELETE /transaction, PUT /account привёл бы к двойному применению.
+            accountRepository.updateBalanceLocal(account.id, newBalance).rollbackOnError()
 
             // 4. Удаляем транзакцию
             transactionRepository.delete(transaction.id).rollbackOnError()
