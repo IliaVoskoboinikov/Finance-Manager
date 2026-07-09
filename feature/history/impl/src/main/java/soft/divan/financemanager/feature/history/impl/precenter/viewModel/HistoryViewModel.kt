@@ -46,13 +46,17 @@ class HistoryViewModel @Inject constructor(
     private val _endDate = MutableStateFlow(LocalDate.now())
     val endDate: StateFlow<LocalDate> = _endDate.asStateFlow()
 
+    // Счётчик-триггер для повтора загрузки: StateFlow глушит повторную установку того же
+    // значения дат, поэтому для retry нужен отдельный меняющийся сигнал.
+    private val _reloadTrigger = MutableStateFlow(0)
+
     init {
         observeDateChanges()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeDateChanges() {
-        combine(startDate, endDate) { start, end -> start to end }
+        combine(startDate, endDate, _reloadTrigger) { start, end, _ -> start to end }
             .onStart { _uiState.update { HistoryUiState.Loading } }
             .flatMapLatest { (start, end) ->
                 getTransactionsByPeriodUseCase(
@@ -94,8 +98,7 @@ class HistoryViewModel @Inject constructor(
     }
 
     fun reloadData() {
-        _startDate.value = _startDate.value
-        _endDate.value = _endDate.value
+        _reloadTrigger.update { it + 1 }
     }
 
     fun updateStartDate(date: LocalDate) {
