@@ -10,6 +10,7 @@
 - [Modules](./modules.md) — список всех модулей с сылками на их структуру.
 - [Auth & Session](./auth.md) — авторизация, управление JWT и состояниями сессии.
 - [Synchronization](./synchronization.md) — как устроена фоновая синхронизация данных.
+- [Post-commit sync](./post-commit-sync.md) — отложенный запуск сетевых пушей до commit БД-транзакции.
 - [DomainResult & errors](./domain-result.md) — подход к доменным результатам и обработке ошибок.
 - [Bd](./bd.md) — локальная база данных.
 

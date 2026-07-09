@@ -16,9 +16,10 @@
 ## Transactions
 *   Use `@Transaction` (DAOs) / `withTransaction` (`RoomTransactionRunner`) for multi-step atomic
     operations, e.g. updating an account balance together with a transaction.
-*   Do **not** launch un-rollbackable side effects (network sync via `appCoroutineContext.launch`)
-    *inside* a DB transaction — a rollback won't undo them. Enqueue such work after a successful
-    commit.
+*   Do **not** launch un-rollbackable side effects (network sync) *inside* a DB transaction —
+    a rollback won't undo them. Use `AppCoroutineContext.launchSync`: inside `runInTransaction`
+    it defers the action until a successful commit (and drops it on rollback), outside it runs
+    immediately. Mechanism and caveats: [docs/post-commit-sync.md](../post-commit-sync.md).
 
 ## Migrations
 *   For production, schema changes REQUIRE a `Migration` plus a migration test

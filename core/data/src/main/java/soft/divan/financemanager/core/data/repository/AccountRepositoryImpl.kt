@@ -38,7 +38,7 @@ class AccountRepositoryImpl @Inject constructor(
 
     /** Создаем аккаунт в БД и сразу запускаем синхронизацию */
     override suspend fun create(account: Account): DomainResult<Unit> {
-        appCoroutineContext.launch {
+        appCoroutineContext.launchSync {
             syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
         }
         return safeDbCall(errorLogger) {
@@ -73,7 +73,7 @@ class AccountRepositoryImpl @Inject constructor(
 
         val accountEntity = (localResult as DomainResult.Success).data
 
-        appCoroutineContext.launch {
+        appCoroutineContext.launchSync {
             val serverId = accountEntity.serverId
             if (serverId != null) {
                 safeApiCall(errorLogger) {
@@ -106,7 +106,7 @@ class AccountRepositoryImpl @Inject constructor(
 
         val accountEntity = (resultDb as DomainResult.Success).data
 
-        appCoroutineContext.launch {
+        appCoroutineContext.launchSync {
             if (accountEntity.serverId == null) {
                 // Если аккаунт не синхронизирован с сервером (нет serverId), то создать на сервере и
                 syncManager.syncCreate(accountDto = account.toDto(), localId = account.id)
@@ -182,7 +182,7 @@ class AccountRepositoryImpl @Inject constructor(
             )
         }
 
-        appCoroutineContext.launch {
+        appCoroutineContext.launchSync {
             syncManager.syncDelete(accountEntity)
         }
 

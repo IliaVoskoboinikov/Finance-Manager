@@ -48,7 +48,7 @@ class TransactionRepositoryImpl @Inject constructor(
             syncStatus = SyncStatus.PENDING_CREATE
         )
 
-        appCoroutineContext.launch {
+        appCoroutineContext.launchSync {
             syncManager.syncCreate(transactionEntity)
         }
 
@@ -98,7 +98,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (resultDb as DomainResult.Success).data
 
-        appCoroutineContext.launch {
+        appCoroutineContext.launchSync {
             val serverId = transactionEntity.serverId
             if (serverId != null) {
                 safeApiCall(errorLogger) {
@@ -139,7 +139,7 @@ class TransactionRepositoryImpl @Inject constructor(
         if (resultDb is DomainResult.Failure) return resultDb
 
         val transactionEntity = (resultDb as DomainResult.Success).data
-        appCoroutineContext.launch {
+        appCoroutineContext.launchSync {
             if (transactionEntity.serverId == null) {
                 syncManager.syncCreate(
                     transaction.toEntity(
@@ -185,7 +185,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (localResult as DomainResult.Success).data
 
-        appCoroutineContext.launch {
+        appCoroutineContext.launchSync {
             syncManager.syncDelete(transactionEntity)
         }
 
