@@ -22,7 +22,7 @@ fun <T : Any> safeDbFlow(
         block()
             .map { DomainResult.Success(it) }
             .catch { error ->
-                errorLogger.recordError(error.message)
+                errorLogger.recordError(error)
                 emit(DomainResult.Failure(DataError.LocalDb(error).toDomainError()))
             }
             .collect { result ->
@@ -41,7 +41,7 @@ suspend fun <T : Any?> safeDbCall(
                 DomainResult.Success(result)
             },
             onFailure = { error ->
-                errorLogger.recordError(error.message)
+                errorLogger.recordError(error)
                 DomainResult.Failure(DataError.LocalDb(error).toDomainError())
             }
         )

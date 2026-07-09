@@ -73,7 +73,7 @@ internal suspend fun safeApiCallInternal(
 
 /** Маппит неуспешный HTTP-ответ в доменную ошибку. */
 private fun Response<*>.toFailure(errorLogger: ErrorLogger): DomainResult.Failure {
-    errorLogger.recordError(message())
+    errorLogger.recordError("HTTP ${code()} ${message().orEmpty()}")
     val dataError = when {
         code() == HTTP_NOT_FOUND -> DataError.NotFound
         code() == HTTP_UNAUTHORIZED -> DataError.Unauthorized
@@ -98,7 +98,7 @@ private fun Throwable.toFailure(errorLogger: ErrorLogger): DomainResult.Failure 
             DomainResult.Failure(DataError.Network.toDomainError())
 
         else -> {
-            errorLogger.recordError(message)
+            errorLogger.recordError(this)
             DomainResult.Failure(DataError.Unknown(this).toDomainError())
         }
     }
