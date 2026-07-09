@@ -51,10 +51,11 @@ class TransactionsTodayViewModel @Inject constructor(
             .onEach { result ->
                 result.fold(
                     onSuccess = { data ->
-                        val uiTransactions = data.first.map { transition ->
-                            transition.toUi(
-                                data.third.find { it.id == transition.categoryId }!!
-                            )
+                        // Транзакции с неизвестной категорией пропускаем (рассинхрон/удалённая
+                        // категория) — раньше `!!` ронял экран.
+                        val uiTransactions = data.first.mapNotNull { transaction ->
+                            data.third.find { it.id == transaction.categoryId }
+                                ?.let { category -> transaction.toUi(category) }
                         }
                         val sumTransactions = getSumTransactionsUseCase(data.first)
                         _uiState.update {

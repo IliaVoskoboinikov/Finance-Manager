@@ -67,8 +67,11 @@ class HistoryViewModel @Inject constructor(
                 result.fold(
                     onSuccess = { data ->
                         val sumTransactions = getSumTransactionsUseCase(data.first)
-                        val uiTransactions = data.first.map { transaction ->
-                            transaction.toUi(data.third.find { it.id == transaction.categoryId }!!)
+                        // Транзакции с неизвестной категорией пропускаем (рассинхрон/удалённая
+                        // категория) — раньше `!!` ронял экран.
+                        val uiTransactions = data.first.mapNotNull { transaction ->
+                            data.third.find { it.id == transaction.categoryId }
+                                ?.let { category -> transaction.toUi(category) }
                         }
 
                         if (data.first.isEmpty()) {
