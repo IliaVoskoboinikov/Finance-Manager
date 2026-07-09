@@ -10,8 +10,13 @@ class Converters {
         return status.name
     }
 
+    /**
+     * Нераспознанное значение (повреждение строки/дрейф enum между версиями) не роняет
+     * чтение из Room, а трактуется как [SyncStatus.SYNCED]: не пушим непонятный статус на
+     * сервер, а ближайший pull по last-write-wins восстановит корректное состояние.
+     */
     @TypeConverter
     fun toSyncStatus(value: String): SyncStatus {
-        return SyncStatus.valueOf(value)
+        return runCatching { SyncStatus.valueOf(value) }.getOrDefault(SyncStatus.SYNCED)
     }
 }
