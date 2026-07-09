@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,11 +38,16 @@ class TransactionsTodayViewModel @Inject constructor(
 
     private var lastIsIncome: Boolean? = null
 
+    // Держим ссылку на текущий сбор, чтобы повторный вызов не плодил параллельные
+    // коллекторы (каждый launchIn создаёт новый) — отменяем предыдущий.
+    private var loadJob: Job? = null
+
     fun loadTodayTransactions(isIncome: Boolean) {
         lastIsIncome = isIncome
 
         val today = Instant.now()
-        getTransactionsByPeriodUseCase(
+        loadJob?.cancel()
+        loadJob = getTransactionsByPeriodUseCase(
             isIncome = isIncome,
             period = Period(today, today)
         )
