@@ -38,8 +38,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/android-setup
-      - name: Run unit tests (Debug only)
-        run: ./gradlew testDebugUnitTest $gradleFlags
+      - name: Run unit tests
+        run: ./gradlew test $gradleFlags
 
   run-lint:
     runs-on: ubuntu-latest
