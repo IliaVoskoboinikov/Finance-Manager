@@ -27,6 +27,8 @@ import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.icons.ArrowBack
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
+import soft.divan.financemanager.sync.worker.MAX_SYNC_INTERVAL_HOURS
+import soft.divan.financemanager.sync.worker.MIN_SYNC_INTERVAL_HOURS
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Suppress("MagicNumber")
@@ -119,8 +121,11 @@ private fun SynchronizationUiStateSuccess(
             modifier = Modifier.padding(horizontal = 16.dp),
             value = interval.toFloat(),
             onValueChange = { onIntervalChanged(it.toInt()) },
-            valueRange = 1f..24f,
-            steps = 23
+            valueRange = MIN_SYNC_INTERVAL_HOURS.toFloat()..MAX_SYNC_INTERVAL_HOURS.toFloat(),
+            // steps — число промежуточных засечек между концами диапазона; для целых часов
+            // нужно (кол-во значений − 2) = (MAX − MIN + 1) − 2, чтобы слайдер вставал ровно
+            // на целые часы.
+            steps = MAX_SYNC_INTERVAL_HOURS - MIN_SYNC_INTERVAL_HOURS - 1
         )
 
         Text(
