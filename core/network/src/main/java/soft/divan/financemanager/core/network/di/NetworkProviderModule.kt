@@ -1,6 +1,7 @@
 package soft.divan.financemanager.core.network.di
 
 import android.content.Context
+import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -119,11 +120,12 @@ object NetworkProviderModule {
     @Singleton
     @BaseRetrofitQualifier
     fun provideBaseRetrofit(
-        @BaseOkHttpClientQualifier okHttp: OkHttpClient
+        @BaseOkHttpClientQualifier okHttp: OkHttpClient,
+        gson: Gson
     ): Retrofit = Retrofit.Builder()
         .baseUrl(BuildConfig.HOST)
         .client(okHttp)
-        .addConverterFactory(GsonConverterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
 
     /**
@@ -131,10 +133,10 @@ object NetworkProviderModule {
      */
     @Provides
     @Singleton
-    fun provideRetrofit(okHttp: OkHttpClient): Retrofit = Retrofit.Builder()
+    fun provideRetrofit(okHttp: OkHttpClient, gson: Gson): Retrofit = Retrofit.Builder()
         .baseUrl(BuildConfig.HOST)
         .client(okHttp)
-        .addConverterFactory(GsonConverterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create(gson))
         .build()
 
     @Provides

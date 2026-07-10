@@ -21,7 +21,7 @@ fun TransactionDto.toEntity(
     accountServerId = accountId,
     categoryId = categoryId,
     currencyId = currencyId,
-    amount = amount.toString(),
+    amount = amount.toPlainString(),
     transactionDate = dateTime,
     comment = comment.orEmpty(),
     createdAt = createdAt,
@@ -35,7 +35,7 @@ fun TransactionEntity.toUpdateDto(accountServerId: String): UpdateTransactionReq
     UpdateTransactionRequestDto(
         accountId = accountServerId,
         categoryId = categoryId,
-        amount = amount.toDouble(),
+        amount = amount.toBigDecimal(),
         dateTime = transactionDate,
         comment = comment
     )
@@ -44,7 +44,7 @@ fun TransactionEntity.toDto(accountServerId: String): TransactionRequestDto = Tr
     id = serverId,
     accountId = accountServerId,
     categoryId = categoryId,
-    amount = amount.toDouble(),
+    amount = amount.toBigDecimal(),
     dateTime = transactionDate,
     comment = comment
 )

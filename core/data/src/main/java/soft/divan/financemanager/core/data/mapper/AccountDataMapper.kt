@@ -11,7 +11,7 @@ fun AccountDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity 
     localId = localId,
     serverId = id,
     name = name,
-    balance = balance.toString(),
+    balance = balance.toPlainString(),
     currencyId = currencyId,
     createdAt = createdAt,
     updatedAt = updatedAt,
@@ -22,7 +22,7 @@ fun Account.toEntity(serverId: String?, syncStatus: SyncStatus): AccountEntity =
     localId = id,
     serverId = serverId,
     name = name,
-    balance = balance.toString(),
+    balance = balance.toPlainString(),
     currencyId = currencyId,
     createdAt = TimeMapper.toApi(createdAt),
     updatedAt = TimeMapper.toApi(updatedAt),
@@ -40,18 +40,18 @@ fun AccountEntity.toDomain(): Account = Account(
 
 fun Account.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
     name = name,
-    balance = balance.toDouble(),
+    balance = balance,
     currencyId = currencyId
 )
 
 fun AccountEntity.toUpdateDto(): UpdateAccountRequestDto = UpdateAccountRequestDto(
     name = name,
-    balance = balance.toDouble(),
+    balance = balance.toBigDecimal(),
     currencyId = currencyId
 )
 
 fun AccountEntity.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
     name = name,
-    balance = balance.toDouble(),
+    balance = balance.toBigDecimal(),
     currencyId = currencyId
 )
