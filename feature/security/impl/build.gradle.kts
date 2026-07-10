@@ -11,9 +11,5 @@ dependencies {
 
     implementation(libs.androidx.biometric.ktx)
 
-    testImplementation(libs.junit)
-    testImplementation(libs.mockk)
     testImplementation(libs.robolectric)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.assertj.core)
 }

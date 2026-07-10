@@ -52,6 +52,7 @@ build-logic/
 
 - `implementation`
 - `debugImplementation`
+- `testImplementation`
 - `api`
 - `ksp`
 
@@ -65,6 +66,7 @@ build-logic/
 
 - `Project.libs`
 - `Project.lib(alias)`
+- `Project.bundle(alias)`
 - `Project.version(alias)`
 - `Project.applyPlugin(alias)`
 
@@ -114,6 +116,25 @@ Namespace формируется автоматически на основе `p
 - `hilt-navigation-compose`
 
 Используется в `app` и `feature:impl` модулях.
+
+---
+
+## Test dependencies
+
+### `addDefaultUnitTestDependencies()`
+
+Подключает как `testImplementation` общий набор для unit‑тестов
+(бандл `unit-test` из `libs.versions.toml`):
+
+- `junit`
+- `mockk`
+- `assertj-core`
+- `kotlinx-coroutines-test`
+
+Применяется автоматически в `soft-divan-jvm-library`, `soft-divan-core` и
+`soft-divan-feature-impl`, поэтому модули больше не дублируют эти зависимости.
+Специфичные для модуля тестовые библиотеки (например `robolectric` или
+`androidTestImplementation`) по‑прежнему указываются в самом модуле.
 
 ---
 
@@ -175,6 +196,8 @@ Namespace формируется автоматически на основе `p
 - `android-library`
 - `soft-divan-android-base`
 
+Подключает unit‑test бандл (`addDefaultUnitTestDependencies()`).
+
 Без Compose и DI.
 
 ---
@@ -205,6 +228,7 @@ Namespace формируется автоматически на основе `p
 
 - Compose dependencies
 - `ui-tooling` для debug
+- unit‑test бандл (`addDefaultUnitTestDependencies()`)
 
 ---
 
@@ -236,6 +260,7 @@ Namespace формируется автоматически на основе `p
 
 - `kotlinx-coroutines-core`
 - `javax.inject`
+- unit‑test бандл (`addDefaultUnitTestDependencies()`)
 
 ---
 

@@ -8,7 +8,4 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.core.data)
     implementation(projects.core.domain)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
 }

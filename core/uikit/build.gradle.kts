@@ -9,7 +9,4 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     debugImplementation(libs.androidx.ui.tooling)
     api(libs.androidx.material.icons.extended)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.assertj.core)
 }

@@ -7,7 +7,4 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.core.domain)
     implementation(libs.ycharts)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.assertj.core)
 }

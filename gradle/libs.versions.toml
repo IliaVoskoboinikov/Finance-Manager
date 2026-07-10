@@ -148,6 +148,15 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
 ##############################################
+#                  Bundles
+##############################################
+
+[bundles]
+
+# Default unit-test stack applied to every module via the soft.divan convention plugins.
+unit-test = ["junit", "mockk", "assertj-core", "kotlinx-coroutines-test"]
+
+##############################################
 #                  Plugins
 ##############################################
 
