@@ -144,8 +144,10 @@ otherwise pick the sensible default and note it.
 
 ## Workflow expectations
 
-- **Do not commit, push, or open PRs** — the user handles all git operations. Leave changes
-  in the working tree.
+- **Never run git yourself** — do not commit, push, or open PRs; the user handles all git
+  operations. Leave changes in the working tree. Once the code is done, only **write a short
+  proposed commit message** (conventional-commit style, matching the existing Russian history,
+  e.g. `fix(network): …`) for the user to copy — do not run `git commit`.
 - **No Claude/Anthropic attribution** in commits or generated text (no `Co-Authored-By`,
   no "Generated with Claude Code").
 - **KDoc** required on new public classes/functions; every new UI component needs a `@Preview`
