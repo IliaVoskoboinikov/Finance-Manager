@@ -19,8 +19,12 @@
             android:name="firebase_crashlytics_collection_enabled"
             android:value="${crashlyticsCollectionEnabled}" />
 
+        <!-- locale|layoutDirection: смену языка (LocaleManager.applicationLocales) обрабатываем
+             без пересоздания Activity — иначе окно моргает чёрным во время recreate.
+             Compose сам перерисует stringResource() через обновление LocalConfiguration. -->
         <activity
             android:name=".presenter.MainActivity"
+            android:configChanges="locale|layoutDirection"
             android:exported="true"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
