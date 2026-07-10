@@ -68,6 +68,7 @@ dependencies {
     implementation(projects.feature.auth.api)
     implementation(projects.feature.auth.impl)
 
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.process)
 }
 

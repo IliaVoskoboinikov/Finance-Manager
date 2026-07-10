@@ -19,8 +19,22 @@
             android:name="firebase_crashlytics_collection_enabled"
             android:value="${crashlyticsCollectionEnabled}" />
 
-        <!-- locale|layoutDirection: смену языка (LocaleManager.applicationLocales) обрабатываем
-             без пересоздания Activity — иначе окно моргает чёрным во время recreate.
+        <!-- autoStoreLocales: на API < 33 AppCompat сам сохраняет выбранную локаль и
+             применяет её в attachBaseContext до первого кадра — язык переживает
+             перезапуск процесса. На API 33+ хранение локалей берёт на себя система. -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
+        <!-- locale|layoutDirection: смену языка (API 33+ — LocaleManager.applicationLocales,
+             API < 33 — AppCompatDelegate.setApplicationLocales) обрабатываем без пересоздания
+             Activity — иначе окно моргает чёрным во время recreate. AppCompat при объявленных
+             configChanges тоже не пересоздаёт, а шлёт onConfigurationChanged.
              Compose сам перерисует stringResource() через обновление LocalConfiguration. -->
         <activity
             android:name=".presenter.MainActivity"

@@ -1,9 +1,11 @@
 package soft.divan.financemanager.presenter
 
+import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,7 +41,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var splashFeatureApi: SplashScreenFeatureApi
@@ -153,6 +155,21 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * На API < 33 AppCompat при объявленных configChanges применяет новую локаль,
+     * вызывая только Activity.onConfigurationChanged — по view-иерархии событие
+     * не рассылается (на API 33+ это делает система через ViewRootImpl). Без него
+     * AndroidComposeView не инвалидирует LocalConfiguration, и stringResource()
+     * вне изменившегося стейта (например, подписи нижнего меню) не перерисовывается.
+     * Рассылаем конфигурацию по иерархии вручную.
+     */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            window.decorView.dispatchConfigurationChanged(newConfig)
         }
     }
 
