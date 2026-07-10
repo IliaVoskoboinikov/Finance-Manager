@@ -22,7 +22,9 @@ fun RowScope.FmNavigationBarItem(
     hapticToggleMenu: () -> Unit
 ) {
     val currentBackStack by navController.currentBackStackEntryAsState()
-    val currentDestination = currentBackStack?.destination
+    // Fallback на синхронный currentDestination: на первом кадре (и в статичном
+    // @Preview) flow из currentBackStackEntryAsState ещё не эмитнул значение.
+    val currentDestination = currentBackStack?.destination ?: navController.currentDestination
     val selected = currentDestination
         ?.hierarchy
         ?.any { it.route?.startsWith(screenBottom.route) == true }

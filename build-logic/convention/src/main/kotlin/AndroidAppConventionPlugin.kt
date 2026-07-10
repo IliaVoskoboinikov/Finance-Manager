@@ -2,9 +2,12 @@ import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.dependencies
+import soft.divan.financemanager.Conf
 import soft.divan.financemanager.addDefaultComposeDependencies
 import soft.divan.financemanager.applyPlugin
 import soft.divan.financemanager.configureBaseAndroid
+import soft.divan.financemanager.lib
 
 class AndroidAppConventionPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -45,6 +48,10 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             }
 
             addDefaultComposeDependencies()
+
+            dependencies {
+                add(Conf.DEBUG_IMPLEMENTATION, lib("androidx-ui-tooling"))
+            }
         }
     }
 }
