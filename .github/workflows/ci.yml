@@ -41,6 +41,24 @@ jobs:
       - name: Run unit tests
         run: ./gradlew test $gradleFlags
 
+  run-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
+      - name: Coverage report & gate
+        uses: ./.github/actions/coverage
+        with:
+          gradle-flags: ${{ env.gradleFlags }}
+      - name: Upload HTML coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kover-coverage-html
+          path: build/reports/kover/htmlFull
+
   run-lint:
     runs-on: ubuntu-latest
     steps:

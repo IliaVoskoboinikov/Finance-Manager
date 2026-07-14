@@ -80,7 +80,7 @@ kover {
             }
         }
         verify {
-            rule("Line coverage of testable code is at least 99%") {
+            rule("Line coverage of testable code is at least 95%") {
                 minBound(95)
             }
         }

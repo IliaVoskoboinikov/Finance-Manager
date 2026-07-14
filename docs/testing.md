@@ -142,4 +142,19 @@ Kover-метрику основного проекта. Его тесты зап
   и/или Paparazzi (скриншот-тесты). Исключены из Kover-метрики, тесты пока не пишутся.
 - **Настоящие миграции Room** — до релиза нужны `Migration` + `MigrationTestHelper`
   (instrumented), сейчас БД на `fallbackToDestructiveMigration` (см. `bd.md`).
-- **CI-гейт по покрытию** — `koverVerifyFull` считается локально; отдельный job в CI пока не заведён.
+
+## CI
+
+Покрытие проверяется в CI отдельной джобой `run-coverage` (`.github/workflows/ci.yml`), которая
+вызывает composite action `./.github/actions/coverage` (по образцу `ktlint` — рендер-логика
+вынесена из workflow в action). Внутри action, по порядку:
+
+1. `:koverHtmlReportFull` + `:koverXmlReportFull` — генерируют агрегированный отчёт (до гейта,
+   чтобы HTML/summary были доступны даже при провале порога; ведущий `:` — только корневая
+   задача, без no-op в модулях).
+2. **Coverage summary** — парсит XML и выводит таблицу LINE/BRANCH-покрытия в сводку прогона
+   (`$GITHUB_STEP_SUMMARY`).
+3. `:koverVerifyFull` — гейт: падает, если покрытие ниже порога `minBound` из корневого
+   `build.gradle.kts` (единственный источник истины для числа).
+
+Сама джоба после action грузит HTML-отчёт артефактом `kover-coverage-html` (`if: always()`).

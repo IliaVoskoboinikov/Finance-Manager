@@ -1,0 +1,45 @@
+name: "Kover Coverage"
+description: "Генерирует агрегированный отчёт покрытия (Kover), пишет сводку в Step Summary и проверяет порог"
+
+inputs:
+  gradle-flags:
+    description: "Gradle flags"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    # Отчёты генерируются ДО verify, чтобы HTML/summary были доступны даже если порог не пройден.
+    # Задачи с ведущим ":" — только корневой агрегированный отчёт (без no-op задач в модулях).
+    - name: Generate coverage reports
+      shell: bash
+      run: ./gradlew :koverHtmlReportFull :koverXmlReportFull ${{ inputs.gradle-flags }}
+
+    - name: Coverage summary
+      shell: bash
+      run: |
+        python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+        import xml.etree.ElementTree as ET
+        root = ET.parse("build/reports/kover/reportFull.xml").getroot()
+        def metric(kind):
+            c = next((x for x in root.findall("counter") if x.get("type") == kind), None)
+            if c is None:
+                return 0, 0, 100.0
+            covered, missed = int(c.get("covered")), int(c.get("missed"))
+            total = covered + missed
+            return covered, total, (100.0 * covered / total if total else 100.0)
+        lc, lt, lp = metric("LINE")
+        bc, bt, bp = metric("BRANCH")
+        print("## 📊 Покрытие тестами (Kover)\n")
+        print("| Метрика | Покрыто | Всего | % |")
+        print("|---|---|---|---|")
+        print(f"| Строки (LINE) | {lc} | {lt} | **{lp:.2f}%** |")
+        print(f"| Ветви (BRANCH) | {bc} | {bt} | {bp:.2f}% |")
+        print("\n> HTML-отчёт — в артефакте `kover-coverage-html`.")
+        PY
+
+    # Гейт: падает, если покрытие ниже порога minBound из корневого build.gradle.kts.
+    - name: Verify coverage threshold
+      shell: bash
+      run: ./gradlew :koverVerifyFull ${{ inputs.gradle-flags }}
