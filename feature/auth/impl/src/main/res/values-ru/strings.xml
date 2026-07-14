@@ -10,6 +10,7 @@
     <string name="auth_no_account_register">Нет аккаунта? Зарегистрироваться</string>
     <string name="auth_have_account_login">Уже есть аккаунт? Войти</string>
     <string name="auth_continue_as_guest">Войти как гость</string>
+    <string name="auth_sign_in_yandex">Войти через Яндекс</string>
     <string name="auth_or_divider">ИЛИ</string>
     <string name="auth_sync_dialog_title">Синхронизировать данные?</string>
     <string name="auth_sync_dialog_text">У вас есть локальные транзакции из гостевой сессии. Хотите синхронизировать их с аккаунтом или начать заново?</string>
@@ -27,4 +28,5 @@
     <string name="auth_error_failed">Не удалось авторизоваться. Попробуйте ещё раз.</string>
     <string name="auth_error_invalid_credentials">Неверное имя или пароль.</string>
     <string name="auth_error_network">Нет подключения к интернету. Проверьте сеть и повторите.</string>
+    <string name="auth_error_yandex">Не удалось войти через Яндекс. Попробуйте ещё раз.</string>
 </resources>

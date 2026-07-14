@@ -1,8 +1,12 @@
 package soft.divan.financemanager.feature.auth.impl.presenter.viewModel
 
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yandex.authsdk.YandexAuthLoginOptions
+import com.yandex.authsdk.YandexAuthResult
+import com.yandex.authsdk.YandexAuthSdk
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +20,7 @@ import soft.divan.financemanager.core.auth.domain.model.AuthStatus
 import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.repository.AuthRepository
+import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.feature.auth.impl.R
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthAction
@@ -28,7 +33,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val getAuthStatusUseCase: GetAuthStatusUseCase,
-    private val syncCoordinator: SyncCoordinator
+    private val syncCoordinator: SyncCoordinator,
+    private val yandexAuthSdk: YandexAuthSdk
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Success())
@@ -38,6 +44,13 @@ class AuthViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     val authStatus = getAuthStatusUseCase()
+
+    /**
+     * Контракт Yandex ID SDK для запуска экрана входа через `rememberLauncherForActivityResult`.
+     * Результат передаётся обратно в [onYandexResult].
+     */
+    val yandexAuthContract: ActivityResultContract<YandexAuthLoginOptions, YandexAuthResult>
+        get() = yandexAuthSdk.contract
 
     fun onAction(action: AuthAction) {
         when (action) {
@@ -81,19 +94,52 @@ class AuthViewModel @Inject constructor(
         val pass = content.authUi.pass
         val isLogin = content.authUi.isLoginMode
 
-        val previousContent = content
+        runAuth(content) {
+            if (isLogin) {
+                authRepository.login(name, pass, shouldMergeData = true)
+            } else {
+                authRepository.register(name, pass, shouldMergeData = true)
+            }
+        }
+    }
+
+    /**
+     * Обрабатывает результат экрана входа Yandex ID SDK.
+     * При успехе обменивает access_token Яндекса на внутреннюю пару токенов,
+     * при ошибке показывает сообщение, при отмене — ничего не делает.
+     */
+    fun onYandexResult(result: YandexAuthResult) {
+        when (result) {
+            is YandexAuthResult.Success -> {
+                val content = _uiState.value as? AuthUiState.Success ?: return
+                runAuth(content) {
+                    authRepository.loginWithYandex(result.token.value, shouldMergeData = true)
+                }
+            }
+
+            is YandexAuthResult.Failure -> _uiState.updateContent {
+                it.copy(errorMessage = R.string.auth_error_yandex)
+            }
+
+            YandexAuthResult.Cancelled -> Unit
+        }
+    }
+
+    /**
+     * Общий сценарий входа: показывает загрузку, при успехе решает вопрос слияния
+     * гостевых данных / запускает первичную синхронизацию, при ошибке — показывает сообщение.
+     * Используется обычным логином/регистрацией и входом через Яндекс.
+     */
+    private fun runAuth(
+        previousContent: AuthUiState.Success,
+        authCall: suspend () -> DomainResult<Unit>
+    ) {
         _uiState.value = AuthUiState.Loading
 
         viewModelScope.launch {
             val wasGuest = getAuthStatusUseCase().first() == AuthStatus.GUEST
 
-            val result = if (isLogin) {
-                authRepository.login(name, pass, shouldMergeData = true)
-            } else {
-                authRepository.register(name, pass, shouldMergeData = true)
-            }
-
-            result.fold(
+            authCall().fold(
                 onSuccess = {
                     if (wasGuest) {
                         _uiState.value = previousContent.copy(showMergeDialog = true)

@@ -1,5 +1,9 @@
 package soft.divan.financemanager.feature.auth.impl.presenter.viewModel
 
+import com.yandex.authsdk.YandexAuthException
+import com.yandex.authsdk.YandexAuthResult
+import com.yandex.authsdk.YandexAuthSdk
+import com.yandex.authsdk.YandexAuthToken
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -32,6 +36,7 @@ class AuthViewModelTest {
     private val authRepository = mockk<AuthRepository>()
     private val getAuthStatusUseCase = mockk<GetAuthStatusUseCase>()
     private val syncCoordinator = mockk<SyncCoordinator>()
+    private val yandexAuthSdk = mockk<YandexAuthSdk>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -48,7 +53,8 @@ class AuthViewModelTest {
     private fun viewModel() = AuthViewModel(
         authRepository = authRepository,
         getAuthStatusUseCase = getAuthStatusUseCase,
-        syncCoordinator = syncCoordinator
+        syncCoordinator = syncCoordinator,
+        yandexAuthSdk = yandexAuthSdk
     )
 
     private fun success(vm: AuthViewModel) = vm.uiState.value as AuthUiState.Success
@@ -178,6 +184,69 @@ class AuthViewModelTest {
         assertThat(events).contains(AuthEvent.NavigateToMain)
 
         job.cancel()
+    }
+
+    /* ---------- yandex oauth ---------- */
+
+    @Test
+    fun `yandex success exchanges token then syncs and navigates`() = runTest {
+        coEvery {
+            authRepository.loginWithYandex("ya-token", shouldMergeData = true)
+        } returns DomainResult.Success(Unit)
+        val vm = viewModel()
+        val events = mutableListOf<AuthEvent>()
+        val job = launch(UnconfinedTestDispatcher()) { vm.eventFlow.collect { events += it } }
+
+        vm.onYandexResult(YandexAuthResult.Success(YandexAuthToken("ya-token", expiresIn = 100L)))
+
+        coVerify(exactly = 1) { authRepository.loginWithYandex("ya-token", shouldMergeData = true) }
+        coVerify(exactly = 1) { syncCoordinator.syncAll() }
+        assertThat(events).contains(AuthEvent.NavigateToMain)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `yandex success as guest asks about merging data`() = runTest {
+        every { getAuthStatusUseCase() } returns flowOf(AuthStatus.GUEST)
+        coEvery { authRepository.loginWithYandex(any(), any()) } returns DomainResult.Success(Unit)
+        val vm = viewModel()
+
+        vm.onYandexResult(YandexAuthResult.Success(YandexAuthToken("ya-token", expiresIn = 100L)))
+
+        assertThat(success(vm).showMergeDialog).isTrue()
+        coVerify(exactly = 0) { syncCoordinator.syncAll() }
+    }
+
+    @Test
+    fun `yandex backend failure shows error message`() = runTest {
+        coEvery { authRepository.loginWithYandex(any(), any()) } returns
+            DomainResult.Failure(DomainError.NetworkUnavailable)
+        val vm = viewModel()
+
+        vm.onYandexResult(YandexAuthResult.Success(YandexAuthToken("ya-token", expiresIn = 100L)))
+
+        assertThat(success(vm).errorMessage).isNotNull()
+    }
+
+    @Test
+    fun `yandex failure result shows error without calling backend`() = runTest {
+        val vm = viewModel()
+
+        vm.onYandexResult(YandexAuthResult.Failure(mockk<YandexAuthException>()))
+
+        assertThat(success(vm).errorMessage).isNotNull()
+        coVerify(exactly = 0) { authRepository.loginWithYandex(any(), any()) }
+    }
+
+    @Test
+    fun `yandex cancelled result is a no-op`() = runTest {
+        val vm = viewModel()
+
+        vm.onYandexResult(YandexAuthResult.Cancelled)
+
+        assertThat(success(vm).errorMessage).isNull()
+        coVerify(exactly = 0) { authRepository.loginWithYandex(any(), any()) }
     }
 
     /* ---------- merge confirm ---------- */

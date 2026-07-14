@@ -4,6 +4,7 @@ import retrofit2.Response
 import soft.divan.financemanager.core.auth.data.api.AuthApiService
 import soft.divan.financemanager.core.auth.data.dto.AuthResponseDto
 import soft.divan.financemanager.core.auth.data.dto.UserCredentialsDto
+import soft.divan.financemanager.core.auth.data.dto.YandexAuthRequestDto
 import soft.divan.financemanager.core.auth.domain.model.AuthEvent
 import soft.divan.financemanager.core.auth.domain.provider.AuthStateProvider
 import soft.divan.financemanager.core.data.error.DataError
@@ -34,6 +35,13 @@ class AuthRepositoryImpl @Inject constructor(
         shouldMergeData: Boolean
     ): DomainResult<Unit> = authenticate(shouldMergeData) {
         authApi.register(UserCredentialsDto(name, password))
+    }
+
+    override suspend fun loginWithYandex(
+        accessToken: String,
+        shouldMergeData: Boolean
+    ): DomainResult<Unit> = authenticate(shouldMergeData) {
+        authApi.oauthYandex(YandexAuthRequestDto(accessToken))
     }
 
     /**

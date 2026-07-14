@@ -5,6 +5,7 @@ import org.junit.Test
 import soft.divan.financemanager.core.auth.data.dto.AuthResponseDto
 import soft.divan.financemanager.core.auth.data.dto.RefreshRequestDto
 import soft.divan.financemanager.core.auth.data.dto.UserCredentialsDto
+import soft.divan.financemanager.core.auth.data.dto.YandexAuthRequestDto
 
 class AuthDataModelsTest {
 
@@ -40,5 +41,10 @@ class AuthDataModelsTest {
 
         assertThat(dto.name).isEqualTo("user")
         assertThat(dto.password).isEqualTo("secret")
+    }
+
+    @Test
+    fun `YandexAuthRequestDto carries access token`() {
+        assertThat(YandexAuthRequestDto(accessToken = "ya-token").accessToken).isEqualTo("ya-token")
     }
 }

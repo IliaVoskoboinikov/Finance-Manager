@@ -1,11 +1,42 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.soft.divan.android.app)
 }
+
+/**
+ * Читает секрет из переменной окружения (CI) или из local.properties (локально).
+ * Зеркалит подход из :core:network.
+ */
+fun Project.getSecret(name: String): String {
+    val env = System.getenv(name)
+    if (env != null) return env
+
+    val localPropertiesFile = rootProject.file("local.properties")
+    var secret = ""
+    if (localPropertiesFile.exists()) {
+        val properties = Properties()
+        localPropertiesFile.inputStream().use(properties::load)
+        secret = properties.getProperty(name).orEmpty()
+    }
+    return secret
+}
+
+// client_id приложения в Яндекс OAuth. Задаётся только через local.properties / CI-секрет
+// YANDEX_CLIENT_ID (в репозиторий не коммитится — как API_TOKEN). Значение публично по
+// природе OAuth (SDK кладёт его в meta-data манифеста, оно видно в схеме редиректа
+// yx<client_id>), но в исходниках его не держим, чтобы не смешивать с конфигом сборки.
+val yandexClientId: String = getSecret("YANDEX_CLIENT_ID")
 
 android {
     namespace = Const.NAMESPACE
     defaultConfig {
         applicationId = Const.NAMESPACE
+
+        // Плейсхолдеры подставляются в meta-data и deep-link из манифеста Yandex ID SDK.
+        // Финальный merge SDK-манифеста происходит в :app, поэтому значения задаются здесь.
+        manifestPlaceholders["YANDEX_CLIENT_ID"] = yandexClientId
+        manifestPlaceholders["YANDEX_OAUTH_HOST"] = "oauth.yandex.ru"
     }
     testOptions {
         unitTests {

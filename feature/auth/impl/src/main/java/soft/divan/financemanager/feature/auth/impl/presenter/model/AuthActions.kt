@@ -12,5 +12,6 @@ data class AuthActions(
     val onLogoutClick: () -> Unit = {},
     val onLogoutConfirm: (Boolean) -> Unit = {},
     val onGuestClick: () -> Unit = {},
+    val onYandexClick: () -> Unit = {},
     val onDismissDialogs: () -> Unit = {}
 )

@@ -1,6 +1,7 @@
 package soft.divan.financemanager.feature.auth.impl.presenter.screen
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wallet
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.yandex.authsdk.YandexAuthLoginOptions
 import soft.divan.financemanager.feature.auth.impl.R
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthAction
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthActions
@@ -63,6 +66,7 @@ import soft.divan.financemanager.uikit.components.LoadingProgressBar
 import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
+import soft.divan.financemanager.uikit.theme.YandexRed
 
 @Composable
 fun AuthScreen(
@@ -72,6 +76,10 @@ fun AuthScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    val yandexLauncher = rememberLauncherForActivityResult(viewModel.yandexAuthContract) { result ->
+        viewModel.onYandexResult(result)
+    }
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
@@ -102,6 +110,7 @@ fun AuthScreen(
             onLogoutClick = { viewModel.onAction(AuthAction.OnLogoutClick) },
             onLogoutConfirm = { viewModel.onAction(AuthAction.OnLogoutConfirm(it)) },
             onGuestClick = { viewModel.onAction(AuthAction.OnGuestClick) },
+            onYandexClick = { yandexLauncher.launch(YandexAuthLoginOptions()) },
             onDismissDialogs = { viewModel.onAction(AuthAction.DismissDialogs) }
         ),
         snackbarHostState = snackbarHostState
@@ -186,7 +195,10 @@ private fun SuccessContent(
                     actions = actions
                 )
 
-                GuestButton(onGuestClick = actions.onGuestClick)
+                AlternativeAuthButtons(
+                    onYandexClick = actions.onYandexClick,
+                    onGuestClick = actions.onGuestClick
+                )
             }
 
             if (content.isSyncing) {
@@ -281,7 +293,10 @@ private fun AuthHeader(isLoginMode: Boolean) {
 }
 
 @Composable
-private fun GuestButton(onGuestClick: () -> Unit) {
+private fun AlternativeAuthButtons(
+    onYandexClick: () -> Unit,
+    onGuestClick: () -> Unit
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -304,6 +319,26 @@ private fun GuestButton(onGuestClick: () -> Unit) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onYandexClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = YandexRed,
+                contentColor = Color.White
+            )
+        ) {
+            Text(
+                text = stringResource(R.string.auth_sign_in_yandex),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedButton(
             onClick = onGuestClick,
