@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(projects.core.common)
     implementation(projects.feature.transactionsToday.api)
     implementation(projects.core.network)
     implementation(projects.core.uikit)

@@ -3,7 +3,7 @@ package soft.divan.financemanager.feature.transactionstoday.impl.presenter.viewm
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import soft.divan.common.di.IoDispatcher
 import soft.divan.financemanager.core.domain.model.Period
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
@@ -29,7 +30,8 @@ import javax.inject.Inject
 class TransactionsTodayViewModel @Inject constructor(
     private val getTransactionsByPeriodUseCase: GetTransactionsByPeriodUseCase,
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
-    private val hapticsManager: HapticsManager
+    private val hapticsManager: HapticsManager,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState =
@@ -80,7 +82,7 @@ class TransactionsTodayViewModel @Inject constructor(
                     }
                 )
             }
-            .flowOn(Dispatchers.IO)
+            .flowOn(ioDispatcher)
             .launchIn(viewModelScope)
     }
 

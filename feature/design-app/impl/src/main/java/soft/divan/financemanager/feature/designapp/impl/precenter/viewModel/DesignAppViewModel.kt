@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import soft.divan.common.di.IoDispatcher
 import soft.divan.financemanager.feature.design_app.impl.R
 import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetAccentColorUseCase
@@ -28,13 +29,15 @@ import soft.divan.financemanager.uikit.theme.AccentColor
 import javax.inject.Inject
 
 @HiltViewModel
+@Suppress("LongParameterList")
 class DesignAppViewModel @Inject constructor(
     private val getThemeModeUseCase: GetThemeModeUseCase,
     private val setThemeModeUseCase: SetThemeModeUseCase,
     private val getAccentColorUseCase: GetAccentColorUseCase,
     private val setAccentColorUseCase: SetAccentColorUseCase,
     private val setCustomAccentColorUseCase: SetCustomAccentColorUseCase,
-    private val hapticsManager: HapticsManager
+    private val hapticsManager: HapticsManager,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DesignUiState>(DesignUiState.Loading)
@@ -54,7 +57,7 @@ class DesignAppViewModel @Inject constructor(
             }
         }
             .catch { _uiState.update { DesignUiState.Error(R.string.error) } }
-            .flowOn(Dispatchers.IO)
+            .flowOn(ioDispatcher)
             .launchIn(viewModelScope)
     }
 

@@ -53,4 +53,8 @@ dependencies {
     implementation(libs.logging.interceptor)
     implementation(libs.converter.gson)
     implementation(libs.androidx.tracing.ktx)
+
+    // Robolectric-тест ConnectivityManagerNetworkMonitor
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }

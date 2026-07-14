@@ -124,4 +124,87 @@ class AuthStateHolderTest {
             sessionDataSource.setAuthStatus(AuthStatus.UNAUTHORIZED)
         }
     }
+
+    @Test
+    fun `login from guest without merge wipes local data first`() = runTest {
+        every { sessionDataSource.getAuthStatus() } returns flowOf(AuthStatus.GUEST)
+        createHolder()
+        testScope.runCurrent()
+
+        authStateHolder.sendEvent(
+            AuthEvent.OnLoginSuccess("access", "refresh", shouldMergeData = false)
+        )
+
+        coVerify { dbCleanupManager.clearUserData() }
+        assertThat(authStateHolder.currentStatus()).isEqualTo(AuthStatus.AUTHORIZED)
+    }
+
+    @Test
+    fun `login from guest with merge keeps local data`() = runTest {
+        every { sessionDataSource.getAuthStatus() } returns flowOf(AuthStatus.GUEST)
+        createHolder()
+        testScope.runCurrent()
+
+        authStateHolder.sendEvent(
+            AuthEvent.OnLoginSuccess("access", "refresh", shouldMergeData = true)
+        )
+
+        coVerify(exactly = 0) { dbCleanupManager.clearUserData() }
+        assertThat(authStateHolder.currentStatus()).isEqualTo(AuthStatus.AUTHORIZED)
+    }
+
+    @Test
+    fun `logout without clearData switches to guest and keeps db`() = runTest {
+        createHolder()
+        testScope.runCurrent()
+
+        authStateHolder.sendEvent(AuthEvent.OnLogout(shouldClearData = false))
+
+        assertThat(authStateHolder.currentStatus()).isEqualTo(AuthStatus.GUEST)
+        coVerify {
+            tokenDataSource.clearTokens()
+            sessionDataSource.setAuthStatus(AuthStatus.GUEST)
+        }
+        coVerify(exactly = 0) { dbCleanupManager.clearUserData() }
+    }
+
+    @Test
+    fun `enter as guest clears tokens but keeps data`() = runTest {
+        createHolder()
+        testScope.runCurrent()
+
+        authStateHolder.sendEvent(AuthEvent.OnEnterAsGuest)
+
+        assertThat(authStateHolder.currentStatus()).isEqualTo(AuthStatus.GUEST)
+        coVerify {
+            tokenDataSource.clearTokens()
+            sessionDataSource.setAuthStatus(AuthStatus.GUEST)
+        }
+        coVerify(exactly = 0) { dbCleanupManager.clearUserData() }
+    }
+
+    @Test
+    fun `clear data event wipes db without changing status`() = runTest {
+        createHolder()
+        testScope.runCurrent()
+
+        authStateHolder.sendEvent(AuthEvent.OnClearData)
+
+        coVerify { dbCleanupManager.clearUserData() }
+        assertThat(authStateHolder.currentStatus()).isEqualTo(AuthStatus.UNAUTHORIZED)
+    }
+
+    @Test
+    fun `restore maps authorized status with missing tokens to unauthorized`() = runTest {
+        every { sessionDataSource.getAuthStatus() } returns flowOf(AuthStatus.AUTHORIZED)
+        every { tokenDataSource.getAccessToken() } returns flowOf(null)
+        every { tokenDataSource.getRefreshToken() } returns flowOf(null)
+
+        createHolder()
+        testScope.runCurrent()
+
+        assertThat(authStateHolder.currentStatus()).isEqualTo(AuthStatus.UNAUTHORIZED)
+        assertThat(authStateHolder.currentSessionState())
+            .isEqualTo(SessionState.Unauthorized)
+    }
 }

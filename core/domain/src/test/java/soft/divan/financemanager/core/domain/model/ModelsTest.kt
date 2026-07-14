@@ -73,6 +73,37 @@ class ModelsTest {
         assertThat(Const.DEFAULT_STOP_TIMEOUT_MS).isEqualTo(5_000L)
     }
 
+    @Test
+    fun `Currency equality is structural`() {
+        val a = Currency(id = "rub-id", name = "Российский рубль")
+        val b = Currency(id = "rub-id", name = "Российский рубль")
+
+        assertThat(a).isEqualTo(b)
+        assertThat(a.copy(name = "Ruble")).isNotEqualTo(a)
+    }
+
+    @Test
+    fun `TransactionType contains all expected operation kinds`() {
+        assertThat(TransactionType.entries).containsExactly(
+            TransactionType.INCOME,
+            TransactionType.EXPENSE,
+            TransactionType.ADJUSTMENT,
+            TransactionType.TRANSFER_IN,
+            TransactionType.TRANSFER_OUT
+        )
+    }
+
+    @Test
+    fun `Transaction transfer carries target account`() {
+        val transfer = transaction(Instant.EPOCH).copy(
+            type = TransactionType.TRANSFER_OUT,
+            targetAccountLocalId = "target-acc"
+        )
+
+        assertThat(transfer.targetAccountLocalId).isEqualTo("target-acc")
+        assertThat(transfer.type).isEqualTo(TransactionType.TRANSFER_OUT)
+    }
+
     private fun transaction(date: Instant, comment: String? = "note") = Transaction(
         id = "1",
         accountLocalId = "acc",

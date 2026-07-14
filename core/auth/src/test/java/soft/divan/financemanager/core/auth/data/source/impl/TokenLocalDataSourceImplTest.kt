@@ -16,6 +16,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import soft.divan.financemanager.core.security.CryptoManager
+import java.security.GeneralSecurityException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TokenLocalDataSourceImplTest {
@@ -34,6 +35,46 @@ class TokenLocalDataSourceImplTest {
             produceFile = { temporaryFolder.newFile("test_tokens.preferences_pb") }
         )
         dataSource = TokenLocalDataSourceImpl(dataStore, cryptoManager)
+    }
+
+    @Test
+    fun `updateRefreshToken encrypts and getRefreshToken decrypts it back`() = runTest {
+        every { cryptoManager.encrypt("refresh123", any()) } returns "enc_refresh"
+        every { cryptoManager.decrypt("enc_refresh", any()) } returns "refresh123"
+
+        dataSource.updateRefreshToken("refresh123")
+
+        assertThat(dataSource.getRefreshToken().first()).isEqualTo("refresh123")
+    }
+
+    @Test
+    fun `getRefreshToken returns null when decryption fails`() = runTest {
+        every { cryptoManager.encrypt("refresh123", any()) } returns "enc_refresh"
+        every { cryptoManager.decrypt("enc_refresh", any()) } throws GeneralSecurityException("x")
+
+        dataSource.updateRefreshToken("refresh123")
+
+        assertThat(dataSource.getRefreshToken().first()).isNull()
+    }
+
+    @Test
+    fun `updateAccessToken with null removes the stored access token`() = runTest {
+        every { cryptoManager.encrypt("access", any()) } returns "enc_access"
+        dataSource.updateAccessToken("access")
+
+        dataSource.updateAccessToken(null)
+
+        assertThat(dataSource.getAccessToken().first()).isNull()
+    }
+
+    @Test
+    fun `updateRefreshToken with null removes the stored refresh token`() = runTest {
+        every { cryptoManager.encrypt("refresh", any()) } returns "enc_refresh"
+        dataSource.updateRefreshToken("refresh")
+
+        dataSource.updateRefreshToken(null)
+
+        assertThat(dataSource.getRefreshToken().first()).isNull()
     }
 
     @Test

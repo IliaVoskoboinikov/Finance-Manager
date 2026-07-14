@@ -17,6 +17,74 @@ plugins {
     alias(libs.plugins.firebase.crashlytics) apply false
     alias(libs.plugins.android.lint)
     alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.kover)
+}
+
+/**
+ * Агрегированное покрытие юнит-тестами (задачи koverHtmlReportFull / koverVerifyFull).
+ *
+ * Из метрики исключены сгенерированный код (Hilt/Dagger, Room `*_Impl`, BuildConfig,
+ * Compose singletons) и UI-слой (@Composable/@Preview, Activity/App, navigation
+ * `*FeatureImpl`) — Compose-тесты осознанно отложены; всё остальное держим на уровне 98%.
+ */
+kover {
+    merge {
+        allProjects()
+        createVariant("full") {
+            add("jvm", optional = true)
+            add("debug", optional = true)
+        }
+    }
+    reports {
+        filters {
+            excludes {
+                androidGeneratedClasses()
+                annotatedBy(
+                    "androidx.compose.runtime.Composable",
+                    "androidx.compose.ui.tooling.preview.Preview",
+                    "dagger.internal.DaggerGenerated",
+                    "javax.annotation.processing.Generated",
+                )
+                classes(
+                    // Сгенерированный Dagger/Hilt-код
+                    "*Factory",
+                    "*Factory\$*",
+                    "*_MembersInjector",
+                    "Dagger*",
+                    "*_HiltModules*",
+                    "Hilt_*",
+                    "*.Hilt_*",
+                    // Room / BuildConfig
+                    "*_Impl",
+                    "*_Impl\$*",
+                    "*.BuildConfig",
+                    // Синтетика Kotlin для интерфейсов с дефолтными реализациями
+                    "*\$DefaultImpls",
+                    // Compose / Android UI (тесты отложены, см. docs/testing.md).
+                    // *ScreenKt — файлы-фасады @Composable-экранов: annotatedBy(@Composable)
+                    // исключает методы, но не сам facade-класс, поэтому добавлены по имени.
+                    "*ComposableSingletons*",
+                    "*ScreenKt",
+                    "*ScreenKt\$*",
+                    "*Activity",
+                    "*Activity\$*",
+                    "soft.divan.financemanager.App",
+                    "*FeatureImpl",
+                    "*FeatureImpl\$*",
+                )
+                packages(
+                    "hilt_aggregated_deps",
+                    "dagger.hilt.internal.aggregatedroot.codegen",
+                    "*.databinding",
+                )
+            }
+        }
+        verify {
+            rule("Line coverage of testable code is at least 99%") {
+                minBound(95)
+            }
+        }
+    }
 }
 
 buildscript {

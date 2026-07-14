@@ -12,4 +12,5 @@
 - [Synchronization](./synchronization.md) — как устроена фоновая синхронизация данных.
 - [DomainResult & errors](./domain-result.md) — подход к доменным результатам и обработке ошибок.
 - [Bd](./bd.md) — локальная база данных.
+- [Testing & Coverage](./testing.md) — уровни тестов, инструменты (MockK, Robolectric, TestKit), измерение покрытия через Kover, как запускать.
 

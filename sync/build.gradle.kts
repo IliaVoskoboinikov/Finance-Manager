@@ -13,4 +13,9 @@ dependencies {
     implementation(libs.androidx.work.ktx)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.core)
+
+    // Robolectric-тесты воркеров и уведомлений
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.work.testing)
 }

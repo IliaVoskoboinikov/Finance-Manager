@@ -7,6 +7,12 @@ android {
     defaultConfig {
         applicationId = Const.NAMESPACE
     }
+    testOptions {
+        unitTests {
+            // Robolectric-тестам БД нужен доступ к assets (prepackaged category_db.db)
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 dependencies {
@@ -70,6 +76,11 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.process)
+
+    testImplementation(libs.bundles.unit.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.room.runtime)
 }
 
 tasks.register("printVersionName") {

@@ -2,6 +2,15 @@ plugins {
     alias(libs.plugins.soft.divan.feature.impl)
 }
 
+android {
+    testOptions {
+        unitTests {
+            // Robolectric-тесту BiometricHelper нужны строковые ресурсы промпта
+            isIncludeAndroidResources = true
+        }
+    }
+}
+
 dependencies {
     implementation(projects.feature.security.api)
     implementation(projects.core.network)
@@ -12,4 +21,5 @@ dependencies {
     implementation(libs.androidx.biometric.ktx)
 
     testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }

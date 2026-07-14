@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(projects.core.common)
     implementation(projects.feature.analysis.api)
     implementation(projects.core.uikit)
     implementation(projects.core.domain)

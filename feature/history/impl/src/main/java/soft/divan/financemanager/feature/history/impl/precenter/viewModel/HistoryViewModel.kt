@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import soft.divan.common.di.IoDispatcher
 import soft.divan.financemanager.core.domain.model.Period
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
@@ -32,6 +33,7 @@ import javax.inject.Inject
 class HistoryViewModel @Inject constructor(
     private val getTransactionsByPeriodUseCase: GetTransactionsByPeriodUseCase,
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -93,7 +95,7 @@ class HistoryViewModel @Inject constructor(
                     onFailure = { _uiState.update { HistoryUiState.Error(R.string.error_loading) } }
                 )
             }
-            .flowOn(Dispatchers.IO)
+            .flowOn(ioDispatcher)
             .launchIn(viewModelScope)
     }
 

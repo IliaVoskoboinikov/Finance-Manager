@@ -11,4 +11,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+
+    // Robolectric-тест DataStore-провайдеров (Context.sessionDataStore/tokenDataStore)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }

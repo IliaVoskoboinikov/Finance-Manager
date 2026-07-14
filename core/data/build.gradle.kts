@@ -14,4 +14,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.converter.gson)
     implementation(libs.androidx.room.ktx)
+
+    // Robolectric-тест DataStore-провайдера (Context.dataStore в DataProviderModule)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }
