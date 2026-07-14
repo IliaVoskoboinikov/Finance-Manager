@@ -76,10 +76,9 @@ class HistoryMappersTest {
     }
 
     @Test
-    fun `Transaction toUi renders null comment as string`() {
-        // Текущее поведение: comment.toString() превращает null в строку "null"
+    fun `Transaction toUi renders null comment as empty string`() {
         val ui = transaction.copy(comment = null).toUi(category)
 
-        assertThat(ui.comment).isEqualTo("null")
+        assertThat(ui.comment).isEmpty()
     }
 }
