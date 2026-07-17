@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -25,6 +26,7 @@ import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.repository.AuthRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthAction
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthEvent
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthUiState
@@ -37,6 +39,7 @@ class AuthViewModelTest {
     private val getAuthStatusUseCase = mockk<GetAuthStatusUseCase>()
     private val syncCoordinator = mockk<SyncCoordinator>()
     private val yandexAuthSdk = mockk<YandexAuthSdk>(relaxed = true)
+    private val errorLogger = mockk<ErrorLogger>(relaxed = true)
 
     @Before
     fun setUp() {
@@ -54,7 +57,8 @@ class AuthViewModelTest {
         authRepository = authRepository,
         getAuthStatusUseCase = getAuthStatusUseCase,
         syncCoordinator = syncCoordinator,
-        yandexAuthSdk = yandexAuthSdk
+        yandexAuthSdk = yandexAuthSdk,
+        errorLogger = errorLogger
     )
 
     private fun success(vm: AuthViewModel) = vm.uiState.value as AuthUiState.Success
@@ -230,13 +234,15 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun `yandex failure result shows error without calling backend`() = runTest {
+    fun `yandex failure result shows error and logs it without calling backend`() = runTest {
+        val exception = mockk<YandexAuthException>()
         val vm = viewModel()
 
-        vm.onYandexResult(YandexAuthResult.Failure(mockk<YandexAuthException>()))
+        vm.onYandexResult(YandexAuthResult.Failure(exception))
 
         assertThat(success(vm).errorMessage).isNotNull()
         coVerify(exactly = 0) { authRepository.loginWithYandex(any(), any()) }
+        verify(exactly = 1) { errorLogger.recordError(exception, any()) }
     }
 
     @Test

@@ -22,6 +22,7 @@ import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.repository.AuthRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import soft.divan.financemanager.feature.auth.impl.R
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthAction
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthEvent
@@ -34,7 +35,8 @@ class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val getAuthStatusUseCase: GetAuthStatusUseCase,
     private val syncCoordinator: SyncCoordinator,
-    private val yandexAuthSdk: YandexAuthSdk
+    private val yandexAuthSdk: YandexAuthSdk,
+    private val errorLogger: ErrorLogger
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Success())
@@ -117,8 +119,13 @@ class AuthViewModel @Inject constructor(
                 }
             }
 
-            is YandexAuthResult.Failure -> _uiState.updateContent {
-                it.copy(errorMessage = R.string.auth_error_yandex)
+            is YandexAuthResult.Failure -> {
+                // Фиксируем причину сбоя SDK (коды ошибок, без токенов/PII),
+                // иначе ошибка Яндекса теряется и диагностировать нечего.
+                errorLogger.recordError(result.exception, "Yandex auth failed")
+                _uiState.updateContent {
+                    it.copy(errorMessage = R.string.auth_error_yandex)
+                }
             }
 
             YandexAuthResult.Cancelled -> Unit

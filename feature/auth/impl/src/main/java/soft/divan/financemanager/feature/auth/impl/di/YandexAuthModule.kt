@@ -1,6 +1,7 @@
 package soft.divan.financemanager.feature.auth.impl.di
 
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import com.yandex.authsdk.YandexAuthOptions
 import com.yandex.authsdk.YandexAuthSdk
 import dagger.Module
@@ -24,5 +25,10 @@ object YandexAuthModule {
     @Singleton
     fun provideYandexAuthSdk(
         @ApplicationContext context: Context
-    ): YandexAuthSdk = YandexAuthSdk.create(YandexAuthOptions(context))
+    ): YandexAuthSdk {
+        // Внутренние логи SDK включаем только в отладочной сборке — помогает
+        // диагностировать ошибки OAuth-редиректа, в release ничего не пишем.
+        val isDebuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        return YandexAuthSdk.create(YandexAuthOptions(context, loggingEnabled = isDebuggable))
+    }
 }
