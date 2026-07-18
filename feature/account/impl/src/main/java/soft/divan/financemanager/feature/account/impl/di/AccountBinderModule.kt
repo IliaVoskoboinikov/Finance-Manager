@@ -8,10 +8,12 @@ import soft.divan.financemanager.feature.account.api.AccountFeatureApi
 import soft.divan.financemanager.feature.account.impl.domain.usecase.CreateAccountUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.DeleteAccountUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.GetAccountByIdUseCase
+import soft.divan.financemanager.feature.account.impl.domain.usecase.HasAccountTransactionsUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.UpdateAccountUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.impl.CreateAccountUseCaseImpl
 import soft.divan.financemanager.feature.account.impl.domain.usecase.impl.DeleteAccountUseCaseImpl
 import soft.divan.financemanager.feature.account.impl.domain.usecase.impl.GetAccountByIdUseCaseImpl
+import soft.divan.financemanager.feature.account.impl.domain.usecase.impl.HasAccountTransactionsUseCaseImpl
 import soft.divan.financemanager.feature.account.impl.domain.usecase.impl.UpdateAccountUseCaseImpl
 import soft.divan.financemanager.feature.account.impl.navigation.AccountFeatureImpl
 
@@ -33,4 +35,9 @@ interface AccountBinderModule {
 
     @Binds
     fun bindGetAccountByIdUserCase(impl: GetAccountByIdUseCaseImpl): GetAccountByIdUseCase
+
+    @Binds
+    fun bindHasAccountTransactionsUseCase(
+        impl: HasAccountTransactionsUseCaseImpl
+    ): HasAccountTransactionsUseCase
 }

@@ -25,6 +25,7 @@ import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.feature.account.impl.domain.usecase.CreateAccountUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.DeleteAccountUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.GetAccountByIdUseCase
+import soft.divan.financemanager.feature.account.impl.domain.usecase.HasAccountTransactionsUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.UpdateAccountUseCase
 import soft.divan.financemanager.feature.account.impl.navigation.ACCOUNT_ID_KEY
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountEvent
@@ -51,6 +52,7 @@ class AccountViewModelTest {
     private val updateAccountUseCase = mockk<UpdateAccountUseCase>()
     private val getAccountByIdUseCase = mockk<GetAccountByIdUseCase>()
     private val deleteAccountUseCase = mockk<DeleteAccountUseCase>()
+    private val hasAccountTransactionsUseCase = mockk<HasAccountTransactionsUseCase>()
     private val hapticsManager = mockk<HapticsManager>(relaxUnitFun = true)
 
     private val domainAccount = Account(
@@ -65,6 +67,7 @@ class AccountViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
+        coEvery { hasAccountTransactionsUseCase(any()) } returns DomainResult.Success(false)
     }
 
     @After
@@ -77,6 +80,7 @@ class AccountViewModelTest {
         updateAccountUseCase = updateAccountUseCase,
         getAccountByIdUseCase = getAccountByIdUseCase,
         deleteAccountUseCase = deleteAccountUseCase,
+        hasAccountTransactionsUseCase = hasAccountTransactionsUseCase,
         hapticsManager = hapticsManager,
         savedStateHandle = SavedStateHandle()
     )
@@ -86,6 +90,7 @@ class AccountViewModelTest {
         updateAccountUseCase = updateAccountUseCase,
         getAccountByIdUseCase = getAccountByIdUseCase,
         deleteAccountUseCase = deleteAccountUseCase,
+        hasAccountTransactionsUseCase = hasAccountTransactionsUseCase,
         hapticsManager = hapticsManager,
         savedStateHandle = SavedStateHandle(mapOf(ACCOUNT_ID_KEY to id))
     )
@@ -165,6 +170,31 @@ class AccountViewModelTest {
         assertThat(state.mode).isEqualTo(AccountMode.Edit("local-1"))
         assertThat(state.account.name).isEqualTo("Cash")
         assertThat(state.account.balance).isEqualTo("100.5")
+
+        job.cancel()
+    }
+
+    @Test
+    fun `edit mode marks hasTransactions true when account has operations`() = runTest {
+        coEvery { getAccountByIdUseCase("local-1") } returns DomainResult.Success(domainAccount)
+        coEvery { hasAccountTransactionsUseCase("local-1") } returns DomainResult.Success(true)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        assertThat(successState(vm).hasTransactions).isTrue()
+
+        job.cancel()
+    }
+
+    @Test
+    fun `edit mode keeps hasTransactions false when check fails`() = runTest {
+        coEvery { getAccountByIdUseCase("local-1") } returns DomainResult.Success(domainAccount)
+        coEvery { hasAccountTransactionsUseCase("local-1") } returns
+            DomainResult.Failure(DomainError.Unknown(null))
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        assertThat(successState(vm).hasTransactions).isFalse()
 
         job.cancel()
     }

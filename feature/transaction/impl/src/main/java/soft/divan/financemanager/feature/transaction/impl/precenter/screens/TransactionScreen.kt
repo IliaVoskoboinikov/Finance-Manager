@@ -227,7 +227,7 @@ fun TransactionForm(
     )
     ShowAccountsBottomSheet(
         isShowAccountsSheet = isShowAccountsSheet,
-        accounts = uiState.accounts,
+        accounts = uiState.accounts.filterNot { it.archived },
         onAccountChange = actions.onAccountChange
     )
 
@@ -358,9 +358,17 @@ private fun Account(
             .clickable(onClick = onClick),
         content = { ContentTextListItem(stringResource(R.string.account)) },
         trail = {
-            ContentTextListItem(
-                uiState.accounts.find { it.id == uiState.transaction.accountId }?.name ?: ""
-            )
+            val selectedAccount =
+                uiState.accounts.find { it.id == uiState.transaction.accountId }
+            val accountName = when {
+                selectedAccount == null -> ""
+
+                selectedAccount.archived ->
+                    selectedAccount.name + stringResource(R.string.archived_account_suffix)
+
+                else -> selectedAccount.name
+            }
+            ContentTextListItem(accountName)
             Spacer(modifier = Modifier.width(16.dp))
             Icon(
                 imageVector = Icons.Filled.Arrow,

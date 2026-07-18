@@ -16,5 +16,12 @@ data class AccountEntity(
     val currencyId: String,
     val createdAt: String,
     val updatedAt: String,
-    val syncStatus: SyncStatus
+    val syncStatus: SyncStatus,
+    /**
+     * Признак архивного («призрачного») счёта. Счёт нельзя удалить физически, пока на нём
+     * есть операции, поэтому вместо удаления он архивируется: пропадает из списков и пикера
+     * (фильтруется в data-слое при выдаче всех счетов), но остаётся в БД, чтобы история
+     * операций могла подтянуть его имя/валюту. Обратной раз-архивации нет.
+     */
+    val archived: Boolean = false
 )

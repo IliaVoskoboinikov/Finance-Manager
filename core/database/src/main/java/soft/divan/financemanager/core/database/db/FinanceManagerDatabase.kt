@@ -22,7 +22,7 @@ import soft.divan.financemanager.core.database.util.Converters
     ],
     // Должна быть строго больше версии прешипнутого ассета category_db.db (user_version = 1),
     // иначе Room видит одинаковую версию с другим identity hash и падает на проверке целостности.
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

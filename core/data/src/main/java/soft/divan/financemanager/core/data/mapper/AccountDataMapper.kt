@@ -15,7 +15,8 @@ fun AccountDto.toEntity(localId: String, syncStatus: SyncStatus): AccountEntity 
     currencyId = currencyId,
     createdAt = createdAt,
     updatedAt = updatedAt,
-    syncStatus = syncStatus
+    syncStatus = syncStatus,
+    archived = archived
 )
 
 fun Account.toEntity(serverId: String?, syncStatus: SyncStatus): AccountEntity = AccountEntity(
@@ -47,7 +48,8 @@ fun Account.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
 fun AccountEntity.toUpdateDto(): UpdateAccountRequestDto = UpdateAccountRequestDto(
     name = name,
     balance = balance.toBigDecimal(),
-    currencyId = currencyId
+    currencyId = currencyId,
+    archived = archived
 )
 
 fun AccountEntity.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(

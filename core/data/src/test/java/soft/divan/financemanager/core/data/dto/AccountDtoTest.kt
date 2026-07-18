@@ -38,4 +38,10 @@ class AccountDtoTest {
         assertThat(dto.createdAt).isEqualTo("2024-01-01T00:00:00Z")
         assertThat(dto.updatedAt).isEqualTo("2024-02-01T00:00:00Z")
     }
+
+    @Test
+    fun `archived defaults to false and is settable`() {
+        assertThat(dto.archived).isFalse()
+        assertThat(dto.copy(archived = true).archived).isTrue()
+    }
 }

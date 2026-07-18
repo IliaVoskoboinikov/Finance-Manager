@@ -70,7 +70,8 @@ class AccountRepositoryImplTest {
     private fun entity(
         localId: String = "local-1",
         serverId: String? = "server-1",
-        syncStatus: SyncStatus = SyncStatus.SYNCED
+        syncStatus: SyncStatus = SyncStatus.SYNCED,
+        archived: Boolean = false
     ) = AccountEntity(
         localId = localId,
         serverId = serverId,
@@ -79,7 +80,8 @@ class AccountRepositoryImplTest {
         currencyId = "rub-id",
         createdAt = createdAt,
         updatedAt = updatedAt,
-        syncStatus = syncStatus
+        syncStatus = syncStatus,
+        archived = archived
     )
 
     /* ---------- create ---------- */
@@ -128,6 +130,22 @@ class AccountRepositoryImplTest {
             listOf(
                 entity(localId = "a1"),
                 entity(localId = "a2", syncStatus = SyncStatus.PENDING_DELETE)
+            )
+        )
+
+        val result = repository.getAll().first()
+
+        val success = result as DomainResult.Success
+        assertThat(success.data).hasSize(1)
+        assertThat(success.data.first().id).isEqualTo("a1")
+    }
+
+    @Test
+    fun `getAll skips archived accounts`() = runTest {
+        every { localDataSource.getAll() } returns flowOf(
+            listOf(
+                entity(localId = "a1"),
+                entity(localId = "a2", archived = true)
             )
         )
 
@@ -331,15 +349,37 @@ class AccountRepositoryImplTest {
     }
 
     @Test
-    fun `delete fails when account has transactions`() = runTest {
-        coEvery { localDataSource.getByLocalId("local-1") } returns entity()
+    fun `delete archives account and syncs update when it has transactions`() = runTest {
+        val local = entity(serverId = "server-1")
+        coEvery { localDataSource.getByLocalId("local-1") } returns local
         coEvery { transactionLocalDataSource.getByAccountId("local-1") } returns
             listOf(mockk<TransactionEntity>())
+        val updated = slot<AccountEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        val result = repository.delete("local-1")
+        appCoroutineContext.runAll()
+
+        assertThat(result).isEqualTo(DomainResult.Success(Unit))
+        assertThat(updated.captured.archived).isTrue()
+        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_UPDATE)
+        coVerify(exactly = 1) {
+            syncManager.syncUpdate(
+                match { it.archived && it.syncStatus == SyncStatus.PENDING_UPDATE }
+            )
+        }
+        coVerify(exactly = 0) { syncManager.syncDelete(any()) }
+    }
+
+    @Test
+    fun `delete returns Failure when transaction lookup fails`() = runTest {
+        val boom = IllegalStateException("db")
+        coEvery { localDataSource.getByLocalId("local-1") } returns entity()
+        coEvery { transactionLocalDataSource.getByAccountId("local-1") } throws boom
 
         val result = repository.delete("local-1")
 
-        val failure = result as DomainResult.Failure
-        assertThat(failure.error).isInstanceOf(DomainError.Unknown::class.java)
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.Unknown(boom)))
         assertThat(appCoroutineContext.launchCount).isZero()
         coVerify(exactly = 0) { localDataSource.update(any()) }
     }

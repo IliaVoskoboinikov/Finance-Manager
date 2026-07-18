@@ -19,6 +19,8 @@ import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.core.domain.result.onSuccess
+import soft.divan.financemanager.core.domain.usecase.GetAccountByIdUseCase
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.haptics.api.domain.HapticType
@@ -51,6 +53,7 @@ import javax.inject.Inject
 class TransactionViewModel @Inject constructor(
     private val createTransactionAndUpdateAccountUseCase: CreateTransactionAndUpdateAccountUseCase,
     private val getAccountsUseCase: GetAccountsUseCase,
+    private val getAccountByIdUseCase: GetAccountByIdUseCase,
     private val getTransactionUseCase: GetTransactionUseCase,
     private val getCategoriesUseCase: GetCategoriesByTypeUseCase,
     private val updateTransactionAndUpdateAccountUseCase: UpdateTransactionAndUpdateAccountUseCase,
@@ -147,6 +150,7 @@ class TransactionViewModel @Inject constructor(
                     ?: return@fold
 
                 transactionUi = domainTransaction.toUi(category)
+                resolveArchivedAccountIfNeeded()
                 publishSuccess()
             },
             onFailure = {
@@ -155,6 +159,20 @@ class TransactionViewModel @Inject constructor(
                 }
             }
         )
+    }
+
+    /**
+     * Если операция ссылается на счёт, которого нет в списке для выбора (он архивный и отфильтрован
+     * [GetAccountsUseCase]), подтягивает его по id и добавляет как архивный — чтобы экран показал
+     * его имя. В пикере такой счёт по-прежнему недоступен для выбора.
+     */
+    private suspend fun resolveArchivedAccountIfNeeded() {
+        val accountId = transactionUi?.accountId ?: return
+        if (accounts.any { it.id == accountId }) return
+
+        getAccountByIdUseCase(accountId).onSuccess { account ->
+            accounts = accounts + account.toUi(archived = true)
+        }
     }
 
     fun save() {

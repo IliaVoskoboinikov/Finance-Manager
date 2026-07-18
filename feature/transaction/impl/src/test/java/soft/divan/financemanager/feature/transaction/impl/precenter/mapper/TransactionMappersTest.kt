@@ -49,6 +49,21 @@ class TransactionMappersTest {
         assertThat(ui.name).isEqualTo("Cash")
         assertThat(ui.balance).isEqualTo("100.50")
         assertThat(ui.currencyId).isEqualTo("rub-id")
+        assertThat(ui.archived).isFalse()
+    }
+
+    @Test
+    fun `Account toUi marks archived when requested`() {
+        val account = Account(
+            id = "a1",
+            name = "Cash",
+            balance = BigDecimal("100.50"),
+            currencyId = "rub-id",
+            createdAt = transaction.createdAt,
+            updatedAt = transaction.updatedAt
+        )
+
+        assertThat(account.toUi(archived = true).archived).isTrue()
     }
 
     @Test

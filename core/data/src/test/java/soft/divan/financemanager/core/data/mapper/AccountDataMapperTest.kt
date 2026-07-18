@@ -56,6 +56,15 @@ class AccountDataMapperTest {
         assertThat(result.createdAt).isEqualTo(createdAt)
         assertThat(result.updatedAt).isEqualTo(updatedAt)
         assertThat(result.syncStatus).isEqualTo(SyncStatus.PENDING_UPDATE)
+        assertThat(result.archived).isFalse()
+    }
+
+    @Test
+    fun `AccountDto toEntity propagates archived flag`() {
+        val result = dto.copy(archived = true)
+            .toEntity(localId = "local-1", syncStatus = SyncStatus.SYNCED)
+
+        assertThat(result.archived).isTrue()
     }
 
     @Test
@@ -108,6 +117,14 @@ class AccountDataMapperTest {
         assertThat(result.name).isEqualTo("Cash")
         assertThat(result.balance).isEqualByComparingTo(BigDecimal("100.50"))
         assertThat(result.currencyId).isEqualTo("rub-id")
+        assertThat(result.archived).isFalse()
+    }
+
+    @Test
+    fun `AccountEntity toUpdateDto propagates archived flag`() {
+        val result = entity.copy(archived = true).toUpdateDto()
+
+        assertThat(result.archived).isTrue()
     }
 
     @Test

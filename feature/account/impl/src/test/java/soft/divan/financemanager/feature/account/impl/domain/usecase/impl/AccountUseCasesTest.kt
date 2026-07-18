@@ -9,6 +9,7 @@ import org.junit.Test
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.repository.AccountRepository
+import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import java.math.BigDecimal
 import java.time.Instant
@@ -16,6 +17,7 @@ import java.time.Instant
 class AccountUseCasesTest {
 
     private val repository = mockk<AccountRepository>()
+    private val transactionRepository = mockk<TransactionRepository>()
 
     private val account = Account(
         id = "local-1",
@@ -82,5 +84,26 @@ class AccountUseCasesTest {
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         coVerify(exactly = 1) { repository.delete("local-1") }
+    }
+
+    @Test
+    fun `HasAccountTransactionsUseCase delegates to transaction repository`() = runTest {
+        coEvery { transactionRepository.hasTransactions("local-1") } returns
+            DomainResult.Success(true)
+
+        val result = HasAccountTransactionsUseCaseImpl(transactionRepository)("local-1")
+
+        assertThat(result).isEqualTo(DomainResult.Success(true))
+        coVerify(exactly = 1) { transactionRepository.hasTransactions("local-1") }
+    }
+
+    @Test
+    fun `HasAccountTransactionsUseCase propagates failure`() = runTest {
+        coEvery { transactionRepository.hasTransactions("local-1") } returns
+            DomainResult.Failure(DomainError.Unknown(null))
+
+        val result = HasAccountTransactionsUseCaseImpl(transactionRepository)("local-1")
+
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.Unknown(null)))
     }
 }

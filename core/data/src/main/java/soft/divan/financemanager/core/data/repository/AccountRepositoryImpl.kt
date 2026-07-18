@@ -55,7 +55,9 @@ class AccountRepositoryImpl @Inject constructor(
         }
         return safeDbFlow(errorLogger) {
             localDataSource.getAll().map { list ->
-                list.filter { it.syncStatus != SyncStatus.PENDING_DELETE }.map { it.toDomain() }
+                list
+                    .filter { it.syncStatus != SyncStatus.PENDING_DELETE && !it.archived }
+                    .map { it.toDomain() }
             }
         }
     }
@@ -161,9 +163,16 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    /** Получаем аккаунт из БД и и проверяем есть ли у него транзакции если нет то помечаем в БД
-     * как удаленный и запускаем синхронизацию удаления,
-     * если на сервере аккаунта нет то просто удалем, если есть то удаляем на сервере и локально */
+    /**
+     * Удаляет счёт с учётом серверного правила «нельзя удалить счёт, на котором есть операции».
+     *
+     * - Если операций на счёте нет — физическое удаление: помечаем запись [SyncStatus.PENDING_DELETE]
+     *   и запускаем синхронизацию удаления (если счёт был на сервере — удаляем и там).
+     * - Если операции есть — архивируем («призрак»): выставляем `archived = true` и
+     *   [SyncStatus.PENDING_UPDATE], счёт пропадает из списков/пикера ([getAll]), но остаётся в БД,
+     *   чтобы история операций подтягивала его имя/валюту. Архивирование уезжает на сервер обычным
+     *   update-механизмом. Обратной раз-архивации нет.
+     */
     @Suppress("ReturnCount")
     override suspend fun delete(id: String): DomainResult<Unit> {
         val localResult = getLocalOrFail(id)
@@ -175,12 +184,10 @@ class AccountRepositoryImpl @Inject constructor(
         val hasTransactions = safeDbCall(errorLogger) {
             transactionLocalDataSource.getByAccountId(id).isNotEmpty()
         }
-        // todo доработать, по серверной логике нельзя удалять счет если на нем есть операции
-        if (hasTransactions is DomainResult.Success && hasTransactions.data) {
-            return DomainResult.Failure(
-                DataError.LocalDb(Throwable("Account has transactions")).toDomainError()
-            )
-        }
+        if (hasTransactions is DomainResult.Failure) return hasTransactions
+
+        val shouldArchive = (hasTransactions as DomainResult.Success).data
+        if (shouldArchive) return archive(accountEntity)
 
         appCoroutineContext.launch {
             syncManager.syncDelete(accountEntity)
@@ -190,6 +197,27 @@ class AccountRepositoryImpl @Inject constructor(
             localDataSource.update(
                 accountEntity.copy(syncStatus = SyncStatus.PENDING_DELETE)
             )
+        }
+    }
+
+    /**
+     * Архивирует счёт локально и пушит изменение на сервер обычным update-механизмом.
+     *
+     * Если счёт ещё не был на сервере (`serverId == null`), [AccountSyncManager.syncUpdate] ничего
+     * не отправляет — архивировать на сервере нечего, ghost остаётся только локально.
+     */
+    private suspend fun archive(accountEntity: AccountEntity): DomainResult<Unit> {
+        val archivedEntity = accountEntity.copy(
+            archived = true,
+            syncStatus = SyncStatus.PENDING_UPDATE
+        )
+
+        appCoroutineContext.launch {
+            syncManager.syncUpdate(archivedEntity)
+        }
+
+        return safeDbCall(errorLogger) {
+            localDataSource.update(archivedEntity)
         }
     }
 

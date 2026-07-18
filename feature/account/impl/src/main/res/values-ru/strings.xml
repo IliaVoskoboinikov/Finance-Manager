@@ -11,4 +11,9 @@
     <string name="error_delete">Ошибка удаления</string>
     <string name="balance">Баланс</string>
     <string name="name">Название</string>
+    <string name="delete_account_title">Удалить счёт?</string>
+    <string name="delete_account_message">Счёт будет удалён навсегда.</string>
+    <string name="archive_account_title">Заархивировать счёт?</string>
+    <string name="archive_account_message">На счёте есть операции, поэтому он будет заархивирован: скрыт из списков, но операции сохранятся в истории.</string>
+    <string name="archive">В архив</string>
 </resources>

@@ -185,6 +185,8 @@ fun CreateAccountForm(
     val currencySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val isCurrencySheetOpen = remember { mutableStateOf(false) }
 
+    val isShowDeleteDialog = remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -205,8 +207,19 @@ fun CreateAccountForm(
         if (uiState.mode is AccountMode.Create) {
             SaveButton(actions.onSave)
         } else {
-            DeleteButton(onClick = actions.onDelete)
+            DeleteButton(onClick = { isShowDeleteDialog.value = true })
         }
+    }
+
+    if (isShowDeleteDialog.value) {
+        DeleteAccountDialog(
+            hasTransactions = uiState.hasTransactions,
+            onConfirm = {
+                isShowDeleteDialog.value = false
+                actions.onDelete()
+            },
+            onDismiss = { isShowDeleteDialog.value = false }
+        )
     }
 }
 

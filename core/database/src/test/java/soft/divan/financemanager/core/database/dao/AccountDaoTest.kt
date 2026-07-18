@@ -20,7 +20,8 @@ class AccountDaoTest : RoomDaoTest() {
         localId: String = "local-1",
         serverId: String? = "server-1",
         name: String = "Cash",
-        syncStatus: SyncStatus = SyncStatus.SYNCED
+        syncStatus: SyncStatus = SyncStatus.SYNCED,
+        archived: Boolean = false
     ) = AccountEntity(
         localId = localId,
         serverId = serverId,
@@ -29,7 +30,8 @@ class AccountDaoTest : RoomDaoTest() {
         currencyId = "rub-id",
         createdAt = "2024-01-01T00:00:00Z",
         updatedAt = "2024-01-01T00:00:00Z",
-        syncStatus = syncStatus
+        syncStatus = syncStatus,
+        archived = archived
     )
 
     @Test
@@ -38,6 +40,13 @@ class AccountDaoTest : RoomDaoTest() {
 
         assertThat(dao.getByLocalId("local-1")).isEqualTo(entity())
         assertThat(dao.getByLocalId("missing")).isNull()
+    }
+
+    @Test
+    fun `insert persists archived flag`() = runTest {
+        dao.insert(entity(archived = true))
+
+        assertThat(dao.getByLocalId("local-1")!!.archived).isTrue()
     }
 
     @Test
