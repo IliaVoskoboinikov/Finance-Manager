@@ -27,6 +27,7 @@ graph TB
     end
 
     subgraph :core
+        :core:common
         :core:data
         :core:domain
         :core:uikit
@@ -35,6 +36,7 @@ graph TB
     end
 
     :feature:my-accounts:impl --> :feature:my-accounts:api
+    :feature:my-accounts:impl --> :core:common
     :feature:my-accounts:impl --> :core:network
     :feature:my-accounts:impl --> :core:uikit
     :feature:my-accounts:impl --> :core:domain

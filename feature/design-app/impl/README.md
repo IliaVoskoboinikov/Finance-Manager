@@ -26,11 +26,13 @@ graph TB
     end
 
     subgraph :core
+        :core:common
         :core:uikit
         :core:feature-api
     end
 
     :feature:design-app:impl --> :feature:design-app:api
+    :feature:design-app:impl --> :core:common
     :feature:design-app:impl --> :core:uikit
     :feature:design-app:impl --> :feature:haptics:api
     :feature:design-app:api --> :core:feature-api

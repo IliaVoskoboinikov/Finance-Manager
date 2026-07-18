@@ -21,5 +21,6 @@ graph TB
     :core:data --> :core:database
     :core:data --> :core:domain
     :core:data --> :core:network
+    :core:data --> :core:auth
     classDef android-library fill: #9BF6FF, stroke: #000, stroke-width: 2px, color: #000;
 ```

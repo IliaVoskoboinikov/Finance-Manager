@@ -27,6 +27,7 @@ graph TB
     end
 
     subgraph :core
+        :core:common
         :core:domain
         :core:data
         :core:uikit
@@ -34,6 +35,7 @@ graph TB
     end
 
     :feature:history:impl --> :feature:history:api
+    :feature:history:impl --> :core:common
     :feature:history:impl --> :core:domain
     :feature:history:impl --> :core:data
     :feature:history:impl --> :core:uikit

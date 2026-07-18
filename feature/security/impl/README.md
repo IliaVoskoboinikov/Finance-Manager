@@ -27,6 +27,7 @@ graph TB
         :core:network
         :core:uikit
         :core:domain
+        :core:security
         :core:feature-api
     end
 
@@ -34,6 +35,7 @@ graph TB
     :feature:security:impl --> :core:network
     :feature:security:impl --> :core:uikit
     :feature:security:impl --> :core:domain
+    :feature:security:impl --> :core:security
     :feature:security:api --> :core:feature-api
 
     classDef android-library fill:#9BF6FF,stroke:#000,stroke-width:2px,color:#000;

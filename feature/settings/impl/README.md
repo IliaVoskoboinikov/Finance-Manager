@@ -29,6 +29,7 @@ graph TB
         :feature:sounds:api
         :feature:languages:api
         :feature:synchronization:api
+        :feature:auth:api
     end
 
     subgraph :core
@@ -44,6 +45,7 @@ graph TB
     :feature:settings:impl --> :feature:sounds:api
     :feature:settings:impl --> :feature:languages:api
     :feature:settings:impl --> :feature:synchronization:api
+    :feature:settings:impl --> :feature:auth:api
     :feature:settings:api --> :core:feature-api
     classDef android-library fill: #9BF6FF, stroke: #000, stroke-width: 2px, color: #000;
 ```
