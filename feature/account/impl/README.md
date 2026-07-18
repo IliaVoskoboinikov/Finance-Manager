@@ -1,8 +1,18 @@
-# `:feature:analysis:impl`
+# `:feature:account:impl`
 
 ## Responsibility
 
-Аналитика транзакций и графиков.
+Создание и редактирование счёта пользователя: экран `AccountScreen` и `AccountViewModel`
+(режимы `AccountMode.Create` / `AccountMode.Edit` — имя, баланс, валюта), а также удаление
+счёта с экрана редактирования.
+
+Use case-ы модуля: `CreateAccountUseCase`, `UpdateAccountUseCase`, `GetAccountByIdUseCase`,
+`DeleteAccountUseCase`. Удаление — мягкое (offline-first): в data-слое счёт помечается
+`syncStatus = PENDING_DELETE` и не удаляется, пока по нему есть транзакции
+(проверка в `AccountRepositoryImpl.delete`).
+
+Модуль реализует `AccountFeatureApi` из `:feature:account:api` и регистрирует свой
+навигационный граф в `app`.
 
 ## Module dependency graph
 
@@ -17,12 +27,12 @@ config:
 ---
 graph TB
     subgraph :feature
-        subgraph :feature:analysis
-            :feature:analysis:api
-            :feature:analysis:impl
+        subgraph :feature:account
+            :feature:account:api
+            :feature:account:impl
         end
 
-        :feature:history:api
+        :feature:haptics:api
     end
 
     subgraph :core
@@ -31,11 +41,11 @@ graph TB
         :core:feature-api
     end
 
-    :feature:analysis:impl --> :feature:analysis:api
-    :feature:analysis:impl --> :core:uikit
-    :feature:analysis:impl --> :core:domain
-    :feature:analysis:impl --> :feature:history:api
-    :feature:analysis:api --> :core:feature-api
+    :feature:account:impl --> :feature:account:api
+    :feature:account:impl --> :core:domain
+    :feature:account:impl --> :core:uikit
+    :feature:account:impl --> :feature:haptics:api
+    :feature:account:api --> :core:feature-api
 
     classDef android-library fill:#9BF6FF,stroke:#000,stroke-width:2px,color:#000;
 ```
