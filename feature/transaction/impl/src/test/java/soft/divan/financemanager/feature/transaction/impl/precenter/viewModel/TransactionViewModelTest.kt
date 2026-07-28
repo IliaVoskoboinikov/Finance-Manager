@@ -22,11 +22,13 @@ import org.junit.Before
 import org.junit.Test
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.usecase.GetAccountByIdUseCase
 import soft.divan.financemanager.core.domain.usecase.GetAccountsUseCase
 import soft.divan.financemanager.feature.haptics.api.domain.HapticType
 import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
@@ -52,6 +54,7 @@ class TransactionViewModelTest {
 
     private val createUseCase = mockk<CreateTransactionAndUpdateAccountUseCase>()
     private val getAccountsUseCase = mockk<GetAccountsUseCase>()
+    private val getAccountByIdUseCase = mockk<GetAccountByIdUseCase>()
     private val getTransactionUseCase = mockk<GetTransactionUseCase>()
     private val getCategoriesUseCase = mockk<GetCategoriesByTypeUseCase>()
     private val updateUseCase = mockk<UpdateTransactionAndUpdateAccountUseCase>()
@@ -107,6 +110,7 @@ class TransactionViewModelTest {
     private fun createModeViewModel() = TransactionViewModel(
         createTransactionAndUpdateAccountUseCase = createUseCase,
         getAccountsUseCase = getAccountsUseCase,
+        getAccountByIdUseCase = getAccountByIdUseCase,
         getTransactionUseCase = getTransactionUseCase,
         getCategoriesUseCase = getCategoriesUseCase,
         updateTransactionAndUpdateAccountUseCase = updateUseCase,
@@ -119,6 +123,7 @@ class TransactionViewModelTest {
     private fun editModeViewModel(id: String = "t1") = TransactionViewModel(
         createTransactionAndUpdateAccountUseCase = createUseCase,
         getAccountsUseCase = getAccountsUseCase,
+        getAccountByIdUseCase = getAccountByIdUseCase,
         getTransactionUseCase = getTransactionUseCase,
         getCategoriesUseCase = getCategoriesUseCase,
         updateTransactionAndUpdateAccountUseCase = updateUseCase,
@@ -163,6 +168,36 @@ class TransactionViewModelTest {
         assertThat(state.transaction.id).isEqualTo("t1")
         assertThat(state.transaction.amount).isEqualTo("42")
         assertThat(state.transaction.mode).isEqualTo(TransactionMode.Edit("t1"))
+
+        job.cancel()
+    }
+
+    @Test
+    fun `edit mode resolves archived account referenced by the transaction`() = runTest {
+        val ghostTransaction = domainTransaction.copy(accountLocalId = "ghost")
+        val ghostAccount =
+            account.copy(id = "ghost", name = "Old wallet", status = AccountStatus.Deleted)
+        coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(ghostTransaction)
+        coEvery { getAccountByIdUseCase("ghost") } returns DomainResult.Success(ghostAccount)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        val resolved = success(vm).accounts.first { it.id == "ghost" }
+        assertThat(resolved.archived).isTrue()
+        assertThat(resolved.name).isEqualTo("Old wallet")
+        assertThat(success(vm).accounts.first { it.id == "a1" }.archived).isFalse()
+
+        job.cancel()
+    }
+
+    @Test
+    fun `edit mode does not resolve account when it is already in the list`() = runTest {
+        coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(domainTransaction)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        coVerify(exactly = 0) { getAccountByIdUseCase(any()) }
+        assertThat(success(vm).accounts.map { it.id }).containsExactly("a1")
 
         job.cancel()
     }

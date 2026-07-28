@@ -19,6 +19,7 @@ import soft.divan.financemanager.core.data.util.safeCall.safeDbFlow
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
@@ -55,7 +56,10 @@ class AccountRepositoryImpl @Inject constructor(
         }
         return safeDbFlow(errorLogger) {
             localDataSource.getAll().map { list ->
-                list.filter { it.syncStatus != SyncStatus.PENDING_DELETE }.map { it.toDomain() }
+                list
+                    .filter { it.syncStatus != SyncStatus.PENDING_DELETE }
+                    .map { it.toDomain() }
+                    .filter { it.status != AccountStatus.Deleted }
             }
         }
     }
@@ -161,9 +165,21 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    /** Получаем аккаунт из БД и и проверяем есть ли у него транзакции если нет то помечаем в БД
-     * как удаленный и запускаем синхронизацию удаления,
-     * если на сервере аккаунта нет то просто удалем, если есть то удаляем на сервере и локально */
+    /**
+     * Удаляет счёт с учётом серверного правила «нельзя удалить счёт, на котором есть операции».
+     *
+     * В обоих случаях на сервер уходит один и тот же запрос — `DELETE /accounts/{id}` (сервер сам
+     * решает: нет операций → физическое удаление, есть → перевод в статус `Deleted`). Различается
+     * только локальное отражение результата:
+     * - операций нет → строка помечается [SyncStatus.PENDING_DELETE] и после успешного серверного
+     *   удаления удаляется локально;
+     * - операции есть → строка переводится в статус `Deleted` (плюс [SyncStatus.PENDING_DELETE] как
+     *   признак «ждём подтверждения сервера»): счёт пропадает из списков/пикера ([getAll]), но
+     *   остаётся в БД для истории. После успешного серверного DELETE строка сохраняется как архивная.
+     *
+     * Статус `Deleted` в самой записи и определяет, оставлять её или удалять после ответа сервера
+     * (см. [AccountSyncManager.syncDelete]). Обратной раз-архивации нет.
+     */
     @Suppress("ReturnCount")
     override suspend fun delete(id: String): DomainResult<Unit> {
         val localResult = getLocalOrFail(id)
@@ -175,21 +191,20 @@ class AccountRepositoryImpl @Inject constructor(
         val hasTransactions = safeDbCall(errorLogger) {
             transactionLocalDataSource.getByAccountId(id).isNotEmpty()
         }
-        // todo доработать, по серверной логике нельзя удалять счет если на нем есть операции
-        if (hasTransactions is DomainResult.Success && hasTransactions.data) {
-            return DomainResult.Failure(
-                DataError.LocalDb(Throwable("Account has transactions")).toDomainError()
-            )
-        }
+        if (hasTransactions is DomainResult.Failure) return hasTransactions
+
+        val shouldArchive = (hasTransactions as DomainResult.Success).data
+        val markedEntity = accountEntity.copy(
+            status = if (shouldArchive) AccountStatus.Deleted.name else accountEntity.status,
+            syncStatus = SyncStatus.PENDING_DELETE
+        )
 
         appCoroutineContext.launch {
-            syncManager.syncDelete(accountEntity)
+            syncManager.syncDelete(markedEntity)
         }
 
         return safeDbCall(errorLogger) {
-            localDataSource.update(
-                accountEntity.copy(syncStatus = SyncStatus.PENDING_DELETE)
-            )
+            localDataSource.update(markedEntity)
         }
     }
 

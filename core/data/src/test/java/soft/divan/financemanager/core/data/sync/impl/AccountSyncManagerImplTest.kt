@@ -55,7 +55,8 @@ class AccountSyncManagerImplTest {
         localId: String = "local-1",
         serverId: String? = "server-1",
         updatedAt: String = "2024-01-15T00:00:00Z",
-        syncStatus: SyncStatus = SyncStatus.SYNCED
+        syncStatus: SyncStatus = SyncStatus.SYNCED,
+        status: String = "Active"
     ) = AccountEntity(
         localId = localId,
         serverId = serverId,
@@ -64,7 +65,8 @@ class AccountSyncManagerImplTest {
         currencyId = "rub-id",
         createdAt = "2024-01-01T00:00:00Z",
         updatedAt = updatedAt,
-        syncStatus = syncStatus
+        syncStatus = syncStatus,
+        status = status
     )
 
     /* ---------- pullServerData ---------- */
@@ -207,6 +209,36 @@ class AccountSyncManagerImplTest {
         syncManager.syncDelete(entity())
 
         coVerify(exactly = 0) { localDataSource.delete(any()) }
+    }
+
+    @Test
+    fun `syncDelete keeps Deleted account locally as SYNCED after server delete`() = runTest {
+        coEvery { remoteDataSource.delete("server-1") } returns Response.success(Unit)
+
+        syncManager.syncDelete(entity(syncStatus = SyncStatus.PENDING_DELETE, status = "Deleted"))
+
+        coVerify(exactly = 1) { remoteDataSource.delete("server-1") }
+        coVerify(exactly = 0) { localDataSource.delete(any()) }
+        coVerify(exactly = 1) {
+            localDataSource.update(
+                match { it.status == "Deleted" && it.syncStatus == SyncStatus.SYNCED }
+            )
+        }
+    }
+
+    @Test
+    fun `syncDelete keeps Deleted unsynced account locally without server call`() = runTest {
+        syncManager.syncDelete(
+            entity(serverId = null, syncStatus = SyncStatus.PENDING_DELETE, status = "Deleted")
+        )
+
+        coVerify(exactly = 0) { remoteDataSource.delete(any()) }
+        coVerify(exactly = 0) { localDataSource.delete(any()) }
+        coVerify(exactly = 1) {
+            localDataSource.update(
+                match { it.status == "Deleted" && it.syncStatus == SyncStatus.SYNCED }
+            )
+        }
     }
 
     /* ---------- syncWith ---------- */

@@ -386,4 +386,34 @@ class TransactionRepositoryImplTest {
         assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NoData))
         assertThat(appCoroutineContext.launchCount).isZero()
     }
+
+    /* ---------- hasTransactions ---------- */
+
+    @Test
+    fun `hasTransactions returns true when account has operations`() = runTest {
+        coEvery { localDataSource.getByAccountId("local-a1") } returns listOf(entity())
+
+        val result = repository.hasTransactions("local-a1")
+
+        assertThat(result).isEqualTo(DomainResult.Success(true))
+    }
+
+    @Test
+    fun `hasTransactions returns false when account has no operations`() = runTest {
+        coEvery { localDataSource.getByAccountId("local-a1") } returns emptyList()
+
+        val result = repository.hasTransactions("local-a1")
+
+        assertThat(result).isEqualTo(DomainResult.Success(false))
+    }
+
+    @Test
+    fun `hasTransactions returns Failure when local query throws`() = runTest {
+        val boom = IllegalStateException("db")
+        coEvery { localDataSource.getByAccountId("local-a1") } throws boom
+
+        val result = repository.hasTransactions("local-a1")
+
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.Unknown(boom)))
+    }
 }

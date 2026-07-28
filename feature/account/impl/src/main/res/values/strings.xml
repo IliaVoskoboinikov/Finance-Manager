@@ -11,4 +11,9 @@
     <string name="error_delete">Uninstall error</string>
     <string name="balance">Balance</string>
     <string name="name">Name</string>
+    <string name="delete_account_title">Delete account?</string>
+    <string name="delete_account_message">The account will be permanently deleted.</string>
+    <string name="archive_account_title">Archive account?</string>
+    <string name="archive_account_message">The account has transactions, so it will be archived: hidden from lists, but its transactions stay in history.</string>
+    <string name="archive">Archive</string>
 </resources>

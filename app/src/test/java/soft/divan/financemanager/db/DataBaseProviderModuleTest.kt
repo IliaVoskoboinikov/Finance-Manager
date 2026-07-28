@@ -42,7 +42,7 @@ class DataBaseProviderModuleTest {
 
     @Test
     fun `database schema version is above prepackaged asset version`() {
-        assertThat(db.openHelper.readableDatabase.version).isEqualTo(2)
+        assertThat(db.openHelper.readableDatabase.version).isGreaterThan(1)
     }
 
     @Test

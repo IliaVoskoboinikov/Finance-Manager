@@ -3,6 +3,7 @@ package soft.divan.financemanager.feature.transaction.impl.precenter.mapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.model.TransactionType
@@ -49,6 +50,22 @@ class TransactionMappersTest {
         assertThat(ui.name).isEqualTo("Cash")
         assertThat(ui.balance).isEqualTo("100.50")
         assertThat(ui.currencyId).isEqualTo("rub-id")
+        assertThat(ui.archived).isFalse()
+    }
+
+    @Test
+    fun `Account toUi marks archived for Deleted status`() {
+        val account = Account(
+            id = "a1",
+            name = "Cash",
+            balance = BigDecimal("100.50"),
+            currencyId = "rub-id",
+            createdAt = transaction.createdAt,
+            updatedAt = transaction.updatedAt,
+            status = AccountStatus.Deleted
+        )
+
+        assertThat(account.toUi().archived).isTrue()
     }
 
     @Test

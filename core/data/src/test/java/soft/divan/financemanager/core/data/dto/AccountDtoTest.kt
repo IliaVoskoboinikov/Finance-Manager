@@ -2,6 +2,7 @@ package soft.divan.financemanager.core.data.dto
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import java.math.BigDecimal
 
 class AccountDtoTest {
@@ -37,5 +38,12 @@ class AccountDtoTest {
         assertThat(dto.currencyId).isEqualTo("rub-id")
         assertThat(dto.createdAt).isEqualTo("2024-01-01T00:00:00Z")
         assertThat(dto.updatedAt).isEqualTo("2024-02-01T00:00:00Z")
+    }
+
+    @Test
+    fun `status defaults to Active and is settable`() {
+        assertThat(dto.status).isEqualTo(AccountStatus.Active.name)
+        assertThat(dto.copy(status = AccountStatus.Deleted.name).status)
+            .isEqualTo(AccountStatus.Deleted.name)
     }
 }

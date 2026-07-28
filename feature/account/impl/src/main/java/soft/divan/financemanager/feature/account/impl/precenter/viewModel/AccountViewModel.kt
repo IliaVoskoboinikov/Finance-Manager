@@ -16,11 +16,13 @@ import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.account.impl.R
 import soft.divan.financemanager.feature.account.impl.domain.usecase.CreateAccountUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.DeleteAccountUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.GetAccountByIdUseCase
+import soft.divan.financemanager.feature.account.impl.domain.usecase.HasAccountTransactionsUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.UpdateAccountUseCase
 import soft.divan.financemanager.feature.account.impl.navigation.ACCOUNT_ID_KEY
 import soft.divan.financemanager.feature.account.impl.precenter.mapper.toDomain
@@ -36,11 +38,13 @@ import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
+@Suppress("LongParameterList")
 class AccountViewModel @Inject constructor(
     private val createAccountUseCase: CreateAccountUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,
     private val getAccountByIdUseCase: GetAccountByIdUseCase,
     private val deleteAccountUseCase: DeleteAccountUseCase,
+    private val hasAccountTransactionsUseCase: HasAccountTransactionsUseCase,
     private val hapticsManager: HapticsManager,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -60,6 +64,7 @@ class AccountViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     private var account: AccountUi? = null
+    private var hasTransactions: Boolean = false
 
     private val mode =
         if (accountId == null) AccountMode.Create else AccountMode.Edit(accountId)
@@ -72,7 +77,8 @@ class AccountViewModel @Inject constructor(
         _uiState.update {
             AccountUiState.Success(
                 account = currentAccount,
-                mode = mode
+                mode = mode,
+                hasTransactions = hasTransactions
             )
         }
     }
@@ -106,6 +112,8 @@ class AccountViewModel @Inject constructor(
             getAccountByIdUseCase(accountId).fold(
                 onSuccess = {
                     account = it.toUi()
+                    hasTransactions =
+                        hasAccountTransactionsUseCase(accountId).getOrNull() ?: false
                     publishSuccess()
                 },
                 onFailure = { _uiState.update { AccountUiState.Error(R.string.error_save) } }

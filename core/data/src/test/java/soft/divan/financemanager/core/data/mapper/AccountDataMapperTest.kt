@@ -6,6 +6,7 @@ import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import java.math.BigDecimal
 import java.time.Instant
 
@@ -56,6 +57,23 @@ class AccountDataMapperTest {
         assertThat(result.createdAt).isEqualTo(createdAt)
         assertThat(result.updatedAt).isEqualTo(updatedAt)
         assertThat(result.syncStatus).isEqualTo(SyncStatus.PENDING_UPDATE)
+        assertThat(result.status).isEqualTo(AccountStatus.Active.name)
+    }
+
+    @Test
+    fun `AccountDto toEntity stores Deleted status`() {
+        val result = dto.copy(status = AccountStatus.Deleted.name)
+            .toEntity(localId = "local-1", syncStatus = SyncStatus.SYNCED)
+
+        assertThat(result.status).isEqualTo(AccountStatus.Deleted.name)
+    }
+
+    @Test
+    fun `AccountDto toEntity normalizes unknown status to Active`() {
+        val result = dto.copy(status = "garbage")
+            .toEntity(localId = "local-1", syncStatus = SyncStatus.SYNCED)
+
+        assertThat(result.status).isEqualTo(AccountStatus.Active.name)
     }
 
     @Test
@@ -70,6 +88,15 @@ class AccountDataMapperTest {
         assertThat(result.createdAt).isEqualTo(createdAt)
         assertThat(result.updatedAt).isEqualTo(updatedAt)
         assertThat(result.syncStatus).isEqualTo(SyncStatus.PENDING_CREATE)
+        assertThat(result.status).isEqualTo(AccountStatus.Active.name)
+    }
+
+    @Test
+    fun `Account toEntity stores Deleted status name`() {
+        val result = account.copy(status = AccountStatus.Deleted)
+            .toEntity(serverId = "server-1", syncStatus = SyncStatus.SYNCED)
+
+        assertThat(result.status).isEqualTo(AccountStatus.Deleted.name)
     }
 
     @Test
@@ -89,6 +116,14 @@ class AccountDataMapperTest {
         assertThat(result.currencyId).isEqualTo("rub-id")
         assertThat(result.createdAt).isEqualTo(Instant.parse(createdAt))
         assertThat(result.updatedAt).isEqualTo(Instant.parse(updatedAt))
+        assertThat(result.status).isEqualTo(AccountStatus.Active)
+    }
+
+    @Test
+    fun `AccountEntity toDomain parses Deleted status`() {
+        val result = entity.copy(status = "Deleted").toDomain()
+
+        assertThat(result.status).isEqualTo(AccountStatus.Deleted)
     }
 
     @Test
