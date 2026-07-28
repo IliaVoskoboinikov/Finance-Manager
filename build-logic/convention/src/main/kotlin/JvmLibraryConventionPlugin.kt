@@ -7,6 +7,7 @@ import org.gradle.kotlin.dsl.dependencies
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import soft.divan.financemanager.Conf
+import soft.divan.financemanager.addDefaultUnitTestDependencies
 import soft.divan.financemanager.applyPlugin
 import soft.divan.financemanager.lib
 
@@ -32,6 +33,8 @@ class JvmLibraryConventionPlugin : Plugin<Project> {
                 add(Conf.IMPLEMENTATION, lib("kotlinx-coroutines-core"))
                 add(Conf.IMPLEMENTATION, lib("javax-inject"))
             }
+
+            addDefaultUnitTestDependencies()
         }
     }
 }

@@ -93,6 +93,49 @@ class AuthRepositoryImplTest {
 
     // endregion
 
+    // region yandex oauth
+
+    @Test
+    fun `loginWithYandex with valid tokens returns Success and emits OnLoginSuccess`() = runTest {
+        coEvery { authApi.oauthYandex(any()) } returns Response.success(
+            AuthResponseDto(accessToken = "access", refreshToken = "refresh")
+        )
+
+        val result = repository.loginWithYandex("ya-token", shouldMergeData = true)
+
+        assertThat(result).isInstanceOf(DomainResult.Success::class.java)
+        coVerify(exactly = 1) {
+            authStateProvider.sendEvent(
+                AuthEvent.OnLoginSuccess("access", "refresh", shouldMergeData = true)
+            )
+        }
+    }
+
+    @Test
+    fun `loginWithYandex with null tokens returns Failure and does NOT open a session`() = runTest {
+        coEvery { authApi.oauthYandex(any()) } returns Response.success(
+            AuthResponseDto(accessToken = null, refreshToken = null)
+        )
+
+        val result = repository.loginWithYandex("ya-token", shouldMergeData = true)
+
+        assertThat(result).isInstanceOf(DomainResult.Failure::class.java)
+        coVerify(exactly = 0) { authStateProvider.sendEvent(any()) }
+    }
+
+    @Test
+    fun `loginWithYandex propagates api failure as Failure without session`() = runTest {
+        coEvery { authApi.oauthYandex(any()) } returns errorResponse(401)
+
+        val result = repository.loginWithYandex("ya-token", shouldMergeData = false)
+
+        assertThat(result).isInstanceOf(DomainResult.Failure::class.java)
+        assertThat((result as DomainResult.Failure).error).isEqualTo(DomainError.Unauthorized)
+        coVerify(exactly = 0) { authStateProvider.sendEvent(any()) }
+    }
+
+    // endregion
+
     // region register
 
     @Test

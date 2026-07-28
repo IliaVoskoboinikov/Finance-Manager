@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import soft.divan.common.di.IoDispatcher
 import soft.divan.financemanager.core.domain.model.Period
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
@@ -32,6 +33,7 @@ import javax.inject.Inject
 class HistoryViewModel @Inject constructor(
     private val getTransactionsByPeriodUseCase: GetTransactionsByPeriodUseCase,
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -46,13 +48,17 @@ class HistoryViewModel @Inject constructor(
     private val _endDate = MutableStateFlow(LocalDate.now())
     val endDate: StateFlow<LocalDate> = _endDate.asStateFlow()
 
+    // Счётчик-триггер для повтора загрузки: StateFlow глушит повторную установку того же
+    // значения дат, поэтому для retry нужен отдельный меняющийся сигнал.
+    private val _reloadTrigger = MutableStateFlow(0)
+
     init {
         observeDateChanges()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeDateChanges() {
-        combine(startDate, endDate) { start, end -> start to end }
+        combine(startDate, endDate, _reloadTrigger) { start, end, _ -> start to end }
             .onStart { _uiState.update { HistoryUiState.Loading } }
             .flatMapLatest { (start, end) ->
                 getTransactionsByPeriodUseCase(
@@ -67,8 +73,11 @@ class HistoryViewModel @Inject constructor(
                 result.fold(
                     onSuccess = { data ->
                         val sumTransactions = getSumTransactionsUseCase(data.first)
-                        val uiTransactions = data.first.map { transaction ->
-                            transaction.toUi(data.third.find { it.id == transaction.categoryId }!!)
+                        // Транзакции с неизвестной категорией пропускаем (рассинхрон/удалённая
+                        // категория) — раньше `!!` ронял экран.
+                        val uiTransactions = data.first.mapNotNull { transaction ->
+                            data.third.find { it.id == transaction.categoryId }
+                                ?.let { category -> transaction.toUi(category) }
                         }
 
                         if (data.first.isEmpty()) {
@@ -86,13 +95,12 @@ class HistoryViewModel @Inject constructor(
                     onFailure = { _uiState.update { HistoryUiState.Error(R.string.error_loading) } }
                 )
             }
-            .flowOn(Dispatchers.IO)
+            .flowOn(ioDispatcher)
             .launchIn(viewModelScope)
     }
 
     fun reloadData() {
-        _startDate.value = _startDate.value
-        _endDate.value = _endDate.value
+        _reloadTrigger.update { it + 1 }
     }
 
     fun updateStartDate(date: LocalDate) {

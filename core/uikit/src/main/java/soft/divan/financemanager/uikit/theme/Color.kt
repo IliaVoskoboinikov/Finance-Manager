@@ -6,6 +6,9 @@ import androidx.compose.ui.graphics.Color
 
 val Purple80 = Color(0xFFF50000)
 
+/** Фирменный красный цвет Яндекса — для кнопки «Войти через Яндекс». */
+val YandexRed = Color(0xFFFC3F1D)
+
 val NeonMint = Color(0xFF2AE881)
 
 val Purple = Color(0xFF9C27B0)

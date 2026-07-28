@@ -10,4 +10,6 @@ dependencies {
     implementation(projects.core.auth)
     implementation(projects.core.domain)
     implementation(projects.sync)
+
+    implementation(libs.yandex.authsdk)
 }

@@ -1,5 +1,21 @@
 package soft.divan.financemanager.core.loggingerror
 
+/**
+ * Логирование нефатальных ошибок в краш-репортинг.
+ *
+ * Для пойманных исключений используйте форму с [Throwable] — тогда в отчёт попадают
+ * оригинальный стек, тип исключения и цепочка `cause`, а Crashlytics корректно группирует
+ * ошибки. Строковая форма — только для логических ошибок, у которых нет исключения
+ * (некорректный ответ сервера, нарушенный инвариант и т.п.).
+ */
 interface ErrorLogger {
-    fun recordError(message: String? = null)
+
+    /**
+     * Записать пойманное исключение [throwable] с сохранением стека/типа/cause.
+     * [message] — необязательный контекст (что именно делали в момент сбоя).
+     */
+    fun recordError(throwable: Throwable, message: String? = null)
+
+    /** Записать логическую ошибку без исключения. */
+    fun recordError(message: String)
 }

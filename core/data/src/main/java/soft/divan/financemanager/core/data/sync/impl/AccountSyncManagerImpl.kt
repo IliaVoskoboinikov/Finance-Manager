@@ -17,6 +17,7 @@ import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
@@ -187,24 +188,40 @@ class AccountSyncManagerImpl @Inject constructor(
     }
 
     /**
-     * Удаляет аккаунт.
+     * Удаляет аккаунт на сервере (`DELETE /accounts/{id}`). Сервер сам решает: нет операций →
+     * физическое удаление, есть → перевод в статус `Deleted` (архив).
      *
-     * Если serverId == null:
-     * - запись никогда не была синхронизирована → удаляем локально
+     * Локальное отражение зависит от статуса записи [AccountEntity.status]:
+     * - не `Deleted` → после успешного серверного удаления запись удаляется локально;
+     * - `Deleted` → запись сохраняется как архивная (переводится в [SyncStatus.SYNCED]),
+     *   чтобы история операций могла подтянуть её имя/валюту.
      *
-     * Если serverId != null:
-     * - удаляем на сервере
-     * - затем удаляем локально
+     * Если serverId == null (запись никогда не была на сервере), удалять/архивировать на сервере
+     * нечего: архивную запись оставляем локально, обычную — удаляем.
      */
     override suspend fun syncDelete(accountEntity: AccountEntity) {
         if (accountEntity.serverId == null) {
-            deleteLocalAccount(accountEntity.localId)
+            finishLocalDelete(accountEntity)
         } else {
             safeApiCall(errorLogger) {
                 remoteDataSource.delete(accountEntity.serverId!!)
             }.onSuccess {
-                deleteLocalAccount(accountEntity.localId)
+                finishLocalDelete(accountEntity)
             }
+        }
+    }
+
+    /**
+     * Завершает удаление локально: архивную запись (статус `Deleted`) оставляет — помечает
+     * [SyncStatus.SYNCED], обычную — физически удаляет.
+     */
+    private suspend fun finishLocalDelete(accountEntity: AccountEntity) {
+        if (accountEntity.status == AccountStatus.Deleted.name) {
+            safeDbCall(errorLogger) {
+                localDataSource.update(accountEntity.copy(syncStatus = SyncStatus.SYNCED))
+            }
+        } else {
+            deleteLocalAccount(accountEntity.localId)
         }
     }
 

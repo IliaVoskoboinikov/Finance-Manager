@@ -6,8 +6,9 @@ import android.app.NotificationManager
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import androidx.work.ForegroundInfo
+import soft.divan.financemanager.sync.R
 
-private const val SYNC_NOTIFICATION_ID = 0
+private const val SYNC_NOTIFICATION_ID = 1
 private const val SYNC_NOTIFICATION_CHANNEL_ID = "SyncNotificationChannel"
 
 /**
@@ -41,9 +42,7 @@ private fun Context.syncWorkNotification(): Notification {
         this,
         SYNC_NOTIFICATION_CHANNEL_ID
     )
-        /*.setSmallIcon(
-        R.drawable.notification,
-    )*/
+        .setSmallIcon(R.drawable.ic_sync_notification)
         .setContentTitle("Sync")
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .build()

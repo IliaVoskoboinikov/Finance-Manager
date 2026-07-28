@@ -11,6 +11,7 @@ class DomainErrorTest {
         assertThat(DomainError.Unauthorized.cause).isNull()
         assertThat(DomainError.OperationNotAllowed.cause).isNull()
         assertThat(DomainError.NetworkUnavailable.cause).isNull()
+        assertThat(DomainError.GuestModeBlocked.cause).isNull()
     }
 
     @Test

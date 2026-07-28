@@ -54,8 +54,7 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.androidx.tracing.ktx)
 
-    testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.mockk)
-    testImplementation(libs.assertj.core)
+    // Robolectric-тест ConnectivityManagerNetworkMonitor
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }

@@ -4,6 +4,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import soft.divan.financemanager.core.domain.usecase.GetAccountByIdUseCase
+import soft.divan.financemanager.core.domain.usecase.impl.GetAccountByIdUseCaseImpl
 import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.CreateTransactionAndUpdateAccountUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteTransactionAndUpdateAccountUseCase
@@ -46,4 +48,7 @@ interface TransactionBinderModule {
     fun bindUpdateTransactionUseCase(
         impl: UpdateTransactionAndUpdateAccountUseCaseImpl
     ): UpdateTransactionAndUpdateAccountUseCase
+
+    @Binds
+    fun bindGetAccountByIdUseCase(impl: GetAccountByIdUseCaseImpl): GetAccountByIdUseCase
 }

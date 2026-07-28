@@ -10,6 +10,7 @@
     <string name="auth_no_account_register">Don\'t have an account? Register</string>
     <string name="auth_have_account_login">Already have an account? Login</string>
     <string name="auth_continue_as_guest">Continue as Guest</string>
+    <string name="auth_sign_in_yandex">Sign in with Yandex</string>
     <string name="auth_or_divider">OR</string>
     <string name="auth_sync_dialog_title">Sync Local Data?</string>
     <string name="auth_sync_dialog_text">You have local transactions from your guest session. Do you want to sync them with your account or start fresh?</string>
@@ -27,4 +28,5 @@
     <string name="auth_error_failed">Authentication failed. Please try again.</string>
     <string name="auth_error_invalid_credentials">Invalid name or password.</string>
     <string name="auth_error_network">No internet connection. Check your network and try again.</string>
+    <string name="auth_error_yandex">Yandex sign-in failed. Please try again.</string>
 </resources>

@@ -4,7 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
+import soft.divan.common.di.IoDispatcher
 import soft.divan.financemanager.core.domain.model.Period
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
@@ -34,6 +35,7 @@ class AnalysisViewModel @Inject constructor(
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
     private val getTransactionsByPeriodUseCase: GetTransactionsByPeriodUseCase,
     private val getCategoryPieChartDataUseCase: GetCategoryPieChartDataUseCase,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -48,13 +50,17 @@ class AnalysisViewModel @Inject constructor(
     private val _endDate = MutableStateFlow(LocalDate.now())
     val endDate: StateFlow<LocalDate> = _endDate.asStateFlow()
 
+    // Счётчик-триггер для повтора загрузки: StateFlow глушит повторную установку того же
+    // значения дат, поэтому для retry нужен отдельный меняющийся сигнал.
+    private val _reloadTrigger = MutableStateFlow(0)
+
     init {
         observeDateChanges()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeDateChanges() {
-        combine(startDate, endDate) { start, end -> start to end }
+        combine(startDate, endDate, _reloadTrigger) { start, end, _ -> start to end }
             .onStart { _uiState.update { AnalysisUiState.Loading } }
             .flatMapLatest { (start, end) ->
                 getTransactionsByPeriodUseCase(
@@ -89,7 +95,7 @@ class AnalysisViewModel @Inject constructor(
                     }
                 )
             }
-            .flowOn(Dispatchers.IO)
+            .flowOn(ioDispatcher)
             .launchIn(viewModelScope)
     }
 
@@ -102,7 +108,6 @@ class AnalysisViewModel @Inject constructor(
     }
 
     fun reloadData() {
-        _startDate.value = _startDate.value
-        _endDate.value = _endDate.value
+        _reloadTrigger.update { it + 1 }
     }
 }

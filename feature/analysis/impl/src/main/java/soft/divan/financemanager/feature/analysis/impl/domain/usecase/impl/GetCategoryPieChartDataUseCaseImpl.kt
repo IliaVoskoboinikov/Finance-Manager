@@ -24,8 +24,10 @@ class GetCategoryPieChartDataUseCaseImpl @Inject constructor() : GetCategoryPieC
 
         return transactions
             .groupBy { it.categoryId }
-            .map { (categoryId, grouped) ->
-                val category = category.find { it.id == categoryId }!!
+            .mapNotNull { (categoryId, grouped) ->
+                // Группы с неизвестной категорией пропускаем (рассинхрон/удалённая
+                // категория) — раньше `!!` ронял экран аналитики.
+                val category = category.find { it.id == categoryId } ?: return@mapNotNull null
                 val sum = grouped.fold(BigDecimal.ZERO) { acc, t -> acc + t.amount.abs() }
                 val percentage = sum
                     .multiply(BigDecimal(PERCENT_MULTIPLIER))

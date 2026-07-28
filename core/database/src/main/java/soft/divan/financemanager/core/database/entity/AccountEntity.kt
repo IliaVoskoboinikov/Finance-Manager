@@ -16,5 +16,15 @@ data class AccountEntity(
     val currencyId: String,
     val createdAt: String,
     val updatedAt: String,
-    val syncStatus: SyncStatus
+    val syncStatus: SyncStatus,
+    /**
+     * Статус счёта — имя серверного enum `EStatus` (`Active`/`Hidden`/`Deleted`), зеркалит
+     * `AccountStatus` из доменного слоя (парсинг и обратное преобразование — в data-слое, чтобы
+     * не заводить зависимость `core:database` → `core:domain`).
+     *
+     * `Deleted` — «архивный» счёт: счёт с операциями нельзя удалить физически, поэтому он
+     * архивируется — пропадает из списков и пикера (фильтруется в data-слое), но остаётся в БД,
+     * чтобы история операций могла подтянуть его имя/валюту. Обратной раз-архивации нет.
+     */
+    val status: String = "Active"
 )

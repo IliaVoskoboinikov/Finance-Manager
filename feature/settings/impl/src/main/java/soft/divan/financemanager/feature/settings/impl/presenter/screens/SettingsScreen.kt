@@ -96,8 +96,7 @@ private fun provideSettings(
     navigation: SettingsActions
 ): List<SettingsModel> {
     return listOf(
-        // todo
-        SettingsModel(R.string.synchronization) { navigation.onNavigateToProfile() },
+        SettingsModel(R.string.profile) { navigation.onNavigateToProfile() },
         SettingsModel(R.string.design) { navigation.onNavigateToDesignApp() },
         SettingsModel(R.string.sounds) { navigation.onNavigateToSounds() },
         SettingsModel(R.string.haptics) { navigation.onNavigateToHaptic() },

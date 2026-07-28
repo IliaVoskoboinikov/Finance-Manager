@@ -6,6 +6,28 @@ import org.junit.Test
 class CurrencySymbolTest {
 
     @Test
+    fun `fromId returns symbol for known id`() {
+        assertThat(CurrencySymbol.fromId(CurrencySymbol.RUB.id)).isEqualTo("₽")
+        assertThat(CurrencySymbol.fromId(CurrencySymbol.USD.id)).isEqualTo("$")
+        assertThat(CurrencySymbol.fromId(CurrencySymbol.EUR.id)).isEqualTo("€")
+    }
+
+    @Test
+    fun `fromId returns input for unknown id`() {
+        assertThat(CurrencySymbol.fromId("no-such-id")).isEqualTo("no-such-id")
+    }
+
+    @Test
+    fun `getById returns enum constant for known id`() {
+        assertThat(CurrencySymbol.getById(CurrencySymbol.USD.id)).isEqualTo(CurrencySymbol.USD)
+    }
+
+    @Test
+    fun `getById returns null for unknown id`() {
+        assertThat(CurrencySymbol.getById("no-such-id")).isNull()
+    }
+
+    @Test
     fun `fromCode returns symbol for known code`() {
         assertThat(CurrencySymbol.fromCode("USD")).isEqualTo("$")
         assertThat(CurrencySymbol.fromCode("EUR")).isEqualTo("€")

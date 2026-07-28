@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings">Настройки</string>
+    <string name="profile">Профиль</string>
     <string name="design">Оформление</string>
     <string name="sounds">Звуки</string>
     <string name="haptics">Хаптики</string>

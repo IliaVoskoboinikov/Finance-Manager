@@ -138,4 +138,46 @@ class AndroidCryptoManagerTest {
         verify { mockKeyStore.deleteEntry(alias) }
         verify { mockKeyGenerator.generateKey() }
     }
+
+    @Test
+    fun `getKey creates a new key when no secret key is stored`() {
+        // getEntry вернул не SecretKeyEntry (null) → ветка createKey без пересоздания
+        every { mockKeyStore.getEntry(alias, null) } returns null
+        every { mockKeyGenerator.generateKey() } returns mockSecretKey
+        every { mockCipher.doFinal(any<ByteArray>()) } returns "ok".toByteArray()
+
+        cryptoManager.encrypt(plainText, alias)
+
+        verify(exactly = 0) { mockKeyStore.deleteEntry(alias) }
+        verify { mockKeyGenerator.generateKey() }
+    }
+
+    @Test
+    fun `deleteEntry failure during recreate is swallowed`() {
+        every { mockKeyStore.getEntry(alias, null) } throws UnrecoverableKeyException("Corrupted")
+        every { mockKeyStore.deleteEntry(alias) } throws GeneralSecurityException("delete failed")
+        every { mockKeyGenerator.generateKey() } returns mockSecretKey
+        every { mockCipher.doFinal(any<ByteArray>()) } returns "ok".toByteArray()
+
+        cryptoManager.encrypt(plainText, alias)
+
+        verify { mockKeyGenerator.generateKey() }
+    }
+
+    @Test
+    fun `createKey rethrows when key generation fails`() {
+        every { mockKeyStore.getEntry(alias, null) } returns null
+        every { mockKeyGenerator.generateKey() } throws GeneralSecurityException("no keystore")
+
+        assertThrows(GeneralSecurityException::class.java) {
+            cryptoManager.encrypt(plainText, alias)
+        }
+    }
+
+    @Test
+    fun `decrypt wraps invalid base64 into GeneralSecurityException`() {
+        assertThrows(GeneralSecurityException::class.java) {
+            cryptoManager.decrypt("!!!not-base64!!!", alias)
+        }
+    }
 }

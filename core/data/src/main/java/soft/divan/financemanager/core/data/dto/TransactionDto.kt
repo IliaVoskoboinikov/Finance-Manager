@@ -1,6 +1,7 @@
 package soft.divan.financemanager.core.data.dto
 
 import com.google.gson.annotations.SerializedName
+import java.math.BigDecimal
 
 data class TransactionDto(
     @SerializedName("id")
@@ -14,7 +15,7 @@ data class TransactionDto(
     @SerializedName("categoryId")
     val categoryId: String,
     @SerializedName("amount")
-    val amount: Double,
+    val amount: BigDecimal,
     @SerializedName("dateTime")
     val dateTime: String,
     @SerializedName("comment")

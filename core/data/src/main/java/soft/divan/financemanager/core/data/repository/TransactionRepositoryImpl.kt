@@ -196,6 +196,17 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Есть ли у счёта хотя бы одна операция. Проверяется по локальной БД (SSOT) тем же путём,
+     * что и логика удаления счёта в `AccountRepositoryImpl.delete`, чтобы предупреждение в UI
+     * совпадало с реальным поведением (архивирование против физического удаления).
+     */
+    override suspend fun hasTransactions(accountId: String): DomainResult<Boolean> {
+        return safeDbCall(errorLogger) {
+            localDataSource.getByAccountId(accountId).isNotEmpty()
+        }
+    }
+
     /**  Хелпер для получения локальной транзакции*/
     private suspend fun getLocalOrFail(id: String): DomainResult<TransactionEntity> {
         return safeDbCall(errorLogger) {

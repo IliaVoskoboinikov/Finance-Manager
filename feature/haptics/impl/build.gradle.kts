@@ -9,4 +9,8 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.core)
+
+    // Robolectric-тест HapticsModule.provideVibrator (системный Vibrator/VibratorManager)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }

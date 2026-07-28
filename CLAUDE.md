@@ -144,12 +144,21 @@ otherwise pick the sensible default and note it.
 
 ## Workflow expectations
 
-- **Do not commit, push, or open PRs** — the user handles all git operations. Leave changes
-  in the working tree.
+- **Never run git yourself** — do not commit, push, or open PRs; the user handles all git
+  operations. Leave changes in the working tree. Once the code is done, only **write a short
+  proposed commit message** (conventional-commit style, matching the existing Russian history,
+  e.g. `fix(network): …`) for the user to copy — do not run `git commit`.
 - **No Claude/Anthropic attribution** in commits or generated text (no `Co-Authored-By`,
   no "Generated with Claude Code").
 - **KDoc** required on new public classes/functions; every new UI component needs a `@Preview`
   (dark mode / font scale where relevant); update the module `README.md` when you change a module.
+- **Design docs for complex features:** when a change introduces non-trivial technical design —
+  a cross-module flow, a new architectural pattern, a client↔server contract, sync/offline logic,
+  a state machine, or anything a reader can't grasp from a single file — write (or update) a
+  Markdown doc under `docs/` and link it from `docs/README.md`. Match the existing docs' style
+  (Russian, `#`/`##` sections, mermaid diagrams, code snippets, a "ключевые файлы" table). Keep it
+  design-level (the "why" and how pieces fit), not a line-by-line restatement of the code. Skip it
+  for small, local, or self-evident changes — KDoc/README is enough there.
 - Prefer the smallest change that satisfies the requirement; mirror existing style and patterns.
 - Don't rename public APIs or restructure packages without an explicit request.
 - When done, give a short report: what changed, architecture/module-graph impact, tests added, risks.

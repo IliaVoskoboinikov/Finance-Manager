@@ -9,4 +9,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.datastore.core)
     implementation(libs.androidx.appcompat)
+
+    // Robolectric-тест AppLocaleManagerImpl
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }

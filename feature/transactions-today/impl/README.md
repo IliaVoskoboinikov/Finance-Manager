@@ -28,6 +28,7 @@ graph TB
     end
 
     subgraph :core
+        :core:common
         :core:network
         :core:uikit
         :core:domain
@@ -35,6 +36,7 @@ graph TB
     end
 
     :feature:transactions-today:impl --> :feature:transactions-today:api
+    :feature:transactions-today:impl --> :core:common
     :feature:transactions-today:impl --> :core:network
     :feature:transactions-today:impl --> :core:uikit
     :feature:transactions-today:impl --> :core:domain

@@ -29,6 +29,8 @@ graph TB
         :core:feature-api
     end
 
+    :sync
+
     :feature:synchronization:impl --> :feature:synchronization:api
     :feature:synchronization:impl --> :core:uikit
     :feature:synchronization:impl --> :core:domain

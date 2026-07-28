@@ -56,6 +56,41 @@ class RoomTransactionRunnerTest {
     }
 
     @Test
+    fun `runInTransaction returns block result`() = runTest {
+        val result = runner.runInTransaction { "done" }
+
+        assertThat(result).isEqualTo("done")
+    }
+
+    @Test
+    fun `runInTransaction converts rollback exception to Failure`() = runTest {
+        val failed: DomainResult<Unit> = DomainResult.Failure(DomainError.NoData)
+
+        val result = runner.runInTransaction<DomainResult<Unit>> {
+            failed.rollbackOnError()
+            DomainResult.Success(Unit)
+        }
+
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NoData))
+    }
+
+    @Test
+    fun `runInTransaction propagates unexpected exceptions`() = runTest {
+        val boom = IllegalStateException("boom")
+
+        val thrown = runCatching {
+            runner.runInTransaction<Unit> { throw boom }
+        }.exceptionOrNull()
+
+        // Не то же исключение по ссылке: реальный Room гоняет блок через свой диспетчер,
+        // и корутины делают stacktrace-recovery (копию). Важно, что исключение
+        // пробрасывается как есть — не глотается и не конвертируется в Failure.
+        assertThat(thrown)
+            .isInstanceOf(IllegalStateException::class.java)
+            .hasMessage("boom")
+    }
+
+    @Test
     fun `sync scheduled inside a transaction runs only after commit`() = runTest {
         var syncExecuted = false
 

@@ -15,6 +15,11 @@ dependencies {
     compileOnly(libs.compose.plugin)
     compileOnly(libs.build.time.tracker)
     compileOnly(libs.ruler.plugin)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.assertj.core)
+    testImplementation(libs.mockk)
+    testImplementation(gradleTestKit())
 }
 
 gradlePlugin {

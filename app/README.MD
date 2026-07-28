@@ -1,5 +1,20 @@
 # `:app`
 
+## Responsibility
+
+Корневой модуль приложения — собирает все модули вместе:
+
+- `App` (`@HiltAndroidApp`) и `MainActivity` (`@AndroidEntryPoint`) — точки входа.
+- `presenter/navigation/RootNavGraph.kt` и `BottomNavGraph.kt` — корневой навигационный
+  граф: внедряет `FeatureApi` всех фич через Hilt и вызывает их `registerGraph(...)`,
+  так что фичи не ссылаются на экраны друг друга напрямую.
+- `di/AppModule` и `db/DataBaseProviderModule` — app-уровневая DI-конфигурация.
+- Конфигурация сборки: подпись, manifest-плейсхолдеры Yandex OAuth
+  (`YANDEX_CLIENT_ID` из `local.properties` / CI-секрета, см. `:feature:auth:impl`).
+
+`:app` зависит от всех `:core:*`, всех `:feature:*:api`/`:feature:*:impl` и `:sync`.
+Граф модулей проверяется задачей `./gradlew :app:assertModuleGraph`.
+
 ## Module dependency graph
 
 Упрощённая диаграмма.
@@ -15,7 +30,8 @@ graph TB
         domain[domain]:::library
         network[network]:::library
         uikit[uikit]:::library
-        logging_api[logging-error]:::library
+        auth[auth]:::library
+        logging_error[logging-error]:::library
         core_feature_api[core:feature-api]:::library
     end
 
@@ -26,6 +42,7 @@ graph TB
     end
 
     app[app]:::app
+    sync[sync]:::library
 
 %% App зависит на Core
     app --> common
@@ -34,7 +51,9 @@ graph TB
     app --> domain
     app --> network
     app --> uikit
+    app --> auth
     app --> logging_error
+    app --> sync
 
 %% App зависит на Features
     app --> feature_api
@@ -53,6 +72,7 @@ graph TB
     data --> database
     data --> network
     data --> domain
+    data --> auth
     data --> logging_error
 
 

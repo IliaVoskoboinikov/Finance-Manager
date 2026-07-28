@@ -9,9 +9,4 @@ dependencies {
     implementation(projects.core.uikit)
     implementation(projects.feature.haptics.api)
     implementation(projects.feature.sounds.api)
-
-    testImplementation(libs.junit)
-    testImplementation(libs.mockk)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.assertj.core)
 }

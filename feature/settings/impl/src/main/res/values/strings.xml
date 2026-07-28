@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings">Settings</string>
+    <string name="profile">Profile</string>
     <string name="design">Decor</string>
     <string name="sounds">Sounds</string>
     <string name="haptics">Haptics</string>

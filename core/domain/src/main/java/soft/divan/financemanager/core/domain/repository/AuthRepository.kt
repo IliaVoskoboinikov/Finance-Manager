@@ -25,6 +25,17 @@ interface AuthRepository {
     ): DomainResult<Unit>
 
     /**
+     * Вход через Яндекс (OAuth).
+     * @param accessToken access_token, полученный на устройстве от Яндекса.
+     * Отправляется на бэкенд, который проверяет его и возвращает внутреннюю пару токенов.
+     * @param shouldMergeData если true, данные гостя будут привязаны к аккаунту.
+     */
+    suspend fun loginWithYandex(
+        accessToken: String,
+        shouldMergeData: Boolean = false
+    ): DomainResult<Unit>
+
+    /**
      * Выход из аккаунта.
      * @param shouldClearData если true, будут удалены все пользовательские данные из БД (кроме категорий).
      */

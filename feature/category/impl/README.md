@@ -1,8 +1,10 @@
 # `:feature:category:impl`
 
-## Module dependency graph
+## Responsibility
 
-Категории в приложении
+Отображение и обработка категорий доходов и расходов.
+
+## Module dependency graph
 
 <!--region graph-->
 
@@ -25,6 +27,7 @@ graph TB
 
     subgraph :core
         direction TB
+        :core:common[common]:::android-library
         :core:data[data]:::android-library
         :core:network[network]:::android-library
         :core:domain[domain]:::android-library
@@ -36,6 +39,7 @@ graph TB
 %% DEPENDENCIES
 %% =======================
     :feature:category:impl --> :feature:category:api
+    :feature:category:impl --> :core:common
     :feature:category:impl --> :core:network
     :feature:category:impl --> :core:uikit
     :feature:category:impl --> :core:data

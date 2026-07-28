@@ -12,8 +12,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
 
-    testImplementation(libs.junit)
-    testImplementation(libs.mockk)
-    testImplementation(libs.assertj.core)
-    testImplementation(libs.kotlinx.coroutines.test)
+    // Robolectric-тест DataStore-провайдеров (Context.sessionDataStore/tokenDataStore)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
 }
