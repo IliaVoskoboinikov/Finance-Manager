@@ -21,7 +21,7 @@ class AccountDaoTest : RoomDaoTest() {
         serverId: String? = "server-1",
         name: String = "Cash",
         syncStatus: SyncStatus = SyncStatus.SYNCED,
-        archived: Boolean = false
+        status: String = "Active"
     ) = AccountEntity(
         localId = localId,
         serverId = serverId,
@@ -31,7 +31,7 @@ class AccountDaoTest : RoomDaoTest() {
         createdAt = "2024-01-01T00:00:00Z",
         updatedAt = "2024-01-01T00:00:00Z",
         syncStatus = syncStatus,
-        archived = archived
+        status = status
     )
 
     @Test
@@ -43,10 +43,10 @@ class AccountDaoTest : RoomDaoTest() {
     }
 
     @Test
-    fun `insert persists archived flag`() = runTest {
-        dao.insert(entity(archived = true))
+    fun `insert persists status`() = runTest {
+        dao.insert(entity(status = "Deleted"))
 
-        assertThat(dao.getByLocalId("local-1")!!.archived).isTrue()
+        assertThat(dao.getByLocalId("local-1")!!.status).isEqualTo("Deleted")
     }
 
     @Test

@@ -9,5 +9,6 @@ data class Account(
     val balance: BigDecimal,
     val currencyId: String,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val status: AccountStatus = AccountStatus.Active
 )

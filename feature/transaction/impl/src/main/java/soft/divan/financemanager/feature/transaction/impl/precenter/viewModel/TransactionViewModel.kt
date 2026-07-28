@@ -171,7 +171,7 @@ class TransactionViewModel @Inject constructor(
         if (accounts.any { it.id == accountId }) return
 
         getAccountByIdUseCase(accountId).onSuccess { account ->
-            accounts = accounts + account.toUi(archived = true)
+            accounts = accounts + account.toUi()
         }
     }
 

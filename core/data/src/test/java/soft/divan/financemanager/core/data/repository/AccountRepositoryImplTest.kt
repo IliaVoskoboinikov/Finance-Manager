@@ -23,6 +23,7 @@ import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.math.BigDecimal
@@ -71,7 +72,7 @@ class AccountRepositoryImplTest {
         localId: String = "local-1",
         serverId: String? = "server-1",
         syncStatus: SyncStatus = SyncStatus.SYNCED,
-        archived: Boolean = false
+        status: String = "Active"
     ) = AccountEntity(
         localId = localId,
         serverId = serverId,
@@ -81,7 +82,7 @@ class AccountRepositoryImplTest {
         createdAt = createdAt,
         updatedAt = updatedAt,
         syncStatus = syncStatus,
-        archived = archived
+        status = status
     )
 
     /* ---------- create ---------- */
@@ -141,19 +142,19 @@ class AccountRepositoryImplTest {
     }
 
     @Test
-    fun `getAll skips archived accounts`() = runTest {
+    fun `getAll skips Deleted accounts but keeps Hidden`() = runTest {
         every { localDataSource.getAll() } returns flowOf(
             listOf(
                 entity(localId = "a1"),
-                entity(localId = "a2", archived = true)
+                entity(localId = "a2", status = "Deleted"),
+                entity(localId = "a3", status = "Hidden")
             )
         )
 
         val result = repository.getAll().first()
 
         val success = result as DomainResult.Success
-        assertThat(success.data).hasSize(1)
-        assertThat(success.data.first().id).isEqualTo("a1")
+        assertThat(success.data.map { it.id }).containsExactly("a1", "a3")
     }
 
     @Test
@@ -333,7 +334,7 @@ class AccountRepositoryImplTest {
     /* ---------- delete ---------- */
 
     @Test
-    fun `delete marks account as PENDING_DELETE and syncs delete`() = runTest {
+    fun `delete without transactions keeps status and marks PENDING_DELETE`() = runTest {
         val local = entity(serverId = "server-1")
         coEvery { localDataSource.getByLocalId("local-1") } returns local
         coEvery { transactionLocalDataSource.getByAccountId("local-1") } returns emptyList()
@@ -345,11 +346,19 @@ class AccountRepositoryImplTest {
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_DELETE)
-        coVerify(exactly = 1) { syncManager.syncDelete(local) }
+        assertThat(updated.captured.status).isEqualTo(AccountStatus.Active.name)
+        coVerify(exactly = 1) {
+            syncManager.syncDelete(
+                match {
+                    it.status == AccountStatus.Active.name &&
+                        it.syncStatus == SyncStatus.PENDING_DELETE
+                }
+            )
+        }
     }
 
     @Test
-    fun `delete archives account and syncs update when it has transactions`() = runTest {
+    fun `delete sets Deleted status via syncDelete when it has transactions`() = runTest {
         val local = entity(serverId = "server-1")
         coEvery { localDataSource.getByLocalId("local-1") } returns local
         coEvery { transactionLocalDataSource.getByAccountId("local-1") } returns
@@ -361,14 +370,17 @@ class AccountRepositoryImplTest {
         appCoroutineContext.runAll()
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
-        assertThat(updated.captured.archived).isTrue()
-        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_UPDATE)
+        assertThat(updated.captured.status).isEqualTo(AccountStatus.Deleted.name)
+        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_DELETE)
         coVerify(exactly = 1) {
-            syncManager.syncUpdate(
-                match { it.archived && it.syncStatus == SyncStatus.PENDING_UPDATE }
+            syncManager.syncDelete(
+                match {
+                    it.status == AccountStatus.Deleted.name &&
+                        it.syncStatus == SyncStatus.PENDING_DELETE
+                }
             )
         }
-        coVerify(exactly = 0) { syncManager.syncDelete(any()) }
+        coVerify(exactly = 0) { syncManager.syncUpdate(any()) }
     }
 
     @Test

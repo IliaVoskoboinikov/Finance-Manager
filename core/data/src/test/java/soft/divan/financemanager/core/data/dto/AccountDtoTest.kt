@@ -2,6 +2,7 @@ package soft.divan.financemanager.core.data.dto
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import java.math.BigDecimal
 
 class AccountDtoTest {
@@ -40,8 +41,9 @@ class AccountDtoTest {
     }
 
     @Test
-    fun `archived defaults to false and is settable`() {
-        assertThat(dto.archived).isFalse()
-        assertThat(dto.copy(archived = true).archived).isTrue()
+    fun `status defaults to Active and is settable`() {
+        assertThat(dto.status).isEqualTo(AccountStatus.Active.name)
+        assertThat(dto.copy(status = AccountStatus.Deleted.name).status)
+            .isEqualTo(AccountStatus.Deleted.name)
     }
 }

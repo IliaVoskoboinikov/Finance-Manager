@@ -1,6 +1,7 @@
 package soft.divan.financemanager.core.data.dto
 
 import com.google.gson.annotations.SerializedName
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import java.math.BigDecimal
 
 data class AccountDto(
@@ -18,6 +19,6 @@ data class AccountDto(
     val createdAt: String,
     @SerializedName("updatedAt")
     val updatedAt: String,
-    @SerializedName("archived")
-    val archived: Boolean = false
+    @SerializedName("status")
+    val status: String = AccountStatus.Active.name
 )

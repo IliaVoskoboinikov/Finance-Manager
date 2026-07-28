@@ -9,7 +9,5 @@ data class UpdateAccountRequestDto(
     @SerializedName("balance")
     val balance: BigDecimal,
     @SerializedName("currencyId")
-    val currencyId: String,
-    @SerializedName("archived")
-    val archived: Boolean = false
+    val currencyId: String
 )

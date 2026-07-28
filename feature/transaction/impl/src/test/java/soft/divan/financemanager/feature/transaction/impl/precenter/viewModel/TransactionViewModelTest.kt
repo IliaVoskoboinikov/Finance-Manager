@@ -22,6 +22,7 @@ import org.junit.Before
 import org.junit.Test
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.Transaction
@@ -174,7 +175,8 @@ class TransactionViewModelTest {
     @Test
     fun `edit mode resolves archived account referenced by the transaction`() = runTest {
         val ghostTransaction = domainTransaction.copy(accountLocalId = "ghost")
-        val ghostAccount = account.copy(id = "ghost", name = "Old wallet")
+        val ghostAccount =
+            account.copy(id = "ghost", name = "Old wallet", status = AccountStatus.Deleted)
         coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(ghostTransaction)
         coEvery { getAccountByIdUseCase("ghost") } returns DomainResult.Success(ghostAccount)
         val vm = editModeViewModel()
