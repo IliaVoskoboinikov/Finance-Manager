@@ -28,6 +28,7 @@ class OutboxDaoTest : RoomDaoTest() {
         entityLocalId: String = "T1",
         entityType: OutboxEntityType = OutboxEntityType.TRANSACTION,
         operation: OutboxOperation = OutboxOperation.CREATE,
+        targetServerId: String? = null,
         status: OutboxStatus = OutboxStatus.PENDING,
         attemptCount: Int = 0,
         nextAttemptAt: Long = 0,
@@ -36,6 +37,7 @@ class OutboxDaoTest : RoomDaoTest() {
         entityType = entityType,
         entityLocalId = entityLocalId,
         operation = operation,
+        targetServerId = targetServerId,
         payload = """{"id":"$entityLocalId"}""",
         idempotencyKey = entityLocalId,
         status = status,
@@ -189,7 +191,8 @@ class OutboxDaoTest : RoomDaoTest() {
             entry(
                 entityLocalId = "A1",
                 entityType = OutboxEntityType.ACCOUNT,
-                operation = OutboxOperation.UPDATE
+                operation = OutboxOperation.UPDATE,
+                targetServerId = "server-a1"
             )
         )
 
@@ -198,6 +201,7 @@ class OutboxDaoTest : RoomDaoTest() {
         assertThat(stored.sequenceNo).isEqualTo(id)
         assertThat(stored.entityType).isEqualTo(OutboxEntityType.ACCOUNT)
         assertThat(stored.operation).isEqualTo(OutboxOperation.UPDATE)
+        assertThat(stored.targetServerId).isEqualTo("server-a1")
         assertThat(stored.status).isEqualTo(OutboxStatus.PENDING)
         assertThat(stored.payload).isEqualTo("""{"id":"A1"}""")
         assertThat(stored.idempotencyKey).isEqualTo("A1")

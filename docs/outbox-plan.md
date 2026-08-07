@@ -136,8 +136,13 @@ sequenceDiagram
   Очередь чистится при логауте (`DatabaseCleanupManager`). ✅ *(итерация 5)*
 - [x] **Bump версии БД** — было **4**, стало **5** (в плане ошибочно значилось «2 → 3»; строго
   > user_version ассета = 1; pre-release destructive — реальная миграция не нужна). ✅
-- [ ] **Enqueue в той же Room-транзакции**, что и domain-запись — через `RoomTransactionRunner`;
-  диспатч после commit через `launchSync` (backbone post-commit-sync — половина уже есть).
+- [x] **Enqueue в той же Room-транзакции**, что и domain-запись — через `RoomTransactionRunner`.
+  `OutboxEnqueuer` (`core:data`) сериализует тело через Gson и пишет строку очереди; атомарность
+  «данные + намерение отправить» закреплена тестами на реальном Room (commit → обе записи,
+  rollback / `rollbackOnError` → ни одной). Добавлен `targetServerId` (адрес для `PUT`/`DELETE`),
+  версия БД **5 → 6**. ✅ *(итерация 6)*
+  <br>Вызовы из репозиториев подключаются вместе с `OutboxProcessor` — чтобы не было промежуточного
+  состояния, где записи копятся необработанными. Диспатч после commit (`launchSync`) — там же.
 - [ ] **`OutboxProcessor`** (заменяет разбросанный `pushLocalChanges`): drain `PENDING` по
   `sequenceNo` (порядок category→account→transaction), шлёт с `idempotencyKey`, разбирает ответ
   → COMPLETED / retry-with-backoff / FAILED (dead-letter на 4xx или после N попыток).

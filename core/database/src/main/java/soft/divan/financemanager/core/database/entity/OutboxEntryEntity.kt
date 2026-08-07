@@ -26,9 +26,13 @@ import soft.divan.financemanager.core.database.model.OutboxStatus
  * @property entityLocalId Клиентский `localId` сущности. Связывает запись очереди с доменной
  *   строкой (для отображения статуса и ручного повтора).
  * @property operation Что именно делаем на сервере.
+ * @property targetServerId Идентификатор ресурса на сервере — адрес для `PUT`/`DELETE`
+ *   (`null` для [OutboxOperation.CREATE], где ресурса ещё нет). Хранится в записи, а не
+ *   вычисляется при отправке, чтобы операция оставалась самодостаточной: её можно выполнить,
+ *   даже если доменной строки уже нет локально (например, повтор после удаления).
  * @property payload Снимок тела запроса (JSON) на момент операции. Хранится готовым, чтобы
  *   отправка не зависела от последующих правок доменной строки: очередь — это журнал событий,
- *   а не указатель на текущее состояние.
+ *   а не указатель на текущее состояние. Для операций без тела (`DELETE`) — пустой объект `{}`.
  * @property idempotencyKey Ключ дедупликации, стабильный на все попытки. Для операций, адресуемых
  *   идентификатором ресурса, совпадает с [entityLocalId].
  * @property status Текущее состояние записи в очереди.
@@ -50,6 +54,7 @@ data class OutboxEntryEntity(
     val entityType: OutboxEntityType,
     val entityLocalId: String,
     val operation: OutboxOperation,
+    val targetServerId: String?,
     val payload: String,
     val idempotencyKey: String,
     val status: OutboxStatus,
