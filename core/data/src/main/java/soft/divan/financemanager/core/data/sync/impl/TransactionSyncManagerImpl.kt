@@ -12,12 +12,16 @@ import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.sync.util.isNetworkBlocked
+import soft.divan.financemanager.core.data.sync.util.isNotFound
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.TransactionType
+import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
@@ -96,20 +100,36 @@ class TransactionSyncManagerImpl @Inject constructor(
      * - помечает как SYNCED
      */
     override suspend fun syncCreate(transactionEntity: TransactionEntity) {
-        transactionEntity.accountServerId?.let { accountServerId ->
-            safeApiCall(errorLogger) {
-                remoteDataSource.create(transactionEntity.toDto(accountServerId))
-            }.onSuccess { transactionDto ->
-                updateLocalFromRemote(
-                    transactionDto.toEntity(
-                        localId = transactionEntity.localId,
-                        accountLocalId = transactionEntity.accountLocalId,
-                        currencyId = transactionEntity.currencyId,
-                        type = TransactionType.valueOf(transactionEntity.type),
-                        syncStatus = SyncStatus.SYNCED
-                    )
+        val accountServerId = transactionEntity.accountServerId ?: return
+
+        val created = safeApiCall(errorLogger) {
+            remoteDataSource.create(transactionEntity.toDto(accountServerId))
+        }
+
+        val confirmed = when {
+            created is DomainResult.Success -> created
+
+            // Сеть заблокирована намеренно (гость / нет сессии) — перепроверять нечего
+            created is DomainResult.Failure && created.error.isNetworkBlocked() -> return
+
+            // Read-back при потере ACK: сервер мог применить POST и не доставить ответ.
+            // Запись адресуема по localId, т.к. create отправляется с клиентским id.
+            else ->
+                safeApiCall(errorLogger) {
+                    remoteDataSource.get(transactionEntity.localId)
+                }
+        }
+
+        confirmed.onSuccess { transactionDto ->
+            updateLocalFromRemote(
+                transactionDto.toEntity(
+                    localId = transactionEntity.localId,
+                    accountLocalId = transactionEntity.accountLocalId,
+                    currencyId = transactionEntity.currencyId,
+                    type = TransactionType.valueOf(transactionEntity.type),
+                    syncStatus = SyncStatus.SYNCED
                 )
-            }
+            )
         }
     }
 
@@ -148,17 +168,25 @@ class TransactionSyncManagerImpl @Inject constructor(
      * Если serverId != null:
      * - удаляем на сервере
      * - затем удаляем локально
+     *
+     * Ответ 404 трактуется как успех: на сервере записи уже нет — цель удаления достигнута
+     * (типично для повтора после потери ACK). См. [isNotFound].
      */
     override suspend fun syncDelete(transactionEntity: TransactionEntity) {
-        if (transactionEntity.serverId == null) {
+        val serverId = transactionEntity.serverId
+        if (serverId == null) {
             deleteLocalTransaction(transactionEntity.localId)
-        } else {
-            safeApiCall(errorLogger) {
-                remoteDataSource.delete(transactionEntity.serverId!!)
-            }.onSuccess {
-                deleteLocalTransaction(transactionEntity.localId)
-            }
+            return
         }
+
+        safeApiCall(errorLogger) {
+            remoteDataSource.delete(serverId)
+        }.fold(
+            onSuccess = { deleteLocalTransaction(transactionEntity.localId) },
+            onFailure = { error ->
+                if (error.isNotFound()) deleteLocalTransaction(transactionEntity.localId)
+            }
+        )
     }
 
     /**

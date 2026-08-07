@@ -12,12 +12,16 @@ import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.sync.util.isNetworkBlocked
+import soft.divan.financemanager.core.data.sync.util.isNotFound
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.AccountStatus
+import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
@@ -159,9 +163,23 @@ class AccountSyncManagerImpl @Inject constructor(
      * - помечает как SYNCED
      */
     override suspend fun syncCreate(accountDto: CreateAccountRequestDto, localId: String) {
-        safeApiCall(errorLogger) {
-            remoteDataSource.create(accountDto)
-        }.onSuccess { dto ->
+        val created =
+            safeApiCall(errorLogger) {
+                remoteDataSource.create(accountDto)
+            }
+
+        val confirmed = when {
+            created is DomainResult.Success -> created
+
+            // Сеть заблокирована намеренно (гость / нет сессии) — перепроверять нечего
+            created is DomainResult.Failure && created.error.isNetworkBlocked() -> return
+
+            // Read-back при потере ACK: сервер мог применить POST и не доставить ответ.
+            // Запись адресуема по localId, т.к. create отправляется с клиентским id.
+            else -> safeApiCall(errorLogger) { remoteDataSource.getById(localId) }
+        }
+
+        confirmed.onSuccess { dto ->
             updateLocalFromRemote(accountDto = dto, localId = localId)
         }
     }
@@ -198,17 +216,23 @@ class AccountSyncManagerImpl @Inject constructor(
      *
      * Если serverId == null (запись никогда не была на сервере), удалять/архивировать на сервере
      * нечего: архивную запись оставляем локально, обычную — удаляем.
+     *
+     * Ответ 404 трактуется как успех: на сервере счёта уже нет — цель удаления достигнута
+     * (типично для повтора после потери ACK). См. [isNotFound].
      */
     override suspend fun syncDelete(accountEntity: AccountEntity) {
-        if (accountEntity.serverId == null) {
+        val serverId = accountEntity.serverId
+        if (serverId == null) {
             finishLocalDelete(accountEntity)
-        } else {
-            safeApiCall(errorLogger) {
-                remoteDataSource.delete(accountEntity.serverId!!)
-            }.onSuccess {
-                finishLocalDelete(accountEntity)
-            }
+            return
         }
+
+        safeApiCall(errorLogger) {
+            remoteDataSource.delete(serverId)
+        }.fold(
+            onSuccess = { finishLocalDelete(accountEntity) },
+            onFailure = { error -> if (error.isNotFound()) finishLocalDelete(accountEntity) }
+        )
     }
 
     /**

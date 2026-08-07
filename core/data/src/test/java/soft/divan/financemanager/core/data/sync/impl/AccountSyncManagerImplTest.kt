@@ -5,6 +5,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
@@ -144,6 +145,34 @@ class AccountSyncManagerImplTest {
     @Test
     fun `syncCreate does not touch local db when server call fails`() = runTest {
         coEvery { remoteDataSource.create(any()) } throws RuntimeException("offline")
+        coEvery { remoteDataSource.getById(any()) } returns Response.error(404, "".toResponseBody())
+
+        syncManager.syncCreate(accountDto = entity(serverId = null).toDto(), localId = "local-1")
+
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+    }
+
+    @Test
+    fun `syncCreate marks account SYNCED when read-back finds it after lost ack`() = runTest {
+        // Сервер создал счёт, но ответ не дошёл: create падает, а GET по localId его находит
+        coEvery { remoteDataSource.create(any()) } throws RuntimeException("timeout")
+        coEvery { remoteDataSource.getById("local-1") } returns
+            Response.success(dto(id = "local-1"))
+        val updated = slot<AccountEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        syncManager.syncCreate(accountDto = entity(serverId = null).toDto(), localId = "local-1")
+
+        assertThat(updated.captured.localId).isEqualTo("local-1")
+        assertThat(updated.captured.serverId).isEqualTo("local-1")
+        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
+    }
+
+    @Test
+    fun `syncCreate keeps account pending when read-back does not find it`() = runTest {
+        coEvery { remoteDataSource.create(any()) } throws RuntimeException("timeout")
+        coEvery { remoteDataSource.getById("local-1") } returns
+            Response.error(404, "".toResponseBody())
 
         syncManager.syncCreate(accountDto = entity(serverId = null).toDto(), localId = "local-1")
 
@@ -209,6 +238,17 @@ class AccountSyncManagerImplTest {
         syncManager.syncDelete(entity())
 
         coVerify(exactly = 0) { localDataSource.delete(any()) }
+    }
+
+    @Test
+    fun `syncDelete removes account locally when server reports 404`() = runTest {
+        // Счёта на сервере уже нет — цель удаления достигнута (идемпотентный успех)
+        coEvery { remoteDataSource.delete("server-1") } returns
+            Response.error(404, "".toResponseBody())
+
+        syncManager.syncDelete(entity(syncStatus = SyncStatus.PENDING_DELETE))
+
+        coVerify(exactly = 1) { localDataSource.delete("local-1") }
     }
 
     @Test

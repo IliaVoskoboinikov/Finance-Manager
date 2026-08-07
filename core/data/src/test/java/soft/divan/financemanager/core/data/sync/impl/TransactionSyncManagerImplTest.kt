@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import okhttp3.ResponseBody.Companion.toResponseBody
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
@@ -235,8 +236,39 @@ class TransactionSyncManagerImplTest {
     @Test
     fun `syncCreate does not touch local db when server call fails`() = runTest {
         coEvery { remoteDataSource.create(any()) } throws RuntimeException("offline")
+        coEvery { remoteDataSource.get(any()) } returns Response.error(404, "".toResponseBody())
 
         syncManager.syncCreate(transactionEntity(serverId = null))
+
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+    }
+
+    @Test
+    fun `syncCreate marks transaction SYNCED when read-back finds it after lost ack`() = runTest {
+        // Сервер создал транзакцию, но ответ не дошёл: create падает, а GET по localId её находит
+        val local = transactionEntity(serverId = null, syncStatus = SyncStatus.PENDING_CREATE)
+        coEvery { remoteDataSource.create(any()) } throws RuntimeException("timeout")
+        coEvery { remoteDataSource.get("local-t1") } returns
+            Response.success(transactionDto(id = "local-t1"))
+        val updated = slot<TransactionEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        syncManager.syncCreate(local)
+
+        assertThat(updated.captured.localId).isEqualTo("local-t1")
+        assertThat(updated.captured.serverId).isEqualTo("local-t1")
+        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
+    }
+
+    @Test
+    fun `syncCreate keeps transaction pending when read-back does not find it`() = runTest {
+        coEvery { remoteDataSource.create(any()) } throws RuntimeException("timeout")
+        coEvery { remoteDataSource.get("local-t1") } returns
+            Response.error(404, "".toResponseBody())
+
+        syncManager.syncCreate(
+            transactionEntity(serverId = null, syncStatus = SyncStatus.PENDING_CREATE)
+        )
 
         coVerify(exactly = 0) { localDataSource.update(any()) }
     }
@@ -298,6 +330,17 @@ class TransactionSyncManagerImplTest {
         syncManager.syncDelete(transactionEntity())
 
         coVerify(exactly = 0) { localDataSource.delete(any()) }
+    }
+
+    @Test
+    fun `syncDelete removes transaction locally when server reports 404`() = runTest {
+        // Записи на сервере уже нет — цель удаления достигнута (идемпотентный успех)
+        coEvery { remoteDataSource.delete("server-t1") } returns
+            Response.error(404, "".toResponseBody())
+
+        syncManager.syncDelete(transactionEntity(syncStatus = SyncStatus.PENDING_DELETE))
+
+        coVerify(exactly = 1) { localDataSource.delete("local-t1") }
     }
 
     /* ---------- syncWith ---------- */
