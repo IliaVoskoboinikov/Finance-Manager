@@ -5,6 +5,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import soft.divan.financemanager.core.data.outbox.OutboxSender
+import soft.divan.financemanager.core.data.outbox.RoutingOutboxSender
 import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.source.impl.OutboxLocalDataSourceImpl
 import java.time.Clock
@@ -17,6 +19,11 @@ interface OutboxDataModule {
     @Binds
     @Singleton
     fun bindOutboxLocalDataSource(impl: OutboxLocalDataSourceImpl): OutboxLocalDataSource
+
+    /** Процессор получает один отправитель — роутер сам выбирает нужный по типу сущности. */
+    @Binds
+    @Singleton
+    fun bindOutboxSender(impl: RoutingOutboxSender): OutboxSender
 
     companion object {
 
