@@ -116,8 +116,10 @@ sequenceDiagram
   вместо разбора кода дубля — **read-back** `GET /{localId}` после неуспешного create (`GET`
   нашёл → `SYNCED`, не нашёл → остаётся `PENDING_CREATE`); `404-on-delete` → успех. Хелперы
   `isNotFound()` / `isNetworkBlocked()`. ✅ *(итерация 2 — см. [idempotency.md](./idempotency.md))*
-- [ ] **Проверить `RetryInterceptor`** — со стабильным id транспортный ретрай 5xx безопасен;
-  4xx он ретраить не должен.
+- [x] **Проверить `RetryInterceptor`** — со стабильным id транспортный ретрай 5xx безопасен;
+  4xx он ретраить не должен. ✅ *(итерация 3: оба инварианта уже выполнялись — правок в проде не
+  потребовалось; добавлены регрессионные тесты «тот же body на каждой попытке» и «терминальные 4xx
+  не ретраятся», раздел «Два уровня ретрая» в [idempotency.md](./idempotency.md))*
 
 ### 2. Outbox
 - [ ] **Таблица `OutboxEntryEntity`** (`core:database`): `entityType`, `entityLocalId`,
