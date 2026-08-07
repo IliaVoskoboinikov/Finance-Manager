@@ -127,12 +127,15 @@ sequenceDiagram
   не ретраятся», раздел «Два уровня ретрая» в [idempotency.md](./idempotency.md))*
 
 ### 2. Outbox
-- [ ] **Таблица `OutboxEntryEntity`** (`core:database`): `entityType`, `entityLocalId`,
-  `operation`(CREATE/UPDATE/DELETE), `payload`, `idempotencyKey`, `status`(PENDING/IN_PROGRESS/
-  COMPLETED/FAILED), `attemptCount`, `nextAttemptAt`, `lastError`, `sequenceNo`,
-  `createdAt/updatedAt` + DAO (`drainPending` ordered, `updateStatus`, `markFailed`).
-- [ ] **Bump версии БД** (сейчас 2 → 3; строго > user_version ассета = 1; pre-release
-  destructive — реальная миграция не нужна; свериться с `FinanceManagerDatabase`).
+- [x] **Таблица `OutboxEntryEntity`** (`core:database`): `sequenceNo` (PK, autoGenerate — FIFO),
+  `entityType`, `entityLocalId`, `operation`, `payload`, `idempotencyKey`, `status`,
+  `attemptCount`, `nextAttemptAt`, `lastError`, `createdAt/updatedAt` (epoch millis) + `OutboxDao`
+  (`getReadyToSend` с учётом backoff, `markInProgress` (CAS от двойной отправки), `markCompleted`,
+  `scheduleRetry`, `markFailed`, `observeFailed`, `deleteCompleted`/`deleteAll`).
+  Решение по payload: **снимок запроса** (канонический outbox, event-log), не re-read.
+  Очередь чистится при логауте (`DatabaseCleanupManager`). ✅ *(итерация 5)*
+- [x] **Bump версии БД** — было **4**, стало **5** (в плане ошибочно значилось «2 → 3»; строго
+  > user_version ассета = 1; pre-release destructive — реальная миграция не нужна). ✅
 - [ ] **Enqueue в той же Room-транзакции**, что и domain-запись — через `RoomTransactionRunner`;
   диспатч после commit через `launchSync` (backbone post-commit-sync — половина уже есть).
 - [ ] **`OutboxProcessor`** (заменяет разбросанный `pushLocalChanges`): drain `PENDING` по

@@ -6,10 +6,12 @@ import androidx.room.TypeConverters
 import soft.divan.financemanager.core.database.dao.AccountDao
 import soft.divan.financemanager.core.database.dao.CategoryDao
 import soft.divan.financemanager.core.database.dao.CurrencyDao
+import soft.divan.financemanager.core.database.dao.OutboxDao
 import soft.divan.financemanager.core.database.dao.TransactionDao
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.entity.CategoryEntity
 import soft.divan.financemanager.core.database.entity.CurrencyEntity
+import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.util.Converters
 
@@ -18,11 +20,13 @@ import soft.divan.financemanager.core.database.util.Converters
         TransactionEntity::class,
         CategoryEntity::class,
         AccountEntity::class,
-        CurrencyEntity::class
+        CurrencyEntity::class,
+        OutboxEntryEntity::class
     ],
     // Должна быть строго больше версии прешипнутого ассета category_db.db (user_version = 1),
     // иначе Room видит одинаковую версию с другим identity hash и падает на проверке целостности.
-    version = 4,
+    // Версия 5: добавлена таблица outbox (очередь исходящих операций).
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -31,4 +35,5 @@ abstract class FinanceManagerDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun accountDao(): AccountDao
     abstract fun currencyDao(): CurrencyDao
+    abstract fun outboxDao(): OutboxDao
 }
