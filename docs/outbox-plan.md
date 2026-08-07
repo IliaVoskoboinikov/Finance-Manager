@@ -143,9 +143,15 @@ sequenceDiagram
   версия БД **5 → 6**. ✅ *(итерация 6)*
   <br>Вызовы из репозиториев подключаются вместе с `OutboxProcessor` — чтобы не было промежуточного
   состояния, где записи копятся необработанными. Диспатч после commit (`launchSync`) — там же.
-- [ ] **`OutboxProcessor`** (заменяет разбросанный `pushLocalChanges`): drain `PENDING` по
-  `sequenceNo` (порядок category→account→transaction), шлёт с `idempotencyKey`, разбирает ответ
-  → COMPLETED / retry-with-backoff / FAILED (dead-letter на 4xx или после N попыток).
+- [x] **`OutboxProcessor`** — движок очереди: drain по `sequenceNo`, атомарный захват записи
+  (защита от двойной отправки), классификация исхода → COMPLETED / retry-with-backoff / FAILED.
+  `OutboxRetryPolicy` — экспоненциальный backoff с equal jitter (30 c … 1 ч), dead-letter после
+  8 попыток. Отдельный исход `Blocked` (гость / нет сессии) возвращает запись в очередь **без
+  списания попытки**. Прогон **останавливается на первой временной неудаче** — операции связаны
+  (счёт → его транзакции, создание → правка), обгонять нельзя; терминальные очередь не блокируют.
+  ✅ *(итерация 7 — движок; отправка вынесена за интерфейс `OutboxSender`)*
+- [ ] **Реализации `OutboxSender`** для транзакций и счетов: разобрать снимок → эндпоинт по
+  (entityType, operation) → применить ответ локально (`serverId`, `SYNCED` / удаление строки).
 - [ ] **Драйвер ретраев** — WorkManager (`:sync`) по расписанию + оппортунистический прогон
   после enqueue; уважать `nextAttemptAt`.
 - [ ] **Dead-letter surfacing** — FAILED → `ErrorLogger` + (опц.) индикатор «не синхронизировано»
