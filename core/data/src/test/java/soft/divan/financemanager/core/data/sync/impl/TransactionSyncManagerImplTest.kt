@@ -109,7 +109,7 @@ class TransactionSyncManagerImplTest {
         coEvery {
             remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
         } returns Response.success(listOf(transactionDto()))
-        coEvery { localDataSource.getByServerIds(listOf("server-t1")) } returns emptyList()
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns emptyList()
         coEvery { categoryLocalDataSource.getById("cat-1") } returns
             categoryEntity(isIncome = true)
         val inserted = slot<TransactionEntity>()
@@ -131,7 +131,7 @@ class TransactionSyncManagerImplTest {
         coEvery {
             remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
         } returns Response.success(listOf(transactionDto(updatedAt = "2024-02-01T00:00:00Z")))
-        coEvery { localDataSource.getByServerIds(listOf("server-t1")) } returns listOf(local)
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns listOf(local)
         coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
         val updated = slot<TransactionEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
@@ -149,7 +149,7 @@ class TransactionSyncManagerImplTest {
         coEvery {
             remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
         } returns Response.success(listOf(transactionDto(updatedAt = "2024-02-01T00:00:00Z")))
-        coEvery { localDataSource.getByServerIds(listOf("server-t1")) } returns listOf(local)
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns listOf(local)
         coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
 
         syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
@@ -164,7 +164,7 @@ class TransactionSyncManagerImplTest {
         coEvery {
             remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
         } returns Response.success(listOf(transactionDto(categoryId = "cat-unknown")))
-        coEvery { localDataSource.getByServerIds(listOf("server-t1")) } returns emptyList()
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns emptyList()
         coEvery { categoryLocalDataSource.getById("cat-unknown") } returns null
 
         syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
@@ -207,6 +207,33 @@ class TransactionSyncManagerImplTest {
         coVerify(exactly = 1) {
             remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-08", any())
         }
+    }
+
+    @Test
+    fun `pull does not duplicate locally created transaction awaiting confirmation`() = runTest {
+        // Потеря ACK: сервер создал транзакцию с нашим клиентским id, локальная ещё PENDING_CREATE
+        // (serverId == null), поэтому по serverId она не находится — но это та же сущность.
+        val pending = transactionEntity(
+            serverId = null,
+            syncStatus = SyncStatus.PENDING_CREATE,
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
+        } returns Response.success(listOf(transactionDto(id = "local-t1")))
+        coEvery { localDataSource.getBySyncIds(listOf("local-t1")) } returns listOf(pending)
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
+        val updated = slot<TransactionEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
+
+        // Дубликат не создаётся: запись опознана и подтверждена по тому же localId
+        coVerify(exactly = 0) { localDataSource.insert(any()) }
+        assertThat(updated.captured.localId).isEqualTo("local-t1")
+        assertThat(updated.captured.serverId).isEqualTo("local-t1")
+        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
     }
 
     /* ---------- syncCreate ---------- */

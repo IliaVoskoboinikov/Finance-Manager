@@ -24,8 +24,8 @@ class TransactionLocalDataSourceImpl @Inject constructor(
     override suspend fun getByServerId(id: String): TransactionEntity? =
         transactionDao.getByServerId(id)
 
-    override suspend fun getByServerIds(serverIds: List<String>): List<TransactionEntity> =
-        transactionDao.getByServerIds(serverIds)
+    override suspend fun getBySyncIds(ids: List<String>): List<TransactionEntity> =
+        transactionDao.getBySyncIds(ids)
 
     override suspend fun getByAccountId(accountId: String): List<TransactionEntity> =
         transactionDao.getByAccountId(accountId)

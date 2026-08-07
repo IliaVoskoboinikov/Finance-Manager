@@ -248,10 +248,13 @@ class TransactionSyncManagerImpl @Inject constructor(
             val serverIds = transactionDtos.map { it.id }
 
             val localTransactions = safeDbCall(errorLogger) {
-                localDataSource.getByServerIds(serverIds)
+                localDataSource.getBySyncIds(serverIds)
             }.getOrNull().orEmpty()
 
-            val localMap = localTransactions.associateBy { it.serverId }
+            // Ключ — serverId, а для созданных здесь и ещё не подтверждённых записей (create ушёл
+            // с `id = localId`, но ACK не дошёл) — их localId: сервер знает их именно под ним.
+            // Без этого pull принял бы собственную транзакцию за новую и вставил дубликат.
+            val localMap = localTransactions.associateBy { it.serverId ?: it.localId }
 
             transactionDtos.forEach { transactionDto ->
                 val localTransaction = localMap[transactionDto.id]

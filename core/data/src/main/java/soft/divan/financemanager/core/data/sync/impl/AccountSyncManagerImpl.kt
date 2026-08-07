@@ -125,10 +125,13 @@ class AccountSyncManagerImpl @Inject constructor(
             val serverIds = accountDtos.map { it.id }
 
             val localAccounts = safeDbCall(errorLogger) {
-                localDataSource.getByServerIds(serverIds)
+                localDataSource.getBySyncIds(serverIds)
             }.getOrNull().orEmpty()
 
-            val localMap = localAccounts.associateBy { it.serverId }
+            // Ключ — serverId, а для созданных здесь и ещё не подтверждённых записей (create ушёл
+            // с `id = localId`, но ACK не дошёл) — их localId: сервер знает их именно под ним.
+            // Без этого pull принял бы собственный счёт за новый и вставил дубликат.
+            val localMap = localAccounts.associateBy { it.serverId ?: it.localId }
 
             accountDtos.forEach { accountDto ->
                 val localAccount = localMap[accountDto.id]

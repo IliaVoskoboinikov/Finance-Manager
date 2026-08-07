@@ -75,7 +75,7 @@ class AccountSyncManagerImplTest {
     @Test
     fun `pull creates local account for unknown server account`() = runTest {
         coEvery { remoteDataSource.getAll() } returns Response.success(listOf(dto()))
-        coEvery { localDataSource.getByServerIds(listOf("server-1")) } returns emptyList()
+        coEvery { localDataSource.getBySyncIds(listOf("server-1")) } returns emptyList()
         val created = slot<AccountEntity>()
         coEvery { localDataSource.create(capture(created)) } returns Unit
 
@@ -92,7 +92,7 @@ class AccountSyncManagerImplTest {
         val local = entity(updatedAt = "2024-01-15T00:00:00Z")
         coEvery { remoteDataSource.getAll() } returns
             Response.success(listOf(dto(updatedAt = "2024-02-01T00:00:00Z")))
-        coEvery { localDataSource.getByServerIds(listOf("server-1")) } returns listOf(local)
+        coEvery { localDataSource.getBySyncIds(listOf("server-1")) } returns listOf(local)
         val updated = slot<AccountEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
@@ -108,7 +108,7 @@ class AccountSyncManagerImplTest {
         val local = entity(updatedAt = "2024-03-01T00:00:00Z")
         coEvery { remoteDataSource.getAll() } returns
             Response.success(listOf(dto(updatedAt = "2024-02-01T00:00:00Z")))
-        coEvery { localDataSource.getByServerIds(listOf("server-1")) } returns listOf(local)
+        coEvery { localDataSource.getBySyncIds(listOf("server-1")) } returns listOf(local)
 
         syncManager.pullServerData()
 
@@ -117,12 +117,36 @@ class AccountSyncManagerImplTest {
     }
 
     @Test
+    fun `pull does not duplicate locally created account awaiting confirmation`() = runTest {
+        // Потеря ACK: сервер создал счёт с нашим клиентским id, локальный ещё PENDING_CREATE
+        // (serverId == null), поэтому по serverId он не находится — но это та же сущность.
+        val pending = entity(
+            serverId = null,
+            syncStatus = SyncStatus.PENDING_CREATE,
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
+        coEvery { remoteDataSource.getAll() } returns
+            Response.success(listOf(dto(id = "local-1", updatedAt = "2024-02-01T00:00:00Z")))
+        coEvery { localDataSource.getBySyncIds(listOf("local-1")) } returns listOf(pending)
+        val updated = slot<AccountEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        syncManager.pullServerData()
+
+        // Дубликат не создаётся: запись опознана и подтверждена по тому же localId
+        coVerify(exactly = 0) { localDataSource.create(any()) }
+        assertThat(updated.captured.localId).isEqualTo("local-1")
+        assertThat(updated.captured.serverId).isEqualTo("local-1")
+        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
+    }
+
+    @Test
     fun `pull does nothing when server call fails`() = runTest {
         coEvery { remoteDataSource.getAll() } throws RuntimeException("offline")
 
         syncManager.pullServerData()
 
-        coVerify(exactly = 0) { localDataSource.getByServerIds(any()) }
+        coVerify(exactly = 0) { localDataSource.getBySyncIds(any()) }
         coVerify(exactly = 0) { localDataSource.create(any()) }
     }
 
