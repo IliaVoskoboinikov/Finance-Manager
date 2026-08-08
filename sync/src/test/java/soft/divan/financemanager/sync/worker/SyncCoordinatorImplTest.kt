@@ -13,6 +13,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import soft.divan.financemanager.core.data.outbox.OutboxProcessor
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.data.sync.CategorySyncManager
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
@@ -23,12 +24,14 @@ class SyncCoordinatorImplTest {
     private val categorySyncManager = mockk<CategorySyncManager>()
     private val accountSyncManager = mockk<AccountSyncManager>()
     private val transactionSyncManager = mockk<TransactionSyncManager>()
+    private val outboxProcessor = mockk<OutboxProcessor>(relaxed = true)
     private val setLastSyncTimeUseCase = mockk<SetLastSyncTimeUseCase>(relaxed = true)
 
     private val coordinator = SyncCoordinatorImpl(
         categorySyncManager = categorySyncManager,
         accountSyncManager = accountSyncManager,
         transactionSyncManager = transactionSyncManager,
+        outboxProcessor = outboxProcessor,
         setLastSyncTimeUseCase = setLastSyncTimeUseCase
     )
 
@@ -117,5 +120,36 @@ class SyncCoordinatorImplTest {
 
         assertThat(result).isFalse()
         coVerify(exactly = 0) { accountSyncManager.syncWith(any()) }
+    }
+
+    @Test
+    fun `syncAll processes the outbox after a successful pull`() = runTest {
+        stubManagers()
+
+        coordinator.syncAll()
+
+        coVerify(exactly = 1) { outboxProcessor.process() }
+    }
+
+    @Test
+    fun `syncAll processes the outbox even when a pull step fails`() = runTest {
+        // Локальные изменения не должны ждать отправки из-за проблем с чтением
+        stubManagers(category = false)
+
+        val result = coordinator.syncAll()
+
+        assertThat(result).isFalse()
+        coVerify(exactly = 1) { outboxProcessor.process() }
+    }
+
+    @Test
+    fun `syncAll returns false when outbox processing fails`() = runTest {
+        stubManagers()
+        coEvery { outboxProcessor.process() } throws RuntimeException("boom")
+
+        val result = coordinator.syncAll()
+
+        assertThat(result).isFalse()
+        coVerify(exactly = 0) { setLastSyncTimeUseCase(any()) }
     }
 }

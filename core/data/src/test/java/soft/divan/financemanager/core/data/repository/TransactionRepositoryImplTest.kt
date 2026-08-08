@@ -11,8 +11,10 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
+import soft.divan.financemanager.core.data.TransactionRunner
 import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
+import soft.divan.financemanager.core.data.outbox.OutboxEnqueuer
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
@@ -21,6 +23,8 @@ import soft.divan.financemanager.core.data.sync.TransactionSyncManager
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.entity.CategoryEntity
 import soft.divan.financemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.model.OutboxEntityType
+import soft.divan.financemanager.core.database.model.OutboxOperation
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.model.Transaction
@@ -37,6 +41,12 @@ class TransactionRepositoryImplTest {
     private val accountLocalDataSource = mockk<AccountLocalDataSource>()
     private val categoryLocalDataSource = mockk<CategoryLocalDataSource>()
     private val syncManager = mockk<TransactionSyncManager>(relaxed = true)
+    private val outboxEnqueuer = mockk<OutboxEnqueuer>(relaxed = true)
+
+    /** Выполняет блок как есть: атомарность проверяется отдельно, на реальном Room. */
+    private val transactionRunner = object : TransactionRunner {
+        override suspend fun <T> runInTransaction(block: suspend () -> T): T = block()
+    }
     private val appCoroutineContext = RecordingAppCoroutineContext()
     private val errorLogger = mockk<ErrorLogger>(relaxed = true)
 
@@ -46,6 +56,8 @@ class TransactionRepositoryImplTest {
         accountLocalDataSource = accountLocalDataSource,
         categoryLocalDataSource = categoryLocalDataSource,
         syncManager = syncManager,
+        transactionRunner = transactionRunner,
+        outboxEnqueuer = outboxEnqueuer,
         appCoroutineContext = appCoroutineContext,
         errorLogger = errorLogger
     )
@@ -118,16 +130,19 @@ class TransactionRepositoryImplTest {
     }
 
     @Test
-    fun `create launches background sync with stored entity`() = runTest {
+    fun `create enqueues an outbox create operation`() = runTest {
         coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
         coEvery { localDataSource.insert(any()) } returns Unit
 
         repository.create(transaction())
-        appCoroutineContext.runAll()
 
         coVerify(exactly = 1) {
-            syncManager.syncCreate(
-                match { it.localId == "local-t1" && it.syncStatus == SyncStatus.PENDING_CREATE }
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.TRANSACTION,
+                entityLocalId = "local-t1",
+                operation = OutboxOperation.CREATE,
+                targetServerId = null,
+                body = any()
             )
         }
     }
@@ -291,14 +306,15 @@ class TransactionRepositoryImplTest {
     }
 
     @Test
-    fun `getById pushes unsynced transaction to server in background`() = runTest {
-        val local = entity(serverId = null)
-        coEvery { localDataSource.getByLocalId("local-t1") } returns local
+    fun `getById does not chase an unsynced transaction`() = runTest {
+        // Создание такой транзакции уже стоит в очереди — догонять её отдельным запросом незачем
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = null)
 
         repository.getById("local-t1")
         appCoroutineContext.runAll()
 
-        coVerify(exactly = 1) { syncManager.syncCreate(local) }
+        coVerify(exactly = 0) { remoteDataSource.get(any()) }
+        coVerify(exactly = 0) { outboxEnqueuer.enqueue(any(), any(), any(), any(), any()) }
     }
 
     /* ---------- update ---------- */
@@ -313,38 +329,45 @@ class TransactionRepositoryImplTest {
     }
 
     @Test
-    fun `update of synced transaction stores PENDING_UPDATE and syncs update`() = runTest {
+    fun `update of synced transaction stores PENDING_UPDATE and enqueues update`() = runTest {
         coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
         val updated = slot<TransactionEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         val result = repository.update(transaction().copy(comment = "dinner"))
-        appCoroutineContext.runAll()
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(updated.captured.comment).isEqualTo("dinner")
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_UPDATE)
         coVerify(exactly = 1) {
-            syncManager.syncUpdate(
-                match { it.serverId == "server-t1" && it.syncStatus == SyncStatus.PENDING_UPDATE }
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.TRANSACTION,
+                entityLocalId = "local-t1",
+                operation = OutboxOperation.UPDATE,
+                targetServerId = "server-t1",
+                body = any()
             )
         }
     }
 
     @Test
-    fun `update of unsynced transaction stores PENDING_CREATE and syncs create`() = runTest {
+    fun `update of unsynced transaction addresses the operation by its client id`() = runTest {
+        // serverId ещё нет, но сервер узнает транзакцию по localId, с которым ушло создание
         coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = null)
         val updated = slot<TransactionEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         val result = repository.update(transaction())
-        appCoroutineContext.runAll()
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_CREATE)
         coVerify(exactly = 1) {
-            syncManager.syncCreate(
-                match { it.serverId == null && it.syncStatus == SyncStatus.PENDING_CREATE }
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.TRANSACTION,
+                entityLocalId = "local-t1",
+                operation = OutboxOperation.UPDATE,
+                targetServerId = "local-t1",
+                body = any()
             )
         }
     }
@@ -363,18 +386,24 @@ class TransactionRepositoryImplTest {
     /* ---------- delete ---------- */
 
     @Test
-    fun `delete marks transaction as PENDING_DELETE and syncs delete`() = runTest {
-        val local = entity(serverId = "server-t1")
-        coEvery { localDataSource.getByLocalId("local-t1") } returns local
+    fun `delete marks transaction as PENDING_DELETE and enqueues delete`() = runTest {
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
         val updated = slot<TransactionEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         val result = repository.delete("local-t1")
-        appCoroutineContext.runAll()
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_DELETE)
-        coVerify(exactly = 1) { syncManager.syncDelete(local) }
+        coVerify(exactly = 1) {
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.TRANSACTION,
+                entityLocalId = "local-t1",
+                operation = OutboxOperation.DELETE,
+                targetServerId = "server-t1",
+                body = null
+            )
+        }
     }
 
     @Test

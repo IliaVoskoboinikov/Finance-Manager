@@ -3,13 +3,16 @@ package soft.divan.financemanager.core.data.outbox
 import com.google.gson.Gson
 import io.mockk.CapturingSlot
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import soft.divan.financemanager.core.data.dto.TransactionRequestDto
 import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
+import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.model.OutboxEntityType
 import soft.divan.financemanager.core.database.model.OutboxOperation
@@ -29,10 +32,20 @@ class OutboxEnqueuerTest {
     private val clock = Clock.fixed(now, ZoneOffset.UTC)
     private val localDataSource = mockk<OutboxLocalDataSource>()
 
+    private val processor = mockk<OutboxProcessor>(relaxed = true)
+
+    /** Выполняет отложенные действия сразу — здесь проверяется не порядок, а содержимое записи. */
+    private val appCoroutineContext = object : AppCoroutineContext {
+        override fun launch(block: suspend CoroutineScope.() -> Unit) = Unit
+        override suspend fun launchSync(block: suspend () -> Unit) = block()
+    }
+
     private val enqueuer = OutboxEnqueuer(
         localDataSource = localDataSource,
         gson = Gson(),
-        clock = clock
+        clock = clock,
+        appCoroutineContext = appCoroutineContext,
+        processor = { processor }
     )
 
     private fun captureEnqueued(): CapturingSlot<OutboxEntryEntity> {
@@ -131,6 +144,20 @@ class OutboxEnqueuerTest {
 
         assertThat(enqueued.captured.payload).isEqualTo("{}")
         assertThat(enqueued.captured.targetServerId).isEqualTo("server-t1")
+    }
+
+    @Test
+    fun `enqueue schedules processing so the operation is not left waiting`() = runTest {
+        captureEnqueued()
+
+        enqueuer.enqueue(
+            entityType = OutboxEntityType.TRANSACTION,
+            entityLocalId = "local-t1",
+            operation = OutboxOperation.CREATE,
+            body = requestDto()
+        )
+
+        coVerify(exactly = 1) { processor.process() }
     }
 
     @Test

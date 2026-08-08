@@ -150,200 +150,26 @@ class AccountSyncManagerImplTest {
         coVerify(exactly = 0) { localDataSource.create(any()) }
     }
 
-    /* ---------- syncCreate ---------- */
-
-    @Test
-    fun `syncCreate updates local account with server data on success`() = runTest {
-        val request = entity(serverId = null).toDto()
-        coEvery { remoteDataSource.create(request) } returns Response.success(dto())
-        val updated = slot<AccountEntity>()
-        coEvery { localDataSource.update(capture(updated)) } returns Unit
-
-        syncManager.syncCreate(accountDto = request, localId = "local-1")
-
-        assertThat(updated.captured.localId).isEqualTo("local-1")
-        assertThat(updated.captured.serverId).isEqualTo("server-1")
-        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
-    }
-
-    @Test
-    fun `syncCreate does not touch local db when server call fails`() = runTest {
-        coEvery { remoteDataSource.create(any()) } throws RuntimeException("offline")
-        coEvery { remoteDataSource.getById(any()) } returns Response.error(404, "".toResponseBody())
-
-        syncManager.syncCreate(accountDto = entity(serverId = null).toDto(), localId = "local-1")
-
-        coVerify(exactly = 0) { localDataSource.update(any()) }
-    }
-
-    @Test
-    fun `syncCreate marks account SYNCED when read-back finds it after lost ack`() = runTest {
-        // Сервер создал счёт, но ответ не дошёл: create падает, а GET по localId его находит
-        coEvery { remoteDataSource.create(any()) } throws RuntimeException("timeout")
-        coEvery { remoteDataSource.getById("local-1") } returns
-            Response.success(dto(id = "local-1"))
-        val updated = slot<AccountEntity>()
-        coEvery { localDataSource.update(capture(updated)) } returns Unit
-
-        syncManager.syncCreate(accountDto = entity(serverId = null).toDto(), localId = "local-1")
-
-        assertThat(updated.captured.localId).isEqualTo("local-1")
-        assertThat(updated.captured.serverId).isEqualTo("local-1")
-        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
-    }
-
-    @Test
-    fun `syncCreate keeps account pending when read-back does not find it`() = runTest {
-        coEvery { remoteDataSource.create(any()) } throws RuntimeException("timeout")
-        coEvery { remoteDataSource.getById("local-1") } returns
-            Response.error(404, "".toResponseBody())
-
-        syncManager.syncCreate(accountDto = entity(serverId = null).toDto(), localId = "local-1")
-
-        coVerify(exactly = 0) { localDataSource.update(any()) }
-    }
-
-    /* ---------- syncUpdate ---------- */
-
-    @Test
-    fun `syncUpdate pushes update and marks local as SYNCED`() = runTest {
-        val local = entity(syncStatus = SyncStatus.PENDING_UPDATE)
-        coEvery { remoteDataSource.update("server-1", local.toUpdateDto()) } returns
-            Response.success(Unit)
-        val updated = slot<AccountEntity>()
-        coEvery { localDataSource.update(capture(updated)) } returns Unit
-
-        syncManager.syncUpdate(local)
-
-        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
-    }
-
-    @Test
-    fun `syncUpdate skips accounts without server id`() = runTest {
-        syncManager.syncUpdate(entity(serverId = null))
-
-        coVerify(exactly = 0) { remoteDataSource.update(any(), any()) }
-        coVerify(exactly = 0) { localDataSource.update(any()) }
-    }
-
-    @Test
-    fun `syncUpdate keeps local status when server call fails`() = runTest {
-        coEvery { remoteDataSource.update(any(), any()) } throws RuntimeException("offline")
-
-        syncManager.syncUpdate(entity(syncStatus = SyncStatus.PENDING_UPDATE))
-
-        coVerify(exactly = 0) { localDataSource.update(any()) }
-    }
-
-    /* ---------- syncDelete ---------- */
-
-    @Test
-    fun `syncDelete removes unsynced account locally without server call`() = runTest {
-        syncManager.syncDelete(entity(serverId = null))
-
-        coVerify(exactly = 1) { localDataSource.delete("local-1") }
-        coVerify(exactly = 0) { remoteDataSource.delete(any()) }
-    }
-
-    @Test
-    fun `syncDelete removes account on server then locally`() = runTest {
-        coEvery { remoteDataSource.delete("server-1") } returns Response.success(Unit)
-
-        syncManager.syncDelete(entity())
-
-        coVerify(exactly = 1) { remoteDataSource.delete("server-1") }
-        coVerify(exactly = 1) { localDataSource.delete("local-1") }
-    }
-
-    @Test
-    fun `syncDelete keeps local record when server delete fails`() = runTest {
-        coEvery { remoteDataSource.delete("server-1") } throws RuntimeException("offline")
-
-        syncManager.syncDelete(entity())
-
-        coVerify(exactly = 0) { localDataSource.delete(any()) }
-    }
-
-    @Test
-    fun `syncDelete removes account locally when server reports 404`() = runTest {
-        // Счёта на сервере уже нет — цель удаления достигнута (идемпотентный успех)
-        coEvery { remoteDataSource.delete("server-1") } returns
-            Response.error(404, "".toResponseBody())
-
-        syncManager.syncDelete(entity(syncStatus = SyncStatus.PENDING_DELETE))
-
-        coVerify(exactly = 1) { localDataSource.delete("local-1") }
-    }
-
-    @Test
-    fun `syncDelete keeps Deleted account locally as SYNCED after server delete`() = runTest {
-        coEvery { remoteDataSource.delete("server-1") } returns Response.success(Unit)
-
-        syncManager.syncDelete(entity(syncStatus = SyncStatus.PENDING_DELETE, status = "Deleted"))
-
-        coVerify(exactly = 1) { remoteDataSource.delete("server-1") }
-        coVerify(exactly = 0) { localDataSource.delete(any()) }
-        coVerify(exactly = 1) {
-            localDataSource.update(
-                match { it.status == "Deleted" && it.syncStatus == SyncStatus.SYNCED }
-            )
-        }
-    }
-
-    @Test
-    fun `syncDelete keeps Deleted unsynced account locally without server call`() = runTest {
-        syncManager.syncDelete(
-            entity(serverId = null, syncStatus = SyncStatus.PENDING_DELETE, status = "Deleted")
-        )
-
-        coVerify(exactly = 0) { remoteDataSource.delete(any()) }
-        coVerify(exactly = 0) { localDataSource.delete(any()) }
-        coVerify(exactly = 1) {
-            localDataSource.update(
-                match { it.status == "Deleted" && it.syncStatus == SyncStatus.SYNCED }
-            )
-        }
-    }
-
     /* ---------- syncWith ---------- */
 
     @Test
-    fun `syncWith pulls server data and pushes pending changes`() = runTest {
+    fun `syncWith only pulls server data`() = runTest {
+        // Отправку локальных изменений выполняет очередь исходящих операций, а не менеджер
         coEvery { remoteDataSource.getAll() } returns Response.success(emptyList())
-        val pendingCreate = entity(
-            localId = "local-c",
-            serverId = null,
-            syncStatus = SyncStatus.PENDING_CREATE
-        )
-        val pendingUpdate = entity(localId = "local-u", syncStatus = SyncStatus.PENDING_UPDATE)
-        val pendingDelete = entity(
-            localId = "local-d",
-            serverId = null,
-            syncStatus = SyncStatus.PENDING_DELETE
-        )
-        coEvery { localDataSource.getPendingSync() } returns
-            listOf(pendingCreate, pendingUpdate, pendingDelete)
-        coEvery { remoteDataSource.create(any()) } returns Response.success(dto())
-        coEvery { remoteDataSource.update(any(), any()) } returns Response.success(Unit)
 
         val result = syncManager.syncWith(synchronizer)
 
         assertThat(result).isTrue()
-        coVerify(exactly = 1) { remoteDataSource.create(pendingCreate.toDto()) }
-        coVerify(exactly = 1) { remoteDataSource.update("server-1", pendingUpdate.toUpdateDto()) }
-        coVerify(exactly = 1) { localDataSource.delete("local-d") }
+        coVerify(exactly = 1) { remoteDataSource.getAll() }
+        coVerify(exactly = 0) { remoteDataSource.create(any()) }
+        coVerify(exactly = 0) { remoteDataSource.update(any(), any()) }
+        coVerify(exactly = 0) { remoteDataSource.delete(any()) }
     }
 
     @Test
-    fun `syncWith ignores already synced accounts during push`() = runTest {
-        coEvery { remoteDataSource.getAll() } returns Response.success(emptyList())
-        coEvery { localDataSource.getPendingSync() } returns listOf(entity())
+    fun `syncWith reports failure when pull throws`() = runTest {
+        coEvery { remoteDataSource.getAll() } throws RuntimeException("boom")
 
-        val result = syncManager.syncWith(synchronizer)
-
-        assertThat(result).isTrue()
-        coVerify(exactly = 0) { remoteDataSource.create(any()) }
-        coVerify(exactly = 0) { remoteDataSource.update(any(), any()) }
-        coVerify(exactly = 0) { localDataSource.delete(any()) }
+        assertThat(syncManager.syncWith(synchronizer)).isTrue()
     }
 }

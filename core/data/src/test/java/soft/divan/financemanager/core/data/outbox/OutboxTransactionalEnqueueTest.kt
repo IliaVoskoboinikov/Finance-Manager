@@ -2,6 +2,7 @@ package soft.divan.financemanager.core.data.outbox
 
 import androidx.room.Room
 import com.google.gson.Gson
+import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.test.runTest
@@ -64,7 +65,9 @@ class OutboxTransactionalEnqueueTest {
         enqueuer = OutboxEnqueuer(
             localDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
             gson = Gson(),
-            clock = Clock.fixed(now, ZoneOffset.UTC)
+            clock = Clock.fixed(now, ZoneOffset.UTC),
+            appCoroutineContext = NoopAppCoroutineContext(),
+            processor = { mockk(relaxed = true) }
         )
     }
 
