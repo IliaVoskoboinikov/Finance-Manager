@@ -86,9 +86,21 @@ interface OutboxDao {
         updatedAt: Long
     )
 
-    /** Записи в dead-letter — для индикации в UI и ручного повтора. */
-    @Query("SELECT * FROM outbox WHERE status = 'FAILED' ORDER BY sequenceNo ASC")
-    fun observeFailed(): Flow<List<OutboxEntryEntity>>
+    /** Сколько операций осело в dead-letter — источник индикатора «не отправлено» в UI. */
+    @Query("SELECT COUNT(*) FROM outbox WHERE status = 'FAILED'")
+    fun observeFailedCount(): Flow<Int>
+
+    /**
+     * Возвращает записи из dead-letter в очередь по явной команде пользователя.
+     *
+     * Счётчик попыток и время следующей попытки сбрасываются: ручной повтор — это утверждение
+     * «причина устранена», поэтому история прошлых неудач не должна мешать новой отправке.
+     */
+    @Query(
+        "UPDATE outbox SET status = 'PENDING', attemptCount = 0, nextAttemptAt = 0, " +
+            "lastError = NULL, updatedAt = :updatedAt WHERE status = 'FAILED'"
+    )
+    suspend fun requeueFailed(updatedAt: Long): Int
 
     /** Чистит успешно отправленные записи, чтобы очередь не росла бесконечно. */
     @Query("DELETE FROM outbox WHERE status = 'COMPLETED'")

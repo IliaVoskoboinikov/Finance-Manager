@@ -37,7 +37,9 @@ class OutboxLocalDataSourceImpl @Inject constructor(
         updatedAt: Long
     ) = outboxDao.markFailed(sequenceNo, attemptCount, lastError, updatedAt)
 
-    override fun observeFailed(): Flow<List<OutboxEntryEntity>> = outboxDao.observeFailed()
+    override fun observeFailedCount(): Flow<Int> = outboxDao.observeFailedCount()
+
+    override suspend fun requeueFailed(updatedAt: Long): Int = outboxDao.requeueFailed(updatedAt)
 
     override suspend fun deleteCompleted() = outboxDao.deleteCompleted()
 }

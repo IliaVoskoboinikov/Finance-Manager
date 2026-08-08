@@ -156,10 +156,14 @@ sequenceDiagram
   (`OutboxCallOutcome`): `404` на delete → идемпотентный успех, `401` → `Blocked`, `5xx`/сеть →
   `Transient`, прочие `4xx` → `Terminal`. Read-back после неуспешного create перенесён из §1;
   архивная семантика удаления счёта сохранена. ✅ *(итерация 8)*
-- [ ] **Драйвер ретраев** — WorkManager (`:sync`) по расписанию + оппортунистический прогон
-  после enqueue; уважать `nextAttemptAt`.
-- [ ] **Dead-letter surfacing** — FAILED → `ErrorLogger` + (опц.) индикатор «не синхронизировано»
-  в UI + ручной retry.
+- [x] **Драйвер ретраев** — WorkManager (`:sync`) по расписанию + оппортунистический прогон
+  после enqueue; уважать `nextAttemptAt`. `SyncWorker → syncAll → process()`, при неуспехе
+  `Result.retry()`; оппортунистический прогон планирует сам `OutboxEnqueuer`. ✅ *(итерация 10–11)*
+- [x] **Dead-letter surfacing** — FAILED → `ErrorLogger` (в `OutboxProcessor.giveUp`, без сумм в
+  сообщении) + доменный контракт `OutboxRepository` (`observeFailedCount` / `retryFailed`) и
+  use case'ы `ObserveUnsentOperationsUseCase` / `RetryUnsentOperationsUseCase`. Ручной повтор
+  сбрасывает `attemptCount`/`nextAttemptAt`/`lastError` и сразу запускает прогон.
+  ✅ *(итерация 11; сам индикатор в UI — отдельным шагом)*
 - [x] **Ретир** per-manager `pushLocalChanges` (Account/Transaction/Category SyncManager); pull
   остаётся. Репозитории пишут в очередь внутри `runInTransaction`; `syncCreate/syncUpdate/syncDelete`
   удалены из интерфейсов менеджеров; `SyncCoordinator` разбирает очередь после pull — **всегда**,

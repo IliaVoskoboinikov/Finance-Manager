@@ -123,7 +123,7 @@ class OutboxDaoTest : RoomDaoTest() {
         dao.markCompleted(sequenceNo = id, updatedAt = now + 1)
 
         assertThat(dao.getReadyToSend(now = now + 1, limit = 10)).isEmpty()
-        assertThat(dao.observeFailed().first()).isEmpty()
+        assertThat(dao.observeFailedCount().first()).isZero()
     }
 
     @Test
@@ -151,10 +151,41 @@ class OutboxDaoTest : RoomDaoTest() {
         dao.markFailed(sequenceNo = id, attemptCount = 3, lastError = "HTTP 400", updatedAt = now)
 
         assertThat(dao.getReadyToSend(now = now + 10_000, limit = 10)).isEmpty()
-        val failed = dao.observeFailed().first().single()
-        assertThat(failed.entityLocalId).isEqualTo("T1")
-        assertThat(failed.attemptCount).isEqualTo(3)
-        assertThat(failed.lastError).isEqualTo("HTTP 400")
+        assertThat(dao.observeFailedCount().first()).isEqualTo(1)
+    }
+
+    @Test
+    fun `requeueFailed returns dead letter entries to the queue with a clean slate`() = runTest {
+        dao.insert(
+            entry(
+                "failed",
+                status = OutboxStatus.FAILED,
+                attemptCount = 8,
+                lastError = "HTTP 400"
+            )
+        )
+
+        val requeued = dao.requeueFailed(updatedAt = now + 1)
+
+        assertThat(requeued).isEqualTo(1)
+        val ready = dao.getReadyToSend(now = now + 1, limit = 10).single()
+        // Ручной повтор — утверждение «причина устранена»: прошлые неудачи не мешают отправке
+        assertThat(ready.entityLocalId).isEqualTo("failed")
+        assertThat(ready.attemptCount).isZero()
+        assertThat(ready.nextAttemptAt).isZero()
+        assertThat(ready.lastError).isNull()
+    }
+
+    @Test
+    fun `requeueFailed leaves healthy entries alone`() = runTest {
+        dao.insert(entry("pending", status = OutboxStatus.PENDING, nextAttemptAt = now + 5_000))
+        dao.insert(entry("inProgress", status = OutboxStatus.IN_PROGRESS))
+
+        val requeued = dao.requeueFailed(updatedAt = now + 1)
+
+        assertThat(requeued).isZero()
+        // Ожидающая backoff запись не должна внезапно стать готовой к отправке
+        assertThat(dao.getReadyToSend(now = now + 1, limit = 10)).isEmpty()
     }
 
     /* ---------- очистка ---------- */
@@ -169,7 +200,7 @@ class OutboxDaoTest : RoomDaoTest() {
 
         assertThat(dao.getReadyToSend(now = now, limit = 10).map { it.entityLocalId })
             .containsExactly("pending")
-        assertThat(dao.observeFailed().first().map { it.entityLocalId }).containsExactly("failed")
+        assertThat(dao.observeFailedCount().first()).isEqualTo(1)
     }
 
     @Test
@@ -180,7 +211,7 @@ class OutboxDaoTest : RoomDaoTest() {
         dao.deleteAll()
 
         assertThat(dao.getReadyToSend(now = now, limit = 10)).isEmpty()
-        assertThat(dao.observeFailed().first()).isEmpty()
+        assertThat(dao.observeFailedCount().first()).isZero()
     }
 
     /* ---------- сохранность полей ---------- */

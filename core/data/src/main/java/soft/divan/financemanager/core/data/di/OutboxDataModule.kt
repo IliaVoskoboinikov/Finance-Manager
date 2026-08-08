@@ -7,8 +7,14 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.core.data.outbox.OutboxSender
 import soft.divan.financemanager.core.data.outbox.RoutingOutboxSender
+import soft.divan.financemanager.core.data.repository.OutboxRepositoryImpl
 import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.source.impl.OutboxLocalDataSourceImpl
+import soft.divan.financemanager.core.domain.repository.OutboxRepository
+import soft.divan.financemanager.core.domain.usecase.ObserveUnsentOperationsUseCase
+import soft.divan.financemanager.core.domain.usecase.RetryUnsentOperationsUseCase
+import soft.divan.financemanager.core.domain.usecase.impl.ObserveUnsentOperationsUseCaseImpl
+import soft.divan.financemanager.core.domain.usecase.impl.RetryUnsentOperationsUseCaseImpl
 import java.time.Clock
 import javax.inject.Singleton
 
@@ -24,6 +30,20 @@ interface OutboxDataModule {
     @Binds
     @Singleton
     fun bindOutboxSender(impl: RoutingOutboxSender): OutboxSender
+
+    @Binds
+    @Singleton
+    fun bindOutboxRepository(impl: OutboxRepositoryImpl): OutboxRepository
+
+    @Binds
+    fun bindObserveUnsentOperationsUseCase(
+        impl: ObserveUnsentOperationsUseCaseImpl
+    ): ObserveUnsentOperationsUseCase
+
+    @Binds
+    fun bindRetryUnsentOperationsUseCase(
+        impl: RetryUnsentOperationsUseCaseImpl
+    ): RetryUnsentOperationsUseCase
 
     companion object {
 

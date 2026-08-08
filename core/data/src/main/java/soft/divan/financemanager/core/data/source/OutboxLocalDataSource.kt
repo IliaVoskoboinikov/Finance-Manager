@@ -27,8 +27,11 @@ interface OutboxLocalDataSource {
 
     suspend fun markFailed(sequenceNo: Long, attemptCount: Int, lastError: String?, updatedAt: Long)
 
-    /** Записи в dead-letter — для индикации в UI и ручного повтора. */
-    fun observeFailed(): Flow<List<OutboxEntryEntity>>
+    /** Сколько операций осело в dead-letter. */
+    fun observeFailedCount(): Flow<Int>
+
+    /** Возвращает записи из dead-letter в очередь; результат — сколько записей вернулось. */
+    suspend fun requeueFailed(updatedAt: Long): Int
 
     suspend fun deleteCompleted()
 }
