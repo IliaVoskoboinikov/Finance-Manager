@@ -61,8 +61,8 @@ class OutboxProcessorTest {
     )
 
     private fun givenReady(vararg entries: OutboxEntryEntity, claimed: Boolean = true) {
-        coEvery { localDataSource.getReadyToSend(any(), any()) } returns entries.toList()
-        coEvery { localDataSource.markInProgress(any(), any()) } returns claimed
+        coEvery { localDataSource.getReadyToSend(any(), any(), any()) } returns entries.toList()
+        coEvery { localDataSource.markInProgress(any(), any(), any()) } returns claimed
     }
 
     /* ---------- успешный путь ---------- */
@@ -140,7 +140,7 @@ class OutboxProcessorTest {
 
         // Вторая запись может зависеть от первой — за неё не беремся
         coVerify(exactly = 1) { sender.send(any()) }
-        coVerify(exactly = 0) { localDataSource.markInProgress(2L, any()) }
+        coVerify(exactly = 0) { localDataSource.markInProgress(2L, any(), any()) }
     }
 
     /* ---------- заблокированная сеть ---------- */
@@ -216,5 +216,26 @@ class OutboxProcessorTest {
 
         assertThat(drained).isTrue()
         coVerify(exactly = 0) { sender.send(any()) }
+    }
+
+    /* ---------- аренда ---------- */
+
+    @Test
+    fun `entries taken into work are leased for a bounded time`() = runTest {
+        givenReady(entry())
+        coEvery { sender.send(any()) } returns OutboxSendResult.Success
+        val staleBefore = slot<Long>()
+        coEvery {
+            localDataSource.getReadyToSend(any(), capture(staleBefore), any())
+        } returns listOf(entry())
+
+        processor.process()
+
+        // Порог «брошенности» отстоит от текущего момента, а не совпадает с ним: запись,
+        // взятую только что, чужой прогон забрать не сможет
+        assertThat(staleBefore.captured).isLessThan(nowMillis)
+        coVerify(exactly = 1) {
+            localDataSource.markInProgress(1L, staleBefore.captured, nowMillis)
+        }
     }
 }

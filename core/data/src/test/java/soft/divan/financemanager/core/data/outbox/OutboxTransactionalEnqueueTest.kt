@@ -92,7 +92,11 @@ class OutboxTransactionalEnqueueTest {
         body = mapOf("id" to localId, "name" to "Cash")
     )
 
-    private suspend fun queued() = db.outboxDao().getReadyToSend(now = now.toEpochMilli(), limit = 10)
+    private suspend fun queued() = db.outboxDao().getReadyToSend(
+        now = now.toEpochMilli(),
+        staleBefore = 0,
+        limit = 10
+    )
 
     @Test
     fun `commit persists both the domain row and its outbox entry`() = runTest {

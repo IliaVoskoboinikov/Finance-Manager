@@ -52,7 +52,9 @@ class DataBaseProviderModuleTest {
         assertThat(db.currencyDao().getCurrencyById("rub")).isNotNull()
         assertThat(db.accountDao().getPendingSync()).isEmpty()
         assertThat(db.transactionDao().getPendingSync()).isEmpty()
-        assertThat(db.outboxDao().getReadyToSend(now = Long.MAX_VALUE, limit = 10)).isEmpty()
+        assertThat(
+            db.outboxDao().getReadyToSend(now = Long.MAX_VALUE, staleBefore = 0, limit = 10)
+        ).isEmpty()
     }
 
     @Test

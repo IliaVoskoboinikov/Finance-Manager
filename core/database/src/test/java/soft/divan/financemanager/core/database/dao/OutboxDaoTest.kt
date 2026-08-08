@@ -64,7 +64,7 @@ class OutboxDaoTest : RoomDaoTest() {
         dao.insert(entry("T1"))
         dao.insert(entry("T2"))
 
-        val ready = dao.getReadyToSend(now = now, limit = 10)
+        val ready = dao.getReadyToSend(now = now, staleBefore = 0, limit = 10)
 
         assertThat(ready.map { it.entityLocalId }).containsExactly("A1", "T1", "T2")
     }
@@ -73,7 +73,7 @@ class OutboxDaoTest : RoomDaoTest() {
     fun `getReadyToSend respects the batch limit`() = runTest {
         repeat(5) { dao.insert(entry("T$it")) }
 
-        val ready = dao.getReadyToSend(now = now, limit = 2)
+        val ready = dao.getReadyToSend(now = now, staleBefore = 0, limit = 2)
 
         assertThat(ready.map { it.entityLocalId }).containsExactly("T0", "T1")
     }
@@ -85,19 +85,20 @@ class OutboxDaoTest : RoomDaoTest() {
         dao.insert(entry("ready", nextAttemptAt = now))
         dao.insert(entry("waiting", nextAttemptAt = now + 1))
 
-        val ready = dao.getReadyToSend(now = now, limit = 10)
+        val ready = dao.getReadyToSend(now = now, staleBefore = 0, limit = 10)
 
         assertThat(ready.map { it.entityLocalId }).containsExactly("ready")
     }
 
     @Test
-    fun `getReadyToSend returns only pending entries`() = runTest {
+    fun `getReadyToSend skips entries that are not awaiting sending`() = runTest {
         dao.insert(entry("pending", status = OutboxStatus.PENDING))
+        // Аренда ещё жива, поэтому запись в работе тоже не выбирается
         dao.insert(entry("inProgress", status = OutboxStatus.IN_PROGRESS))
         dao.insert(entry("completed", status = OutboxStatus.COMPLETED))
         dao.insert(entry("failed", status = OutboxStatus.FAILED))
 
-        val ready = dao.getReadyToSend(now = now, limit = 10)
+        val ready = dao.getReadyToSend(now = now, staleBefore = 0, limit = 10)
 
         assertThat(ready.map { it.entityLocalId }).containsExactly("pending")
     }
@@ -108,12 +109,62 @@ class OutboxDaoTest : RoomDaoTest() {
     fun `markInProgress claims a pending entry once`() = runTest {
         val id = dao.insert(entry("T1"))
 
-        val claimed = dao.markInProgress(sequenceNo = id, updatedAt = now + 1)
-        val claimedAgain = dao.markInProgress(sequenceNo = id, updatedAt = now + 2)
+        val claimed = dao.markInProgress(sequenceNo = id, staleBefore = 0, updatedAt = now + 1)
+        val claimedAgain = dao.markInProgress(sequenceNo = id, staleBefore = 0, updatedAt = now + 2)
 
         // Повторный захват не проходит: запись уже не PENDING — защита от двойной отправки
         assertThat(claimed).isEqualTo(1)
         assertThat(claimedAgain).isZero()
+    }
+
+    /* ---------- аренда записи, взятой в работу ---------- */
+
+    @Test
+    fun `getReadyToSend reclaims an entry whose lease expired`() = runTest {
+        // Прогон взял запись и умер во время отправки — без реклейма она пропала бы навсегда
+        dao.insert(entry("abandoned", status = OutboxStatus.IN_PROGRESS))
+
+        val ready = dao.getReadyToSend(now = now, staleBefore = now, limit = 10)
+
+        assertThat(ready.map { it.entityLocalId }).containsExactly("abandoned")
+    }
+
+    @Test
+    fun `getReadyToSend leaves an entry with a live lease alone`() = runTest {
+        // Её прямо сейчас отправляет другой прогон — забирать нельзя
+        dao.insert(entry("inFlight", status = OutboxStatus.IN_PROGRESS))
+
+        val ready = dao.getReadyToSend(now = now, staleBefore = now - 1, limit = 10)
+
+        assertThat(ready).isEmpty()
+    }
+
+    @Test
+    fun `markInProgress takes over an entry whose lease expired`() = runTest {
+        val id = dao.insert(entry("abandoned", status = OutboxStatus.IN_PROGRESS))
+
+        val claimed = dao.markInProgress(sequenceNo = id, staleBefore = now, updatedAt = now + 1)
+
+        assertThat(claimed).isEqualTo(1)
+    }
+
+    @Test
+    fun `markInProgress cannot steal an entry with a live lease`() = runTest {
+        val id = dao.insert(entry("inFlight", status = OutboxStatus.IN_PROGRESS))
+
+        val claimed = dao.markInProgress(sequenceNo = id, staleBefore = now - 1, updatedAt = now + 1)
+
+        assertThat(claimed).isZero()
+    }
+
+    @Test
+    fun `claiming an entry renews its lease`() = runTest {
+        val id = dao.insert(entry("T1"))
+
+        dao.markInProgress(sequenceNo = id, staleBefore = 0, updatedAt = now + 10_000)
+
+        // Аренда продлена: по старому порогу запись уже не считается брошенной
+        assertThat(dao.getReadyToSend(now = now, staleBefore = now, limit = 10)).isEmpty()
     }
 
     @Test
@@ -122,7 +173,7 @@ class OutboxDaoTest : RoomDaoTest() {
 
         dao.markCompleted(sequenceNo = id, updatedAt = now + 1)
 
-        assertThat(dao.getReadyToSend(now = now + 1, limit = 10)).isEmpty()
+        assertThat(dao.getReadyToSend(now = now + 1, staleBefore = 0, limit = 10)).isEmpty()
         assertThat(dao.observeFailedCount().first()).isZero()
     }
 
@@ -138,8 +189,8 @@ class OutboxDaoTest : RoomDaoTest() {
             updatedAt = now
         )
 
-        assertThat(dao.getReadyToSend(now = now + 499, limit = 10)).isEmpty()
-        val ready = dao.getReadyToSend(now = now + 500, limit = 10).single()
+        assertThat(dao.getReadyToSend(now = now + 499, staleBefore = 0, limit = 10)).isEmpty()
+        val ready = dao.getReadyToSend(now = now + 500, staleBefore = 0, limit = 10).single()
         assertThat(ready.attemptCount).isEqualTo(1)
         assertThat(ready.lastError).isEqualTo("HTTP 503")
     }
@@ -150,7 +201,7 @@ class OutboxDaoTest : RoomDaoTest() {
 
         dao.markFailed(sequenceNo = id, attemptCount = 3, lastError = "HTTP 400", updatedAt = now)
 
-        assertThat(dao.getReadyToSend(now = now + 10_000, limit = 10)).isEmpty()
+        assertThat(dao.getReadyToSend(now = now + 10_000, staleBefore = 0, limit = 10)).isEmpty()
         assertThat(dao.observeFailedCount().first()).isEqualTo(1)
     }
 
@@ -168,7 +219,7 @@ class OutboxDaoTest : RoomDaoTest() {
         val requeued = dao.requeueFailed(updatedAt = now + 1)
 
         assertThat(requeued).isEqualTo(1)
-        val ready = dao.getReadyToSend(now = now + 1, limit = 10).single()
+        val ready = dao.getReadyToSend(now = now + 1, staleBefore = 0, limit = 10).single()
         // Ручной повтор — утверждение «причина устранена»: прошлые неудачи не мешают отправке
         assertThat(ready.entityLocalId).isEqualTo("failed")
         assertThat(ready.attemptCount).isZero()
@@ -185,7 +236,7 @@ class OutboxDaoTest : RoomDaoTest() {
 
         assertThat(requeued).isZero()
         // Ожидающая backoff запись не должна внезапно стать готовой к отправке
-        assertThat(dao.getReadyToSend(now = now + 1, limit = 10)).isEmpty()
+        assertThat(dao.getReadyToSend(now = now + 1, staleBefore = 0, limit = 10)).isEmpty()
     }
 
     /* ---------- очистка ---------- */
@@ -198,7 +249,7 @@ class OutboxDaoTest : RoomDaoTest() {
 
         dao.deleteCompleted()
 
-        assertThat(dao.getReadyToSend(now = now, limit = 10).map { it.entityLocalId })
+        assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId })
             .containsExactly("pending")
         assertThat(dao.observeFailedCount().first()).isEqualTo(1)
     }
@@ -210,7 +261,7 @@ class OutboxDaoTest : RoomDaoTest() {
 
         dao.deleteAll()
 
-        assertThat(dao.getReadyToSend(now = now, limit = 10)).isEmpty()
+        assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10)).isEmpty()
         assertThat(dao.observeFailedCount().first()).isZero()
     }
 
@@ -227,7 +278,7 @@ class OutboxDaoTest : RoomDaoTest() {
             )
         )
 
-        val stored = dao.getReadyToSend(now = now, limit = 10).single()
+        val stored = dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).single()
 
         assertThat(stored.sequenceNo).isEqualTo(id)
         assertThat(stored.entityType).isEqualTo(OutboxEntityType.ACCOUNT)

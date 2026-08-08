@@ -12,12 +12,18 @@ class OutboxLocalDataSourceImpl @Inject constructor(
 
     override suspend fun enqueue(entry: OutboxEntryEntity): Long = outboxDao.insert(entry)
 
-    override suspend fun getReadyToSend(now: Long, limit: Int): List<OutboxEntryEntity> =
-        outboxDao.getReadyToSend(now, limit)
+    override suspend fun getReadyToSend(
+        now: Long,
+        staleBefore: Long,
+        limit: Int
+    ): List<OutboxEntryEntity> = outboxDao.getReadyToSend(now, staleBefore, limit)
 
     /** DAO возвращает число изменённых строк: 0 означает, что запись уже забрал другой прогон. */
-    override suspend fun markInProgress(sequenceNo: Long, updatedAt: Long): Boolean =
-        outboxDao.markInProgress(sequenceNo, updatedAt) > 0
+    override suspend fun markInProgress(
+        sequenceNo: Long,
+        staleBefore: Long,
+        updatedAt: Long
+    ): Boolean = outboxDao.markInProgress(sequenceNo, staleBefore, updatedAt) > 0
 
     override suspend fun markCompleted(sequenceNo: Long, updatedAt: Long) =
         outboxDao.markCompleted(sequenceNo, updatedAt)

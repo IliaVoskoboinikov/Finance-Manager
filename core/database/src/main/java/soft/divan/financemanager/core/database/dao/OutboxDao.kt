@@ -25,7 +25,15 @@ interface OutboxDao {
     suspend fun insert(entry: OutboxEntryEntity): Long
 
     /**
-     * Записи, готовые к отправке прямо сейчас: ждут своей очереди и уже отбыли backoff.
+     * Записи, готовые к отправке прямо сейчас.
+     *
+     * Это либо ждущие своей очереди и отбывшие backoff (`PENDING`), либо **зависшие в работе**:
+     * взятые прошлым прогоном, который не успел доложить об исходе. Такое случается, когда система
+     * убивает процесс во время сетевого вызова, — без второго условия эти записи не подобрал бы
+     * никто и они молча пропали бы навсегда.
+     *
+     * `updatedAt <= staleBefore` работает как «аренда»: пока она не истекла, запись считается
+     * живой и чужому прогону недоступна.
      *
      * Порядок по `sequenceNo` гарантирует, что счёт уедет раньше своих транзакций, а правки одной
      * сущности не перемешаются. [limit] ограничивает размер пачки, чтобы один прогон не занимал
@@ -33,17 +41,24 @@ interface OutboxDao {
      */
     @Query(
         "SELECT * FROM outbox " +
-            "WHERE status = 'PENDING' AND nextAttemptAt <= :now " +
+            "WHERE (status = 'PENDING' AND nextAttemptAt <= :now) " +
+            "OR (status = 'IN_PROGRESS' AND updatedAt <= :staleBefore) " +
             "ORDER BY sequenceNo ASC LIMIT :limit"
     )
-    suspend fun getReadyToSend(now: Long, limit: Int): List<OutboxEntryEntity>
+    suspend fun getReadyToSend(now: Long, staleBefore: Long, limit: Int): List<OutboxEntryEntity>
 
-    /** Помечает запись взятой в работу — чтобы параллельный прогон не отправил её повторно. */
+    /**
+     * Берёт запись в работу и продлевает аренду; `0` означает, что взять не удалось.
+     *
+     * Взять можно либо свободную (`PENDING`), либо ту, чья аренда истекла. Живую `IN_PROGRESS`
+     * увести нельзя — это и защищает от двойной отправки, когда прогоны пересеклись.
+     */
     @Query(
         "UPDATE outbox SET status = 'IN_PROGRESS', updatedAt = :updatedAt " +
-            "WHERE sequenceNo = :sequenceNo AND status = 'PENDING'"
+            "WHERE sequenceNo = :sequenceNo " +
+            "AND (status = 'PENDING' OR (status = 'IN_PROGRESS' AND updatedAt <= :staleBefore))"
     )
-    suspend fun markInProgress(sequenceNo: Long, updatedAt: Long): Int
+    suspend fun markInProgress(sequenceNo: Long, staleBefore: Long, updatedAt: Long): Int
 
     /** Операция принята сервером — запись остаётся для наблюдаемости до очистки. */
     @Query(

@@ -9,11 +9,14 @@ interface OutboxLocalDataSource {
     /** Ставит операцию в очередь и возвращает присвоенный `sequenceNo`. */
     suspend fun enqueue(entry: OutboxEntryEntity): Long
 
-    /** Записи, готовые к отправке: ждут своей очереди и уже отбыли backoff. */
-    suspend fun getReadyToSend(now: Long, limit: Int): List<OutboxEntryEntity>
+    /**
+     * Записи, готовые к отправке: отбывшие backoff, а также зависшие в работе — те, чья аренда
+     * истекла раньше [staleBefore] (прогон, взявший их, не доложил об исходе).
+     */
+    suspend fun getReadyToSend(now: Long, staleBefore: Long, limit: Int): List<OutboxEntryEntity>
 
     /** Захватывает запись в работу; `true` — захват удался (защита от двойной отправки). */
-    suspend fun markInProgress(sequenceNo: Long, updatedAt: Long): Boolean
+    suspend fun markInProgress(sequenceNo: Long, staleBefore: Long, updatedAt: Long): Boolean
 
     suspend fun markCompleted(sequenceNo: Long, updatedAt: Long)
 
