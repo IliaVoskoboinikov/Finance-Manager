@@ -145,4 +145,48 @@ class RoomTransactionRunnerTest {
 
         assertThat(appContext.launched).hasSize(1)
     }
+
+    /* ---------- вложенные транзакции ---------- */
+
+    @Test
+    fun `nested transaction returns the inner block result`() = runTest {
+        val result = runner.runInTransaction {
+            runner.runInTransaction { "inner" }
+        }
+
+        assertThat(result).isEqualTo("inner")
+    }
+
+    @Test
+    fun `sync scheduled in a nested transaction waits for the outer commit`() = runTest {
+        var dispatchedInside = false
+
+        runner.runInTransaction {
+            runner.runInTransaction {
+                appContext.launchSync { }
+                DomainResult.Success(Unit)
+            }
+            // Внутренний блок завершился, но внешняя транзакция ещё не зафиксирована
+            dispatchedInside = appContext.launched.isNotEmpty()
+            DomainResult.Success(Unit)
+        }
+
+        assertThat(dispatchedInside).isFalse()
+        assertThat(appContext.launched).hasSize(1)
+    }
+
+    @Test
+    fun `rollback inside a nested transaction discards the whole operation`() = runTest {
+        val result = runner.runInTransaction<DomainResult<Unit>> {
+            runner.runInTransaction {
+                appContext.launchSync { }
+                DomainResult.Failure(DomainError.NoData).rollbackOnError()
+            }
+            DomainResult.Success(Unit)
+        }
+
+        // Откат внутреннего блока отменяет операцию целиком, отложенные пуши не уходят
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NoData))
+        assertThat(appContext.launched).isEmpty()
+    }
 }

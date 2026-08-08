@@ -1,6 +1,7 @@
 package soft.divan.financemanager.core.data
 
 import androidx.room.withTransaction
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
 import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
@@ -29,6 +30,12 @@ class RoomTransactionRunner @Inject constructor(
 ) : TransactionRunner {
 
     override suspend fun <T> runInTransaction(block: suspend () -> T): T {
+        // Уже внутри транзакции (репозиторий вызвали из use case'а, который сам её открыл) —
+        // присоединяемся к ней вместо создания своей.
+        if (currentCoroutineContext()[PostCommitSyncQueue] != null) {
+            return joinOuterTransaction(block)
+        }
+
         // Очередь отложенных пушей: репозитории внутри блока кладут сюда сетевые sync-действия
         // (через AppCoroutineContext.launchSync) вместо немедленного запуска.
         val postCommitQueue = PostCommitSyncQueue()
@@ -50,4 +57,18 @@ class RoomTransactionRunner @Inject constructor(
             DomainResult.Failure(e.error) as T
         }
     }
+
+    /**
+     * Выполняет блок в уже открытой транзакции.
+     *
+     * Своей очереди не заводит: отложенные пуши попадают во внешнюю и уйдут после её commit —
+     * иначе они стартовали бы раньше, чем изменения реально зафиксированы.
+     *
+     * [TransactionRollbackException] намеренно **не** перехватывается: решение об откате
+     * принимает внешний вызов, для которого вложенный сбой означает откат всей операции.
+     * Проглотив исключение здесь, мы вернули бы `Failure` наружу, а внешняя транзакция всё
+     * равно откатилась бы — состояние и результат разошлись бы.
+     */
+    private suspend fun <T> joinOuterTransaction(block: suspend () -> T): T =
+        db.withTransaction { block() }
 }
