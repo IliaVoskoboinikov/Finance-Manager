@@ -68,17 +68,13 @@ class AccountSyncManagerImpl @Inject constructor(
     /**
      * Точка входа для полной синхронизации.
      *
-     * Порядок выполнения:
-     * 1. pullServerData() — обновление локальной БД
-     * 2. pushLocalChanges() — отправка pending-изменений
+     * Тянет актуальные данные с сервера. Отправку локальных изменений выполняет очередь
+     * исходящих операций, а не этот менеджер.
      *
-     * Возвращает true, если оба шага завершились без исключений.
+     * Возвращает true, если шаг завершился без исключений.
      */
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
-        return runCatching {
-            pullServerData()
-            pushLocalChanges()
-        }.isSuccess
+        return runCatching { pullServerData() }.isSuccess
     }
 
     /**
@@ -158,130 +154,6 @@ class AccountSyncManagerImpl @Inject constructor(
     }
 
     /**
-     * Отправляет новый локальный аккаунт на сервер.
-     *
-     * После успешного ответа:
-     * - обновляет локальную запись
-     * - устанавливает serverId
-     * - помечает как SYNCED
-     */
-    override suspend fun syncCreate(accountDto: CreateAccountRequestDto, localId: String) {
-        val created =
-            safeApiCall(errorLogger) {
-                remoteDataSource.create(accountDto)
-            }
-
-        val confirmed = when {
-            created is DomainResult.Success -> created
-
-            // Сеть заблокирована намеренно (гость / нет сессии) — перепроверять нечего
-            created is DomainResult.Failure && created.error.isNetworkBlocked() -> return
-
-            // Read-back при потере ACK: сервер мог применить POST и не доставить ответ.
-            // Запись адресуема по localId, т.к. create отправляется с клиентским id.
-            else -> safeApiCall(errorLogger) { remoteDataSource.getById(localId) }
-        }
-
-        confirmed.onSuccess { dto ->
-            updateLocalFromRemote(accountDto = dto, localId = localId)
-        }
-    }
-
-    /**
-     * Отправляет обновление аккаунта на сервер.
-     *
-     * Требует наличия serverId.
-     * После успешного ответа синхронизирует локальную запись.
-     */
-    override suspend fun syncUpdate(accountEntity: AccountEntity) {
-        accountEntity.serverId?.let { idAccount ->
-            safeApiCall(errorLogger) {
-                remoteDataSource.update(
-                    id = idAccount,
-                    account = accountEntity.toUpdateDto()
-                )
-            }.onSuccess {
-                safeDbCall(errorLogger) {
-                    localDataSource.update(accountEntity.copy(syncStatus = SyncStatus.SYNCED))
-                }
-            }
-        }
-    }
-
-    /**
-     * Удаляет аккаунт на сервере (`DELETE /accounts/{id}`). Сервер сам решает: нет операций →
-     * физическое удаление, есть → перевод в статус `Deleted` (архив).
-     *
-     * Локальное отражение зависит от статуса записи [AccountEntity.status]:
-     * - не `Deleted` → после успешного серверного удаления запись удаляется локально;
-     * - `Deleted` → запись сохраняется как архивная (переводится в [SyncStatus.SYNCED]),
-     *   чтобы история операций могла подтянуть её имя/валюту.
-     *
-     * Если serverId == null (запись никогда не была на сервере), удалять/архивировать на сервере
-     * нечего: архивную запись оставляем локально, обычную — удаляем.
-     *
-     * Ответ 404 трактуется как успех: на сервере счёта уже нет — цель удаления достигнута
-     * (типично для повтора после потери ACK). См. [isNotFound].
-     */
-    override suspend fun syncDelete(accountEntity: AccountEntity) {
-        val serverId = accountEntity.serverId
-        if (serverId == null) {
-            finishLocalDelete(accountEntity)
-            return
-        }
-
-        safeApiCall(errorLogger) {
-            remoteDataSource.delete(serverId)
-        }.fold(
-            onSuccess = { finishLocalDelete(accountEntity) },
-            onFailure = { error -> if (error.isNotFound()) finishLocalDelete(accountEntity) }
-        )
-    }
-
-    /**
-     * Завершает удаление локально: архивную запись (статус `Deleted`) оставляет — помечает
-     * [SyncStatus.SYNCED], обычную — физически удаляет.
-     */
-    private suspend fun finishLocalDelete(accountEntity: AccountEntity) {
-        if (accountEntity.status == AccountStatus.Deleted.name) {
-            safeDbCall(errorLogger) {
-                localDataSource.update(accountEntity.copy(syncStatus = SyncStatus.SYNCED))
-            }
-        } else {
-            deleteLocalAccount(accountEntity.localId)
-        }
-    }
-
-    /**
-     * Обрабатывает все локальные записи со статусом pending.
-     *
-     * Для каждой записи:
-     * - PENDING_CREATE  → syncCreate
-     * - PENDING_UPDATE  → syncUpdate
-     * - PENDING_DELETE  → syncDelete
-     *
-     * Используется при background-синхронизации.
-     */
-    private suspend fun pushLocalChanges() {
-        safeDbCall(errorLogger) { localDataSource.getPendingSync() }.onSuccess { accountEntities ->
-            accountEntities.forEach { accountEntity ->
-                when (accountEntity.syncStatus) {
-                    SyncStatus.SYNCED -> Unit
-
-                    SyncStatus.PENDING_CREATE -> syncCreate(
-                        accountDto = accountEntity.toDto(),
-                        localId = accountEntity.localId
-                    )
-
-                    SyncStatus.PENDING_UPDATE -> syncUpdate(accountEntity)
-
-                    SyncStatus.PENDING_DELETE -> syncDelete(accountEntity)
-                }
-            }
-        }
-    }
-
-    /**
      * Унифицированный метод обновления локальной записи
      * после успешного ответа сервера.
      *
@@ -297,18 +169,6 @@ class AccountSyncManagerImpl @Inject constructor(
                     syncStatus = SyncStatus.SYNCED
                 )
             )
-        }
-    }
-
-    /**
-     * Физическое удаление записи из локальной БД.
-     *
-     * Используется только после успешного server-delete
-     * или если запись не была синхронизирована.
-     */
-    private suspend fun deleteLocalAccount(localId: String) {
-        safeDbCall(errorLogger) {
-            localDataSource.delete(localId)
         }
     }
 }

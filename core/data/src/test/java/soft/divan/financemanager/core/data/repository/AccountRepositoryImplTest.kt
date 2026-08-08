@@ -12,14 +12,17 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
+import soft.divan.financemanager.core.data.TransactionRunner
 import soft.divan.financemanager.core.data.dto.AccountDto
-import soft.divan.financemanager.core.data.mapper.toDto
+import soft.divan.financemanager.core.data.outbox.OutboxEnqueuer
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.model.OutboxEntityType
+import soft.divan.financemanager.core.database.model.OutboxOperation
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.model.Account
@@ -44,14 +47,22 @@ class AccountRepositoryImplTest {
     private val localDataSource = mockk<AccountLocalDataSource>(relaxUnitFun = true)
     private val transactionLocalDataSource = mockk<TransactionLocalDataSource>()
     private val syncManager = mockk<AccountSyncManager>(relaxed = true)
+    private val outboxEnqueuer = mockk<OutboxEnqueuer>(relaxed = true)
     private val appCoroutineContext = RecordingAppCoroutineContext()
     private val errorLogger = mockk<ErrorLogger>(relaxed = true)
+
+    /** Выполняет блок как есть: атомарность проверяется отдельно, на реальном Room. */
+    private val transactionRunner = object : TransactionRunner {
+        override suspend fun <T> runInTransaction(block: suspend () -> T): T = block()
+    }
 
     private val repository = AccountRepositoryImpl(
         remoteDataSource = remoteDataSource,
         localDataSource = localDataSource,
         transactionLocalDataSource = transactionLocalDataSource,
         syncManager = syncManager,
+        transactionRunner = transactionRunner,
+        outboxEnqueuer = outboxEnqueuer,
         appCoroutineContext = appCoroutineContext,
         errorLogger = errorLogger
     )
@@ -102,14 +113,19 @@ class AccountRepositoryImplTest {
     }
 
     @Test
-    fun `create launches background sync with dto and local id`() = runTest {
+    fun `create enqueues an outbox create operation`() = runTest {
         coEvery { localDataSource.create(any()) } returns Unit
 
         repository.create(account())
-        appCoroutineContext.runAll()
 
         coVerify(exactly = 1) {
-            syncManager.syncCreate(accountDto = account().toDto(), localId = "local-1")
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.ACCOUNT,
+                entityLocalId = "local-1",
+                operation = OutboxOperation.CREATE,
+                targetServerId = null,
+                body = any()
+            )
         }
     }
 
@@ -247,16 +263,15 @@ class AccountRepositoryImplTest {
     }
 
     @Test
-    fun `getById pushes unsynced account to server in background`() = runTest {
-        val local = entity(serverId = null)
-        coEvery { localDataSource.getByLocalId("local-1") } returns local
+    fun `getById does not chase an unsynced account`() = runTest {
+        // Создание такого счёта уже стоит в очереди — догонять его отдельным запросом незачем
+        coEvery { localDataSource.getByLocalId("local-1") } returns entity(serverId = null)
 
         repository.getById("local-1")
         appCoroutineContext.runAll()
 
-        coVerify(exactly = 1) {
-            syncManager.syncCreate(accountDto = local.toDto(), localId = "local-1")
-        }
+        coVerify(exactly = 0) { remoteDataSource.getById(any()) }
+        coVerify(exactly = 0) { outboxEnqueuer.enqueue(any(), any(), any(), any(), any()) }
     }
 
     /* ---------- update ---------- */
@@ -271,38 +286,47 @@ class AccountRepositoryImplTest {
     }
 
     @Test
-    fun `update of synced account stores PENDING_UPDATE and syncs update`() = runTest {
+    fun `update of synced account stores PENDING_UPDATE and enqueues update`() = runTest {
         coEvery { localDataSource.getByLocalId("local-1") } returns entity(serverId = "server-1")
         val updated = slot<AccountEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         val result = repository.update(account().copy(name = "Renamed"))
-        appCoroutineContext.runAll()
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(updated.captured.name).isEqualTo("Renamed")
         assertThat(updated.captured.serverId).isEqualTo("server-1")
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_UPDATE)
         coVerify(exactly = 1) {
-            syncManager.syncUpdate(
-                match { it.serverId == "server-1" && it.syncStatus == SyncStatus.PENDING_UPDATE }
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.ACCOUNT,
+                entityLocalId = "local-1",
+                operation = OutboxOperation.UPDATE,
+                targetServerId = "server-1",
+                body = any()
             )
         }
     }
 
     @Test
-    fun `update of unsynced account stores PENDING_CREATE and syncs create`() = runTest {
+    fun `update of unsynced account addresses the operation by its client id`() = runTest {
+        // serverId ещё нет, но сервер узнает счёт по localId, с которым ушло создание
         coEvery { localDataSource.getByLocalId("local-1") } returns entity(serverId = null)
         val updated = slot<AccountEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         val result = repository.update(account())
-        appCoroutineContext.runAll()
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_CREATE)
         coVerify(exactly = 1) {
-            syncManager.syncCreate(accountDto = account().toDto(), localId = "local-1")
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.ACCOUNT,
+                entityLocalId = "local-1",
+                operation = OutboxOperation.UPDATE,
+                targetServerId = "local-1",
+                body = any()
+            )
         }
     }
 
@@ -342,17 +366,17 @@ class AccountRepositoryImplTest {
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         val result = repository.delete("local-1")
-        appCoroutineContext.runAll()
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_DELETE)
         assertThat(updated.captured.status).isEqualTo(AccountStatus.Active.name)
         coVerify(exactly = 1) {
-            syncManager.syncDelete(
-                match {
-                    it.status == AccountStatus.Active.name &&
-                        it.syncStatus == SyncStatus.PENDING_DELETE
-                }
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.ACCOUNT,
+                entityLocalId = "local-1",
+                operation = OutboxOperation.DELETE,
+                targetServerId = "server-1",
+                body = null
             )
         }
     }
@@ -367,20 +391,23 @@ class AccountRepositoryImplTest {
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         val result = repository.delete("local-1")
-        appCoroutineContext.runAll()
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(updated.captured.status).isEqualTo(AccountStatus.Deleted.name)
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_DELETE)
+        // Архивация уходит тем же DELETE — отдельного обновления на сервер быть не должно
         coVerify(exactly = 1) {
-            syncManager.syncDelete(
-                match {
-                    it.status == AccountStatus.Deleted.name &&
-                        it.syncStatus == SyncStatus.PENDING_DELETE
-                }
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.ACCOUNT,
+                entityLocalId = "local-1",
+                operation = OutboxOperation.DELETE,
+                targetServerId = "server-1",
+                body = null
             )
         }
-        coVerify(exactly = 0) { syncManager.syncUpdate(any()) }
+        coVerify(exactly = 0) {
+            outboxEnqueuer.enqueue(any(), any(), OutboxOperation.UPDATE, any(), any())
+        }
     }
 
     @Test

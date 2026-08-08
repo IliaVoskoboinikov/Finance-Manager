@@ -2,12 +2,14 @@ package soft.divan.financemanager.core.data.outbox
 
 import com.google.gson.Gson
 import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
+import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.model.OutboxEntityType
 import soft.divan.financemanager.core.database.model.OutboxOperation
 import soft.divan.financemanager.core.database.model.OutboxStatus
 import java.time.Clock
 import javax.inject.Inject
+import javax.inject.Provider
 
 /** Тело для операций, у которых его нет (`DELETE`). */
 private const val EMPTY_PAYLOAD = "{}"
@@ -30,7 +32,9 @@ private const val EMPTY_PAYLOAD = "{}"
 class OutboxEnqueuer @Inject constructor(
     private val localDataSource: OutboxLocalDataSource,
     private val gson: Gson,
-    private val clock: Clock
+    private val clock: Clock,
+    private val appCoroutineContext: AppCoroutineContext,
+    private val processor: Provider<OutboxProcessor>
 ) {
 
     /**
@@ -51,6 +55,11 @@ class OutboxEnqueuer @Inject constructor(
         body: Any? = null
     ): Long {
         val now = clock.millis()
+
+        // Разбор очереди планируется здесь, а не в вызывающем коде: так «положили операцию» и
+        // «попробовали отправить» нельзя рассинхронизировать, забыв про второе. Внутри транзакции
+        // launchSync откладывает запуск до commit — раньше отправлять нечего.
+        appCoroutineContext.launchSync { processor.get().process() }
 
         return localDataSource.enqueue(
             OutboxEntryEntity(

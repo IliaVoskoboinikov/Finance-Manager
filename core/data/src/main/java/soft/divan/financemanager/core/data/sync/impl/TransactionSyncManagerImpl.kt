@@ -54,17 +54,13 @@ class TransactionSyncManagerImpl @Inject constructor(
     /**
      * Точка входа полной синхронизации.
      *
-     * Порядок:
-     * 1. pullServerData() — обновление локальных данных
-     * 2. pushLocalChanges() — отправка pending-операций
+     * Тянет актуальные данные с сервера. Отправку локальных изменений выполняет очередь
+     * исходящих операций, а не этот менеджер.
      *
-     * Возвращает true, если синхронизация завершилась без исключений.
+     * Возвращает true, если шаг завершился без исключений.
      */
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
-        return runCatching {
-            pullServerData()
-            pushLocalChanges()
-        }.isSuccess
+        return runCatching { pullServerData() }.isSuccess
     }
 
     /**
@@ -86,131 +82,6 @@ class TransactionSyncManagerImpl @Inject constructor(
                 ),
                 endDate = ApiDateMapper.toApiDate(Instant.now())
             )
-        }
-    }
-
-    /**
-     * Отправляет новую локальную транзакцию на сервер.
-     *
-     * Требует наличия accountServerId.
-     *
-     * После успешного ответа:
-     * - обновляет локальную запись
-     * - устанавливает serverId
-     * - помечает как SYNCED
-     */
-    override suspend fun syncCreate(transactionEntity: TransactionEntity) {
-        val accountServerId = transactionEntity.accountServerId ?: return
-
-        val created = safeApiCall(errorLogger) {
-            remoteDataSource.create(transactionEntity.toDto(accountServerId))
-        }
-
-        val confirmed = when {
-            created is DomainResult.Success -> created
-
-            // Сеть заблокирована намеренно (гость / нет сессии) — перепроверять нечего
-            created is DomainResult.Failure && created.error.isNetworkBlocked() -> return
-
-            // Read-back при потере ACK: сервер мог применить POST и не доставить ответ.
-            // Запись адресуема по localId, т.к. create отправляется с клиентским id.
-            else ->
-                safeApiCall(errorLogger) {
-                    remoteDataSource.get(transactionEntity.localId)
-                }
-        }
-
-        confirmed.onSuccess { transactionDto ->
-            updateLocalFromRemote(
-                transactionDto.toEntity(
-                    localId = transactionEntity.localId,
-                    accountLocalId = transactionEntity.accountLocalId,
-                    currencyId = transactionEntity.currencyId,
-                    type = TransactionType.valueOf(transactionEntity.type),
-                    syncStatus = SyncStatus.SYNCED
-                )
-            )
-        }
-    }
-
-    /**
-     * Отправляет обновление транзакции на сервер.
-     *
-     * Требует:
-     * - serverId транзакции
-     * - serverId аккаунта
-     *
-     * После успешного ответа синхронизирует локальную запись.
-     */
-    override suspend fun syncUpdate(transactionEntity: TransactionEntity) {
-        transactionEntity.serverId?.let { serverId ->
-            transactionEntity.accountServerId?.let { accountServerId ->
-                safeApiCall(errorLogger) {
-                    remoteDataSource.update(
-                        id = serverId,
-                        transaction = transactionEntity.toUpdateDto(accountServerId)
-                    )
-                }.onSuccess {
-                    updateLocalFromRemote(
-                        transactionEntity.copy(syncStatus = SyncStatus.SYNCED)
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * Удаляет транзакцию.
-     *
-     * Если serverId == null:
-     * - запись никогда не была синхронизирована → удаляем локально
-     *
-     * Если serverId != null:
-     * - удаляем на сервере
-     * - затем удаляем локально
-     *
-     * Ответ 404 трактуется как успех: на сервере записи уже нет — цель удаления достигнута
-     * (типично для повтора после потери ACK). См. [isNotFound].
-     */
-    override suspend fun syncDelete(transactionEntity: TransactionEntity) {
-        val serverId = transactionEntity.serverId
-        if (serverId == null) {
-            deleteLocalTransaction(transactionEntity.localId)
-            return
-        }
-
-        safeApiCall(errorLogger) {
-            remoteDataSource.delete(serverId)
-        }.fold(
-            onSuccess = { deleteLocalTransaction(transactionEntity.localId) },
-            onFailure = { error ->
-                if (error.isNotFound()) deleteLocalTransaction(transactionEntity.localId)
-            }
-        )
-    }
-
-    /**
-     * Обрабатывает все локальные транзакции со статусом pending.
-     *
-     * Стратегия:
-     * - PENDING_CREATE  → syncCreate
-     * - PENDING_UPDATE  → syncUpdate
-     * - PENDING_DELETE  → syncDelete
-     *
-     * Используется в background-синхронизации.
-     */
-    private suspend fun pushLocalChanges() {
-        safeDbCall(errorLogger) {
-            localDataSource.getPendingSync()
-        }.onSuccess { transactionEntities ->
-            transactionEntities.forEach { transactionEntity ->
-                when (transactionEntity.syncStatus) {
-                    SyncStatus.PENDING_CREATE -> syncCreate(transactionEntity)
-                    SyncStatus.PENDING_UPDATE -> syncUpdate(transactionEntity)
-                    SyncStatus.PENDING_DELETE -> syncDelete(transactionEntity)
-                    SyncStatus.SYNCED -> Unit
-                }
-            }
         }
     }
 
@@ -291,19 +162,6 @@ class TransactionSyncManagerImpl @Inject constructor(
     private suspend fun updateLocalFromRemote(transactionEntity: TransactionEntity) {
         safeDbCall(errorLogger) {
             localDataSource.update(transactionEntity)
-        }
-    }
-
-    /**
-     * Физическое удаление транзакции из локальной БД.
-     *
-     * Вызывается:
-     * - после успешного server-delete
-     * - либо если запись не была синхронизирована
-     */
-    private suspend fun deleteLocalTransaction(localId: String) {
-        safeDbCall(errorLogger) {
-            localDataSource.delete(localId)
         }
     }
 }

@@ -160,8 +160,10 @@ sequenceDiagram
   после enqueue; уважать `nextAttemptAt`.
 - [ ] **Dead-letter surfacing** — FAILED → `ErrorLogger` + (опц.) индикатор «не синхронизировано»
   в UI + ручной retry.
-- [ ] **Ретир** per-manager `pushLocalChanges` (Account/Transaction/Category SyncManager); pull
-  остаётся.
+- [x] **Ретир** per-manager `pushLocalChanges` (Account/Transaction/Category SyncManager); pull
+  остаётся. Репозитории пишут в очередь внутри `runInTransaction`; `syncCreate/syncUpdate/syncDelete`
+  удалены из интерфейсов менеджеров; `SyncCoordinator` разбирает очередь после pull — **всегда**,
+  даже если pull не удался. ✅ *(итерация 10)*
 - [ ] **(Опц.) Коалесинг** — CREATE+DELETE до синка → отменить оба; CREATE→UPDATE → смёрджить.
   v1 можно пропустить.
 - [ ] **Тесты** (Robolectric + in-memory Room, как `RoomTransactionRunnerTest`): атомарность
