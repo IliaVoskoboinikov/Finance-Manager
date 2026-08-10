@@ -74,7 +74,9 @@ flowchart TB
 Ключевая логика синка находится в `SyncWorker`:
 
 1. Запускается `SyncWorker` (через `DelegatingWorker`) по расписанию или по требованию.
-2. Внутри `doWork()` вызывается `SyncCoordinator.syncAll()`, который тянет данные **с сервера**:
+2. Внутри `doWork()` вызывается `SyncCoordinator.syncAll()`, который тянет данные **с сервера**.
+   Порядок важен (категории нужны транзакциям, счета тоже), но сбой шага **не отменяет
+   следующие**: каждый работает с тем, что уже есть локально, и приносит частичный прогресс —
     - `CategorySyncManagerImpl.sync()` — категории не зависят ни от кого;
     - `AccountSyncManagerImpl.sync()` — счета опираются на категории;
     - `TransactionSyncManagerImpl.sync()` — транзакции зависят от счетов;
@@ -93,10 +95,11 @@ flowchart TB
 
 ```kotlin
 suspend fun syncAll(): Boolean {
-    val pulled =
-        runStep("CategorySync") { categorySyncManager.sync() } &&
-            runStep("AccountSync") { accountSyncManager.sync() } &&
-            runStep("TransactionSync") { transactionSyncManager.sync() }
+    // Результаты в переменные: `&&` пропустил бы оставшиеся шаги при первом же сбое
+    val categoriesPulled = runStep("CategorySync") { categorySyncManager.sync() }
+    val accountsPulled = runStep("AccountSync") { accountSyncManager.sync() }
+    val transactionsPulled = runStep("TransactionSync") { transactionSyncManager.sync() }
+    val pulled = categoriesPulled && accountsPulled && transactionsPulled
 
     // Очередь разбирается независимо от исхода pull
     val pushed = runStep("OutboxSync") { outboxProcessor.process(); true }

@@ -80,25 +80,26 @@ class SyncCoordinatorImplTest {
     }
 
     @Test
-    fun `syncAll short-circuits when category sync fails`() = runTest {
+    fun `syncAll keeps pulling the rest when category sync fails`() = runTest {
         stubManagers(category = false)
 
         val result = coordinator.syncAll()
 
+        // Сбой чтения категорий не повод оставить счета и транзакции без обновления
         assertThat(result).isFalse()
-        coVerify(exactly = 0) { accountSyncManager.syncWith(any()) }
-        coVerify(exactly = 0) { transactionSyncManager.syncWith(any()) }
+        coVerify(exactly = 1) { accountSyncManager.syncWith(any()) }
+        coVerify(exactly = 1) { transactionSyncManager.syncWith(any()) }
         coVerify(exactly = 0) { setLastSyncTimeUseCase(any()) }
     }
 
     @Test
-    fun `syncAll short-circuits when account sync fails`() = runTest {
+    fun `syncAll keeps pulling transactions when account sync fails`() = runTest {
         stubManagers(account = false)
 
         val result = coordinator.syncAll()
 
         assertThat(result).isFalse()
-        coVerify(exactly = 0) { transactionSyncManager.syncWith(any()) }
+        coVerify(exactly = 1) { transactionSyncManager.syncWith(any()) }
         coVerify(exactly = 0) { setLastSyncTimeUseCase(any()) }
     }
 
@@ -113,13 +114,16 @@ class SyncCoordinatorImplTest {
     }
 
     @Test
-    fun `syncAll treats manager exception as failed step`() = runTest {
+    fun `syncAll treats manager exception as failed step without stopping`() = runTest {
+        stubManagers()
         coEvery { categorySyncManager.syncWith(any()) } throws RuntimeException("boom")
 
         val result = coordinator.syncAll()
 
         assertThat(result).isFalse()
-        coVerify(exactly = 0) { accountSyncManager.syncWith(any()) }
+        // Исключение в одном менеджере не должно ронять весь цикл синхронизации
+        coVerify(exactly = 1) { accountSyncManager.syncWith(any()) }
+        coVerify(exactly = 1) { outboxProcessor.process() }
     }
 
     @Test

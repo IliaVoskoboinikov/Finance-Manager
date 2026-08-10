@@ -21,14 +21,26 @@ class SyncCoordinatorImpl @Inject constructor(
      * Полный цикл синхронизации: сначала забираем изменения с сервера, затем разбираем очередь
      * исходящих операций.
      *
-     * Очередь обрабатывается **последней и всегда**, даже если какой-то pull не удался: накопленные
-     * локальные изменения не должны ждать из-за проблем с чтением — их отправка не зависит от него.
+     * Шаги выполняются **все**, независимо от исхода предыдущих. Сбой чтения категорий — не повод
+     * оставить счета и транзакции без обновления: каждый шаг самодостаточен и приносит пользу сам
+     * по себе, а недостающее подтянет ближайший прогон.
+     *
+     * Очередь обрабатывается **последней и тоже всегда**: накопленные локальные изменения не должны
+     * ждать отправки из-за проблем с чтением — оно на неё не влияет.
+     *
+     * Возвращает `true`, только если удались все шаги: по этому признаку [SyncCoordinator]
+     * решает, обновлять ли время последней успешной синхронизации и просить ли WorkManager
+     * повторить работу.
      */
     override suspend fun syncAll(): Boolean {
-        val pulled =
-            runStep("CategorySync") { categorySyncManager.sync() } &&
-                runStep("AccountSync") { accountSyncManager.sync() } &&
-                runStep("TransactionSync") { transactionSyncManager.sync() }
+        // Порядок важен — категории нужны транзакциям, счета тоже, — но неудача шага не отменяет
+        // следующие: они работают с тем, что уже есть локально, и приносят частичный прогресс.
+        // Результаты собираем в переменные, иначе `&&` пропустил бы оставшиеся шаги.
+        val categoriesPulled = runStep("CategorySync") { categorySyncManager.sync() }
+        val accountsPulled = runStep("AccountSync") { accountSyncManager.sync() }
+        val transactionsPulled = runStep("TransactionSync") { transactionSyncManager.sync() }
+
+        val pulled = categoriesPulled && accountsPulled && transactionsPulled
 
         val pushed = runStep("OutboxSync") {
             outboxProcessor.process()
