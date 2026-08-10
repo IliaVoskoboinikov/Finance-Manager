@@ -13,7 +13,7 @@
 
 Очередь `outbox` наполняется **в той же Room-транзакции**, что и доменное изменение, поэтому
 запись данных и намерение их отправить фиксируются атомарно. Дизайн и жизненный цикл записи —
-[docs/outbox-plan.md](../../docs/outbox-plan.md), гарантии доставки — [docs/idempotency.md](../../docs/idempotency.md).
+[docs/outbox.md](../../docs/outbox.md), гарантии доставки — [docs/idempotency.md](../../docs/idempotency.md).
 
 > Версия схемы (`@Database(version = …)`) обязана быть строго больше `user_version` прешипнутого
 > ассета `category_db.db` (= 1). Любое изменение схемы — включая новую таблицу — требует поднятия

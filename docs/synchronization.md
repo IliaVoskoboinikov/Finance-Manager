@@ -49,10 +49,14 @@ flowchart TB
       SyncWorker["SyncWorker\n(CoroutineWorker + Synchronizer)"]
     end
 
-    subgraph DATA["core:data – sync managers"]
+    subgraph DATA["core:data – pull с сервера"]
       CatSync["CategorySyncManagerImpl"]
       AccSync["AccountSyncManagerImpl"]
       TxSync["TransactionSyncManagerImpl"]
+    end
+
+    subgraph OUTBOX["core:data – отправка на сервер"]
+      Proc["OutboxProcessor"]
     end
 
     SyncScreen -->|"setInterval / syncNow"| SYNC_DOMAIN
@@ -61,6 +65,7 @@ flowchart TB
     SyncWorker --> CatSync
     SyncWorker --> AccSync
     SyncWorker --> TxSync
+    SyncWorker --> Proc
     SyncWorker --> SetLastTime
 ```
 
@@ -69,25 +74,36 @@ flowchart TB
 Ключевая логика синка находится в `SyncWorker`:
 
 1. Запускается `SyncWorker` (через `DelegatingWorker`) по расписанию или по требованию.
-2. Внутри `doWork()`:
-    - выполняется `CategorySyncManagerImpl.sync()` — категории не зависят ни от кого;
-    - выполняется `AccountSyncManagerImpl.sync()` — счета опираются на категории;
-    - выполняется `TransactionSyncManagerImpl.sync()` — транзакции зависят от счетов;
-3. Каждый шаг оборачивается в `runStep(name) { ... }`:
+2. Внутри `doWork()` вызывается `SyncCoordinator.syncAll()`, который тянет данные **с сервера**:
+    - `CategorySyncManagerImpl.sync()` — категории не зависят ни от кого;
+    - `AccountSyncManagerImpl.sync()` — счета опираются на категории;
+    - `TransactionSyncManagerImpl.sync()` — транзакции зависят от счетов;
+3. Затем разбирается очередь исходящих операций — `OutboxProcessor.process()`. Этот шаг
+   выполняется **всегда**, даже если какой-то pull не удался: накопленные локальные изменения не
+   должны ждать отправки из-за проблем с чтением (см. [outbox.md](./outbox.md));
+4. Каждый шаг оборачивается в `runStep(name) { ... }`:
     - логируем старт и завершение;
-    - при ошибке возвращаем `Result.retry()`, чтобы WorkManager повторил задачу;
-4. При успешном выполнении всех шагов вызывается `SetLastSyncTimeUseCase` с текущим временем.
+    - при ошибке `SyncWorker` возвращает `Result.retry()`, чтобы WorkManager повторил задачу;
+5. При успешном выполнении всех шагов вызывается `SetLastSyncTimeUseCase` с текущим временем.
+
+> Отправкой локальных изменений менеджеры больше не занимаются: `syncWith` у них выполняет только
+> pull. За доставку на сервер отвечает очередь — с повторами, backoff и dead-letter.
 
 Упрощённый псевдокод:
 
 ```kotlin
-suspend fun doWork(): Result = withContext(ioDispatcher) {
-    if (!runStep("CategorySync") { categorySyncManager.sync() }) return Result.retry()
-    if (!runStep("AccountSync") { accountSyncManager.sync() }) return Result.retry()
-    if (!runStep("TransactionSync") { transactionSyncManager.sync() }) return Result.retry()
+suspend fun syncAll(): Boolean {
+    val pulled =
+        runStep("CategorySync") { categorySyncManager.sync() } &&
+            runStep("AccountSync") { accountSyncManager.sync() } &&
+            runStep("TransactionSync") { transactionSyncManager.sync() }
 
-    setLastSyncTimeUseCase(System.currentTimeMillis())
-    Result.success()
+    // Очередь разбирается независимо от исхода pull
+    val pushed = runStep("OutboxSync") { outboxProcessor.process(); true }
+
+    val success = pulled && pushed
+    if (success) setLastSyncTimeUseCase(System.currentTimeMillis())
+    return success
 }
 ```
 

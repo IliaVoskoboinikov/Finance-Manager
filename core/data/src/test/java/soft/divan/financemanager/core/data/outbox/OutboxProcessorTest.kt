@@ -218,6 +218,20 @@ class OutboxProcessorTest {
         coVerify(exactly = 0) { sender.send(any()) }
     }
 
+    @Test
+    fun `sent entries are cleaned up even when the run stops early`() = runTest {
+        givenReady(entry(sequenceNo = 1L), entry(sequenceNo = 2L, entityLocalId = "T2"))
+        coEvery { sender.send(any()) } returnsMany listOf(
+            OutboxSendResult.Success,
+            OutboxSendResult.Transient("HTTP 503")
+        )
+
+        processor.process()
+
+        // Первая запись отправлена — она не должна ждать удаления до следующего удачного прогона
+        coVerify(exactly = 1) { localDataSource.deleteCompleted() }
+    }
+
     /* ---------- аренда ---------- */
 
     @Test

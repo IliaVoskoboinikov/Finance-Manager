@@ -3,8 +3,16 @@
 ## Responsibility
 
 Слой управления данными приложения: реализации репозиториев (`core:domain`), локальные и
-удалённые data sources, маппинг Entity/DTO ↔ Domain, sync-менеджеры (pull/push,
-last-write-wins) и транзакционный механизм.
+удалённые data sources, маппинг Entity/DTO ↔ Domain, sync-менеджеры (pull с сервера,
+last-write-wins), очередь исходящих операций и транзакционный механизм.
+
+## Направления синхронизации
+
+Два направления разделены: **с сервера** — sync-менеджеры (`sync/`), **на сервер** — очередь
+исходящих операций (`outbox/`). Репозитории не ходят в сеть при записи: они кладут операцию в
+очередь той же транзакцией, что и сами данные, а `OutboxProcessor` отправляет её с повторами и
+dead-letter. Дизайн — [docs/outbox.md](../../docs/outbox.md), гарантии от дублей —
+[docs/idempotency.md](../../docs/idempotency.md).
 
 ## Transactions & post-commit sync
 

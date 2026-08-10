@@ -76,17 +76,21 @@ class OutboxProcessor @Inject constructor(
             limit = BATCH_LIMIT
         )
 
-        for (entry in ready) {
-            if (!localDataSource.markInProgress(entry.sequenceNo, staleBefore, clock.millis())) {
-                // Запись уже забрал параллельный прогон — не отправляем её второй раз
-                continue
+        try {
+            for (entry in ready) {
+                if (!localDataSource.markInProgress(entry.sequenceNo, staleBefore, clock.millis())) {
+                    // Запись уже забрал параллельный прогон — не отправляем её второй раз
+                    continue
+                }
+
+                if (!handle(entry)) return false
             }
-
-            if (!handle(entry)) return false
+            return true
+        } finally {
+            // Чистим и при досрочной остановке: иначе уже отправленные записи копились бы в
+            // очереди до ближайшего полностью успешного прогона.
+            localDataSource.deleteCompleted()
         }
-
-        localDataSource.deleteCompleted()
-        return true
     }
 
     /** Обрабатывает исход отправки. Возвращает `false`, если прогон дальше идти не должен. */
