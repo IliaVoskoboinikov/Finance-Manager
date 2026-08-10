@@ -12,8 +12,6 @@ import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
-import soft.divan.financemanager.core.data.sync.util.isNetworkBlocked
-import soft.divan.financemanager.core.data.sync.util.isNotFound
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
@@ -30,17 +28,15 @@ import javax.inject.Inject
 /**
  * Реализация [AccountSyncManager].
  *
- * Отвечает за двустороннюю синхронизацию аккаунтов:
- *
- * 1. Pull — получение данных с сервера (server → local)
- * 2. Push — отправка локальных изменений (local → server)
+ * Отвечает за одно направление — **pull**, получение данных с сервера (server → local).
+ * Обратное направление обеспечивает очередь исходящих операций (см. `docs/outbox.md`).
  *
  * Особенности реализации:
  * - Offline-first: локальная БД является источником истины
- * - Разрешение конфликтов по updatedAt (last-write-wins)
+ * - Разрешение конфликтов по updatedAt (last-write-wins), но строку с неотправленной операцией
+ *   серверная версия не перезаписывает — см. [canBeOverwritten]
  * - Double-check locking через Mutex для защиты от параллельного pull
  * - Все операции обёрнуты в safeApiCall / safeDbCall
- *
  */
 class AccountSyncManagerImpl @Inject constructor(
     private val remoteDataSource: AccountRemoteDataSource,

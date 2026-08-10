@@ -82,7 +82,7 @@ flowchart TD
     A["delete(id)"] --> B{"есть операции?\n(локально)"}
     B -- "нет" --> C["status оставляем,\nsyncStatus = PENDING_DELETE"]
     B -- "да"  --> D["status = Deleted,\nsyncStatus = PENDING_DELETE"]
-    C --> E["syncDelete → DELETE /account/{id}"]
+    C --> E["очередь outbox → DELETE /account/{id}"]
     D --> E
     E --> F{"status == Deleted?"}
     F -- "нет" --> G["удаляем строку локально"]
@@ -92,7 +92,7 @@ flowchart TD
 - **Список/пикер**: [`AccountRepositoryImpl.getAll()`](../core/data/src/main/java/soft/divan/financemanager/core/data/repository/AccountRepositoryImpl.kt)
   отдаёт только `status != Deleted` (и без `PENDING_DELETE`). Архивный счёт исчезает из UI
   сразу — ещё до подтверждения сервером.
-- **Синхронизация**: [`AccountSyncManagerImpl.syncDelete`](../core/data/src/main/java/soft/divan/financemanager/core/data/sync/impl/AccountSyncManagerImpl.kt)
+- **Синхронизация**: [`AccountOutboxSender`](../core/data/src/main/java/soft/divan/financemanager/core/data/outbox/AccountOutboxSender.kt)
   после успешного серверного `DELETE` по статусу решает: `Deleted` → оставить запись и пометить
   `SYNCED`; иначе → удалить физически. `serverId == null` (счёт не был на сервере) — сетевого
   вызова нет: архивную запись оставляем локально, обычную удаляем.
@@ -139,7 +139,7 @@ flowchart TD
 | data | `core/data/.../dto/AccountDto.kt` | поле `status` на проводе |
 | data | `core/data/.../mapper/AccountDataMapper.kt` | конвертация строка↔enum |
 | data | `core/data/.../repository/AccountRepositoryImpl.kt` | `delete` / `getAll` фильтр |
-| data | `core/data/.../sync/impl/AccountSyncManagerImpl.kt` | `syncDelete` (оставить/удалить) |
+| data | `core/data/.../outbox/AccountOutboxSender.kt` | удаление на сервере: оставить архивную запись или удалить |
 | database | `core/database/.../entity/AccountEntity.kt` | `status: String` |
 | feature | `feature/account/impl/.../HasAccountTransactionsUseCase.kt` | флаг для диалога |
 | feature | `feature/account/impl/.../screens/DeleteAccountDialog.kt` | адаптивный диалог |

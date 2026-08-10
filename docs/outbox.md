@@ -6,7 +6,6 @@
 Смежные документы: [Idempotency](./idempotency.md) (почему повтор не создаёт дублей),
 [Post-commit sync](./post-commit-sync.md) (механизм отложенного запуска),
 [Synchronization](./synchronization.md) (обратное направление — pull с сервера).
-План работ и статус: [outbox-plan.md](./outbox-plan.md).
 
 ## Зачем это нужно
 
@@ -104,6 +103,36 @@ private fun TransactionEntity.syncId(): String = serverId ?: localId
 
 Строгий порядок очереди гарантирует, что создание уедет раньше правок. Без этого приёма пришлось
 бы слать второй `CREATE`, а сервер отбросил бы его как дубль — и правка потерялась бы.
+
+### Полный путь одной операции
+
+```mermaid
+sequenceDiagram
+    participant UC as UseCase
+    participant TR as RoomTransactionRunner
+    participant Room as Room (домен + outbox)
+    participant OP as OutboxProcessor
+    participant Srv as Сервер
+
+    UC->>TR: runInTransaction { ... }
+    TR->>Room: withTransaction { запись домена + INSERT outbox(PENDING) }
+    Note over Room: атомарно — либо оба факта,<br/>либо ни одного
+    Room-->>TR: COMMIT
+    TR->>OP: разбор очереди (после commit)
+    loop пока есть готовые записи
+        OP->>Srv: POST/PUT/DELETE, id = ключ идемпотентности
+        alt 2xx / повтор опознан / 404 на удалении
+            Srv-->>OP: успех
+            OP->>Room: outbox → COMPLETED, домен → SYNCED
+        else 5xx / обрыв сети
+            Srv-->>OP: временный сбой
+            OP->>Room: attemptCount++, nextAttemptAt = backoff
+        else отказ по существу / попытки исчерпаны
+            Srv-->>OP: терминально
+            OP->>Room: outbox → FAILED (dead-letter)
+        end
+    end
+```
 
 ## Жизненный цикл записи
 

@@ -12,8 +12,6 @@ import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
 import soft.divan.financemanager.core.data.sync.util.Synchronizer
-import soft.divan.financemanager.core.data.sync.util.isNetworkBlocked
-import soft.divan.financemanager.core.data.sync.util.isNotFound
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
@@ -32,15 +30,14 @@ import javax.inject.Inject
 /**
  * Реализация [TransactionSyncManager].
  *
- * Отвечает за двустороннюю синхронизацию транзакций:
- *
- * 1. Pull — загрузка транзакций с сервера по каждому аккаунту
- * 2. Push — отправка локальных изменений (create/update/delete)
+ * Отвечает за одно направление — **pull**, загрузку транзакций с сервера по каждому аккаунту.
+ * Обратное направление обеспечивает очередь исходящих операций (см. `docs/outbox.md`).
  *
  * Архитектурные принципы:
  * - Offline-first: локальная БД — источник истины
  * - Синхронизация выполняется на уровне аккаунта
- * - Разрешение конфликтов по updatedAt (last-write-wins)
+ * - Разрешение конфликтов по updatedAt (last-write-wins), но строку с неотправленной операцией
+ *   серверная версия не перезаписывает — см. [canBeOverwritten]
  * - Все операции изолированы через safeApiCall / safeDbCall
  */
 class TransactionSyncManagerImpl @Inject constructor(
