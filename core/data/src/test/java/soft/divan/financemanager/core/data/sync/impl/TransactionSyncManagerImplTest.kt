@@ -224,16 +224,52 @@ class TransactionSyncManagerImplTest {
         } returns Response.success(listOf(transactionDto(id = "local-t1")))
         coEvery { localDataSource.getBySyncIds(listOf("local-t1")) } returns listOf(pending)
         coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
-        val updated = slot<TransactionEntity>()
-        coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
 
-        // Дубликат не создаётся: запись опознана и подтверждена по тому же localId
+        // Дубликат не создаётся: запись опознана по тому же localId.
+        // Подтвердит её отправитель очереди — pull в чужую незавершённую операцию не лезет.
         coVerify(exactly = 0) { localDataSource.insert(any()) }
-        assertThat(updated.captured.localId).isEqualTo("local-t1")
-        assertThat(updated.captured.serverId).isEqualTo("local-t1")
-        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+    }
+
+    @Test
+    fun `pull does not overwrite a transaction with unsent local changes`() = runTest {
+        // Пользователь поправил сумму, операция ещё в очереди; серверная версия её не знает
+        val edited = transactionEntity(
+            syncStatus = SyncStatus.PENDING_UPDATE,
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
+        } returns Response.success(listOf(transactionDto(updatedAt = "2024-02-01T00:00:00Z")))
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns listOf(edited)
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
+
+        syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
+
+        // Иначе правка откатилась бы на глазах у пользователя до отправки из очереди
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+    }
+
+    @Test
+    fun `pull does not resurrect a transaction awaiting deletion`() = runTest {
+        val deleted = transactionEntity(
+            syncStatus = SyncStatus.PENDING_DELETE,
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
+        } returns Response.success(listOf(transactionDto(updatedAt = "2024-02-01T00:00:00Z")))
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns listOf(deleted)
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
+
+        syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
+
+        // Перезапись вернула бы транзакцию в списки: PENDING_DELETE скрывает её, SYNCED — нет
+        coVerify(exactly = 0) { localDataSource.update(any()) }
     }
 
     /* ---------- syncWith ---------- */

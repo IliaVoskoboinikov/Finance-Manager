@@ -156,10 +156,10 @@ sequenceDiagram
   (`OutboxCallOutcome`): `404` на delete → идемпотентный успех, `401` → `Blocked`, `5xx`/сеть →
   `Transient`, прочие `4xx` → `Terminal`. Read-back после неуспешного create перенесён из §1;
   архивная семантика удаления счёта сохранена. ✅ *(итерация 8)*
-- [ ] **Драйвер ретраев** — WorkManager (`:sync`) по расписанию + оппортунистический прогон
-  после enqueue; уважать `nextAttemptAt`.
-- [ ] **Dead-letter surfacing** — FAILED → `ErrorLogger` + (опц.) индикатор «не синхронизировано»
-  в UI + ручной retry.
+- [x] **Драйвер ретраев** — WorkManager (`:sync`) по расписанию + оппортунистический прогон
+  после enqueue; уважать `nextAttemptAt`. ✅ *(итерация 11: `SyncWorker → syncAll → process()`, при неуспехе `Result.retry()`; оппортунистический прогон планирует `OutboxEnqueuer`)*
+- [x] **Dead-letter surfacing** — FAILED → `ErrorLogger` + (опц.) индикатор «не синхронизировано»
+  в UI + ручной retry. ✅ *(итерация 11: `ErrorLogger` в `giveUp` + `OutboxRepository.observeFailedCount()/retryFailed()` и use case'ы. Индикатор в UI — необязательный остаток)*
 - [x] **Ретир** per-manager `pushLocalChanges` (Account/Transaction/Category SyncManager); pull
   остаётся. Репозитории пишут в очередь внутри `runInTransaction`; `syncCreate/syncUpdate/syncDelete`
   удалены из интерфейсов менеджеров; `SyncCoordinator` разбирает очередь после pull — **всегда**,
@@ -179,17 +179,15 @@ sequenceDiagram
 - [x] ~~**(Опц.) Коалесинг**~~ — **решено не делать**: это оптимизация, а не корректность (без неё
   сервер получит лишние запросы, но верный итог), а схлопывание конфликтует с идеей неизменяемого
   снимка и требует различать PENDING/IN_PROGRESS. Для личных финансов объёмы малы.
-- [ ] **Тесты** (Robolectric + in-memory Room, как `RoomTransactionRunnerTest`): атомарность
+- [x] **Тесты** (Robolectric + in-memory Room, как `RoomTransactionRunnerTest`): атомарность
   enqueue (rollback дропает outbox), переходы статусов, backoff/dead-letter, порядок,
-  replay/404-as-success, poison→FAILED.
-
+  replay/404-as-success, poison→FAILED. ✅ *(~72 теста по outbox: атомарность enqueue, переходы статусов, аренда, backoff/dead-letter, порядок, replay/404-as-success, отправители)*
 ### 3. Другие фиксы
-- [ ] **Pull-vs-push.** Pull не должен затирать domain-строку с незавершённой outbox-записью и
-  сбрасывать её статус в `SYNCED` (потеря локальной правки). Либо push-before-pull, либо проверка
-  outbox перед перезаписью.
-- [ ] **Убрать тихий skip.** `transaction.syncCreate` при `accountServerId == null` — no-op.
-  С `serverId := localId` id родителя известен на enqueue → отвязаться от `accountServerId`
-  (снять TODO на `TransactionEntity`).
+- [x] **Pull-vs-push.** Pull больше не принимает серверную версию поверх строки, у которой есть
+  незавершённая операция в очереди: к last-write-wins добавлено условие `syncStatus == SYNCED`
+  (`canBeOverwritten`). Отдельный запрос к очереди не нужен — `syncStatus` меняется с ней в
+  лок-степ. Чинит не потерю данных (снимок в очереди всё равно доедет), а враньё на экране:
+  откат правки до отправки и **воскрешение записи, ожидающей удаления**. ✅ *(итерация 14)*
 - [ ] **SyncCoordinator short-circuit.** `Category && Account && Transaction` — падение категории
   блокирует push аккаунтов и транзакций. Сделать шаги независимыми (порядок зависимостей
   сохранить, всё из-за одного не отменять).

@@ -145,13 +145,30 @@ class TransactionSyncManagerImpl @Inject constructor(
                 if (localTransaction == null) {
                     //  Локальной транзакции нет → создаём
                     safeDbCall(errorLogger) { localDataSource.insert(entity) }
-                } else if (TimeMapper.isAfter(transactionDto.updatedAt, localTransaction.updatedAt)) {
+                } else if (localTransaction.canBeOverwritten(transactionDto.updatedAt)) {
                     // Если есть, то разрешаем конфликт: побеждает та, что менялась позже
                     updateLocalFromRemote(entity)
                 }
             }
         }
     }
+
+    /**
+     * Можно ли принять серверную версию поверх локальной.
+     *
+     * Два условия. Первое — обычный last-write-wins по времени изменения.
+     *
+     * Второе: строка не должна ждать отправки. Пока `syncStatus` не `SYNCED`, у записи есть
+     * незавершённая операция в очереди, и серверная версия заведомо не знает о ней. Перезапись
+     * в этот момент откатила бы правку на глазах у пользователя, а `PENDING_DELETE` и вовсе
+     * вернула бы удалённую транзакцию в списки. Данные при этом не терялись бы — очередь хранит
+     * снимок и всё равно доотправит его, — но состояние на экране успело бы соврать.
+     *
+     * Дождаться отправки безопасно: после неё запись станет `SYNCED`, и ближайший pull разрешит
+     * конфликт уже честно.
+     */
+    private fun TransactionEntity.canBeOverwritten(serverUpdatedAt: String): Boolean =
+        syncStatus == SyncStatus.SYNCED && TimeMapper.isAfter(serverUpdatedAt, updatedAt)
 
     /**
      * Унифицированное обновление локальной транзакции

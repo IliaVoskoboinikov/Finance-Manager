@@ -142,7 +142,7 @@ class AccountSyncManagerImpl @Inject constructor(
                             )
                         )
                     }
-                } else if (TimeMapper.isAfter(accountDto.updatedAt, localAccount.updatedAt)) {
+                } else if (localAccount.canBeOverwritten(accountDto.updatedAt)) {
                     // Конфликт → побеждает тот, кто обновлялся позже
                     updateLocalFromRemote(
                         accountDto = accountDto,
@@ -152,6 +152,23 @@ class AccountSyncManagerImpl @Inject constructor(
             }
         }
     }
+
+    /**
+     * Можно ли принять серверную версию поверх локальной.
+     *
+     * Два условия. Первое — обычный last-write-wins по времени изменения.
+     *
+     * Второе: строка не должна ждать отправки. Пока `syncStatus` не `SYNCED`, у записи есть
+     * незавершённая операция в очереди, и серверная версия заведомо не знает о ней. Перезапись
+     * в этот момент откатила бы правку на глазах у пользователя, а `PENDING_DELETE` и вовсе
+     * воскресила бы удалённый счёт в списках. Данные при этом не терялись бы — очередь хранит
+     * снимок и всё равно доотправит его, — но состояние на экране успело бы соврать.
+     *
+     * Дождаться отправки безопасно: после неё запись станет `SYNCED`, и ближайший pull разрешит
+     * конфликт уже честно.
+     */
+    private fun AccountEntity.canBeOverwritten(serverUpdatedAt: String): Boolean =
+        syncStatus == SyncStatus.SYNCED && TimeMapper.isAfter(serverUpdatedAt, updatedAt)
 
     /**
      * Унифицированный метод обновления локальной записи

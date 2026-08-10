@@ -128,16 +128,46 @@ class AccountSyncManagerImplTest {
         coEvery { remoteDataSource.getAll() } returns
             Response.success(listOf(dto(id = "local-1", updatedAt = "2024-02-01T00:00:00Z")))
         coEvery { localDataSource.getBySyncIds(listOf("local-1")) } returns listOf(pending)
-        val updated = slot<AccountEntity>()
-        coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         syncManager.pullServerData()
 
-        // Дубликат не создаётся: запись опознана и подтверждена по тому же localId
+        // Дубликат не создаётся: запись опознана по тому же localId.
+        // Подтвердит её отправитель очереди — pull в чужую незавершённую операцию не лезет.
         coVerify(exactly = 0) { localDataSource.create(any()) }
-        assertThat(updated.captured.localId).isEqualTo("local-1")
-        assertThat(updated.captured.serverId).isEqualTo("local-1")
-        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+    }
+
+    @Test
+    fun `pull does not overwrite an account with unsent local changes`() = runTest {
+        // Пользователь переименовал счёт, операция ещё в очереди; серверная версия её не знает
+        val edited = entity(
+            syncStatus = SyncStatus.PENDING_UPDATE,
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
+        coEvery { remoteDataSource.getAll() } returns
+            Response.success(listOf(dto(updatedAt = "2024-02-01T00:00:00Z")))
+        coEvery { localDataSource.getBySyncIds(listOf("server-1")) } returns listOf(edited)
+
+        syncManager.pullServerData()
+
+        // Иначе правка откатилась бы на глазах у пользователя до отправки из очереди
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+    }
+
+    @Test
+    fun `pull does not resurrect an account awaiting deletion`() = runTest {
+        val deleted = entity(
+            syncStatus = SyncStatus.PENDING_DELETE,
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
+        coEvery { remoteDataSource.getAll() } returns
+            Response.success(listOf(dto(updatedAt = "2024-02-01T00:00:00Z")))
+        coEvery { localDataSource.getBySyncIds(listOf("server-1")) } returns listOf(deleted)
+
+        syncManager.pullServerData()
+
+        // Перезапись вернула бы счёт в списки: PENDING_DELETE скрывает его, SYNCED — нет
+        coVerify(exactly = 0) { localDataSource.update(any()) }
     }
 
     @Test
