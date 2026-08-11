@@ -53,6 +53,9 @@ loggingInterceptor = "5.4.0"
 # Auth (OAuth)
 yandexAuthSdk = "3.1.3"
 
+# Navigation graph visualisation (KSP + Gradle plugin + IDE plugin)
+navgraph = "0.2.1"
+
 # Lint & QA Tools
 detekt = "1.23.8"
 detektCompose = "0.6.1"
@@ -152,6 +155,7 @@ lint-tests = { group = "com.android.tools.lint", name = "lint-tests", version.re
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 kotlin-metadata-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-metadata-jvm", version.ref = "kotlinMetadataJvm" }
 ruler-plugin = { group = "com.spotify.ruler", name = "ruler-gradle-plugin", version.ref = "ruler" }
+navgraph-gradle-plugin = { group = "com.github.skydoves", name = "compose-nav-graph-gradle", version.ref = "navgraph" }
 
 #Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
@@ -203,6 +207,7 @@ build-time-tracker = { id = "com.asarkar.gradle.build-time-tracker", version.ref
 android-lint = { id = "com.android.lint", version.ref = "agp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 ruler = { id = "com.spotify.ruler", version.ref = "ruler" }
+navgraph = { id = "com.github.skydoves.navgraph", version.ref = "navgraph" }
 
 #Firebase
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }

@@ -9,10 +9,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import soft.divan.financemanager.feature.security.api.CreatePinKey
 import soft.divan.financemanager.feature.security.impl.R
 import soft.divan.financemanager.feature.security.impl.presenter.model.CreatePinScreenState
 import soft.divan.financemanager.feature.security.impl.presenter.viewmodel.CreatePinViewModel
 
+@NavDestination(route = CreatePinKey::class)
 @Composable
 fun CreatePinScreen(
     viewModel: CreatePinViewModel = hiltViewModel(),

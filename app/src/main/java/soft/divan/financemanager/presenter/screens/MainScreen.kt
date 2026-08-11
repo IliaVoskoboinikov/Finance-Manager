@@ -20,8 +20,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavEdge
+import com.github.skydoves.navgraph.annotations.NavPreview
 import soft.divan.financemanager.core.featureapi.FeatureApi
+import soft.divan.financemanager.feature.category.api.CategoryKey
+import soft.divan.financemanager.feature.myaccounts.impl.MyAccountsKey
+import soft.divan.financemanager.feature.settings.api.SettingsKey
+import soft.divan.financemanager.feature.transactionstoday.api.TransactionsTodayKey
 import soft.divan.financemanager.presenter.MainViewModel
+import soft.divan.financemanager.presenter.navigation.MainKey
 import soft.divan.financemanager.presenter.navigation.BottomNavigationBar
 import soft.divan.financemanager.presenter.navigation.MainNavDisplay
 import soft.divan.financemanager.presenter.navigation.ScreenBottom
@@ -33,6 +41,11 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
  * Корневой экран приложения после авторизации: рисует нижнюю навигацию и хостит
  * граф всех фич ([features]) внутри [MainScreenContent].
  */
+@NavDestination(route = MainKey::class)
+@NavEdge(to = TransactionsTodayKey::class, label = "вкладка «Расходы» / «Доходы»")
+@NavEdge(to = MyAccountsKey::class, label = "вкладка «Счёт»")
+@NavEdge(to = CategoryKey::class, label = "вкладка «Статьи»")
+@NavEdge(to = SettingsKey::class, label = "вкладка «Настройки»")
 @Composable
 fun MainScreen(
     features: Set<FeatureApi>,
@@ -102,6 +115,7 @@ internal fun MainScreenContent(
     }
 }
 
+@NavPreview(route = MainKey::class, primary = true)
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable

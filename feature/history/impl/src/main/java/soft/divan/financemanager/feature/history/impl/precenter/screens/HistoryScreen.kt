@@ -26,8 +26,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavEdge
+import com.github.skydoves.navgraph.annotations.NavPreview
 import soft.divan.financemanager.core.domain.utli.UiDateFormatter
+import soft.divan.financemanager.feature.analysis.api.AnalysisKey
+import soft.divan.financemanager.feature.history.api.HistoryKey
 import soft.divan.financemanager.feature.history.impl.R
+import soft.divan.financemanager.feature.transaction.api.TransactionKey
 import soft.divan.financemanager.feature.history.impl.precenter.model.HistoryActions
 import soft.divan.financemanager.feature.history.impl.precenter.model.HistoryUiState
 import soft.divan.financemanager.feature.history.impl.precenter.model.UiTransaction
@@ -49,6 +55,7 @@ import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import java.time.LocalDate
 
+@NavPreview(route = HistoryKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun HistoryScreenPreview() {
@@ -70,6 +77,9 @@ fun HistoryScreenPreview() {
     }
 }
 
+@NavDestination(route = HistoryKey::class)
+@NavEdge(to = TransactionKey::class, label = "операция")
+@NavEdge(to = AnalysisKey::class, label = "анализ")
 @Composable
 fun HistoryScreen(
     isIncome: Boolean,

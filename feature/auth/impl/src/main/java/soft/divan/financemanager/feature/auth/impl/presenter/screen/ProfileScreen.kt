@@ -19,7 +19,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavEdge
 import soft.divan.financemanager.core.auth.domain.model.AuthStatus
+import soft.divan.financemanager.feature.auth.api.ProfileAuthKey
+import soft.divan.financemanager.feature.auth.api.ProfileKey
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthAction
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthUiState
 import soft.divan.financemanager.feature.auth.impl.presenter.viewModel.AuthViewModel
@@ -36,6 +40,8 @@ import soft.divan.financemanager.uikit.components.LoadingProgressBar
 import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.model.TopBarModel
 
+@NavDestination(route = ProfileKey::class)
+@NavEdge(to = ProfileAuthKey::class, label = "сменить аккаунт")
 @Composable
 fun ProfileScreen(
     onNavigateToAuth: () -> Unit,

@@ -25,7 +25,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavEdge
+import com.github.skydoves.navgraph.annotations.NavPreview
+import soft.divan.financemanager.feature.history.api.HistoryKey
+import soft.divan.financemanager.feature.transaction.api.TransactionKey
 import soft.divan.financemanager.feature.transactions_today.impl.R
+import soft.divan.financemanager.feature.transactionstoday.api.TransactionsTodayKey
 import soft.divan.financemanager.feature.transactionstoday.impl.presenter.model.TransactionUi
 import soft.divan.financemanager.feature.transactionstoday.impl.presenter.model.TransactionsTodayActions
 import soft.divan.financemanager.feature.transactionstoday.impl.presenter.model.TransactionsTodayUiState
@@ -45,6 +51,7 @@ import soft.divan.financemanager.uikit.icons.Clock
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
+@NavPreview(route = TransactionsTodayKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun TransactionsTodayPreview() {
@@ -64,6 +71,9 @@ fun TransactionsTodayPreview() {
     }
 }
 
+@NavDestination(route = TransactionsTodayKey::class)
+@NavEdge(to = HistoryKey::class, label = "история")
+@NavEdge(to = TransactionKey::class, label = "новая / существующая операция")
 @Composable
 fun TransactionsTodayScreen(
     modifier: Modifier = Modifier,

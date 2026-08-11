@@ -52,7 +52,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavPreview
 import com.yandex.authsdk.YandexAuthLoginOptions
+import soft.divan.financemanager.feature.auth.api.AuthKey
 import soft.divan.financemanager.feature.auth.impl.R
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthAction
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthActions
@@ -68,6 +71,7 @@ import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import soft.divan.financemanager.uikit.theme.YandexRed
 
+@NavDestination(route = AuthKey::class)
 @Composable
 fun AuthScreen(
     onAuthSuccess: () -> Unit,
@@ -475,6 +479,7 @@ private fun SyncingOverlay() {
     }
 }
 
+@NavPreview(route = AuthKey::class, primary = true)
 @Preview(showBackground = true, name = "Login Mode - Light")
 @Composable
 fun AuthScreenLoginLightPreview() {
@@ -493,6 +498,7 @@ fun AuthScreenLoginLightPreview() {
     }
 }
 
+@NavPreview(route = AuthKey::class)
 @Preview(showBackground = true, name = "Login Mode - Dark")
 @Composable
 fun AuthScreenLoginDarkPreview() {
@@ -511,6 +517,7 @@ fun AuthScreenLoginDarkPreview() {
     }
 }
 
+@NavPreview(route = AuthKey::class)
 @Preview(showBackground = true, name = "Register Mode")
 @Composable
 fun AuthScreenRegisterPreview() {
@@ -529,6 +536,7 @@ fun AuthScreenRegisterPreview() {
     }
 }
 
+@NavPreview(route = AuthKey::class)
 @Preview(showBackground = true, name = "Error State")
 @Composable
 fun AuthScreenErrorPreview() {
@@ -548,6 +556,7 @@ fun AuthScreenErrorPreview() {
     }
 }
 
+@NavPreview(route = AuthKey::class)
 @Preview(showBackground = true, name = "Russian Localization", locale = "ru")
 @Composable
 fun AuthScreenRussianPreview() {

@@ -45,7 +45,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavPreview
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.feature.transaction.api.TransactionKey
 import soft.divan.financemanager.feature.transaction.impl.R
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.CategoryUi
@@ -75,6 +78,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import java.time.LocalDate
 import java.time.LocalTime
 
+@NavPreview(route = TransactionKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun TransactionScreenPreview() {
@@ -114,6 +118,7 @@ fun AccountPreview() {
     }
 }
 
+@NavDestination(route = TransactionKey::class)
 @Composable
 fun TransactionScreen(
     isIncome: Boolean,

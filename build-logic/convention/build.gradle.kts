@@ -21,6 +21,10 @@ dependencies {
     compileOnly(libs.build.time.tracker)
     compileOnly(libs.ruler.plugin)
 
+    // Нужен только ради типов NavGraphExtension / RenderBackend в convention-плагинах:
+    // сам плагин navgraph подключается через root build.gradle.kts (`apply false`).
+    compileOnly(libs.navgraph.gradle.plugin)
+
     testImplementation(libs.junit)
     testImplementation(libs.assertj.core)
     testImplementation(libs.mockk)

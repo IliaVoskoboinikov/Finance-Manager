@@ -8,6 +8,7 @@ import soft.divan.financemanager.addDefaultComposeDependencies
 import soft.divan.financemanager.addDefaultUnitTestDependencies
 import soft.divan.financemanager.applyPlugin
 import soft.divan.financemanager.configureBaseAndroid
+import soft.divan.financemanager.configureNavGraph
 import soft.divan.financemanager.lib
 
 class FeatureImplConventionPlugin : Plugin<Project> {
@@ -17,6 +18,11 @@ class FeatureImplConventionPlugin : Plugin<Project> {
             applyPlugin("android-library")
             applyPlugin("kotlin-compose")
             applyPlugin("soft-divan-hilt")
+
+            // Экраны фичи попадают в общий граф навигации (docs/nav-graph.md):
+            // KSP-процессор разбирает аннотации и складывает граф фичи в nav-graph.json,
+            // который агрегирует :app.
+            configureNavGraph()
 
             extensions.configure<LibraryExtension> {
                 configureBaseAndroid(project)

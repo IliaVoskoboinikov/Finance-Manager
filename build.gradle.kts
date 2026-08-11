@@ -18,6 +18,7 @@ plugins {
     alias(libs.plugins.android.lint)
     alias(libs.plugins.ktlint) apply false
     alias(libs.plugins.kover)
+    alias(libs.plugins.navgraph) apply false
 }
 
 /**

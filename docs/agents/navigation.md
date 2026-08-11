@@ -27,3 +27,18 @@
 *   `SavedStateHandle` не содержит аргументов навигации. Если ViewModel нужен аргумент —
     `@HiltViewModel(assistedFactory = ...)` + `@Assisted` и вызов
     `hiltViewModel<VM, VM.Factory> { it.create(...) }` из экрана.
+
+## Разметка графа (`compose-nav-graph`)
+Граф экранов собирается из аннотаций на этапе сборки — подробности в
+[`docs/nav-graph.md`](../nav-graph.md). Новый экран или переход обязан быть размечен:
+
+*   `@NavDestination(route = ЕгоKey::class)` — на `@Composable`-функции экрана в `:impl`
+    (не на ключе в `:api`: рёбрам нужны оба ключа, а лишние зависимости `:api → :api`
+    сломают `assertModuleGraph`).
+*   `@NavEdge(to = ЧужойKey::class, label = "…")` — по одной на каждый `goTo` из экрана,
+    аннотация повторяемая. Для переходов, которыми владеет хост (`RootNavDisplay`),
+    `from` указывается явно.
+*   `@NavPreview(route = ЕгоKey::class, primary = true)` — рядом с `@Preview`, чтобы у узла
+    была отрисованная миниатюра.
+*   После изменения графа — `./gradlew navDump` и коммит обновлённых `*/nav/*.nav`;
+    `./gradlew navCheck` проверяет, что разметка не разошлась с кодом.
