@@ -66,7 +66,31 @@ class ConnectivityManagerNetworkMonitorTest {
 
     @Test
     fun `network callback drives online state changes`() = runBlocking<Unit> {
+        givenActiveNetworkWithInternet()
+
+        val monitor = ConnectivityManagerNetworkMonitor(context)
+        val emissions = Channel<Boolean>(Channel.UNLIMITED)
+        val collectJob = launch(Dispatchers.Default) { monitor.isOnline.collect(emissions::send) }
+
+        try {
             // Первое значение уходит в канал уже после registerNetworkCallback, поэтому
+            // после его получения callback точно зарегистрирован и виден этому потоку.
+            assertThat(emissions.awaitValue(expected = true)).isTrue()
+
+            val callback = shadowOf(connectivityManager).networkCallbacks.first()
+            val network = connectivityManager.activeNetwork!!
+
+            callback.onLost(network)
+            assertThat(emissions.awaitValue(expected = false)).isFalse()
+
+            callback.onAvailable(network)
+            assertThat(emissions.awaitValue(expected = true)).isTrue()
+        } finally {
+            collectJob.cancel()
+        }
+    }
+
+    private fun givenActiveNetworkWithInternet() {
         val capabilities = Shadow.newInstanceOf(NetworkCapabilities::class.java)
         shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         shadowOf(connectivityManager).setNetworkCapabilities(
