@@ -7,6 +7,8 @@ import androidx.test.core.app.ApplicationProvider
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -18,6 +20,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadow.api.Shadow
+
+/** Запас на медленный CI: обмен значениями идёт между потоками, а не в виртуальном времени. */
+private const val AWAIT_TIMEOUT_MS = 10_000L
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -52,12 +57,7 @@ class ConnectivityManagerNetworkMonitorTest {
 
     @Test
     fun `emits true when active network has internet capability`() = runBlocking<Unit> {
-        val capabilities = Shadow.newInstanceOf(NetworkCapabilities::class.java)
-        shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-        shadowOf(connectivityManager).setNetworkCapabilities(
-            connectivityManager.activeNetwork,
-            capabilities
-        )
+        givenActiveNetworkWithInternet()
 
         val monitor = ConnectivityManagerNetworkMonitor(context)
 
@@ -97,29 +97,22 @@ class ConnectivityManagerNetworkMonitorTest {
             connectivityManager.activeNetwork,
             capabilities
         )
-        val monitor = ConnectivityManagerNetworkMonitor(context)
-        val values = mutableListOf<Boolean>()
-
-        val job = launch(Dispatchers.Default) { monitor.isOnline.collect { values += it } }
-        withTimeout(5000) {
-            while (shadowOf(connectivityManager).networkCallbacks.isEmpty()) {
-                kotlinx.coroutines.delay(10)
-            }
-        }
-        val callback = shadowOf(connectivityManager).networkCallbacks.first()
-        val network = connectivityManager.activeNetwork!!
-
-        callback.onAvailable(network)
-        callback.onLost(network)
-        withTimeout(5000) {
-            while (values.lastOrNull() != false) {
-                kotlinx.coroutines.delay(10)
-            }
-        }
-        job.cancel()
-
-        // после onLost сеть считается потерянной
-        assertThat(values.last()).isFalse()
-        assertThat(values).contains(true)
     }
+
+    /**
+     * Ждёт значение [expected], пропуская всё до него.
+     *
+     * `isOnline` завершается `conflate()`, поэтому количество промежуточных эмиссий
+     * недетерминировано (медленный коллектор просто не увидит часть значений) — а вот
+     * порядок смены состояний детерминирован. Если значение не пришло за
+     * [AWAIT_TIMEOUT_MS], тест падает по таймауту.
+     */
+    private suspend fun ReceiveChannel<Boolean>.awaitValue(expected: Boolean): Boolean =
+        withTimeout(AWAIT_TIMEOUT_MS) {
+            var value = receive()
+            while (value != expected) {
+                value = receive()
+            }
+            value
+        }
 }
