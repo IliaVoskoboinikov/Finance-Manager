@@ -2,6 +2,7 @@ package soft.divan.financemanager.core.data.outbox
 
 import androidx.room.Room
 import com.google.gson.Gson
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.currentCoroutineContext
@@ -45,6 +46,20 @@ class OutboxTransactionalEnqueueTest {
 
         override suspend fun launchSync(block: suspend () -> Unit) {
             currentCoroutineContext()[PostCommitSyncQueue]?.add(block)
+        }
+    }
+
+    /** Копит задиспатченные после commit действия, чтобы тест сам решал, когда их выполнить. */
+    private class CollectingAppCoroutineContext : AppCoroutineContext {
+        val dispatched = mutableListOf<suspend () -> Unit>()
+
+        override fun launch(block: suspend CoroutineScope.() -> Unit) {
+            dispatched.add { CoroutineScope(EmptyCoroutineContext).block() }
+        }
+
+        override suspend fun launchSync(block: suspend () -> Unit) {
+            val queue = currentCoroutineContext()[PostCommitSyncQueue]
+            if (queue != null) queue.add(block) else block()
         }
     }
 
@@ -137,6 +152,44 @@ class OutboxTransactionalEnqueueTest {
         assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NoData))
         assertThat(db.accountDao().getByLocalId("local-a1")).isNull()
         assertThat(queued()).isEmpty()
+    }
+
+    @Test
+    fun `queue processing is deferred until after the commit`() = runTest {
+        // Ради этого и живёт PostCommitSyncQueue: разбор очереди внутри транзакции увидел бы
+        // ещё не зафиксированную запись (то же соединение Room) и отправил бы её на сервер до
+        // commit — при откате получился бы ровно тот фантом, от которого защищает outbox.
+        val context = CollectingAppCoroutineContext()
+        val localRunner = RoomTransactionRunner(db, context)
+        val processor = mockk<OutboxProcessor>(relaxed = true)
+        val localEnqueuer = OutboxEnqueuer(
+            localDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
+            gson = Gson(),
+            clock = Clock.fixed(now, ZoneOffset.UTC),
+            appCoroutineContext = context,
+            processor = { processor }
+        )
+
+        var dispatchedInsideTransaction = false
+        localRunner.runInTransaction {
+            db.accountDao().insert(account())
+            localEnqueuer.enqueue(
+                entityType = OutboxEntityType.ACCOUNT,
+                entityLocalId = "local-a1",
+                operation = OutboxOperation.CREATE,
+                body = mapOf("id" to "local-a1")
+            )
+            dispatchedInsideTransaction = context.dispatched.isNotEmpty()
+            DomainResult.Success(Unit)
+        }
+
+        assertThat(dispatchedInsideTransaction).isFalse()
+        coVerify(exactly = 0) { processor.process() }
+
+        // После commit действие задиспатчено — выполняем и убеждаемся, что это разбор очереди
+        assertThat(context.dispatched).hasSize(1)
+        context.dispatched.forEach { it() }
+        coVerify(exactly = 1) { processor.process() }
     }
 
     @Test
