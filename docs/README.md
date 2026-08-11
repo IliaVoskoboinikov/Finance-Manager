@@ -14,4 +14,5 @@
 - [DomainResult & errors](./domain-result.md) — подход к доменным результатам и обработке ошибок.
 - [Bd](./bd.md) — локальная база данных.
 - [Testing & Coverage](./testing.md) — уровни тестов, инструменты (MockK, Robolectric, TestKit), измерение покрытия через Kover, как запускать.
+- [CI/CD](./ci-cd.md) — workflow GitHub Actions, composite actions, секреты, релизный пайплайн и что в нём ещё не сделано.
 

@@ -28,15 +28,58 @@
 
 ## ⚙️ CI/CD
 
+> Как всё устроено сейчас и обоснование каждого пункта — в [docs/ci-cd.md](docs/ci-cd.md).
+
+Критично:
+
+- [ ] Убрать инъекцию шелла в `send-file-tg`: сообщение коммита подставляется прямо
+      в `run:` — передавать через `env:` и `"$VAR"`
+- [ ] Завязать релиз на гейт качества — сейчас `cd_release.yml` публикует в Play,
+      не запуская ни тестов, ни линтеров
+- [ ] Добавить минимальный блок `permissions:` во все workflow
+      (`contents: read` + `security-events: write` для SARIF)
+- [ ] Настроить `moduleGraphAssert { … }` — задача `:app:assertModuleGraph`
+      сейчас пустая (`SKIPPED`), архитектуру реально проверяет `CheckConventionsPlugin`
+- [ ] Собирать `assembleRelease` в CI — R8/shrink включены только для release,
+      ошибки в `proguard-rules.pro` всплывают лишь в момент релиза
+
+Важно:
+
 - [ ] Добавить триггер на `pull_request` (сейчас прогонов для пул-реквестов нет)
 - [ ] Добавить `cancel-in-progress`, чтобы отменялись устаревшие прогоны
+- [ ] Починить передачу флагов Gradle: в `ci.yml` они попали в *название* шага,
+      в `cd_release.yml` используется несуществующая `$GRADLE_FLAGS`
+- [ ] Починить версию в Telegram-отчётах: `printVersionName` печатает
+      `Const.VERSION_NAME` (`0.0.1`) и не знает про `-PversionName`
+- [ ] Использовать `android-setup` во всех джобах (`run-detekt`, `check-module-graph`,
+      `report-telegram`, `distribute-app-firebase` идут на JDK раннера по умолчанию)
 - [ ] Добавить Gradle cache для ускорения сборок (релиз — однозначно без кеша,
       тестовые сборки — можно с кешем; пока приложение простое, проблем быть не
-      должно, но на больших проектах может быть больно)
+      должно, но на больших проектах может быть больно) и убрать дублирующий
+      `cache: gradle` в `actions/setup-java`
+- [ ] Объединить `run-tests` и `run-coverage` — тесты сейчас прогоняются дважды;
+      заодно перевести `./gradlew test` на `testDebugUnitTest`
+- [ ] Свести порог покрытия к одному числу: фактически `minBound(95)`,
+      в KDoc — 98 %, в `docs/testing.md` — 99 % и 98 %
+
+Улучшения:
+
 - [ ] Добавить AI-ревьюера
-- [ ] Подключить `koverVerifyFull` в CI — гейт покрытия (99%) сейчас гоняется
-      только локально
 - [ ] Настроить Dependabot/Renovate для автообновления зависимостей
+- [ ] `timeout-minutes` на джобах и `retention-days` на артефактах
+- [ ] Гейты (а не только отчёты) на размер приложения (Ruler) и время сборки
+- [ ] Включить загрузку SARIF для Android Lint (сейчас закомментирована)
+- [ ] Instrumented-тесты на эмуляторе — понадобятся для миграционных тестов Room
+- [ ] Автоматизация релиза: тег + GitHub Release + changelog, release notes для Play
+- [ ] Разобраться с `ANDROID_SDK_ROOT: /usr/lib/android-sdk` в CD-workflow —
+      на раннерах GitHub SDK лежит по другому пути
+- [ ] Завести `YANDEX_CLIENT_ID` как CI-секрет (сейчас в CI-сборках client_id пустой)
+- [ ] `CODEOWNERS`, шаблон PR, `SECURITY.md`, бейджи сборки в `README.md`
+
+Сделано:
+
+- [x] Подключить `koverVerifyFull` в CI — гейт покрытия работает в джобе `run-coverage`
+      через composite action `.github/actions/coverage`
 
 ## 🧪 Тестирование
 
