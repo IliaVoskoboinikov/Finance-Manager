@@ -66,6 +66,7 @@ class ConnectivityManagerNetworkMonitorTest {
 
     @Test
     fun `network callback drives online state changes`() = runBlocking<Unit> {
+            // Первое значение уходит в канал уже после registerNetworkCallback, поэтому
         val capabilities = Shadow.newInstanceOf(NetworkCapabilities::class.java)
         shadowOf(capabilities).addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         shadowOf(connectivityManager).setNetworkCapabilities(
