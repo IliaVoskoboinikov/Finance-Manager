@@ -1,30 +1,25 @@
 package soft.divan.financemanager.feature.haptics.impl.navigation
 
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.composable
-import soft.divan.financemanager.core.featureapi.RouteScope
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
+import soft.divan.financemanager.core.featureapi.Navigator
 import soft.divan.financemanager.feature.haptics.api.HapticsFeatureApi
+import soft.divan.financemanager.feature.haptics.api.HapticsKey
 import soft.divan.financemanager.feature.haptics.impl.precenter.screen.HapticsScreen
 import javax.inject.Inject
 
-private const val BASE_ROUTE = "haptics"
-
 class HapticFeatureImpl @Inject constructor() : HapticsFeatureApi {
 
-    override val route: String = BASE_ROUTE
-
-    override fun registerGraph(
-        navGraphBuilder: NavGraphBuilder,
-        navController: NavHostController,
-        scope: RouteScope,
+    override fun registerEntries(
+        scope: EntryProviderScope<NavKey>,
+        navigator: Navigator,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(scope.route()) {
+        scope.entry<HapticsKey> {
             HapticsScreen(
                 modifier = modifier,
-                onNavigateBack = navController::popBackStack
+                onNavigateBack = navigator::back
             )
         }
     }

@@ -11,8 +11,8 @@ Use case-ы модуля: `CreateAccountUseCase`, `UpdateAccountUseCase`, `GetAc
 `syncStatus = PENDING_DELETE` и не удаляется, пока по нему есть транзакции
 (проверка в `AccountRepositoryImpl.delete`).
 
-Модуль реализует `AccountFeatureApi` из `:feature:account:api` и регистрирует свой
-навигационный граф в `app`.
+Модуль реализует `AccountFeatureApi` из `:feature:account:api` и регистрирует экран по
+ключу `AccountKey` в общем `entryProvider` приложения.
 
 ## Module dependency graph
 

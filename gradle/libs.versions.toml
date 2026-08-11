@@ -31,7 +31,10 @@ workManager = "2.11.2"
 # Compose
 composeBom = "2026.05.01"
 materialIconsExtended = "1.7.8"
-navigationCompose = "2.9.8"
+navigation3 = "1.1.5"
+# 2.11.0 требует compileSdk 37 (а он же уходит в targetSdk) — остаёмся на линейке lifecycle 2.10.x.
+lifecycleViewmodelNavigation3 = "2.10.0"
+kotlinxSerialization = "1.11.0"
 
 # UI Libraries
 lottieCompose = "6.7.1"
@@ -80,6 +83,7 @@ androidxTestCore = "1.6.1"
 agp = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 compose-plugin = { group = "org.jetbrains.kotlin.plugin.compose", name = "org.jetbrains.kotlin.plugin.compose.gradle.plugin", version.ref = "kotlin" }
+kotlin-serialization-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-serialization", version.ref = "kotlin" }
 build-time-tracker = { module = "com.asarkar.gradle:build-time-tracker", version.ref = "buildTimeTracker" }
 
 # AndroidX Core
@@ -101,12 +105,18 @@ androidx-work-testing = { group = "androidx.work", name = "work-testing", versio
 
 # Compose
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+
+# Navigation 3
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNavigation3" }
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerialization" }
 
 # UI Libraries
 lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottieCompose" }
@@ -177,6 +187,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 java-library = { id = "java-library" }
 

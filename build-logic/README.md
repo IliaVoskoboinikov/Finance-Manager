@@ -161,6 +161,7 @@ Namespace формируется автоматически на основе `p
 
 - android application
 - compose
+- kotlin-serialization (ключи корневого графа навигации)
 - hilt
 - firebase
 - graph plugin
@@ -210,6 +211,10 @@ Namespace формируется автоматически на основе `p
 - contracts
 - interfaces
 - public models
+- ключи навигации (`NavKey`)
+
+Применяет плагин `kotlin-serialization` и подключает `kotlinx-serialization-core`:
+ключи экранов помечаются `@Serializable`, по ним Navigation 3 восстанавливает back stack.
 
 Без Compose и реализаций.
 

@@ -72,11 +72,15 @@ fun HistoryScreenPreview() {
 
 @Composable
 fun HistoryScreen(
+    isIncome: Boolean,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     onNavigateToTransaction: (String) -> Unit,
     onNavigateToAnalysis: () -> Unit,
-    viewModel: HistoryViewModel = hiltViewModel()
+    viewModel: HistoryViewModel =
+        hiltViewModel<HistoryViewModel, HistoryViewModel.Factory> { factory ->
+            factory.create(isIncome = isIncome)
+        }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val startDate by viewModel.startDate.collectAsStateWithLifecycle()

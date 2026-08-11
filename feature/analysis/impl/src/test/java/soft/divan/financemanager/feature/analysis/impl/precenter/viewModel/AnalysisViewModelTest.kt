@@ -1,6 +1,5 @@
 package soft.divan.financemanager.feature.analysis.impl.precenter.viewModel
 
-import androidx.lifecycle.SavedStateHandle
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -25,7 +24,6 @@ import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
 import soft.divan.financemanager.feature.analysis.impl.domain.usecase.GetCategoryPieChartDataUseCase
-import soft.divan.financemanager.feature.analysis.impl.navigation.IS_INCOME_KEY
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisUiState
 import java.math.BigDecimal
 import java.time.Instant
@@ -71,13 +69,12 @@ class AnalysisViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel(isIncome: Boolean? = false) = AnalysisViewModel(
+    private fun viewModel(isIncome: Boolean = false) = AnalysisViewModel(
         getSumTransactionsUseCase = getSumTransactionsUseCase,
         getTransactionsByPeriodUseCase = getTransactionsByPeriodUseCase,
         getCategoryPieChartDataUseCase = getCategoryPieChartDataUseCase,
         ioDispatcher = UnconfinedTestDispatcher(),
-        savedStateHandle = isIncome?.let { SavedStateHandle(mapOf(IS_INCOME_KEY to it)) }
-            ?: SavedStateHandle()
+        isIncome = isIncome
     )
 
     private fun stubSuccess(transactions: List<Transaction>) {
@@ -128,16 +125,6 @@ class AnalysisViewModelTest {
         vm.uiState.first { it !is AnalysisUiState.Loading }
 
         verify { getTransactionsByPeriodUseCase(isIncome = true, period = any()) }
-    }
-
-    @Test
-    fun `missing isIncome argument defaults to false`() = runTest {
-        stubSuccess(emptyList())
-        val vm = viewModel(isIncome = null)
-
-        vm.uiState.first { it !is AnalysisUiState.Loading }
-
-        verify { getTransactionsByPeriodUseCase(isIncome = false, period = any()) }
     }
 
     @Test

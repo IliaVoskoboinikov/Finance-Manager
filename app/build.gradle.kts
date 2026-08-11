@@ -108,6 +108,9 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.lifecycle.process)
 
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
     testImplementation(libs.bundles.unit.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)

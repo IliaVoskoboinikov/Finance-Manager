@@ -22,19 +22,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
+import soft.divan.financemanager.core.featureapi.FeatureApi
 import soft.divan.financemanager.feature.auth.api.AuthFeatureApi
-import soft.divan.financemanager.feature.category.api.CategoryFeatureApi
 import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetThemeModeUseCase
-import soft.divan.financemanager.feature.myaccounts.impl.MyAccountsFeatureApi
 import soft.divan.financemanager.feature.security.impl.domain.usecase.IsPinSetUseCase
 import soft.divan.financemanager.feature.security.impl.presenter.screen.PinLockScreen
-import soft.divan.financemanager.feature.settings.api.SettingsFeatureApi
 import soft.divan.financemanager.feature.splashscreen.api.SplashScreenFeatureApi
-import soft.divan.financemanager.feature.transactionstoday.api.TransactionsTodayFeatureApi
-import soft.divan.financemanager.presenter.navigation.RootNavGraph
+import soft.divan.financemanager.presenter.navigation.RootNavDisplay
 import soft.divan.financemanager.presenter.screens.MainScreen
 import soft.divan.financemanager.uikit.theme.AccentColor
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
@@ -49,17 +46,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var authFeatureApi: AuthFeatureApi
 
+    /** Все фичи основного графа — см. `FeatureNavigationModule`. */
     @Inject
-    lateinit var transactionsTodayFeatureApi: TransactionsTodayFeatureApi
-
-    @Inject
-    lateinit var myAccountsFeatureApi: MyAccountsFeatureApi
-
-    @Inject
-    lateinit var categoryFeatureApi: CategoryFeatureApi
-
-    @Inject
-    lateinit var settingsFeatureApi: SettingsFeatureApi
+    lateinit var features: Set<@JvmSuppressWildcards FeatureApi>
 
     @Inject
     lateinit var getAuthStatusUseCase: GetAuthStatusUseCase
@@ -140,17 +129,12 @@ class MainActivity : AppCompatActivity() {
                         shouldLock.value = false
                     })
                 } else {
-                    RootNavGraph(
+                    RootNavDisplay(
                         splashFeatureApi = splashFeatureApi,
                         authFeatureApi = authFeatureApi,
                         getAuthStatusUseCase = getAuthStatusUseCase,
                         mainScreen = {
-                            MainScreen(
-                                transactionsTodayFeatureApi = transactionsTodayFeatureApi,
-                                myAccountsFeatureApi = myAccountsFeatureApi,
-                                categoryFeatureApi = categoryFeatureApi,
-                                settingsFeatureApi = settingsFeatureApi
-                            )
+                            MainScreen(features = features)
                         }
                     )
                 }

@@ -1,45 +1,26 @@
 package soft.divan.financemanager.feature.analysis.impl.navigation
 
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import soft.divan.financemanager.core.featureapi.RouteScope
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
+import soft.divan.financemanager.core.featureapi.Navigator
 import soft.divan.financemanager.feature.analysis.api.AnalysisFeatureApi
+import soft.divan.financemanager.feature.analysis.api.AnalysisKey
 import soft.divan.financemanager.feature.analysis.impl.precenter.screen.AnalysisScreen
 import javax.inject.Inject
 
-private const val BASE_ROUTE = "analysis"
-const val IS_INCOME_KEY: String = "isIncome"
-
 class AnalysisFeatureImpl @Inject constructor() : AnalysisFeatureApi {
 
-    override val route: String = BASE_ROUTE
-
-    override fun analysisRouteWithArgs(isIncome: Boolean): String {
-        val income = isIncome.toString()
-        return "$route/$income"
-    }
-
-    override fun registerGraph(
-        navGraphBuilder: NavGraphBuilder,
-        navController: NavHostController,
-        scope: RouteScope,
+    override fun registerEntries(
+        scope: EntryProviderScope<NavKey>,
+        navigator: Navigator,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(
-            route = "${scope.route()}/{$IS_INCOME_KEY}",
-            arguments = listOf(
-                navArgument(IS_INCOME_KEY) {
-                    type = NavType.BoolType
-                }
-            )
-        ) {
+        scope.entry<AnalysisKey> { analysisKey ->
             AnalysisScreen(
                 modifier = modifier,
-                onNavigateBack = navController::popBackStack
+                isIncome = analysisKey.isIncome,
+                onNavigateBack = navigator::back
             )
         }
     }

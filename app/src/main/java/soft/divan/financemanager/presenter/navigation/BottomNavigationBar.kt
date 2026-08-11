@@ -5,12 +5,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 
 @Composable
 fun BottomNavigationBar(
     modifier: Modifier,
-    navController: NavController,
+    backStack: TopLevelBackStack,
     screens: List<ScreenBottom>,
     hapticToggleMenu: () -> Unit
 ) {
@@ -19,7 +18,7 @@ fun BottomNavigationBar(
         containerColor = MaterialTheme.colorScheme.surfaceContainer
     ) {
         screens.forEach { screen ->
-            FmNavigationBarItem(navController, screen, hapticToggleMenu)
+            FmNavigationBarItem(backStack, screen, hapticToggleMenu)
         }
     }
 }

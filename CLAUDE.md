@@ -16,6 +16,8 @@ DB migration rules below).
 
 - **Kotlin `2.4.0`, Java 11**, AGP `9.2.1`, `compileSdk 36`, `minSdk 26`.
 - **UI:** Jetpack Compose + Material 3 (custom components in `core:uikit`).
+- **Navigation:** Navigation 3 (`androidx.navigation3` `1.1.5`) — `NavKey` + `NavDisplay`,
+  ключи сериализуются kotlinx.serialization.
 - **Architecture:** Clean Architecture + MVVM + Unidirectional Data Flow (UDF), offline-first.
 - **DI:** Dagger Hilt `2.59.2`. **Async:** Coroutines + Flow.
 - **Storage:** Room `2.8.4` (`FinanceManagerDatabase`, SSOT) + DataStore.
@@ -62,13 +64,17 @@ Layers: **Presentation** = `feature:*:impl` (Compose + ViewModel mapping Domain�
 **Domain** = `core:domain` (pure Kotlin: entities, UseCases, repository interfaces — no Android/Data deps);
 **Data** = `core:data`/`core:database`/`core:network` (implements repos, DTO/Entity↔Domain mapping).
 
-### Navigation is decoupled via `FeatureApi` (`core:feature-api`)
-Each feature exposes a `<Name>FeatureApi : FeatureApi` interface from its `:api` module,
-declaring its `route` and a `registerGraph(navGraphBuilder, navController, scope, modifier)`.
-The `:impl` implements it; `app` (`presenter/navigation/RootNavGraph.kt`, `BottomNavGraph.kt`)
-injects the `FeatureApi` instances via Hilt and calls `registerGraph` to assemble the graph —
-so features never reference each other's screens directly. Routes are built with the typed
-`RouteScope` helper, not string concatenation.
+### Navigation is decoupled via `FeatureApi` (`core:feature-api`) — see `docs/navigation3.md`
+Screens are addressed by `@Serializable` `NavKey`s declared in each feature's `:api` module
+(arguments are fields of the key, never string routes). A feature exposes
+`<Name>FeatureApi : FeatureApi` and implements
+`registerEntries(scope: EntryProviderScope<NavKey>, navigator: Navigator, modifier)` in its
+`:impl`, registering **only its own** keys — a key may be registered exactly once. Navigation
+to another feature is `navigator.goTo(ItsKey)`; `back()` pops. `app` assembles the graph from a
+Hilt `Set<FeatureApi>` multibinding (`di/FeatureNavigationModule.kt`) and owns two back stacks:
+the root one (`RootNavDisplay`: splash → auth → main) and one per bottom-nav tab
+(`TopLevelBackStack`). ViewModels that need nav arguments use Hilt assisted factories —
+`SavedStateHandle` no longer carries them.
 
 ### Error handling: `DomainResult` (see `docs/domain-result.md`)
 The domain layer never throws across boundaries. Repositories/UseCases return
@@ -119,7 +125,7 @@ category → account → transaction sync order + last-write-wins are handled in
 @./docs/agents/release-process.md
 
 Deeper design docs live in `docs/` (`architecture.md`, `modularization.md`, `modules.md`,
-`auth.md`, `synchronization.md`, `domain-result.md`, `bd.md`).
+`navigation3.md`, `auth.md`, `synchronization.md`, `domain-result.md`, `bd.md`).
 
 ## Clarify before executing
 

@@ -80,9 +80,13 @@ fun AnalysisScreenPreview() {
 
 @Composable
 fun AnalysisScreen(
+    isIncome: Boolean,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
-    viewModel: AnalysisViewModel = hiltViewModel(),
+    viewModel: AnalysisViewModel =
+        hiltViewModel<AnalysisViewModel, AnalysisViewModel.Factory> { factory ->
+            factory.create(isIncome = isIncome)
+        },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

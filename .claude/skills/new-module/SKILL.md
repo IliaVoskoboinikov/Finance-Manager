@@ -25,6 +25,7 @@ feature/<name>/api/build.gradle.kts
 feature/<name>/api/README.md
 feature/<name>/api/src/main/AndroidManifest.xml            (empty <manifest></manifest>)
 feature/<name>/api/src/main/java/soft/divan/financemanager/feature/<pkg>/api/<Name>FeatureApi.kt
+feature/<name>/api/src/main/java/soft/divan/financemanager/feature/<pkg>/api/<Name>Key.kt
 feature/<name>/impl/build.gradle.kts
 feature/<name>/impl/README.md
 feature/<name>/impl/src/main/AndroidManifest.xml
@@ -52,6 +53,20 @@ import soft.divan.financemanager.core.featureapi.FeatureApi
 interface <Name>FeatureApi : FeatureApi
 ```
 
+**`<Name>Key.kt`** — публичный контракт навигации фичи (Navigation 3). Аргументы экрана —
+поля ключа, а не строки маршрута:
+```kotlin
+package soft.divan.financemanager.feature.<pkg>.api
+
+import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.Serializable
+
+/** KDoc: что за экран. */
+@Serializable
+data object <Name>Key : NavKey     // или data class <Name>Key(val id: String) : NavKey
+```
+`@Serializable` обязателен: по нему back stack переживает смерть процесса.
+
 **impl/build.gradle.kts** (add only the `core:*` / other-feature `:api` deps actually used)
 ```kotlin
 plugins {
@@ -66,9 +81,11 @@ dependencies {
 ```
 Note: type-safe accessors camel-case dashes — `my-goals` → `projects.feature.myGoals.api`.
 
-**`<Name>FeatureImpl.kt`** — implements `<Name>FeatureApi`, `@Inject constructor()`,
-`override val route`, and `registerGraph { navGraphBuilder.composable(scope.route()) { ... } }`
+**`<Name>FeatureImpl.kt`** — implements `<Name>FeatureApi`, `@Inject constructor()`, and
+`registerEntries(scope, navigator, modifier) { scope.entry<<Name>Key> { ... } }`
 (see `feature/account/impl/.../navigation/AccountFeatureImpl.kt`).
+Регистрируй только свои ключи: переход к соседней фиче — `navigator.goTo(OtherKey)`,
+возврат — `navigator::back`. Один и тот же ключ нельзя зарегистрировать дважды.
 
 **`<Name>BinderModule.kt`**
 ```kotlin
@@ -89,9 +106,16 @@ interface <Name>BinderModule {
 }
 ```
 
-If the feature owns a screen wired into the app graph, also inject the new
-`<Name>FeatureApi` in `app/.../presenter/navigation/RootNavGraph.kt` (or
-`BottomNavGraph.kt`) and call `registerGraph` — mirror an existing feature there.
+If the feature owns a screen wired into the app graph, add a binding to
+`app/.../di/FeatureNavigationModule.kt`:
+```kotlin
+    @Binds
+    @IntoSet
+    fun bind<Name>Feature(impl: <Name>FeatureApi): FeatureApi
+```
+Без этой привязки экраны фичи не попадут в `entryProvider`, и переход на её ключ упадёт
+в рантайме. Вкладка нижней навигации дополнительно добавляется в
+`app/.../presenter/navigation/ScreenBottom.kt`.
 
 ## 3. Core module layout
 
