@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data
+package soft.divan.financemanager.core.data.transaction.impl
 
 import androidx.room.Room
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +11,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
+import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
+import soft.divan.financemanager.core.data.transaction.rollbackOnError
+import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.result.DomainResult

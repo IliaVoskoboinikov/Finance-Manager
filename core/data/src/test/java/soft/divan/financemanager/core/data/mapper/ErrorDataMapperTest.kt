@@ -5,7 +5,7 @@ import org.junit.Test
 import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.domain.error.DomainError
 
-class ErrorDataMaperTest {
+class ErrorDataMapperTest {
 
     @Test
     fun `Network maps to NetworkUnavailable`() {

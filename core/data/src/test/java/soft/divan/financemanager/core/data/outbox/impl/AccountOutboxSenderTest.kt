@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data.outbox
+package soft.divan.financemanager.core.data.outbox.impl
 
 import com.google.gson.Gson
 import io.mockk.coEvery
@@ -11,6 +11,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
 import soft.divan.financemanager.core.data.dto.AccountDto
+import soft.divan.financemanager.core.data.outbox.OutboxSendResult
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.database.entity.AccountEntity

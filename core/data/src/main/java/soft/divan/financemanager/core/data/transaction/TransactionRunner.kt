@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data
+package soft.divan.financemanager.core.data.transaction
 
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.result.DomainResult

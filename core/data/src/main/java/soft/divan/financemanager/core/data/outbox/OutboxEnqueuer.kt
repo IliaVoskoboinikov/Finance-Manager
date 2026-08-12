@@ -2,7 +2,7 @@ package soft.divan.financemanager.core.data.outbox
 
 import com.google.gson.Gson
 import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
-import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
+import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.model.OutboxEntityType
 import soft.divan.financemanager.core.database.model.OutboxOperation
@@ -59,7 +59,9 @@ class OutboxEnqueuer @Inject constructor(
         // Разбор очереди планируется здесь, а не в вызывающем коде: так «положили операцию» и
         // «попробовали отправить» нельзя рассинхронизировать, забыв про второе. Внутри транзакции
         // launchSync откладывает запуск до commit — раньше отправлять нечего.
-        appCoroutineContext.launchSync { processor.get().process() }
+        appCoroutineContext.launchSync {
+            processor.get().process()
+        }
 
         return localDataSource.enqueue(
             OutboxEntryEntity(

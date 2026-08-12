@@ -1,7 +1,5 @@
 package soft.divan.financemanager.core.data.sync
 
-import soft.divan.financemanager.core.data.sync.util.Syncable
-
 /**
  * Синхронизация транзакций **с сервера на устройство**.
  *

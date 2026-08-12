@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data
+package soft.divan.financemanager.core.data.transaction
 
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.AbstractCoroutineContextElement

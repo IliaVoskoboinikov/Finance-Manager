@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data.util.coroutne
+package soft.divan.financemanager.core.data.util.coroutine
 
 import kotlinx.coroutines.CoroutineScope
 

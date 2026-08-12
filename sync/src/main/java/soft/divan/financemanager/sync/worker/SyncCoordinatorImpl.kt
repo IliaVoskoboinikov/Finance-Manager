@@ -5,7 +5,7 @@ import soft.divan.financemanager.core.data.outbox.OutboxProcessor
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.data.sync.CategorySyncManager
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
-import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.sync.Synchronizer
 import soft.divan.financemanager.sync.domain.usecase.SetLastSyncTimeUseCase
 import javax.inject.Inject
 

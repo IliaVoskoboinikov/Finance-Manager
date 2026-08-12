@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data.util.coroutne.impl
+package soft.divan.financemanager.core.data.util.coroutine.impl
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -7,8 +7,8 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 import soft.divan.common.di.ApplicationScope
 import soft.divan.common.di.IoDispatcher
-import soft.divan.financemanager.core.data.PostCommitSyncQueue
-import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
+import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
+import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
 
 /**
  * Реализация [AppCoroutineContext]: application-scope + IO-диспетчер + exceptionHandler

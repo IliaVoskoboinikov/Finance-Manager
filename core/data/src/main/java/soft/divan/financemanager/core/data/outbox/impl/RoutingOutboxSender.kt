@@ -1,5 +1,7 @@
-package soft.divan.financemanager.core.data.outbox
+package soft.divan.financemanager.core.data.outbox.impl
 
+import soft.divan.financemanager.core.data.outbox.OutboxSendResult
+import soft.divan.financemanager.core.data.outbox.OutboxSender
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.model.OutboxEntityType
 import javax.inject.Inject

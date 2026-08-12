@@ -3,8 +3,8 @@ package soft.divan.financemanager.core.data.repository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
-import soft.divan.financemanager.core.data.PostCommitSyncQueue
-import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
+import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
+import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
 
 /**
  * Тестовый [AppCoroutineContext]: не запускает блоки сразу, а записывает их,

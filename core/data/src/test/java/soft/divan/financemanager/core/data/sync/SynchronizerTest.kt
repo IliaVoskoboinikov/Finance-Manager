@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data.sync.util
+package soft.divan.financemanager.core.data.sync
 
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -7,7 +7,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
-class SyncUtilitiesTest {
+class SynchronizerTest {
 
     @Test
     fun `sync delegates to syncWith passing the synchronizer`() = runTest {

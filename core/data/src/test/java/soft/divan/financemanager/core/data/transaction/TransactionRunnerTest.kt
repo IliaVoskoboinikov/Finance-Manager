@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data
+package soft.divan.financemanager.core.data.transaction
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy

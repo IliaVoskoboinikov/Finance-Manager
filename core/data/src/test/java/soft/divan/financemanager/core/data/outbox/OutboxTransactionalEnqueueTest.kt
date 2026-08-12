@@ -14,11 +14,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
-import soft.divan.financemanager.core.data.PostCommitSyncQueue
-import soft.divan.financemanager.core.data.RoomTransactionRunner
-import soft.divan.financemanager.core.data.rollbackOnError
 import soft.divan.financemanager.core.data.source.impl.OutboxLocalDataSourceImpl
-import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
+import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
+import soft.divan.financemanager.core.data.transaction.impl.RoomTransactionRunner
+import soft.divan.financemanager.core.data.transaction.rollbackOnError
+import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.OutboxEntityType

@@ -1,4 +1,4 @@
-package soft.divan.financemanager.core.data.util.coroutne.impl
+package soft.divan.financemanager.core.data.util.coroutine.impl
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -12,7 +12,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import soft.divan.financemanager.core.data.PostCommitSyncQueue
+import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DefaultAppCoroutineContextTest {
