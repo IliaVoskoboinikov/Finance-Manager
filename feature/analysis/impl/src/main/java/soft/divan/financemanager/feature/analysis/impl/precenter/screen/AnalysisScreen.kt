@@ -47,7 +47,7 @@ import soft.divan.financemanager.feature.analysis.api.AnalysisKey
 import soft.divan.financemanager.feature.analysis.impl.R
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisActions
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisUiState
-import soft.divan.financemanager.feature.analysis.impl.precenter.model.mockTransactionUiStateError
+import soft.divan.financemanager.feature.analysis.impl.precenter.model.mockTransactionUiStateSuccess
 import soft.divan.financemanager.feature.analysis.impl.precenter.viewModel.AnalysisViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.ErrorContent
@@ -68,7 +68,7 @@ fun AnalysisScreenPreview() {
     val today = remember { LocalDate.now() }
     FinanceManagerTheme {
         AnalysisContent(
-            uiState = mockTransactionUiStateError,
+            uiState = mockTransactionUiStateSuccess,
             actions = AnalysisActions(
                 onRetry = {},
                 onNavigateBack = { },

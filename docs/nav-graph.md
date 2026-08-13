@@ -72,8 +72,11 @@ flowchart LR
 - **превью** — из `@NavPreview(route = ...)` рядом с обычным `@Preview`. Layoutlib (тот же
   движок, что рисует превью в Android Studio) рендерит их в PNG на этапе сборки.
 
-Узел, на который есть ребро, но нет `@NavDestination`, всё равно появится в графе —
-пустой карточкой (у нас так выглядит `ProfileAuthKey`).
+Узел, на который есть ребро, но нет `@NavDestination`, всё равно появится в графе. Такой узел
+может быть с превью или без: `@NavPreview(route = XKey::class)` привязывает миниатюру к
+маршруту **независимо** от `@NavDestination`. Так сделан `ProfileAuthKey` — это тот же
+`AuthScreen`, поэтому своего `@NavDestination` у него нет, но миниатюра есть (см. раздел
+«Превью и миниатюры»).
 
 ## Как размечен наш проект
 
@@ -110,7 +113,24 @@ fun RootNavDisplay(...)
 
 ### Что получилось
 
-**21 узел и 22 ребра из 17 модулей**, 18 узлов с отрендеренным превью.
+**21 узел и 22 ребра из 17 модулей, все 21 узла — с отрендеренным превью.**
+
+Сгенерированная карта (миниатюры — реальные экраны, отрисованные Layoutlib без эмулятора):
+
+![Карта навигации Finance Manager](graphs/nav_graph/nav-graph.png)
+
+Интерактивная версия — [`graphs/nav_graph/nav-graph.html`](graphs/nav_graph/nav-graph.html):
+самодостаточный файл (миниатюры вшиты в base64), открывается в браузере, узлы кликабельны.
+
+Рядом лежит **галерея всех `@Preview` проекта**, сгруппированная по модулям и пакетам:
+[`graphs/nav_graph/preview-gallery.html`](graphs/nav_graph/preview-gallery.html)
+(![png](graphs/nav_graph/preview-gallery.png) — статичная версия).
+
+Все четыре файла (`nav-graph.png` / `nav-graph.html` / `preview-gallery.png` /
+`preview-gallery.html`) лежат в `docs/graphs/nav_graph/` и обновляются одной командой
+`./gradlew :app:exportNavGraphToDocs` (см. [«Команды»](#команды)).
+
+Схема тех же переходов в текстовом виде:
 
 ```mermaid
 flowchart TD
@@ -150,6 +170,41 @@ flowchart TD
 входа в восемь экранов-настроек, что `TransactionKey` открывается из двух мест, и что
 вкладки нижней навигации — это четыре независимых поддерева под `MainKey`.
 
+## Превью и миниатюры
+
+Миниатюра узла — это `@Preview`, помеченный `@NavPreview(route = XKey::class)` и отрисованный
+Layoutlib **headless**, без эмулятора. Отсюда главное правило: **превью должно быть
+DI-free** — рендер идёт без запущенного Hilt-графа, поэтому реальную функцию-экран
+`XScreen()` (она тянет `hiltViewModel()`) рисовать нельзя, она упадёт. У нас превью
+вызывают внутренний `XContent(uiState = mock..., ...)` с mock-состоянием — это и есть
+«representative preview» из гайда: выглядит как экран, но не лезет наружу за Compose.
+
+Сейчас миниатюры есть у **всех 21 узла**. Три случая потребовали ручной доводки:
+
+- **`ProfileScreen` и `CreatePinScreen`** — у экранов не было `@Preview` вообще. Добавили
+  DI-free превью: `ProfileScreen` рисует `ProfileContent` в состоянии авторизованного
+  пользователя, `CreatePinScreen` — экран ввода PIN.
+- **`ProfileAuthKey`** — у него нет своего `@NavDestination` (это тот же `AuthScreen`).
+  Миниатюру дали отдельным `@NavPreview(route = ProfileAuthKey::class)` на превью, которое
+  рисует `AuthContent`. `@NavPreview` привязывается к маршруту независимо от `@NavDestination`.
+- **`CreatePinScreen`** — его настоящий `PinEntryCommonScreen` принимает параметр типа
+  `android.hardware.biometrics.BiometricPrompt.AuthenticationCallback`, а этот класс не
+  загружается в headless-Layoutlib (`NoClassDefFoundError`). Поэтому превью собрано из тех
+  же под-компонентов напрямую (`PinCodeScreenHeader` + `RoundedBoxesRow` + `Keyboard`), без
+  биометрического параметра.
+
+Две миниатюры Layoutlib рисует не полностью — это ограничение движка рендера, а не ошибка
+разметки:
+
+| Экран | Что видно | Почему |
+| --- | --- | --- |
+| `SplashKey` | пустой фон | экран — это Lottie-анимация (`LottieAnimation`), а Lottie в headless-Layoutlib не воспроизводится |
+| `AnalysisKey` | период, сумма, легенда категорий — но без самой круговой диаграммы | `PieChart` из YCharts рисуется на кастомном `Canvas`, который Layoutlib не отрисовывает |
+
+Превью `AnalysisScreen` при этом специально переведено с состояния ошибки на
+`mockTransactionUiStateSuccess` — так миниатюра показывает реальную структуру экрана, а не
+экран ошибки.
+
 ## Команды
 
 Все задачи регистрируются в каждом модуле с плагином; в `:app` они работают с
@@ -159,15 +214,19 @@ flowchart TD
 | --- | --- |
 | `./gradlew :app:aggregateNavGraph` | склеивает графы всех модулей → `app/build/navgraph-aggregated/nav-graph.json` |
 | `./gradlew :app:generateNavGraph` | граф одного модуля + рендер превью → `app/build/navgraph/` |
-| `./gradlew :app:exportNavGraphHtml` | интерактивный HTML со всеми экранами и переходами |
-| `./gradlew :app:exportNavGraphImage` | тот же граф одной PNG-картинкой |
+| `./gradlew :app:exportNavGraphHtml` | интерактивный HTML со всеми экранами и переходами → `app/build/navgraph/` |
+| `./gradlew :app:exportNavGraphImage` | тот же граф одной PNG-картинкой → `app/build/navgraph/` |
+| **`./gradlew :app:exportNavGraphToDocs`** | **экспортирует граф и галерею превью (PNG + HTML) сразу в `docs/graphs/nav_graph/`** — коммитим как документацию (задача в `app/build.gradle.kts`) |
 | `./gradlew :app:generatePreviewGallery` | рендер всех `@Preview` проекта (галерея превью в IDE) |
-| `./gradlew :app:exportPreviewGalleryHtml` | галерея превью отдельным HTML |
+| `./gradlew :app:exportPreviewGalleryHtml` | галерея превью отдельным HTML → `app/build/navgallery/` |
+| `./gradlew :app:exportPreviewGalleryImage` | галерея превью одной PNG → `app/build/navgallery/` |
 | `./gradlew navDump` | перезаписать `.nav`-бейзлайны во всех модулях |
 | `./gradlew navCheck` | проверить, что граф не разошёлся с бейзлайнами |
 
+Обновить закоммиченную карту и галерею в `docs/graphs/nav_graph/` после изменения графа:
+
 ```bash
-./gradlew :app:exportNavGraphHtml
+./gradlew :app:exportNavGraphToDocs
 ```
 
 ### Бейзлайн `.nav`
@@ -238,19 +297,24 @@ extensions.configure<NavGraphExtension> {
    экран умеет делать (аннотация повторяемая). Метка — по-русски, как в UI.
 4. На основной `@Preview` — `@NavPreview(route = XKey::class, primary = true)`; остальные
    превью того же экрана можно пометить без `primary` (так сделано у `AuthScreen` — пять
-   состояний).
+   состояний). Превью должно быть **DI-free** (рисовать `XContent(mock)`, а не `XScreen()`) —
+   иначе headless-рендер упадёт. Подробнее — раздел «Превью и миниатюры».
 5. `./gradlew navDump` и закоммитить обновлённый `.nav`.
+6. `./gradlew :app:exportNavGraphToDocs` — обновить карту и галерею в
+   `docs/graphs/nav_graph/` и закоммитить их вместе с изменениями.
 
 Ключ, у которого нет `@NavDestination`, попадёт в граф пустой карточкой — это сигнал, что
 экран не размечен.
 
 ## Ограничения
 
-- **Один экран — один узел.** `AuthScreen` рисует и `AuthKey`, и `ProfileAuthKey`, но
-  `@NavDestination` можно повесить только один раз, поэтому `ProfileAuthKey` показан
-  карточкой без превью.
-- **Нет превью — нет картинки.** У `ProfileScreen` и `CreatePinScreen` нет `@Preview`
-  (давняя дыра, не связанная с плагином) — в графе они пустые.
+- **Один экран — один `@NavDestination`.** `AuthScreen` обслуживает и `AuthKey`, и
+  `ProfileAuthKey`, но `@NavDestination` вешается только один раз (на `AuthKey`). Миниатюру
+  `ProfileAuthKey` при этом дали отдельным `@NavPreview` (см. «Превью и миниатюры»).
+- **Headless-рендер рисует не всё.** Lottie (`SplashKey`) и кастомный `Canvas` YCharts
+  (диаграмма `AnalysisKey`) Layoutlib не отрисовывает; типы из `android.hardware.*` в превью
+  приводят к `NoClassDefFoundError`. Обход — DI-free representative-превью из простых
+  Compose-компонентов (см. «Превью и миниатюры»).
 - **Граф статический.** Условные переходы (`if (authStatus == UNAUTHORIZED)`) видны как
   два ребра с метками, но самого условия в графе нет; рёбра, не описанные аннотацией,
   в граф не попадут — разметку нужно поддерживать руками (для этого и `navCheck`).
@@ -266,6 +330,9 @@ extensions.configure<NavGraphExtension> {
 | `build-logic/.../soft/divan/financemanager/NavGraph.kt` | подключение и настройка плагина |
 | `build-logic/.../FeatureImplConventionPlugin.kt` | плагин для всех `feature:*:impl` |
 | `build-logic/.../AndroidAppConventionPlugin.kt` | плагин для `:app` (агрегация) |
+| `app/build.gradle.kts` | задача `exportNavGraphToDocs` (граф + галерея → `docs/graphs/nav_graph/`) |
+| `docs/graphs/nav_graph/nav-graph.{png,html}` | закоммиченная карта навигации для документации |
+| `docs/graphs/nav_graph/preview-gallery.{png,html}` | закоммиченная галерея всех `@Preview` |
 | `gradle/libs.versions.toml` | версия `navgraph` и артефакт для convention-плагинов |
 | `feature/*/impl/.../*Screen.kt` | `@NavDestination` / `@NavEdge` / `@NavPreview` |
 | `app/.../presenter/navigation/RootNavDisplay.kt` | рёбра корневого стека (явный `from`) |

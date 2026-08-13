@@ -56,6 +56,7 @@ import com.github.skydoves.navgraph.annotations.NavDestination
 import com.github.skydoves.navgraph.annotations.NavPreview
 import com.yandex.authsdk.YandexAuthLoginOptions
 import soft.divan.financemanager.feature.auth.api.AuthKey
+import soft.divan.financemanager.feature.auth.api.ProfileAuthKey
 import soft.divan.financemanager.feature.auth.impl.R
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthAction
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthActions
@@ -476,6 +477,27 @@ private fun SyncingOverlay() {
                 Text(text = stringResource(R.string.auth_syncing_overlay))
             }
         }
+    }
+}
+
+/**
+ * Превью повторной авторизации из профиля для карты навигации ([ProfileAuthKey]).
+ *
+ * Экран [ProfileAuthKey] — это тот же [AuthScreen], поэтому миниатюра узла берётся из того
+ * же DI-free [AuthContent]; отдельный `@NavDestination` ключу не нужен (у экрана он один).
+ */
+@NavPreview(route = ProfileAuthKey::class, primary = true)
+@Preview(showBackground = true, name = "Profile re-auth")
+@Composable
+fun ProfileAuthScreenPreview() {
+    FinanceManagerTheme {
+        AuthContent(
+            uiState = AuthUiState.Success(
+                authUi = AuthUi(isLoginMode = true)
+            ),
+            actions = AuthActions(),
+            snackbarHostState = SnackbarHostState()
+        )
     }
 }
 

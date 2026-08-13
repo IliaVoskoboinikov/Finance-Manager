@@ -122,3 +122,29 @@ tasks.register("printVersionName") {
         println(Const.VERSION_NAME)
     }
 }
+
+// Экспорт карты навигации в docs/graphs/nav_graph/ — коммитим статичные PNG и самодостаточные
+// интерактивные HTML (миниатюры вшиты в base64), чтобы граф и галерея превью были видны прямо
+// в документации (docs/nav-graph.md). Кладём и сам граф (nav-graph), и галерею всех @Preview
+// (preview-gallery). Запускать вручную после осознанного изменения графа:
+//   ./gradlew :app:exportNavGraphToDocs
+//
+// Замечание по путям: export-задачи плагина пишут в build/navgraph/ и build/navgallery/
+// (без подчёркиваний), а целевая папка документации — docs/graphs/nav_graph/.
+tasks.register<Copy>("exportNavGraphToDocs") {
+    group = "navgraph"
+    description = "Copies nav-graph + preview-gallery (png/html) into docs/graphs/nav_graph/"
+    dependsOn(
+        "exportNavGraphImage",
+        "exportNavGraphHtml",
+        "exportPreviewGalleryImage",
+        "exportPreviewGalleryHtml"
+    )
+    from(layout.buildDirectory.dir("navgraph")) {
+        include("nav-graph.png", "nav-graph.html")
+    }
+    from(layout.buildDirectory.dir("navgallery")) {
+        include("preview-gallery.png", "preview-gallery.html")
+    }
+    into(rootProject.layout.projectDirectory.dir("docs/graphs/nav_graph"))
+}
