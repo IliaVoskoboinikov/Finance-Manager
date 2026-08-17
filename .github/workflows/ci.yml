@@ -183,3 +183,31 @@ jobs:
         with:
           name: all_modules.png
           path: all_modules.png
+
+  nav-graph:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
+      # Рендер превью использует Layoutlib 16.2.1, чей Bridge скомпилирован под Java 21
+      # (class file version 65). android-setup ставит JDK 17 → рендер падает с
+      # UnsupportedClassVersionError, и ВСЕ превью выходят «no preview» (граф/рёбра при этом
+      # строятся корректно — их даёт KSP, а он на 17 работает). Переопределяем JAVA_HOME на 21
+      # только для этой джобы; остальные CI-джобы остаются на 17.
+      - name: Set up JDK 21 for Layoutlib render
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Nav graph report
+        uses: ./.github/actions/nav-graph
+        with:
+          gradle-flags: ${{ env.gradleFlags }}
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nav-graph-report
+          path: nav-graph-report

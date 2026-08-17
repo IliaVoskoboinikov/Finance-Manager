@@ -39,12 +39,15 @@ import co.yml.charts.common.model.LegendsConfig
 import co.yml.charts.ui.piechart.charts.PieChart
 import co.yml.charts.ui.piechart.models.PieChartConfig
 import co.yml.charts.ui.piechart.models.PieChartData
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavPreview
 import soft.divan.financemanager.core.domain.extension.pretty
 import soft.divan.financemanager.core.domain.utli.UiDateFormatter
+import soft.divan.financemanager.feature.analysis.api.AnalysisKey
 import soft.divan.financemanager.feature.analysis.impl.R
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisActions
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisUiState
-import soft.divan.financemanager.feature.analysis.impl.precenter.model.mockTransactionUiStateError
+import soft.divan.financemanager.feature.analysis.impl.precenter.model.mockTransactionUiStateSuccess
 import soft.divan.financemanager.feature.analysis.impl.precenter.viewModel.AnalysisViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
 import soft.divan.financemanager.uikit.components.ErrorContent
@@ -58,13 +61,14 @@ import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import java.time.LocalDate
 
+@NavPreview(route = AnalysisKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AnalysisScreenPreview() {
     val today = remember { LocalDate.now() }
     FinanceManagerTheme {
         AnalysisContent(
-            uiState = mockTransactionUiStateError,
+            uiState = mockTransactionUiStateSuccess,
             actions = AnalysisActions(
                 onRetry = {},
                 onNavigateBack = { },
@@ -78,6 +82,7 @@ fun AnalysisScreenPreview() {
     }
 }
 
+@NavDestination(route = AnalysisKey::class)
 @Composable
 fun AnalysisScreen(
     isIncome: Boolean,

@@ -12,6 +12,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.github.skydoves.navgraph.annotations.NavEdge
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.auth.domain.model.AuthStatus
@@ -26,6 +27,10 @@ import soft.divan.financemanager.feature.splashscreen.api.SplashScreenFeatureApi
  *
  * Это отдельный back stack: у вкладок нижней навигации свои стеки внутри [MainKey].
  */
+// Переходы корневого стека принадлежат хосту, а не экранам, поэтому `from` у рёбер задан явно.
+@NavEdge(from = SplashKey::class, to = AuthKey::class, label = "нет сессии")
+@NavEdge(from = SplashKey::class, to = MainKey::class, label = "есть сессия")
+@NavEdge(from = AuthKey::class, to = MainKey::class, label = "вход выполнен")
 @Composable
 fun RootNavDisplay(
     splashFeatureApi: SplashScreenFeatureApi,

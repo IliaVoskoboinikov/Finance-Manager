@@ -38,6 +38,8 @@ Run checks for the modules you touched; fix every violation your change introduc
 ./gradlew detekt                        # static analysis (./gradlew detektBaseline to snapshot)
 ./gradlew lint                          # Android lint + custom :lint checkers
 ./gradlew :app:assertModuleGraph        # validate module dependency graph
+./gradlew navCheck                      # navigation graph matches the committed .nav baselines
+./gradlew navDump                       # refresh those baselines after an intentional nav change
 ./gradlew app:assembleDebug            # build debug APK
 ```
 
@@ -76,6 +78,12 @@ Hilt `Set<FeatureApi>` multibinding (`di/FeatureNavigationModule.kt`) and owns t
 the root one (`RootNavDisplay`: splash → auth → main) and one per bottom-nav tab
 (`TopLevelBackStack`). ViewModels that need nav arguments use Hilt assisted factories —
 `SavedStateHandle` no longer carries them.
+
+Because the graph is spread across features, it is also **described in annotations** and
+extracted at build time by `compose-nav-graph` (see `docs/nav-graph.md`): a screen composable
+carries `@NavDestination(route = XKey::class)`, one `@NavEdge(to = …)` per outgoing `goTo`,
+and `@NavPreview` next to its `@Preview`. New screens/transitions MUST be annotated, and
+`./gradlew navDump` re-records the committed `*/nav/*.nav` baselines.
 
 ### Error handling: `DomainResult` (see `docs/domain-result.md`)
 The domain layer never throws across boundaries. Repositories/UseCases return

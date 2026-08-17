@@ -7,6 +7,7 @@ import soft.divan.financemanager.Conf
 import soft.divan.financemanager.addDefaultComposeDependencies
 import soft.divan.financemanager.applyPlugin
 import soft.divan.financemanager.configureBaseAndroid
+import soft.divan.financemanager.configureNavGraph
 import soft.divan.financemanager.lib
 
 class AndroidAppConventionPlugin : Plugin<Project> {
@@ -20,6 +21,10 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             applyPlugin("kotlin-serialization")
             applyPlugin("soft-divan-hilt")
             applyPlugin("soft-divan-firebase")
+
+            // Хост навигации: агрегирует nav-graph.json всех фич в единый граф
+            // и владеет задачами generateNavGraph / navDump / navCheck (docs/nav-graph.md).
+            configureNavGraph()
 
             applyPlugin("graph")
             applyPlugin("soft-divan-build-time-tracker")

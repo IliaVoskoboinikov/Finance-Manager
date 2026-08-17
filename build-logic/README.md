@@ -25,7 +25,7 @@ build-logic/
 │   ├── HiltConventionPlugin
 │   ├── JvmLibraryConventionPlugin
 │   ├── BuildTimeTrackerConventionPlugin
-│   └── utils (libs, Conf, namespace, android config)
+│   └── utils (libs, Conf, namespace, android config, navgraph)
 ├── settings.gradle.kts
 └── build.gradle.kts
 ```
@@ -164,6 +164,7 @@ Namespace формируется автоматически на основе `p
 - kotlin-serialization (ключи корневого графа навигации)
 - hilt
 - firebase
+- navgraph (агрегация карты навигации, `configureNavGraph()`)
 - graph plugin
 - build time tracker
 
@@ -228,12 +229,28 @@ Namespace формируется автоматически на основе `p
 - android library
 - compose
 - hilt
+- navgraph (`configureNavGraph()`)
 
 Подключает:
 
 - Compose dependencies
 - `ui-tooling` для debug
 - unit‑test бандл (`addDefaultUnitTestDependencies()`)
+
+---
+
+### `configureNavGraph()`
+**Карта навигации**
+
+Не отдельный плагин, а утилита (`soft/divan/financemanager/NavGraph.kt`), которую применяют
+`soft-divan-feature-impl` и `soft-divan-android-app`. Подключает
+`com.github.skydoves.navgraph`: KSP-процессор собирает граф экранов модуля из аннотаций
+`@NavDestination` / `@NavEdge` / `@NavPreview`, `:app` агрегирует графы всех фич.
+
+Фиксирует `renderBackend = LAYOUTLIB` (иначе плагин генерирует Robolectric-тест рендера в
+`testDebugUnitTest`) и снимает `failOnNoDiscoveredTests` в модулях без `src/test` — плагин
+включает `includeAndroidResources`, из-за чего пустая задача тестов перестаёт быть
+`NO-SOURCE`. Подробности — [`docs/nav-graph.md`](../docs/nav-graph.md).
 
 ---
 
