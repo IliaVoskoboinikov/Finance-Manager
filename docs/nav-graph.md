@@ -170,6 +170,22 @@ flowchart TD
 входа в восемь экранов-настроек, что `TransactionKey` открывается из двух мест, и что
 вкладки нижней навигации — это четыре независимых поддерева под `MainKey`.
 
+Два места читаются неочевидно — это не баг рендера, а как плагин моделирует граф:
+
+- **`MainKey` — это оболочка с нижней навигацией, а не экран.** Её миниатюра — намеренная
+  заглушка (`MainScreenPreview`): в превью нельзя поднять реальный граф вкладок (он идёт
+  через DI/навигацию), поэтому рисуется нижний бар + подпись выбранной вкладки («Expenses»).
+  Реальный контент вкладок — это **отдельные узлы**: `TransactionsTodayKey`, `MyAccountsKey`,
+  `CategoryKey`, `SettingsKey` (сама «Expenses today» со списком операций — узел
+  `TransactionsTodayKey`, а не `MainKey`).
+- **«Расходы» и «Доходы» — это один узел `TransactionsTodayKey`, а не два.** Обе вкладки —
+  один и тот же экран `TransactionsTodayScreen` с аргументом `isIncome: Boolean` (Расходы =
+  `isIncome=false`, Доходы = `isIncome=true`). Плагин моделирует **один маршрут-с-аргументом
+  как один узел**, поэтому отдельного «Income» в графе нет — оба таба ведут в
+  `TransactionsTodayKey`, и это отражено в подписи ребра `MainKey → TransactionsTodayKey`
+  («вкладка «Расходы» / «Доходы»»). Так же устроены `HistoryKey`/`AnalysisKey`/`TransactionKey`
+  — у них тоже `isIncome` в аргументах.
+
 ## Превью и миниатюры
 
 Миниатюра узла — это `@Preview`, помеченный `@NavPreview(route = XKey::class)` и отрисованный
@@ -330,8 +346,13 @@ extensions.configure<NavGraphExtension> {
 - **Граф статический.** Условные переходы (`if (authStatus == UNAUTHORIZED)`) видны как
   два ребра с метками, но самого условия в графе нет; рёбра, не описанные аннотацией,
   в граф не попадут — разметку нужно поддерживать руками (для этого и `navCheck`).
-- **Рендер требует Layoutlib.** Первый запуск скачивает `layoutlib` и
-  `compose-preview-renderer` (~100 МБ) в кэш Gradle.
+- **Рендер требует Layoutlib и JDK 21.** Первый запуск скачивает `layoutlib` и
+  `compose-preview-renderer` (~100 МБ) в кэш Gradle. Важно: `Bridge` из Layoutlib `16.2.1`
+  скомпилирован под **Java 21** (class file version 65), поэтому Gradle-JVM для рендера
+  обязан быть **JDK 21** — на JDK 17 рендер падает с `UnsupportedClassVersionError`, и **все**
+  превью выходят «no preview» (граф и рёбра при этом строятся корректно — их даёт KSP, а он на
+  17 работает). Локальная разработка идёт на JDK 21; в CI джоба `nav-graph` (`.github/workflows/ci.yml`)
+  явно поднимает JDK 21 отдельным шагом, т.к. общий `android-setup` ставит 17.
 - Плагин относительно новый (0.2.1, июль 2026) и на сборку не влияет: ни одна его задача
   не входит в `assembleDebug`, `check` или `testDebugUnitTest`.
 
