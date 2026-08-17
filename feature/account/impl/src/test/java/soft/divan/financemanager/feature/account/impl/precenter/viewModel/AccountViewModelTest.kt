@@ -1,6 +1,5 @@
 package soft.divan.financemanager.feature.account.impl.precenter.viewModel
 
-import androidx.lifecycle.SavedStateHandle
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -27,7 +26,6 @@ import soft.divan.financemanager.feature.account.impl.domain.usecase.DeleteAccou
 import soft.divan.financemanager.feature.account.impl.domain.usecase.GetAccountByIdUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.HasAccountTransactionsUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.UpdateAccountUseCase
-import soft.divan.financemanager.feature.account.impl.navigation.ACCOUNT_ID_KEY
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountEvent
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountMode
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUiState
@@ -82,7 +80,7 @@ class AccountViewModelTest {
         deleteAccountUseCase = deleteAccountUseCase,
         hasAccountTransactionsUseCase = hasAccountTransactionsUseCase,
         hapticsManager = hapticsManager,
-        savedStateHandle = SavedStateHandle()
+        accountId = null
     )
 
     private fun editModeViewModel(id: String = "local-1") = AccountViewModel(
@@ -92,7 +90,7 @@ class AccountViewModelTest {
         deleteAccountUseCase = deleteAccountUseCase,
         hasAccountTransactionsUseCase = hasAccountTransactionsUseCase,
         hapticsManager = hapticsManager,
-        savedStateHandle = SavedStateHandle(mapOf(ACCOUNT_ID_KEY to id))
+        accountId = id
     )
 
     /** Подписка на uiState, чтобы сработал onStart { loadAccount() }. */

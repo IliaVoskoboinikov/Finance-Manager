@@ -99,10 +99,13 @@ fun PreviewCurrencySheet() {
 
 @Composable
 fun AccountScreenScreen(
-    modifier: Modifier = Modifier,
     accountId: String?,
+    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
-    viewModel: AccountViewModel = hiltViewModel(),
+    viewModel: AccountViewModel =
+        hiltViewModel<AccountViewModel, AccountViewModel.Factory> { factory ->
+            factory.create(accountId = accountId)
+        },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

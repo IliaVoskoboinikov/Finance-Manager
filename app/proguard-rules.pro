@@ -23,3 +23,9 @@
 -keepclassmembers,allowobfuscation class * {
     @com.google.gson.annotations.SerializedName <fields>;
 }
+
+# --- Navigation 3 ---
+# Back stack сохраняется через kotlinx.serialization, а ключи восстанавливаются
+# рефлексией по имени класса (Class.forName в NavKeySerializer). Без keep R8 может
+# выбросить класс ключа целиком, и восстановление стека после смерти процесса упадёт.
+-keep class * implements androidx.navigation3.runtime.NavKey { *; }

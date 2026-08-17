@@ -116,10 +116,14 @@ fun AccountPreview() {
 
 @Composable
 fun TransactionScreen(
+    isIncome: Boolean,
+    transactionId: String?,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
-    isIncome: Boolean,
-    viewModel: TransactionViewModel = hiltViewModel(),
+    viewModel: TransactionViewModel =
+        hiltViewModel<TransactionViewModel, TransactionViewModel.Factory> { factory ->
+            factory.create(isIncome = isIncome, transactionId = transactionId)
+        },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 
 ) {

@@ -1,8 +1,10 @@
 package soft.divan.financemanager.feature.transaction.impl.precenter.viewModel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,8 +35,6 @@ import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteT
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetTransactionUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.UpdateTransactionAndUpdateAccountUseCase
-import soft.divan.financemanager.feature.transaction.impl.navigation.IS_INCOME_KEY
-import soft.divan.financemanager.feature.transaction.impl.navigation.TRANSACTION_ID_KEY
 import soft.divan.financemanager.feature.transaction.impl.precenter.mapper.toDomain
 import soft.divan.financemanager.feature.transaction.impl.precenter.mapper.toUi
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.AccountUi
@@ -46,11 +46,10 @@ import soft.divan.financemanager.feature.transaction.impl.precenter.model.Transa
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import javax.inject.Inject
 
-@HiltViewModel
+@HiltViewModel(assistedFactory = TransactionViewModel.Factory::class)
 @Suppress("LongParameterList", "TooManyFunctions")
-class TransactionViewModel @Inject constructor(
+class TransactionViewModel @AssistedInject constructor(
     private val createTransactionAndUpdateAccountUseCase: CreateTransactionAndUpdateAccountUseCase,
     private val getAccountsUseCase: GetAccountsUseCase,
     private val getAccountByIdUseCase: GetAccountByIdUseCase,
@@ -60,11 +59,15 @@ class TransactionViewModel @Inject constructor(
     private val deleteTransactionAndUpdateAccountUseCase: DeleteTransactionAndUpdateAccountUseCase,
     private val hapticsManager: HapticsManager,
     private val soundPlayer: SoundPlayer,
-    savedStateHandle: SavedStateHandle
+    @Assisted private val isIncome: Boolean,
+    @Assisted private val transactionId: String?
 ) : ViewModel() {
 
-    private val transactionId: String? = savedStateHandle.get<String>(TRANSACTION_ID_KEY)
-    private val isIncome: Boolean = savedStateHandle.get<Boolean>(IS_INCOME_KEY) ?: false
+    /** Создаёт [TransactionViewModel] с аргументами навигации из `TransactionKey`. */
+    @AssistedFactory
+    interface Factory {
+        fun create(isIncome: Boolean, transactionId: String?): TransactionViewModel
+    }
 
     private val _uiState = MutableStateFlow<TransactionUiState>(TransactionUiState.Loading)
     val uiState: StateFlow<TransactionUiState> = _uiState.onStart { load() }

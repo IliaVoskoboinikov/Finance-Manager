@@ -15,6 +15,9 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             applyPlugin("soft-divan-android-base")
             applyPlugin("android-application")
             applyPlugin("kotlin-compose")
+
+            // Ключи корневого графа (NavKey) сохраняются через kotlinx.serialization.
+            applyPlugin("kotlin-serialization")
             applyPlugin("soft-divan-hilt")
             applyPlugin("soft-divan-firebase")
 

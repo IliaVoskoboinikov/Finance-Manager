@@ -1,6 +1,5 @@
 package soft.divan.financemanager.feature.transaction.impl.precenter.viewModel
 
-import androidx.lifecycle.SavedStateHandle
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -39,8 +38,6 @@ import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteT
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetTransactionUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.UpdateTransactionAndUpdateAccountUseCase
-import soft.divan.financemanager.feature.transaction.impl.navigation.IS_INCOME_KEY
-import soft.divan.financemanager.feature.transaction.impl.navigation.TRANSACTION_ID_KEY
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionUiState
@@ -117,7 +114,8 @@ class TransactionViewModelTest {
         deleteTransactionAndUpdateAccountUseCase = deleteUseCase,
         hapticsManager = hapticsManager,
         soundPlayer = soundPlayer,
-        savedStateHandle = SavedStateHandle(mapOf(IS_INCOME_KEY to false))
+        isIncome = false,
+        transactionId = null
     )
 
     private fun editModeViewModel(id: String = "t1") = TransactionViewModel(
@@ -130,9 +128,8 @@ class TransactionViewModelTest {
         deleteTransactionAndUpdateAccountUseCase = deleteUseCase,
         hapticsManager = hapticsManager,
         soundPlayer = soundPlayer,
-        savedStateHandle = SavedStateHandle(
-            mapOf(TRANSACTION_ID_KEY to id, IS_INCOME_KEY to false)
-        )
+        isIncome = false,
+        transactionId = id
     )
 
     private fun TestScope.subscribe(vm: TransactionViewModel): Job =

@@ -1,8 +1,8 @@
 package soft.divan.financemanager.core.featureapi
 
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
@@ -11,22 +11,23 @@ import org.junit.Test
 class NavExtTest {
 
     private val featureApi = mockk<FeatureApi>()
-    private val navGraphBuilder = mockk<NavGraphBuilder>()
-    private val navController = mockk<NavHostController>()
-    private val scope = RouteScope("root")
+    private val scope = mockk<EntryProviderScope<NavKey>>()
+    private val navigator = mockk<Navigator>()
+
+    /** Модификатор, отличимый от [Modifier] по умолчанию. */
+    private object TestElement : Modifier.Element
 
     @Test
-    fun `register delegates to featureApi registerGraph`() {
-        val modifier = Modifier
-        justRun { featureApi.registerGraph(any(), any(), any(), any()) }
+    fun `register delegates to featureApi registerEntries`() {
+        val modifier: Modifier = TestElement
+        justRun { featureApi.registerEntries(any(), any(), any()) }
 
-        navGraphBuilder.register(featureApi, navController, scope, modifier)
+        scope.register(featureApi, navigator, modifier)
 
         verify(exactly = 1) {
-            featureApi.registerGraph(
-                navGraphBuilder = navGraphBuilder,
-                navController = navController,
+            featureApi.registerEntries(
                 scope = scope,
+                navigator = navigator,
                 modifier = modifier
             )
         }
@@ -34,12 +35,12 @@ class NavExtTest {
 
     @Test
     fun `register uses empty modifier by default`() {
-        justRun { featureApi.registerGraph(any(), any(), any(), any()) }
+        justRun { featureApi.registerEntries(any(), any(), any()) }
 
-        navGraphBuilder.register(featureApi, navController, scope)
+        scope.register(featureApi, navigator)
 
         verify(exactly = 1) {
-            featureApi.registerGraph(navGraphBuilder, navController, scope, Modifier)
+            featureApi.registerEntries(scope, navigator, Modifier)
         }
     }
 }

@@ -13,6 +13,11 @@ dependencies {
     compileOnly(libs.agp)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.compose.plugin)
+
+    // В отличие от compose-плагина, плагин kotlinx.serialization не входит в KGP,
+    // поэтому его нужно положить на runtime-classpath convention-плагинов —
+    // иначе pluginManager.apply("org.jetbrains.kotlin.plugin.serialization") его не найдёт.
+    implementation(libs.kotlin.serialization.plugin)
     compileOnly(libs.build.time.tracker)
     compileOnly(libs.ruler.plugin)
 

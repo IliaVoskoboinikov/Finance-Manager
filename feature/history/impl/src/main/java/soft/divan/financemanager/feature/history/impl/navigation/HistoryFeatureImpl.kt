@@ -1,83 +1,39 @@
 package soft.divan.financemanager.feature.history.impl.navigation
 
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import soft.divan.financemanager.core.featureapi.RouteScope
-import soft.divan.financemanager.feature.analysis.api.AnalysisFeatureApi
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
+import soft.divan.financemanager.core.featureapi.Navigator
+import soft.divan.financemanager.feature.analysis.api.AnalysisKey
 import soft.divan.financemanager.feature.history.api.HistoryFeatureApi
+import soft.divan.financemanager.feature.history.api.HistoryKey
 import soft.divan.financemanager.feature.history.impl.precenter.screens.HistoryScreen
-import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
+import soft.divan.financemanager.feature.transaction.api.TransactionKey
 import javax.inject.Inject
-
-private const val BASE_ROUTE = "history"
-const val IS_INCOME_KEY: String = "isIncome"
 
 class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
 
-    override val route: String = BASE_ROUTE
-
-    @Inject
-    lateinit var transactionFeatureApi: TransactionFeatureApi
-
-    @Inject
-    lateinit var analysisFeatureApi: AnalysisFeatureApi
-
-    override fun transactionRouteWithArgs(isIncome: Boolean) = "$route/$isIncome"
-
-    override fun registerGraph(
-        navGraphBuilder: NavGraphBuilder,
-        navController: NavHostController,
-        scope: RouteScope,
+    override fun registerEntries(
+        scope: EntryProviderScope<NavKey>,
+        navigator: Navigator,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(
-            "${scope.route()}/{$IS_INCOME_KEY}",
-            arguments = listOf(
-                navArgument(IS_INCOME_KEY) {
-                    type = NavType.BoolType
-                    defaultValue = false
-                }
-            )
-        ) { backStackEntry ->
-
-            val isIncome = backStackEntry.arguments?.getBoolean(IS_INCOME_KEY) ?: false
+        scope.entry<HistoryKey> { historyKey ->
+            val isIncome = historyKey.isIncome
 
             HistoryScreen(
                 modifier = modifier,
-                onNavigateBack = navController::popBackStack,
-                onNavigateToTransaction = { transitionId ->
-                    navController.navigate(
-                        scope.route(
-                            transactionFeatureApi.transactionRouteWithArgs(
-                                transactionId = transitionId,
-                                isIncome = isIncome
-                            )
-                        )
+                isIncome = isIncome,
+                onNavigateBack = navigator::back,
+                onNavigateToTransaction = { transactionId ->
+                    navigator.goTo(
+                        TransactionKey(isIncome = isIncome, transactionId = transactionId)
                     )
                 },
                 onNavigateToAnalysis = {
-                    navController.navigate(
-                        scope.route(analysisFeatureApi.analysisRouteWithArgs(isIncome = isIncome))
-                    )
+                    navigator.goTo(AnalysisKey(isIncome = isIncome))
                 }
             )
         }
-        transactionFeatureApi.registerGraph(
-            navGraphBuilder = navGraphBuilder,
-            navController = navController,
-            scope = scope.child(transactionFeatureApi.route),
-            modifier = modifier
-        )
-
-        analysisFeatureApi.registerGraph(
-            navGraphBuilder = navGraphBuilder,
-            navController = navController,
-            scope = scope.child(analysisFeatureApi.route),
-            modifier = modifier
-        )
     }
 }

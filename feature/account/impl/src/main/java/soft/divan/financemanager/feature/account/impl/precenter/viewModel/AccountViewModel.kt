@@ -1,8 +1,10 @@
 package soft.divan.financemanager.feature.account.impl.precenter.viewModel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +26,6 @@ import soft.divan.financemanager.feature.account.impl.domain.usecase.DeleteAccou
 import soft.divan.financemanager.feature.account.impl.domain.usecase.GetAccountByIdUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.HasAccountTransactionsUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.UpdateAccountUseCase
-import soft.divan.financemanager.feature.account.impl.navigation.ACCOUNT_ID_KEY
 import soft.divan.financemanager.feature.account.impl.precenter.mapper.toDomain
 import soft.divan.financemanager.feature.account.impl.precenter.mapper.toUi
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountEvent
@@ -35,21 +36,24 @@ import soft.divan.financemanager.feature.haptics.api.domain.HapticType
 import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
 import java.time.LocalDateTime
 import java.util.UUID
-import javax.inject.Inject
 
-@HiltViewModel
+@HiltViewModel(assistedFactory = AccountViewModel.Factory::class)
 @Suppress("LongParameterList")
-class AccountViewModel @Inject constructor(
+class AccountViewModel @AssistedInject constructor(
     private val createAccountUseCase: CreateAccountUseCase,
     private val updateAccountUseCase: UpdateAccountUseCase,
     private val getAccountByIdUseCase: GetAccountByIdUseCase,
     private val deleteAccountUseCase: DeleteAccountUseCase,
     private val hasAccountTransactionsUseCase: HasAccountTransactionsUseCase,
     private val hapticsManager: HapticsManager,
-    savedStateHandle: SavedStateHandle
+    @Assisted private val accountId: String?
 ) : ViewModel() {
 
-    private val accountId: String? = savedStateHandle.get<String>(ACCOUNT_ID_KEY)
+    /** Создаёт [AccountViewModel] с аргументом навигации из `AccountKey`. */
+    @AssistedFactory
+    interface Factory {
+        fun create(accountId: String?): AccountViewModel
+    }
 
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState: StateFlow<AccountUiState> = _uiState

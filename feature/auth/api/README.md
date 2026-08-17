@@ -2,8 +2,9 @@
 
 ## Responsibility
 
-Предоставление API для фичи авторизации: `AuthFeatureApi` (маршруты экранов входа и
-профиля, регистрация навигационного графа с колбэком `onFinish`).
+Предоставление API для фичи авторизации: ключи экранов (`AuthKey` — вход как точка входа
+в приложение, `ProfileKey`, `ProfileAuthKey`) и `AuthFeatureApi` с дополнительной
+регистрацией корневого экрана входа (`registerRootEntries` с колбэком `onAuthSuccess`).
 
 ## Module dependency graph
 
