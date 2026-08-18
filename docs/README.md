@@ -12,6 +12,7 @@
 - [Nav graph map](./nav-graph.md) — карта экранов из аннотаций (`compose-nav-graph`): как собирается, как размечать, `navDump` / `navCheck`.
 - [Auth & Session](./auth.md) — авторизация, управление JWT и состояниями сессии.
 - [Synchronization](./synchronization.md) — как устроена фоновая синхронизация данных.
+- [Notifications](./notifications.md) — уведомления: напоминание о неактивности, приём пушей, модель адресации и что нужно для адресных пушей.
 - [Account status & archiving](./account-archive.md) — статусная модель счёта, удаление и архивация («призрачный» счёт).
 - [DomainResult & errors](./domain-result.md) — подход к доменным результатам и обработке ошибок.
 - [Bd](./bd.md) — локальная база данных.

@@ -65,7 +65,9 @@ flowchart TB
 
 Ключевая логика синка находится в `SyncWorker`:
 
-1. Запускается `SyncWorker` (через `DelegatingWorker`) по расписанию или по требованию.
+1. Запускается `SyncWorker` (через `DelegatingWorker` из `:core:workmanager` — он общий
+   с `:core:notifications`, подробности в [`notifications.md`](./notifications.md))
+   по расписанию или по требованию.
 2. Внутри `doWork()`:
     - выполняется `CategorySyncManagerImpl.sync()` — категории не зависят ни от кого;
     - выполняется `AccountSyncManagerImpl.sync()` — счета опираются на категории;

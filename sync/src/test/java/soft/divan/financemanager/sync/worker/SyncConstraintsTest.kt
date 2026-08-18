@@ -3,6 +3,8 @@ package soft.divan.financemanager.sync.worker
 import androidx.work.NetworkType
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import soft.divan.financemanager.core.workmanager.WORKER_CLASS_NAME
+import soft.divan.financemanager.core.workmanager.delegatedData
 
 class SyncConstraintsTest {
 

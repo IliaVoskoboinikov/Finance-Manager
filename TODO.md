@@ -107,6 +107,29 @@
 - [ ] Доделать post-commit-sync (готово на ветке `post-commit-sync` — влить в master)
 - [ ] Добавить сбор статистики в приложение
 
+## 🔔 Уведомления
+
+> Как устроено сейчас и обоснование решений — в [docs/notifications.md](docs/notifications.md).
+
+- [ ] Адресные пуши, бэкенд: таблица `device_tokens`, ручки `POST /api/v1/devices`
+      и `DELETE /api/v1/devices/{token}`, отправка через FCM HTTP v1 с таргетом `token`
+- [ ] Адресные пуши, бэкенд: удалять токен по ответам `UNREGISTERED` / `INVALID_ARGUMENT`,
+      иначе база зарастает мёртвыми записями
+- [ ] Адресные пуши, бэкенд: снимать привязку токена к прежнему пользователю при смене
+      аккаунта на устройстве — иначе новый пользователь получит чужие пуши (утечка ПД)
+- [ ] Адресные пуши, мобилка: регистрация токена из `onNewToken` через WorkManager
+      (сети в этот момент может не быть), плюс при старте и после логина
+- [ ] Адресные пуши, мобилка: снятие регистрации по `AuthEvent.OnLogout`
+      (`DELETE /devices` + `FirebaseMessaging.deleteToken()`)
+- [ ] Адресные пуши, мобилка: `DeviceApiService` + DTO в `core:data`,
+      `RegisterPushTokenUseCase` в `core:domain`, кеш «последний отправленный токен + user»
+- [ ] Вернуть `deepLink` в `NotificationMessage` и смапить на `NavKey`, когда пуши
+      начнут вести на конкретный экран
+- [ ] Отказаться от `DelegatingWorker`: отдать `:app` `Configuration.Provider`
+      с `HiltWorkerFactory` и убрать дефолтный `WorkManagerInitializer` из `androidx.startup` —
+      тогда `@HiltWorker` ставятся в очередь напрямую, а `:core:workmanager` удаляется
+- [ ] Дать пользователю настройку напоминания о неактивности (порог / выключить)
+
 ## 🛠 Инструменты и качество
 
 - [ ] Подключить LeakCanary

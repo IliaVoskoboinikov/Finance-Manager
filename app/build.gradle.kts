@@ -56,6 +56,7 @@ dependencies {
     implementation(projects.core.data)
     implementation(projects.core.loggingError)
     implementation(projects.core.auth)
+    implementation(projects.core.notifications)
 
     implementation(projects.feature.category.api)
     implementation(projects.feature.category.impl)

@@ -20,6 +20,8 @@
 - [core:uikit](../core/uikit/README.md)
 - [core:feature-api](../core/feature-api/README.md)
 - [core:logging-error](../core/logging-error/README.md)
+- [core:notifications](../core/notifications/README.md)
+- [core:workmanager](../core/workmanager/README.md)
 
 ---
 

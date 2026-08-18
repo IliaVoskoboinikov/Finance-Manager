@@ -9,12 +9,12 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import soft.divan.financemanager.core.workmanager.DelegatingWorker
+import soft.divan.financemanager.core.workmanager.delegatedData
 import soft.divan.financemanager.sync.initializers.SYNC_ONE_TIME_WORK
 import soft.divan.financemanager.sync.initializers.SYNC_PERIODIC_WORK
-import soft.divan.financemanager.sync.worker.DelegatingWorker
 import soft.divan.financemanager.sync.worker.SyncConstraints
 import soft.divan.financemanager.sync.worker.SyncWorker
-import soft.divan.financemanager.sync.worker.delegatedData
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 

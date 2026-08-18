@@ -6,6 +6,9 @@ plugins {
 dependencies {
     implementation(projects.core.data)
     implementation(projects.core.common)
+    // DelegatingWorker + delegatedData(): общий примитив для @HiltWorker в библиотечных
+    // модулях. Отдаёт androidx.work и hilt-work транзитивно через api().
+    implementation(projects.core.workmanager)
 
     ksp(libs.hilt.ext.compiler)
     // ic_sync_notification.xml ссылается на ?attr/colorControlNormal из appcompat. Раньше

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_general_name">General</string>
+    <string name="notification_channel_general_description">Reminders and app announcements</string>
+
+    <string name="notification_inactivity_title">We miss you!</string>
+    <string name="notification_inactivity_message">You haven\'t opened the app for a week. It\'s a good time to check your finances.</string>
+
+    <string name="notification_push_default_title">Finance Manager</string>
+</resources>

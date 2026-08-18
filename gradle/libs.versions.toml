@@ -160,6 +160,8 @@ navgraph-gradle-plugin = { group = "com.github.skydoves", name = "compose-nav-gr
 #Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
+# Версия приходит из firebase-bom — как и у crashlytics.
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
 
 # TEST
 junit = { group = "junit", name = "junit", version.ref = "junit" }
