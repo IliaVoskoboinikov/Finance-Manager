@@ -134,13 +134,20 @@
 
 - [ ] Подключить LeakCanary
 - [ ] Улучшить документацию
-- [ ] Доделать [help_comand.md](help_comand.md)
+- [x] Доделать [help_comand.md](help_comand.md) — шпаргалка по командам: сборка, тесты,
+      покрытие, линтеры, графы модулей и навигации, Ruler, ADB-рецепты, пути отчётов
 
 ## 🚀 Релиз
 
 - [ ] Реальные Room-миграции + миграционные тесты (`MigrationTestHelper`) вместо
       `fallbackToDestructiveMigration` — обязательно до выхода к реальным пользователям
 - [ ] Обфускация и сборка (R8/ProGuard)
+- [ ] 🔴 Починить `assembleRelease` — `:app:minifyReleaseWithR8` падает на
+      `Missing class kotlinx.parcelize.Parcelize` (тянется из `com.yandex.authsdk`).
+      Правило генерирует сам R8: `app/build/outputs/mapping/release/missing_rules.txt`
+      (`-dontwarn kotlinx.parcelize.Parcelize`) → перенести в `app/proguard-rules.pro`.
+      Заодно ломается `:app:analyzeReleaseBundle`. Всплыло только сейчас, потому что
+      CI не собирает release (см. раздел CI/CD выше)
 - [ ] Релиз
 
 ## 💡 Идеи на подумать
