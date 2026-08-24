@@ -1,0 +1,39 @@
+name: Dependency submission
+
+# Отдаёт GitHub полный граф зависимостей проекта (Dependency graph → Insights).
+# Без него не работают Dependabot alerts по уязвимостям и dependency-review на PR:
+# GitHub не умеет сам разбирать libs.versions.toml + convention-плагины.
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  API_TOKEN: ${{ secrets.API_TOKEN }}
+  GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+
+jobs:
+  dependency-submission:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Create google-services.json
+        uses: ./.github/actions/create-google-services
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      # Действие само поднимает Gradle и резолвит все конфигурации проекта,
+      # поэтому отдельный setup-gradle (init-gradle) здесь не нужен.
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v6
+        with:
+          # Тестовые и инструментальные конфигурации в проде не живут — не шумим ими в алертах.
+          dependency-graph-exclude-configurations: '.*[Tt]est(Compile|Runtime)Classpath'

@@ -1,0 +1,77 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  // При желании сюда можно добавить "helpers:pinGitHubActionDigests" — тогда все
+  // actions будут запиниваться по SHA (безопаснее, но читаемость `uses:` теряется).
+  extends: ["config:recommended"],
+  timezone: "Europe/Moscow",
+  schedule: ["before 6am on monday"],
+  labels: ["dependencies"],
+  // Дашборд-issue со списком всех доступных обновлений, в т.ч. отложенных.
+  dependencyDashboard: true,
+  dependencyDashboardTitle: "🤖 Dependency Dashboard",
+  prConcurrentLimit: 5,
+  prHourlyLimit: 2,
+  // Свежие релизы регулярно ломают сборку — даём им отлежаться.
+  minimumReleaseAge: "5 days",
+  // Renovate сам находит gradle/libs.versions.toml, gradle-wrapper.properties
+  // и версии actions в .github/workflows.
+  enabledManagers: ["gradle", "gradle-wrapper", "github-actions"],
+  packageRules: [
+    {
+      // Kotlin, KSP, compose-compiler и Hilt обязаны обновляться синхронно:
+      // KSP-процессоры собираются под конкретную версию компилятора.
+      groupName: "Kotlin toolchain",
+      matchPackageNames: [
+        "org.jetbrains.kotlin{/,}**",
+        "com.google.devtools.ksp{/,}**",
+        "com.google.dagger{/,}**",
+      ],
+    },
+    {
+      // AGP тянет за собой compileSdk/lint — отдельный PR, чтобы разбирать точечно.
+      groupName: "Android Gradle Plugin",
+      matchPackageNames: ["com.android.tools.build{/,}**", "com.android{/,}**"],
+    },
+    {
+      groupName: "AndroidX Compose",
+      matchPackageNames: [
+        "androidx.compose{/,}**",
+        "androidx.navigation3{/,}**",
+        "androidx.lifecycle{/,}**",
+      ],
+    },
+    {
+      groupName: "AndroidX",
+      matchPackageNames: ["androidx{/,}**"],
+      matchUpdateTypes: ["minor", "patch"],
+    },
+    {
+      groupName: "Firebase",
+      matchPackageNames: ["com.google.firebase{/,}**", "com.google.gms{/,}**"],
+    },
+    {
+      // Инструменты качества не влияют на рантайм — мержим патчи автоматически.
+      groupName: "Static analysis tooling",
+      matchPackageNames: [
+        "io.gitlab.arturbosch.detekt{/,}**",
+        "org.jlleitschuh.gradle.ktlint{/,}**",
+        "org.jetbrains.kotlinx.kover{/,}**",
+        "io.nlopez.compose.rules{/,}**",
+      ],
+      matchUpdateTypes: ["patch"],
+      automerge: true,
+    },
+    {
+      groupName: "GitHub Actions",
+      matchManagers: ["github-actions"],
+      matchUpdateTypes: ["minor", "patch"],
+      automerge: true,
+    },
+    {
+      // major-обновления всегда отдельным PR и без automerge.
+      matchUpdateTypes: ["major"],
+      automerge: false,
+      dependencyDashboardApproval: true,
+    },
+  ],
+}

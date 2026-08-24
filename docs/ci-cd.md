@@ -13,26 +13,39 @@
 
 ```mermaid
 flowchart TD
-    push["push в любую ветку<br/>(кроме изменений только в *.md)"] --> ci["ci.yml — CI<br/>8 параллельных джоб"]
+    push["push / pull_request<br/>(кроме изменений только в *.md)"] --> ci["ci.yml — CI<br/>10 параллельных джоб"]
+    push --> sec["security.yml<br/>gitleaks + dependency-review"]
+    pushM["push в master"] --> dep["dependency-submission.yml<br/>граф зависимостей → GitHub"]
     pushT["push в tests/**"] --> cdt["cd_tests.yml — App test"]
     pushR["push в releases/**"] --> cdr["cd_release.yml — App release"]
     wd["workflow_dispatch"] -.-> cdt
     wd -.-> cdr
 
-    ci --> art1["APK debug, отчёты:<br/>Kover, Lint, Detekt, KtLint,<br/>Ruler, граф модулей, build time"]
+    ci --> art1["APK debug, отчёты:<br/>Kover, Lint, Detekt, KtLint,<br/>Ruler, граф модулей, build time,<br/>dependency analysis"]
+    sec --> art4["Алерты о секретах и<br/>уязвимых зависимостях"]
+    dep --> art5["Dependabot alerts,<br/>основа для dependency-review"]
     cdt --> art2["APK debug →<br/>Telegram + Firebase App Distribution"]
-    cdr --> art3["APK + AAB (signed) →<br/>Telegram + Google Play (internal, draft)"]
+    cdr --> art3["APK + AAB (signed) →<br/>Telegram + Google Play (internal, draft)<br/>+ черновик GitHub Release"]
 ```
 
-Три workflow разделены по назначению:
+Workflow разделены по назначению:
 
 | Workflow | Файл | Назначение |
 |---|---|---|
-| **CI** | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества: сборка, тесты, покрытие, статический анализ, размер приложения, граф модулей. |
+| **CI** | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества: сборка, тесты, покрытие, статический анализ, размер приложения, граф модулей, здоровье зависимостей. |
+| **Security** | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | Поиск утёкших секретов (gitleaks) и уязвимых зависимостей в PR (dependency-review). |
+| **Dependency submission** | [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Отдаёт GitHub граф зависимостей — без него не работают Dependabot alerts. |
 | **App test** | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Доставка тестовой (debug) сборки тестировщикам. |
-| **App release** | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз: APK + AAB, публикация в Google Play. |
+| **App release** | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз: APK + AAB, публикация в Google Play, черновик GitHub Release. |
 
-Общие настройки во всех трёх:
+Обновление зависимостей автоматизировано **Renovate** ([`.github/renovate.json5`](../.github/renovate.json5)):
+он читает `gradle/libs.versions.toml`, `gradle-wrapper.properties` и версии actions,
+группирует связанные обновления (Kotlin + KSP + Hilt, AndroidX Compose, Firebase) и
+раз в неделю открывает PR. Патчи инструментов статического анализа и минорные обновления
+actions мержатся автоматически, major — только через Dependency Dashboard.
+Требует установки GitHub App **Mend Renovate** на репозиторий.
+
+Общие настройки во всех workflow, запускающих Gradle:
 
 ```yaml
 env:
@@ -47,20 +60,23 @@ env:
 
 ## CI (`ci.yml`)
 
-Триггер — **любой** `push` (без ограничения по веткам). Восемь независимых джоб,
-запускаются параллельно, между собой не связаны `needs` — то есть падение одной не
-останавливает остальные, и в сводке прогона видно сразу все проблемы.
+Триггеры — `push` в любую ветку и `pull_request`. Прогон на устаревший коммит отменяется
+(`concurrency` + `cancel-in-progress`), кроме `master`: там история статусов важна.
+Десять независимых джоб, запускаются параллельно, между собой не связаны `needs` — то есть
+падение одной не останавливает остальные, и в сводке прогона видно сразу все проблемы.
 
 | Джоба | Команда / action | Что проверяет | Артефакты и отчёты |
 |---|---|---|---|
 | `build-app` | `./gradlew assembleDebug` | Проект компилируется. | `debug-apk`; таблица времени сборки в Step Summary. |
-| `run-tests` | `./gradlew test` | Все юнит-тесты (JVM + Robolectric). | — |
+| `run-tests` | `./gradlew test` (master) / `runAffectedUnitTests` (ветки и PR) | Юнит-тесты (JVM + Robolectric) и архитектурные тесты `:konsist`. | Аннотации на упавших тестах в diff, `unit-tests-html` при падении. |
+| `check-dependencies` | `./gradlew buildHealth` + `:app:dependencyGuard` | Здоровье дерева зависимостей и неизменность release-classpath. | `dependency-analysis-report`; первые 200 строк отчёта в Step Summary. |
 | `run-coverage` | [`actions/coverage`](../.github/actions/coverage/action.yml) | Порог покрытия Kover. | `kover-coverage-html`; таблица LINE/BRANCH в Step Summary. |
 | `run-lint` | `./gradlew lint` | Android Lint + кастомные чекеры модуля `:lint`. | `lint-html` (HTML-отчёты всех модулей). |
 | `run-detekt` | `./gradlew detekt --continue` | Статический анализ Kotlin. | `detekt.html`, SARIF в Code Scanning, Markdown в Step Summary. |
 | `run-ktlint` | [`actions/ktlint`](../.github/actions/ktlint/action.yml) | Форматирование/стиль. | `ktlint-html-report`, SARIF в Code Scanning, Markdown в Step Summary. |
 | `check-app-size` | `./gradlew :app:analyzeDebugBundle` | Размер приложения (Ruler). | `ruler-report.html`. |
 | `check-module-graph` | `./gradlew :app:assertModuleGraph` + `generateModulesGraphvizText` | Архитектурные границы модулей. | `all_modules.png` (Graphviz), DOT-граф в Step Summary. |
+| `nav-graph` | [`actions/nav-graph`](../.github/actions/nav-graph/action.yml) | Карта экранов и галерея `@Preview` собираются без ошибок. | `nav-graph-report` (PNG + интерактивный HTML + `index.html`). |
 
 ### Как устроены отдельные джобы
 
@@ -93,6 +109,45 @@ HTML через Pandoc.
 (она гарантированно конфигурирует проект и рисует граф), но название вводит в заблуждение —
 см. раздел «Что нужно доделать».
 
+**`run-tests`.** На `master` гоняется полный `./gradlew test`. На ветках и в PR —
+`runAffectedUnitTests` из плагина
+[AffectedModuleDetector](https://github.com/dropbox/AffectedModuleDetector): он сравнивает
+диффс merge-base `master`, строит список изменённых модулей и их обратных зависимостей и
+запускает тесты только для них. Поэтому `checkout` здесь с `fetch-depth: 0` — без полной
+истории merge-base не найти. Правка `gradle/libs.versions.toml`, `build-logic`, корневых
+`*.gradle.kts` или `gradle.properties` считается задевающей всё (`pathsAffectingAllModules`)
+и возвращает полный прогон. Модуль `:konsist` из детектора исключён и запускается явно: он
+читает исходники всех модулей с диска, и граф зависимостей Gradle этой связи не видит.
+Результаты публикует `mikepenz/action-junit-report` — упавший тест виден аннотацией прямо
+на строке, а не только в логе.
+
+**`check-dependencies`.** Две разные по строгости проверки:
+
+* `buildHealth` ([dependency-analysis](https://github.com/autonomousapps/dependency-analysis-gradle-plugin))
+  — **рекомендательный**: ищет неиспользуемые зависимости, `api` вместо `implementation`
+  и использование транзитивных зависимостей без явного объявления. Все категории настроены
+  на `severity("warn")` в корневом `build.gradle.kts`: на текущей кодовой базе отчёт занимает
+  ~950 строк, и разбирать его нужно постепенно. По мере разбора категории переводятся
+  на `fail` поштучно.
+* `:app:dependencyGuard` ([dependency-guard](https://github.com/dropbox/dependency-guard))
+  — **блокирующий**: сверяет release-runtime-classpath приложения со слепком
+  [`app/dependencies/releaseRuntimeClasspath.txt`](../app/dependencies/releaseRuntimeClasspath.txt).
+  Любое изменение дерева зависимостей, включая транзитивное, приезжает в PR явным diff'ом.
+  Обновить слепок осознанно: `./gradlew :app:dependencyGuardBaseline`.
+
+## Security (`security.yml`)
+
+Две джобы на каждый `push` и `pull_request`:
+
+* **`secret-scan`** — [gitleaks](https://github.com/gitleaks/gitleaks-action) по всей истории
+  (`fetch-depth: 0`, иначе секрет, удалённый последним коммитом, не найдётся). Прямо
+  поддерживает требование [`docs/agents/security.md`](./agents/security.md): пароли от
+  keystore, `API_TOKEN`, `YANDEX_CLIENT_ID` и JWT живут только в `local.properties` и
+  CI-секретах. Лицензия нужна только организациям — для личного аккаунта бесплатно.
+* **`dependency-review`** (только на PR) — блокирует добавление зависимости с известной
+  уязвимостью уровня `high` и выше. Работает поверх графа, который публикует
+  `dependency-submission.yml`, поэтому без него бесполезен.
+
 ## CD: тестовые сборки (`cd_tests.yml`)
 
 Триггер — `push` в `tests/**` либо ручной `workflow_dispatch`.
@@ -118,7 +173,14 @@ flowchart LR
     v --> aab["build-aab<br/>bundleRelease"]
     apk --> tg["report-telegram<br/>APK в чат (тред «release»)"]
     aab --> play["publish-play<br/>Google Play, track=internal, status=draft"]
+    apk --> gh["github-release<br/>черновик релиза: тег v.X.Y.Z,<br/>APK + AAB, авто-changelog"]
+    aab --> gh
 ```
+
+Джоба `github-release` создаёт именно **черновик**: тег и release notes GitHub собирает сам
+(`generate_release_notes: true` — из PR и коммитов с прошлого тега), а публикует релиз
+человек кнопкой Publish. Симметрично `status: draft` в Play — ни одна из двух публикаций
+не происходит автоматически.
 
 **Версия берётся из имени ветки.** Джоба `validate-version` требует, чтобы ветка
 заканчивалась на `v.X.Y.Z` (например `releases/v.1.2.3`), иначе прогон падает. Из неё
@@ -195,13 +257,35 @@ CI намеренно тонкий, поэтому «где что настро�
 | Время сборки | [`BuildTimeTrackerConventionPlugin`](../build-logic/convention/src/main/kotlin/BuildTimeTrackerConventionPlugin.kt) | CSV в `app/build/reports/buildTimeTracker/` |
 | Архитектурные границы | [`CheckConventionsPlugin`](../build-logic/convention/src/main/kotlin/CheckConventionsPlugin.kt) | выполняется на любом запуске Gradle |
 | Граф модулей | плагин `com.jraska.module.graph.assertion` | `:app:assertModuleGraph`, `:app:generateModulesGraphvizText` |
+| Архитектура на уровне классов | модуль [`:konsist`](../konsist/README.md) | `:konsist:test` (входит в обычный `test`) |
+| Анализ зависимостей | корневой `build.gradle.kts` + `AndroidBaseConventionPlugin` / `JvmLibraryConventionPlugin` | `buildHealth` |
+| Слепок release-classpath | [`DependencyGuardConventionPlugin`](../build-logic/convention/src/main/kotlin/DependencyGuardConventionPlugin.kt) | `:app:dependencyGuard`, `:app:dependencyGuardBaseline` |
+| Отбор затронутых модулей | корневой `build.gradle.kts` (AffectedModuleDetector) | `runAffectedUnitTests` |
+| Диагностика скорости сборки | корневой `build.gradle.kts` (Gradle Doctor) | выполняется на любом запуске Gradle |
+| Build scan | `settings.gradle.kts` (Develocity) | `--scan -Pdevelocity.tos.agree=true` |
 | Версия и подпись | `AndroidAppConventionPlugin`, `ConfigureBaseAndroid`, `Const.kt` | `-PversionName` / `-PversionCode`, `signingConfigs` |
+
+**Gradle Doctor** ([`com.osacky.doctor`](https://github.com/runningcode/gradle-doctor)) печатает
+«рецепты» после каждой сборки: промахи build cache, время в GC, зависимости от `clean`,
+незаданный `JAVA_HOME` (из-за него переключение между Android Studio и терминалом вызывает
+полную пересборку). Настроен предупреждать, а не ронять сборку: `javaHome.failOnError = false`
+и выключен `disallowMultipleDaemons` — CI и так гоняет Gradle с `--no-daemon`.
+
+**Build scan** публикуется на публичный `scans.gradle.com`, поэтому по умолчанию выключен:
+это требует согласия с условиями использования Gradle. Включается явно одним запуском —
+`./gradlew assembleDebug --scan -Pdevelocity.tos.agree=true`.
 
 ## Локальный прогон «как в CI»
 
 ```bash
-./gradlew assembleDebug test koverVerifyFull lint detekt ktlintCheck :app:assertModuleGraph
+./gradlew assembleDebug test koverVerifyFull lint detekt ktlintCheck :app:assertModuleGraph :app:dependencyGuard
+./gradlew buildHealth
 ```
+
+`buildHealth` вынесен во второй запуск намеренно: dependency-analysis добавляет по десятку
+своих задач на каждый модуль, и вместе с полной сборкой это укладывает Gradle-демон по
+памяти (`Gradle build daemon disappeared unexpectedly`). В CI они и так живут в разных
+джобах, так что проблема только локальная.
 
 Быстрее — проверять только затронутые модули (`./gradlew :feature:<name>:impl:check`),
 а полный набор гонять перед пушем.
@@ -240,29 +324,15 @@ CI намеренно тонкий, поэтому «где что настро�
 
 ### 🟠 Важно
 
-- [ ] **Нет триггера `pull_request`.** Сейчас проверки идут только на `push`, поэтому нет
-      required status checks на PR и невозможно защитить `master`.
-- [ ] **Нет `concurrency` + `cancel-in-progress`.** Каждый пуш в ветку запускает ещё восемь
-      джоб; устаревшие прогоны не отменяются и просто жгут минуты.
-- [ ] **Флаги Gradle не долетают до команд.**
-      В `ci.yml` в джобе `build-app` флаги попали в *название* шага
-      (`name: Build project $gradleFlags`), а команда — просто `./gradlew assembleDebug`.
-      В `cd_release.yml` обе сборки используют `$GRADLE_FLAGS`, тогда как объявлена
-      переменная `gradleFlags` — подставляется пустая строка.
 - [ ] **Telegram сообщает неверную версию.** Джобы `report-telegram` берут версию из
       `./gradlew -q printVersionName`, а эта задача печатает `Const.VERSION_NAME` (`0.0.1`)
       и не знает про `-PversionName`. В релизе нужно брать
       `needs.validate-version.outputs.version_name`, а саму задачу — научить читать
       проектное свойство.
-- [ ] **Половина джоб не использует `android-setup`.** `run-detekt` и `check-module-graph`
-      (и обе `report-telegram`, и `distribute-app-firebase`) запускают Gradle без
+- [ ] **Часть CD-джоб не использует `android-setup`.** В `ci.yml` это починено, но обе
+      `report-telegram` и `distribute-app-firebase` по-прежнему запускают Gradle без
       `init-gradle` — на JDK раннера по умолчанию и без кеша Gradle. Версия JDK не
       зафиксирована: смена образа `ubuntu-latest` может неожиданно сломать сборку.
-- [ ] **Кеш настроен наполовину.** `init-gradle` одновременно включает `cache: gradle` в
-      `actions/setup-java@v3` и `gradle/actions/setup-gradle@v4`, которые кешируют одно и то
-      же. Нужно оставить только `setup-gradle` и продумать стратегию (`cache-read-only` для
-      не-`master`, отдельный `build-cache` между джобами). Плюс `actions/setup-java@v3` уже
-      устарел.
 - [ ] **Восемь джоб = восемь холодных сборок.** `run-tests` и `run-coverage` прогоняют тесты
       дважды (Kover требует своего прогона). Стоит либо объединить их, либо включить
       общий remote/GHA build cache.
@@ -280,9 +350,10 @@ CI намеренно тонкий, поэтому «где что настро�
 ### 🟡 Улучшения
 
 - [ ] **Gradle-кеш для сборок.** Тестовые прогоны — с кешем, релизные — принципиально без.
-- [ ] **Dependabot / Renovate** для автообновления зависимостей и версий actions
-      (сейчас `.github/dependabot.yml` нет; actions запинены только по мажору).
-- [ ] **AI-ревьюер на PR** (после появления `pull_request`-триггера).
+- [ ] **AI-ревьюер на PR.**
+- [ ] **Пин actions по SHA.** Сейчас `uses:` запинены только по мажору. Renovate умеет
+      переводить их на digest — достаточно добавить `helpers:pinGitHubActionDigests`
+      в `extends` его конфига.
 - [ ] **`timeout-minutes` на джобах** — сейчас зависшая сборка висит до дефолтных 6 часов.
 - [ ] **`retention-days` для артефактов** — APK и HTML-отчёты хранятся 90 дней по умолчанию.
 - [ ] **Гейт на размер приложения.** Ruler строит отчёт, но порога/сравнения с baseline нет —
@@ -294,9 +365,16 @@ CI намеренно тонкий, поэтому «где что настро�
 - [ ] **Instrumented-тесты на эмуляторе** (`reactivecircus/android-emulator-runner`). Понадобятся
       обязательно, когда появятся настоящие Room-миграции и `MigrationTestHelper` — сейчас в
       CI только JVM/Robolectric.
-- [ ] **Скриншот-тесты** (Paparazzi / Roborazzi) — отложенный «трек 4» плана покрытия.
-- [ ] **Автоматизация релиза:** тег + GitHub Release + changelog из истории коммитов;
-      сейчас есть только ветка `releases/**` и draft в Play.
+- [ ] **Скриншот-тесты** — отложенный «трек 4» плана покрытия. Официальный
+      **Compose Preview Screenshot Testing** (`com.android.compose.screenshot`) сейчас
+      **не подключается**: его source set включается только глобальным флагом
+      `android.experimental.enableScreenshotTest=true` в корневом `gradle.properties`
+      (плагин читает флаг в момент применения, `android.experimentalProperties` и
+      `gradle.properties` внутри модуля не работают), а с этим флагом ktlint 14.2.0 падает
+      в `:app` с `Cannot add task 'runKtlintCheckOverAndroidTestSourceSet' as a task with
+      that name already exists`. Более новой версии ktlint-плагина нет. Рабочая
+      альтернатива — **Roborazzi** (Robolectric, обычный `test`-source set, без
+      экспериментальных флагов AGP).
 - [ ] **Release notes для Play** (`whatsNewDirectory`) и осознанный переход
       `draft → completed` / promote между треками.
 - [ ] **`workflow_dispatch` для релиза фактически не работает** из произвольной ветки:
@@ -317,7 +395,12 @@ CI намеренно тонкий, поэтому «где что настро�
 | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества на каждый push. |
 | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Тестовая раздача (Telegram + Firebase). |
 | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз и публикация в Play. |
+| [`.github/workflows/security.yml`](../.github/workflows/security.yml) | gitleaks + dependency-review. |
+| [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Граф зависимостей для Dependabot alerts. |
+| [`.github/renovate.json5`](../.github/renovate.json5) | Правила автообновления зависимостей и actions. |
 | [`.github/actions/`](../.github/actions/) | Composite actions: setup, отчёты, доставка. |
+| [`konsist/`](../konsist/README.md) | Архитектурные тесты уровня классов. |
+| [`app/dependencies/`](../app/dependencies/) | Слепок release-classpath (dependency-guard). |
 | [`build.gradle.kts`](../build.gradle.kts) | Kover (фильтры + порог), Detekt, KtLint. |
 | [`build-logic/convention/`](../build-logic/convention/) | Версия, подпись, R8, Ruler, build-time tracker, проверка архитектуры. |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | Правила Detekt. |

@@ -67,3 +67,4 @@
 ## Utility modules
 
 - [sync](../sync/README.md)
+- [konsist](../konsist/README.md) — архитектурные тесты уровня классов (без продуктового кода)

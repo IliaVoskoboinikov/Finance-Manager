@@ -1,0 +1,53 @@
+name: Security
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+permissions:
+  contents: read
+
+jobs:
+  # Ищет утёкшие секреты в коде и во всей истории коммитов: keystore-пароли,
+  # API_TOKEN, YANDEX_CLIENT_ID, JWT — всё, что по docs/agents/security.md обязано
+  # жить только в local.properties и CI-секретах.
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Полная история — иначе секрет, удалённый последним коммитом, не найдётся.
+          fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Блокирует PR, добавляющий зависимость с известной уязвимостью или несовместимой
+  # лицензией. Работает поверх графа из dependency-submission.yml.
+  dependency-review:
+    name: Dependency review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      # Нужно, чтобы action мог оставить сводку в PR при провале проверки.
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Review dependencies
+        uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
