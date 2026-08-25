@@ -26,7 +26,7 @@ class AndroidAppConventionPlugin : Plugin<Project> {
             // и владеет задачами generateNavGraph / navDump / navCheck (docs/nav-graph.md).
             configureNavGraph()
 
-            applyPlugin("graph")
+            applyPlugin("soft-divan-module-graph")
             applyPlugin("soft-divan-build-time-tracker")
             applyPlugin("soft-divan-check-conventions")
             applyPlugin("soft-divan-ruler")

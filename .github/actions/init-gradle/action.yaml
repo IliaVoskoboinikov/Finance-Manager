@@ -4,10 +4,10 @@ description: Setup gradle environment
 runs:
   using: 'composite'
   steps:
-    - name: set up JDK 17
+    - name: set up JDK 21
       uses: actions/setup-java@v5
       with:
-        java-version: '17'
+        java-version: '21'
         distribution: 'temurin'
         # cache: gradle здесь НЕ включаем — кэшем Gradle User Home управляет
         # gradle/actions/setup-gradle ниже. Два механизма поверх одного каталога

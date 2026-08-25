@@ -2,11 +2,10 @@ name: CI
 
 on:
   push:
-    paths-ignore:
-      - '**.md'
+    branches:
+      - master
+      - 'releases/**'
   pull_request:
-    paths-ignore:
-      - '**.md'
 
 # Новый push в ту же ветку/PR отменяет предыдущий прогон: 10 джоб на устаревший коммит
 # никому не нужны. На master прогоны не отменяем — там важна история статусов.
@@ -278,16 +277,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/android-setup
-      # Рендер превью использует Layoutlib 16.2.1, чей Bridge скомпилирован под Java 21
-      # (class file version 65). android-setup ставит JDK 17 → рендер падает с
-      # UnsupportedClassVersionError, и ВСЕ превью выходят «no preview» (граф/рёбра при этом
-      # строятся корректно — их даёт KSP, а он на 17 работает). Переопределяем JAVA_HOME на 21
-      # только для этой джобы; остальные CI-джобы остаются на 17.
-      - name: Set up JDK 21 for Layoutlib render
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
       - name: Nav graph report
         uses: ./.github/actions/nav-graph
         with:

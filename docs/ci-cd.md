@@ -13,9 +13,11 @@
 
 ```mermaid
 flowchart TD
-    push["push / pull_request<br/>(кроме изменений только в *.md)"] --> ci["ci.yml — CI<br/>10 параллельных джоб"]
-    push --> sec["security.yml<br/>gitleaks + dependency-review"]
-    pushM["push в master"] --> dep["dependency-submission.yml<br/>граф зависимостей → GitHub"]
+    pr["pull_request<br/>(любая ветка)"] --> ci["ci.yml — CI<br/>10 параллельных джоб"]
+    pushM["push в master / releases/**"] --> ci
+    pr --> sec["security.yml<br/>gitleaks + dependency-review"]
+    pushM --> sec
+    pushM --> dep["dependency-submission.yml<br/>граф зависимостей → GitHub"]
     pushT["push в tests/**"] --> cdt["cd_tests.yml — App test"]
     pushR["push в releases/**"] --> cdr["cd_release.yml — App release"]
     wd["workflow_dispatch"] -.-> cdt
@@ -55,13 +57,22 @@ env:
 ```
 
 `--no-configuration-cache` и `--no-daemon` — потому что раннер одноразовый: кеш конфигурации
-негде переиспользовать, а демон только держит память. `paths-ignore: ['**.md']` не гоняет
-сборку на правки документации.
+негде переиспользовать, а демон только держит память.
+
+JDK **21** во всех джобах, ставится в [`init-gradle`](../.github/actions/init-gradle/action.yaml).
+Раньше там стоял 17, а джоба `nav-graph` переопределяла его на 21 ради Layoutlib — разные JDK
+в разных джобах обесценивали общий build cache. Байткод при этом по-прежнему собирается
+под Java 11 (`Const.JAVA_VERSION`): версия JDK, на котором работает Gradle, и целевая версия
+байткода — разные вещи.
 
 ## CI (`ci.yml`)
 
-Триггеры — `push` в любую ветку и `pull_request`. Прогон на устаревший коммит отменяется
-(`concurrency` + `cancel-in-progress`), кроме `master`: там история статусов важна.
+Триггеры — `pull_request` (любая ветка) и `push` в `master` / `releases/**`. Ветки без PR
+CI не гоняют намеренно: у `push` и `pull_request` разные `github.ref`, а значит разные группы
+`concurrency`, и раньше каждый push в ветку с открытым PR запускал прогон дважды.
+`paths-ignore` на `pull_request` **нет**: пропущенный workflow не создаёт чек-ранов, и PR
+с правками только в `*.md` навсегда зависал бы в «Expected — Waiting for status to be reported».
+Прогон на устаревший коммит отменяется (`concurrency` + `cancel-in-progress`), кроме `master`.
 Десять независимых джоб, запускаются параллельно, между собой не связаны `needs` — то есть
 падение одной не останавливает остальные, и в сводке прогона видно сразу все проблемы.
 
@@ -98,10 +109,15 @@ env:
 [`actions/report-renderer`](../.github/actions/report-renderer/action.yml) рендерит его в
 HTML через Pandoc.
 
-**`check-module-graph`.** Здесь важный нюанс: задача `:app:assertModuleGraph` приходит из
-плагина `com.jraska.module.graph.assertion`, но блока `moduleGraphAssert { … }` в проекте
-нет — то есть **сама задача сейчас пустая** (`SKIPPED`, ноль ассертов). Реальную проверку
-архитектуры делает конвеншен-плагин `soft.divan.check.conventions`
+**`check-module-graph`.** Задача `:app:assertModuleGraph` раскрывается в две:
+`assertMaxHeight` (высота графа — 6 рёбер, зафиксирована по факту без запаса) и
+`assertRestrictions` (запрещённые рёбра регулярками). Правила живут в
+[`ModuleGraphConventionPlugin`](../build-logic/convention/src/main/kotlin/ModuleGraphConventionPlugin.kt)
+и дополняют, а не дублируют `CheckConventionsPlugin`: самое ценное — `:core:domain` не имеет
+права зависеть от data-слоя, чего проверка конвеншенов не ловит вовсе. Оговорка: задача
+не считает свою конфигурацию входом, поэтому после правки правил локально нужен
+`--rerun-tasks`; в CI каждый прогон и так с чистого листа.
+Параллельно архитектуру проверяет конвеншен-плагин `soft.divan.check.conventions`
 ([`CheckConventionsPlugin.kt`](../build-logic/convention/src/main/kotlin/CheckConventionsPlugin.kt)):
 он на `projectsEvaluated` обходит все модули и падает `GradleException`, если
 `core` зависит от `feature`, `feature:*:api` — от `impl`, или один `impl` — от чужого `impl`.
@@ -215,7 +231,7 @@ VERSION_CODE = X * 1_000_000 + Y * 1_000 + Z
 | Action | Что делает |
 |---|---|
 | [`android-setup`](../.github/actions/android-setup/action.yml) | Зонтичный: checkout → `init-gradle` → `create-google-services`. Одна строка в джобе вместо трёх. |
-| [`init-gradle`](../.github/actions/init-gradle/action.yaml) | JDK 17 (Temurin) + `gradle/actions/setup-gradle` + `chmod +x gradlew`. |
+| [`init-gradle`](../.github/actions/init-gradle/action.yaml) | JDK 21 (Temurin) + `gradle/actions/setup-gradle` + `chmod +x gradlew`. |
 | [`create-google-services`](../.github/actions/create-google-services/action.yml) | Декодирует секрет `GOOGLE_SERVICES_JSON` (base64) в `app/google-services.json`; падает, если секрет пуст. |
 | [`coverage`](../.github/actions/coverage/action.yml) | Kover: отчёты → сводка в Step Summary → гейт `koverVerifyFull`. |
 | [`ktlint`](../.github/actions/ktlint/action.yml) | `ktlintCheck`, склейка SARIF по модулям, подробный Markdown-отчёт. |
@@ -256,7 +272,7 @@ CI намеренно тонкий, поэтому «где что настро�
 | Ruler (размер приложения) | [`RulerConventionPlugin`](../build-logic/convention/src/main/kotlin/RulerConventionPlugin.kt) | `:app:analyzeDebugBundle` |
 | Время сборки | [`BuildTimeTrackerConventionPlugin`](../build-logic/convention/src/main/kotlin/BuildTimeTrackerConventionPlugin.kt) | CSV в `app/build/reports/buildTimeTracker/` |
 | Архитектурные границы | [`CheckConventionsPlugin`](../build-logic/convention/src/main/kotlin/CheckConventionsPlugin.kt) | выполняется на любом запуске Gradle |
-| Граф модулей | плагин `com.jraska.module.graph.assertion` | `:app:assertModuleGraph`, `:app:generateModulesGraphvizText` |
+| Граф модулей | [`ModuleGraphConventionPlugin`](../build-logic/convention/src/main/kotlin/ModuleGraphConventionPlugin.kt) | `:app:assertModuleGraph` (высота + запрещённые рёбра), `:app:generateModulesGraphvizText` |
 | Архитектура на уровне классов | модуль [`:konsist`](../konsist/README.md) | `:konsist:test` (входит в обычный `test`) |
 | Анализ зависимостей | корневой `build.gradle.kts` + `AndroidBaseConventionPlugin` / `JvmLibraryConventionPlugin` | `buildHealth` |
 | Слепок release-classpath | [`DependencyGuardConventionPlugin`](../build-logic/convention/src/main/kotlin/DependencyGuardConventionPlugin.kt) | `:app:dependencyGuard`, `:app:dependencyGuardBaseline` |
@@ -312,10 +328,6 @@ CI намеренно тонкий, поэтому «где что настро�
 - [ ] **Нет `permissions:` ни в одном workflow.** Токен получает права по умолчанию
       организации/репозитория. Шаги `upload-sarif` требуют `security-events: write`; всё
       остальное обходится `contents: read`. Явный минимальный блок в каждом workflow.
-- [ ] **`assertModuleGraph` ничего не проверяет.** Задача есть, но конфигурации
-      `moduleGraphAssert { maxHeight = …, allowed = […] }` нет — задача выполняется как
-      `SKIPPED`. Либо настроить правила (высота графа, белый список рёбер), либо честно
-      переименовать джобу в «граф модулей» и опираться на `CheckConventionsPlugin`.
 - [ ] **Release-сборка не проверяется в CI.** Для `:app` в release включён R8 + шринк
       ресурсов, но `assembleRelease` собирается только на релизной ветке. Ошибки в
       `proguard-rules.pro` (упавшая рефлексия Gson/Room/Hilt) обнаруживаются в момент
@@ -343,9 +355,9 @@ CI намеренно тонкий, поэтому «где что настро�
       `minBound(95)` в корневом `build.gradle.kts`; при этом KDoc рядом говорит про 98 %,
       `docs/testing.md` — про 99 % и 98 %, `TODO.md` — про 99 %. Нужно решить целевое число
       и починить все упоминания (единственный источник истины — `build.gradle.kts`).
-- [ ] **`ci.yml` дублирует CD-прогоны.** Триггер без фильтра веток: пуш в `tests/**` или
-      `releases/**` запускает и CI, и CD одновременно. Либо это осознанно (и стоит
-      зафиксировать в документе), либо нужен `branches-ignore`.
+- [ ] **CI и CD пересекаются на `releases/**`.** Это осознанно: релизная ветка проходит
+      полный гейт качества параллельно со сборкой. Правильнее связать их через `needs`,
+      чтобы публикация не стартовала при красном CI — см. пункт про гейт выше.
 
 ### 🟡 Улучшения
 

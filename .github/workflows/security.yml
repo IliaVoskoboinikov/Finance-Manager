@@ -2,11 +2,10 @@ name: Security
 
 on:
   push:
-    paths-ignore:
-      - '**.md'
+    branches:
+      - master
+      - 'releases/**'
   pull_request:
-    paths-ignore:
-      - '**.md'
 
 concurrency:
   group: security-${{ github.ref }}

@@ -160,6 +160,7 @@ lint-tests = { group = "com.android.tools.lint", name = "lint-tests", version.re
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 kotlin-metadata-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-metadata-jvm", version.ref = "kotlinMetadataJvm" }
 ruler-plugin = { group = "com.spotify.ruler", name = "ruler-gradle-plugin", version.ref = "ruler" }
+module-graph-plugin = { module = "com.jraska.module.graph.assertion:plugin", version.ref = "graphPlugin" }
 dependency-guard-plugin = { module = "com.dropbox.dependency-guard:dependency-guard", version.ref = "dependencyGuard" }
 navgraph-gradle-plugin = { group = "com.github.skydoves", name = "compose-nav-graph-gradle", version.ref = "navgraph" }
 
@@ -239,5 +240,6 @@ soft-divan-firebase = { id = "soft.divan.firebase" }
 soft-divan-check-conventions = { id = "soft.divan.check.conventions" }
 soft-divan-ruler = { id = "soft.divan.ruler" }
 soft-divan-dependency-guard = { id = "soft.divan.dependency.guard" }
+soft-divan-module-graph = { id = "soft.divan.module.graph" }
 
 

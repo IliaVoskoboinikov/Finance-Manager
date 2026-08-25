@@ -38,10 +38,11 @@
       не запуская ни тестов, ни линтеров
 - [x] Добавить минимальный блок `permissions:` во все workflow
       (`contents: read` + `security-events: write` для SARIF) — сделано для `ci.yml`,
-      `security.yml`, `dependency-submission.yml`; остались `cd_tests.yml`,
-      `cd_release.yml`, `nav-graph.yml`
-- [ ] Настроить `moduleGraphAssert { … }` — задача `:app:assertModuleGraph`
-      сейчас пустая (`SKIPPED`), архитектуру реально проверяет `CheckConventionsPlugin`
+      `security.yml`, `dependency-submission.yml`; остались `cd_tests.yml`
+      и `cd_release.yml`
+- [x] Настроить `moduleGraphAssert { … }` — `ModuleGraphConventionPlugin`:
+      высота графа 6 рёбер + запрет рёбер `:core:domain → data-слой`, `* → :app`,
+      `:sync → :feature:*`
 - [ ] Собирать `assembleRelease` в CI — R8/shrink включены только для release,
       ошибки в `proguard-rules.pro` всплывают лишь в момент релиза
 
