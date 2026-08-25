@@ -7,8 +7,8 @@ on:
       - 'releases/**'
   pull_request:
 
-# Новый push в ту же ветку/PR отменяет предыдущий прогон: 10 джоб на устаревший коммит
-# никому не нужны. На master прогоны не отменяем — там важна история статусов.
+# Новый push в ту же ветку/PR отменяет предыдущий прогон: десяток джоб на устаревший
+# коммит никому не нужен. На master прогоны не отменяем — там важна история статусов.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
@@ -203,18 +203,45 @@ jobs:
           name: ruler-report.html
           path: app/build/reports/ruler/debug/report.html
 
-  # Здоровье дерева зависимостей: buildHealth (неиспользуемые/неверно объявленные
-  # зависимости) — рекомендательный, dependencyGuard — блокирующий: любое изменение
-  # release-classpath приложения должно приезжать осознанным diff'ом слепка.
-  check-dependencies:
+  # Блокирующая проверка: release-classpath приложения должен совпадать со слепком
+  # app/dependencies/releaseRuntimeClasspath.txt. Быстрая, идёт на каждый PR.
+  # Разошлось — обновить осознанно: ./gradlew :app:dependencyGuardBaseline
+  check-dependency-guard:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/android-setup
+      - name: Dependency guard
+        run: ./gradlew :app:dependencyGuard $gradleFlags
+
+  # Рекомендательный отчёт о здоровье зависимостей. Только на master и только
+  # информативно — на PR он стоил бы девять минут ради текста, который разбирается
+  # постепенно (все severity выставлены в "warn" в корневом build.gradle.kts).
+  dependency-analysis:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    # Самая долгая джоба пайплайна: на холодном кэше это ~6700 задач.
+    # Ограничение, чтобы зависшая сборка не висела до дефолтных шести часов.
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
+      # Задачи анализа исполняются через IsolatedClassloaderWorker: каждый work item
+      # получает свой classloader, а его классы живут в Metaspace. На холодном кэше
+      # это 4000+ задач, и дефолтного -XX:MaxMetaspaceSize=1g из gradle.properties
+      # не хватает — джоба падала с OutOfMemoryError: Metaspace. Поэтому здесь
+      # свой лимит и последовательное исполнение вместо --parallel: меньше
+      # одновременно живых загрузчиков.
       - name: Dependency analysis
-        run: ./gradlew buildHealth $gradleFlags
+        run: >
+          ./gradlew buildHealth --stacktrace --no-configuration-cache --no-daemon
+          --max-workers=2
+          "-Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=2g -XX:+UseParallelGC -Dfile.encoding=UTF-8"
       - name: Publish advice to summary
         if: always()
         run: |
@@ -236,10 +263,6 @@ jobs:
         with:
           name: dependency-analysis-report
           path: build/reports/dependency-analysis/
-      # Падает, если release-classpath разошёлся с app/dependencies/*.txt.
-      # Обновить слепок: ./gradlew :app:dependencyGuardBaseline
-      - name: Dependency guard
-        run: ./gradlew :app:dependencyGuard $gradleFlags
 
   check-module-graph:
     runs-on: ubuntu-latest

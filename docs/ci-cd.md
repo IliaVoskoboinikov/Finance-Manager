@@ -14,6 +14,7 @@
 ```mermaid
 flowchart TD
     pr["pull_request<br/>(любая ветка)"] --> ci["ci.yml — CI<br/>10 параллельных джоб"]
+    pushM --> da["dependency-analysis<br/>(только master)"]
     pushM["push в master / releases/**"] --> ci
     pr --> sec["security.yml<br/>gitleaks + dependency-review"]
     pushM --> sec
@@ -73,14 +74,16 @@ CI не гоняют намеренно: у `push` и `pull_request` разны�
 `paths-ignore` на `pull_request` **нет**: пропущенный workflow не создаёт чек-ранов, и PR
 с правками только в `*.md` навсегда зависал бы в «Expected — Waiting for status to be reported».
 Прогон на устаревший коммит отменяется (`concurrency` + `cancel-in-progress`), кроме `master`.
-Десять независимых джоб, запускаются параллельно, между собой не связаны `needs` — то есть
-падение одной не останавливает остальные, и в сводке прогона видно сразу все проблемы.
+Одиннадцать джоб, из них десять идут на каждый прогон, а `dependency-analysis` — только
+на `master`. Между собой они не связаны `needs`: падение одной не останавливает остальные,
+и в сводке прогона видно сразу все проблемы.
 
 | Джоба | Команда / action | Что проверяет | Артефакты и отчёты |
 |---|---|---|---|
 | `build-app` | `./gradlew assembleDebug` | Проект компилируется. | `debug-apk`; таблица времени сборки в Step Summary. |
 | `run-tests` | `./gradlew test` (master) / `runAffectedUnitTests` (ветки и PR) | Юнит-тесты (JVM + Robolectric) и архитектурные тесты `:konsist`. | Аннотации на упавших тестах в diff, `unit-tests-html` при падении. |
-| `check-dependencies` | `./gradlew buildHealth` + `:app:dependencyGuard` | Здоровье дерева зависимостей и неизменность release-classpath. | `dependency-analysis-report`; первые 200 строк отчёта в Step Summary. |
+| `check-dependency-guard` | `./gradlew :app:dependencyGuard` | Release-classpath не разошёлся со слепком. | — |
+| `dependency-analysis` *(только master)* | `./gradlew buildHealth` | Неиспользуемые и неверно объявленные зависимости. Не блокирует. | `dependency-analysis-report`; первые 200 строк отчёта в Step Summary. |
 | `run-coverage` | [`actions/coverage`](../.github/actions/coverage/action.yml) | Порог покрытия Kover. | `kover-coverage-html`; таблица LINE/BRANCH в Step Summary. |
 | `run-lint` | `./gradlew lint` | Android Lint + кастомные чекеры модуля `:lint`. | `lint-html` (HTML-отчёты всех модулей). |
 | `run-detekt` | `./gradlew detekt --continue` | Статический анализ Kotlin. | `detekt.html`, SARIF в Code Scanning, Markdown в Step Summary. |
@@ -137,14 +140,24 @@ HTML через Pandoc.
 Результаты публикует `mikepenz/action-junit-report` — упавший тест виден аннотацией прямо
 на строке, а не только в логе.
 
-**`check-dependencies`.** Две разные по строгости проверки:
+**`check-dependency-guard` и `dependency-analysis`.** Две проверки, намеренно разнесённые
+по разным джобам: сначала они были склеены, и падение рекомендательного отчёта утаскивало
+за собой блокирующий гейт, который даже не успевал запуститься.
 
 * `buildHealth` ([dependency-analysis](https://github.com/autonomousapps/dependency-analysis-gradle-plugin))
   — **рекомендательный**: ищет неиспользуемые зависимости, `api` вместо `implementation`
   и использование транзитивных зависимостей без явного объявления. Все категории настроены
   на `severity("warn")` в корневом `build.gradle.kts`: на текущей кодовой базе отчёт занимает
   ~950 строк, и разбирать его нужно постепенно. По мере разбора категории переводятся
-  на `fail` поштучно.
+  на `fail` поштучно. Джоба помечена `continue-on-error` и запускается только на `master`:
+  на холодном кэше это ~4300 задач и девять минут — слишком дорого для каждого PR.
+  Там же свои настройки памяти. Задачи плагина исполняются через
+  `IsolatedClassloaderWorker` — каждый work item получает собственный classloader, и его
+  классы оседают в Metaspace. Дефолтного `-XX:MaxMetaspaceSize=1g` из `gradle.properties`
+  на такой объём не хватает: джоба падала с `OutOfMemoryError: Metaspace`. Поэтому здесь
+  `-XX:MaxMetaspaceSize=2g` и `--max-workers=2` вместо `--parallel`.
+  Локально это воспроизводится только с `--rerun-tasks`: на тёплом кэше почти все задачи
+  становятся `UP-TO-DATE`, и холодный путь не проверяется вовсе.
 * `:app:dependencyGuard` ([dependency-guard](https://github.com/dropbox/dependency-guard))
   — **блокирующий**: сверяет release-runtime-classpath приложения со слепком
   [`app/dependencies/releaseRuntimeClasspath.txt`](../app/dependencies/releaseRuntimeClasspath.txt).
@@ -153,7 +166,7 @@ HTML через Pandoc.
 
 ## Security (`security.yml`)
 
-Две джобы на каждый `push` и `pull_request`:
+Две джобы, триггеры те же, что у `ci.yml` (`pull_request` + `push` в `master` / `releases/**`):
 
 * **`secret-scan`** — [gitleaks](https://github.com/gitleaks/gitleaks-action) по всей истории
   (`fetch-depth: 0`, иначе секрет, удалённый последним коммитом, не найдётся). Прямо
