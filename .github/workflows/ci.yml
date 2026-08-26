@@ -2,8 +2,22 @@ name: CI
 
 on:
   push:
-    paths-ignore:
-      - '**.md'
+    branches:
+      - master
+      - 'releases/**'
+  pull_request:
+
+# Новый push в ту же ветку/PR отменяет предыдущий прогон: десяток джоб на устаревший
+# коммит никому не нужен. На master прогоны не отменяем — там важна история статусов.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+# Явные права токена: раньше воркфлоу полагался на настройку репозитория по умолчанию.
+permissions:
+  contents: read
+  security-events: write  # upload-sarif (detekt, ktlint)
+  checks: write           # action-junit-report создаёт check-run с аннотациями
 
 env:
   gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
@@ -18,8 +32,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/android-setup
-      - name: Build project $gradleFlags
-        run: ./gradlew assembleDebug
+      - name: Build project
+        run: ./gradlew assembleDebug $gradleFlags
       - name: Generate build time report
         uses: ./.github/actions/build-time-report
         with:
@@ -34,12 +48,40 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     steps:
+      # Полная история нужна AffectedModuleDetector: он ищет merge-base с master.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Setup environment
         uses: ./.github/actions/android-setup
-      - name: Run unit tests
-        run: ./gradlew test $gradleFlags
+      # На master — полный прогон: основная ветка проверяется целиком.
+      # --continue: собираем отчёт по всем модулям, а не до первого упавшего.
+      - name: Run all unit tests
+        if: github.ref == 'refs/heads/master'
+        run: ./gradlew test $gradleFlags --continue
+      # На ветках и в PR — только модули, задетые диффом, и их обратные зависимости.
+      # :konsist исключён из детектора (он читает исходники с диска, а не через
+      # зависимости Gradle), поэтому запускается явно.
+      - name: Run affected unit tests
+        if: github.ref != 'refs/heads/master'
+        run: ./gradlew runAffectedUnitTests :konsist:test $gradleFlags --continue
+      # Раскладывает JUnit XML в аннотации прямо на строках упавших тестов + сводку в Summary.
+      - name: Publish test report
+        if: always()
+        uses: mikepenz/action-junit-report@v6
+        with:
+          report_paths: '**/build/test-results/test*/TEST-*.xml'
+          check_name: Unit tests
+          detailed_summary: true
+          include_passed: false
+          fail_on_failure: true
+      - name: Upload test HTML reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-tests-html
+          path: '**/build/reports/tests/**'
 
   run-coverage:
     runs-on: ubuntu-latest
@@ -87,6 +129,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
       - name: Run Detekt
         run: ./gradlew detekt $gradleFlags --continue
         continue-on-error: true
@@ -120,6 +164,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
       - name: Run KtLint composite action
         uses: ./.github/actions/ktlint
         with:
@@ -157,11 +203,75 @@ jobs:
           name: ruler-report.html
           path: app/build/reports/ruler/debug/report.html
 
+  # Блокирующая проверка: release-classpath приложения должен совпадать со слепком
+  # app/dependencies/releaseRuntimeClasspath.txt. Быстрая, идёт на каждый PR.
+  # Разошлось — обновить осознанно: ./gradlew :app:dependencyGuardBaseline
+  check-dependency-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
+      - name: Dependency guard
+        run: ./gradlew :app:dependencyGuard $gradleFlags
+
+  # Рекомендательный отчёт о здоровье зависимостей: неиспользуемые и неверно
+  # объявленные зависимости. Идёт на каждый прогон, но намеренно НЕ блокирует —
+  # все severity выставлены в "warn" в корневом build.gradle.kts, и отчёт
+  # разбирается постепенно. continue-on-error, а в required-чеках её нет:
+  # PR не должен ждать девять минут ради текста, который читают раз в месяц.
+  dependency-analysis:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    # Самая долгая джоба пайплайна: на холодном кэше это ~6700 задач.
+    # Ограничение, чтобы зависшая сборка не висела до дефолтных шести часов.
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
+      # Задачи анализа исполняются через IsolatedClassloaderWorker: каждый work item
+      # получает свой classloader, а его классы живут в Metaspace. На холодном кэше
+      # это 4000+ задач, и дефолтного -XX:MaxMetaspaceSize=1g из gradle.properties
+      # не хватает — джоба падала с OutOfMemoryError: Metaspace. Поэтому здесь
+      # свой лимит и последовательное исполнение вместо --parallel: меньше
+      # одновременно живых загрузчиков.
+      - name: Dependency analysis
+        run: >
+          ./gradlew buildHealth --stacktrace --no-configuration-cache --no-daemon
+          --max-workers=2
+          "-Dorg.gradle.jvmargs=-Xmx5g -XX:MaxMetaspaceSize=2g -XX:+UseParallelGC -Dfile.encoding=UTF-8"
+      - name: Publish advice to summary
+        if: always()
+        run: |
+          REPORT=build/reports/dependency-analysis/build-health-report.txt
+          {
+            echo '## Dependency analysis'
+            if [ -f "$REPORT" ]; then
+              echo "Полный отчёт — в артефакте \`dependency-analysis-report\` ($(wc -l < "$REPORT") строк)."
+              echo '```'
+              head -200 "$REPORT"
+              echo '```'
+            else
+              echo 'Отчёт не сформирован.'
+            fi
+          } >> $GITHUB_STEP_SUMMARY
+      - name: Upload dependency analysis report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-analysis-report
+          path: build/reports/dependency-analysis/
+
   check-module-graph:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
       - name: Check Graph
         run: ./gradlew :app:assertModuleGraph $gradleFlags
       - name: Generate graph
@@ -191,16 +301,6 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/android-setup
-      # Рендер превью использует Layoutlib 16.2.1, чей Bridge скомпилирован под Java 21
-      # (class file version 65). android-setup ставит JDK 17 → рендер падает с
-      # UnsupportedClassVersionError, и ВСЕ превью выходят «no preview» (граф/рёбра при этом
-      # строятся корректно — их даёт KSP, а он на 17 работает). Переопределяем JAVA_HOME на 21
-      # только для этой джобы; остальные CI-джобы остаются на 17.
-      - name: Set up JDK 21 for Layoutlib render
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
       - name: Nav graph report
         uses: ./.github/actions/nav-graph
         with:

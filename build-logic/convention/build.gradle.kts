@@ -20,6 +20,8 @@ dependencies {
     implementation(libs.kotlin.serialization.plugin)
     compileOnly(libs.build.time.tracker)
     compileOnly(libs.ruler.plugin)
+    compileOnly(libs.dependency.guard.plugin)
+    compileOnly(libs.module.graph.plugin)
 
     // Нужен только ради типов NavGraphExtension / RenderBackend в convention-плагинах:
     // сам плагин navgraph подключается через root build.gradle.kts (`apply false`).
@@ -86,6 +88,16 @@ gradlePlugin {
         plugins.register("rulerConventionPlugin") {
             id = libs.plugins.soft.divan.ruler.get().pluginId
             implementationClass = "RulerConventionPlugin"
+        }
+
+        plugins.register("dependencyGuardConventionPlugin") {
+            id = libs.plugins.soft.divan.dependency.guard.get().pluginId
+            implementationClass = "DependencyGuardConventionPlugin"
+        }
+
+        plugins.register("moduleGraphConventionPlugin") {
+            id = libs.plugins.soft.divan.module.graph.get().pluginId
+            implementationClass = "ModuleGraphConventionPlugin"
         }
     }
 }

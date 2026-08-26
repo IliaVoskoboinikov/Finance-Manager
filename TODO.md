@@ -36,27 +36,29 @@
       в `run:` — передавать через `env:` и `"$VAR"`
 - [ ] Завязать релиз на гейт качества — сейчас `cd_release.yml` публикует в Play,
       не запуская ни тестов, ни линтеров
-- [ ] Добавить минимальный блок `permissions:` во все workflow
-      (`contents: read` + `security-events: write` для SARIF)
-- [ ] Настроить `moduleGraphAssert { … }` — задача `:app:assertModuleGraph`
-      сейчас пустая (`SKIPPED`), архитектуру реально проверяет `CheckConventionsPlugin`
+- [x] Добавить минимальный блок `permissions:` во все workflow
+      (`contents: read` + `security-events: write` для SARIF) — сделано для `ci.yml`,
+      `security.yml`, `dependency-submission.yml`; остались `cd_tests.yml`
+      и `cd_release.yml`
+- [x] Настроить `moduleGraphAssert { … }` — `ModuleGraphConventionPlugin`:
+      высота графа 6 рёбер + запрет рёбер `:core:domain → data-слой`, `* → :app`,
+      `:sync → :feature:*`
 - [ ] Собирать `assembleRelease` в CI — R8/shrink включены только для release,
       ошибки в `proguard-rules.pro` всплывают лишь в момент релиза
 
 Важно:
 
-- [ ] Добавить триггер на `pull_request` (сейчас прогонов для пул-реквестов нет)
-- [ ] Добавить `cancel-in-progress`, чтобы отменялись устаревшие прогоны
-- [ ] Починить передачу флагов Gradle: в `ci.yml` они попали в *название* шага,
+- [x] Добавить триггер на `pull_request` (сейчас прогонов для пул-реквестов нет)
+- [x] Добавить `cancel-in-progress`, чтобы отменялись устаревшие прогоны
+- [x] Починить передачу флагов Gradle: в `ci.yml` они попали в *название* шага,
       в `cd_release.yml` используется несуществующая `$GRADLE_FLAGS`
 - [ ] Починить версию в Telegram-отчётах: `printVersionName` печатает
       `Const.VERSION_NAME` (`0.0.1`) и не знает про `-PversionName`
-- [ ] Использовать `android-setup` во всех джобах (`run-detekt`, `check-module-graph`,
-      `report-telegram`, `distribute-app-firebase` идут на JDK раннера по умолчанию)
-- [ ] Добавить Gradle cache для ускорения сборок (релиз — однозначно без кеша,
-      тестовые сборки — можно с кешем; пока приложение простое, проблем быть не
-      должно, но на больших проектах может быть больно) и убрать дублирующий
-      `cache: gradle` в `actions/setup-java`
+- [x] Использовать `android-setup` во всех джобах `ci.yml` (`run-detekt`, `run-ktlint`,
+      `check-module-graph`) — в CD остались `report-telegram` и `distribute-app-firebase`
+- [x] Добавить Gradle cache для ускорения сборок и убрать дублирующий
+      `cache: gradle` в `actions/setup-java` — `setup-gradle@v6` + `setup-java@v5`,
+      кеш пишется только с `master`
 - [ ] Объединить `run-tests` и `run-coverage` — тесты сейчас прогоняются дважды;
       заодно перевести `./gradlew test` на `testDebugUnitTest`
 - [ ] Свести порог покрытия к одному числу: фактически `minBound(95)`,
@@ -65,7 +67,12 @@
 Улучшения:
 
 - [ ] Добавить AI-ревьюера
-- [ ] Настроить Dependabot/Renovate для автообновления зависимостей
+- [x] Настроить Dependabot/Renovate для автообновления зависимостей — `.github/renovate.json5`
+      (нужно установить GitHub App **Mend Renovate** на репозиторий)
+- [x] Сканирование секретов (gitleaks) и уязвимых зависимостей (dependency-review
+      поверх `dependency-submission`) — `.github/workflows/security.yml`
+- [x] Черновик GitHub Release с тегом, APK/AAB и авто-changelog — джоба `github-release`
+- [ ] Перевести `uses:` на пин по SHA (Renovate: `helpers:pinGitHubActionDigests`)
 - [ ] `timeout-minutes` на джобах и `retention-days` на артефактах
 - [ ] Гейты (а не только отчёты) на размер приложения (Ruler) и время сборки
 - [ ] Включить загрузку SARIF для Android Lint (сейчас закомментирована)
@@ -159,3 +166,4 @@
 - [ ] Виджет на домашний экран (быстрое добавление расхода / баланс)
 - [ ] Напоминание-нотификация «внеси расходы за день»
 - [ ] Baseline Profiles / macrobenchmark для ускорения холодного старта
+- [ ] Графана

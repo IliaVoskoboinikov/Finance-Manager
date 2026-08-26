@@ -61,6 +61,11 @@ detekt = "1.23.8"
 detektCompose = "0.6.1"
 lint = "32.2.1"
 kover = "0.9.8"
+dependencyAnalysis = "3.18.0"
+dependencyGuard = "0.5.0"
+konsist = "0.17.3"
+gradleDoctor = "0.12.0"
+affectedModuleDetector = "0.6.2"
 
 #Firebase
 gmsPlugin = "4.5.0"
@@ -155,6 +160,8 @@ lint-tests = { group = "com.android.tools.lint", name = "lint-tests", version.re
 kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
 kotlin-metadata-jvm = { group = "org.jetbrains.kotlin", name = "kotlin-metadata-jvm", version.ref = "kotlinMetadataJvm" }
 ruler-plugin = { group = "com.spotify.ruler", name = "ruler-gradle-plugin", version.ref = "ruler" }
+module-graph-plugin = { module = "com.jraska.module.graph.assertion:plugin", version.ref = "graphPlugin" }
+dependency-guard-plugin = { module = "com.dropbox.dependency-guard:dependency-guard", version.ref = "dependencyGuard" }
 navgraph-gradle-plugin = { group = "com.github.skydoves", name = "compose-nav-graph-gradle", version.ref = "navgraph" }
 
 #Firebase
@@ -170,6 +177,7 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertjCore" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
@@ -210,6 +218,10 @@ android-lint = { id = "com.android.lint", version.ref = "agp" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
 ruler = { id = "com.spotify.ruler", version.ref = "ruler" }
 navgraph = { id = "com.github.skydoves.navgraph", version.ref = "navgraph" }
+dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.ref = "dependencyAnalysis" }
+dependency-guard = { id = "com.dropbox.dependency-guard", version.ref = "dependencyGuard" }
+gradle-doctor = { id = "com.osacky.doctor", version.ref = "gradleDoctor" }
+affected-module-detector = { id = "com.dropbox.affectedmoduledetector", version.ref = "affectedModuleDetector" }
 
 #Firebase
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
@@ -227,5 +239,7 @@ soft-divan-build-time-tracker = { id = "soft.divan.build.time.tracker" }
 soft-divan-firebase = { id = "soft.divan.firebase" }
 soft-divan-check-conventions = { id = "soft.divan.check.conventions" }
 soft-divan-ruler = { id = "soft.divan.ruler" }
+soft-divan-dependency-guard = { id = "soft.divan.dependency.guard" }
+soft-divan-module-graph = { id = "soft.divan.module.graph" }
 
 
