@@ -58,9 +58,9 @@ navgraph = "0.2.1"
 
 # Lint & QA Tools
 detekt = "1.23.8"
-detektCompose = "0.6.1"
+detektCompose = "0.6.4"
 lint = "32.2.1"
-kover = "0.9.8"
+kover = "0.9.9"
 dependencyAnalysis = "3.18.0"
 dependencyGuard = "0.5.0"
 konsist = "0.17.3"
