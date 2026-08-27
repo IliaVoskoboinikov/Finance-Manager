@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Build project
@@ -50,7 +50,7 @@ jobs:
     steps:
       # Полная история нужна AffectedModuleDetector: он ищет merge-base с master.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Setup environment
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Coverage report & gate
@@ -105,7 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Run Android Lint
@@ -128,7 +128,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Run Detekt
@@ -163,7 +163,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Run KtLint composite action
@@ -192,7 +192,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Analyze size
@@ -210,7 +210,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Dependency guard
@@ -229,7 +229,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       # Задачи анализа исполняются через IsolatedClassloaderWorker: каждый work item
@@ -269,7 +269,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Check Graph
@@ -298,7 +298,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Nav graph report
