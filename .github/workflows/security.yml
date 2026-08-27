@@ -31,6 +31,41 @@ jobs:
         uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Свой отчёт в Step Summary: сам action пишет сводку только когда что-то нашёл,
+      # и тогда джоба уже красная. Здесь видно результат в любом случае — в том числе
+      # сколько правил отработало на зелёном прогоне.
+      #
+      # В сводку намеренно НЕ попадает найденное значение (region.snippet): секрет,
+      # напечатанный в лог публичного репозитория, утекает второй раз. Показываем
+      # только правило, файл и строку — этого хватает, чтобы пойти и посмотреть.
+      - name: Отчёт о сканировании в сводку
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          SARIF=$(find "$GITHUB_WORKSPACE" -maxdepth 3 -name '*.sarif' -print -quit)
+          if [ -z "$SARIF" ]; then
+            echo "## 🔐 Сканирование секретов" >> "$GITHUB_STEP_SUMMARY"
+            echo "Отчёт gitleaks не найден — сканирование не отработало." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          FOUND=$(jq '[.runs[].results[]?] | length' "$SARIF")
+          RULES=$(jq '[.runs[].tool.driver.rules[]?] | length' "$SARIF")
+          {
+            echo "## 🔐 Сканирование секретов (gitleaks)"
+            echo
+            if [ "$FOUND" -eq 0 ]; then
+              echo "Утечек не найдено. Проверено правил: **$RULES**, просканирована вся история коммитов."
+            else
+              echo "> Найдено совпадений: **$FOUND**. Значение секрета здесь намеренно не печатается — смотри файл и строку."
+              echo
+              echo "| Правило | Файл | Строка |"
+              echo "|---|---|---|"
+              jq -r '.runs[].results[]? | "| `\(.ruleId)` | `\(.locations[0].physicalLocation.artifactLocation.uri)` | \(.locations[0].physicalLocation.region.startLine) |"' "$SARIF"
+              echo
+              echo "**Секрет в истории git остаётся скомпрометированным, даже если удалить его следующим коммитом. Единственное лечение — ротация самого секрета.**"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # Блокирует PR, добавляющий зависимость с известной уязвимостью или несовместимой
   # лицензией. Работает поверх графа из dependency-submission.yml.
