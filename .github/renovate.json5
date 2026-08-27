@@ -68,6 +68,17 @@
       automerge: true,
     },
     {
+      // Плагин-маркер com.spotify.ruler.gradle.plugin опубликован только в Gradle
+      // Plugin Portal — в Maven Central его нет (404), и Renovate не может определить
+      // версию: «Failed to look up maven package … no-result». Указываем оба реестра.
+      groupName: "Ruler",
+      matchPackageNames: ["com.spotify.ruler{/,}**"],
+      registryUrls: [
+        "https://plugins.gradle.org/m2/",
+        "https://repo1.maven.org/maven2/",
+      ],
+    },
+    {
       // major-обновления всегда отдельным PR и без automerge.
       matchUpdateTypes: ["major"],
       automerge: false,
