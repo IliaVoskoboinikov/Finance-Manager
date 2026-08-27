@@ -73,12 +73,12 @@ jobs:
           file: app/build/reports/buildTimeTracker/build.csv
           output-file: buildTime.csv
       - name: Upload apk
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-release
           path: app/build/outputs/apk/release/app-release.apk
       - name: Upload time report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: buildTime.csv
           path: buildTime.csv
@@ -92,7 +92,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Download apk
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name:  app-release
       - name: Get app version
@@ -137,7 +137,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.JKS_ALIAS }}
           KEY_PASSWORD: ${{ secrets.JKS_KEY_PASS }}
       - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-release-aab
           path: app/build/outputs/bundle/release/app-release.aab
@@ -148,7 +148,7 @@ jobs:
     needs: build-aab
     steps:
       - name: Download signed aab
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-release-aab
       - name: Upload to Play Store
@@ -172,11 +172,11 @@ jobs:
       contents: write
     steps:
       - name: Download signed apk
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-release
       - name: Download signed aab
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-release-aab
       - name: Create draft release
