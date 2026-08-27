@@ -23,7 +23,7 @@ jobs:
       version_code: ${{ steps.extract.outputs.version_code }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Extract version from branch
         id: extract
         run: |
@@ -52,7 +52,7 @@ jobs:
     needs: validate-version
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Decode Keystore
@@ -90,7 +90,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Download apk
         uses: actions/download-artifact@v4
         with:
@@ -121,7 +121,7 @@ jobs:
     needs: validate-version
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Decode Keystore
