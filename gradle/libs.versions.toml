@@ -5,7 +5,7 @@
 [versions]
 
 # Build & Kotlin
-agp = "9.2.1"
+agp = "9.3.2"
 kotlin = "2.4.0"
 ksp = "2.3.9"
 coroutines = "1.11.0"
@@ -59,7 +59,7 @@ navgraph = "0.2.1"
 # Lint & QA Tools
 detekt = "1.23.8"
 detektCompose = "0.6.4"
-lint = "32.2.1"
+lint = "32.3.2"
 kover = "0.9.9"
 dependencyAnalysis = "3.18.0"
 dependencyGuard = "0.5.0"
