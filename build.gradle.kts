@@ -1,3 +1,5 @@
+import com.aalekh.aalekh.model.ModuleType
+import com.aalekh.aalekh.model.Severity
 import io.gitlab.arturbosch.detekt.Detekt
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
@@ -194,6 +196,215 @@ subprojects {
                 reporter(ReporterType.SARIF)
             }
         }
+    }
+}
+
+/**
+ * Aalekh — анализ и enforcement архитектуры графа модулей (`./gradlew aalekhReport` /
+ * `aalekhCheck`). Плагин применяется в [settings.gradle.kts] (settings-вариант), а весь
+ * контракт архитектуры описан здесь, в единственном блоке `aalekh { }`.
+ *
+ * Что он закрывает сверх уже имеющихся проверок:
+ * - `CheckConventionsPlugin` (build-logic) проверяет применение конвеншен-плагинов и грубые
+ *   рёбра, но не даёт ни отчёта, ни диффа в PR;
+ * - `:app:assertModuleGraph` (jraska) на данный момент правил не содержит и по факту `UP-TO-DATE`
+ *   (см. help_comand.md) — Aalekh закрывает именно это: машинно-проверяемые слои, изоляция фич,
+ *   reachability, метрики и интерактивный HTML-отчёт.
+ *
+ * Слои повторяют Clean Architecture проекта: foundation (инфраструктурные core) → domain
+ * (чистый Kotlin) → data (Room/Retrofit/sync) → ui (дизайн-система) → feature (:feature:*:impl/api)
+ * → app. `canOnlyDependOn` перечисляет слои, «вниз» по которым модулю разрешено зависеть; рёбра
+ * внутри одного слоя разрешены всегда. Модуль попадает в ПЕРВЫЙ подходящий по шаблону слой.
+ *
+ * CI-джоба `check-architecture` в .github/workflows/ci.yml запускает `aalekhCheck` как
+ * блокирующую проверку; текущие (унаследованные) нарушения заморожены в `aalekh-baseline.json`,
+ * поэтому падение возможно только на НОВЫХ. Полное описание — docs/aalekh.md.
+ */
+aalekh {
+    // В CI браузер открывать нельзя; локально путь к отчёту печатается в лог — открывается вручную.
+    openBrowserAfterReport.set(false)
+    // Тестовые рёбра оставляем — важны для полноты графа и метрик связности.
+    includeTestDependencies.set(true)
+    // compileOnly архитектурно не значим — по умолчанию за бортом, фиксируем явно.
+    includeCompileOnlyDependencies.set(false)
+    // Внешние координаты (group:name:version) читаются как объявлены, без резолва, — показываются
+    // в инспекторе модулей и на вкладке Dependencies (ловит расхождения версий библиотек).
+    includeExternalDependencies.set(true)
+    // Писать aalekh-metrics.csv рядом с HTML на каждый aalekhReport — для внешних дашбордов/трендов.
+    exportMetrics.set(true)
+
+    // Слепок нарушений (freeze). Падаем только на новых. Обновлять: ./gradlew aalekhBaseline.
+    baselineFile.set("aalekh-baseline.json")
+    // Слепок архитектуры для aalekhDiff (комментарий в PR). Обновлять: ./gradlew aalekhSnapshot.
+    snapshotFile.set("aalekh-snapshot.json")
+    // aalekhDiff по умолчанию только отчитывается; ронять его на новом цикле/регрессии метрики
+    // не нужно — за это отвечает блокирующий aalekhCheck (см. qualityGates ниже).
+    failOnArchitectureRegression.set(false)
+
+    // Временна́я (change) связанность из git-истории: aalekhTemporal → aalekh-temporal.md/.json.
+    temporalCoupling {
+        commitWindow.set(500)
+        minSharedCommits.set(2)
+        hiddenCouplingThreshold.set(0.6)
+    }
+
+    // Диапазон для aalekhAffected (blast radius по диффу). В CI baseRef переопределяется на
+    // origin/master, локально по умолчанию сравнение с рабочим деревом от HEAD~1.
+    affected {
+        baseRef.set("origin/master")
+        headRef.set("")
+    }
+
+    // Экспорт диаграмм (aalekhMermaid): чисто инструментальные модули из картинки убираем.
+    mermaid {
+        exclude(":lint")
+        exclude(":konsist")
+    }
+
+    // ── Слои: foundation → domain → data → ui → feature → app ────────────────────────────────
+    layers {
+        // Инфраструктурные core-модули. Без canOnlyDependOn — не ограничиваем, чтобы не ловить
+        // ложные срабатывания (например :core:auth, использующий :core:network).
+        layer("foundation") {
+            modules(
+                // :core — пустой контейнер-namespace, который Gradle материализует для вложенных
+                // путей; кладём сюда, чтобы покрытие слоями было исчерпывающим (иначе uncovered).
+                ":core",
+                ":core:common",
+                ":core:security",
+                ":core:auth",
+                ":core:logging-error",
+                ":core:feature-api",
+                ":core:workmanager",
+                ":core:notifications",
+            )
+        }
+        // Чистый Kotlin: сущности, UseCase, интерфейсы репозиториев. Ничего, кроме foundation.
+        layer("domain") {
+            modules(":core:domain")
+            canOnlyDependOn("foundation")
+        }
+        // Реализация репозиториев, Room, Retrofit и фоновая синхронизация.
+        layer("data") {
+            modules(
+                ":core:data",
+                ":core:database",
+                ":core:network",
+                ":sync",
+            )
+            canOnlyDependOn("foundation", "domain")
+        }
+        // Дизайн-система (Compose + Material 3).
+        layer("ui") {
+            modules(":core:uikit")
+            canOnlyDependOn("foundation", "domain", "data")
+        }
+        // Презентационный слой: контракты (:api) и реализации (:impl) фич.
+        layer("feature") {
+            modules(":feature:**")
+            canOnlyDependOn("foundation", "domain", "data", "ui")
+        }
+        // Хост: собирает граф и владеет корневой навигацией.
+        layer("app") {
+            modules(":app")
+            canOnlyDependOn("foundation", "domain", "data", "ui", "feature")
+        }
+        // Инструментальные модули без продуктового кода — отдельный слой, чтобы покрытие слоями
+        // (requireLayerForAllModules) было исчерпывающим и они не висели в Unclassified.
+        layer("quality") {
+            modules(":lint", ":konsist")
+        }
+    }
+
+    // Изоляция фич: :feature:*:impl не должны зависеть друг от друга — только через чужие :api
+    // (:api под шаблон не подпадает, поэтому impl → чужой api разрешён).
+    featureIsolation {
+        featurePattern = ":feature:*:impl"
+    }
+
+    // Владение модулями — оверлей на графе и в инспекторе; помечает межкомандные рёбра.
+    teams {
+        team("core-platform") { modules(":core:**") }
+        team("features") { modules(":feature:**") }
+        team("app") { modules(":app", ":sync") }
+        team("quality") { modules(":lint", ":konsist") }
+    }
+
+    rules {
+        // Каждый модуль обязан попасть в объявленный слой (иначе layer-dependency его не видит).
+        requireLayerForAllModules()
+
+        // Бюджеты графа (WARNING): высота = минимум последовательных шагов компиляции.
+        // Лимит транзитивных зависимостей чуть выше текущего пика (:app = 45) — ловит рост,
+        // не шумя на нормальном для хост-модуля агрегате.
+        maxGraphHeight(12)
+        noTransitiveDependenciesExceeding(50)
+
+        // Модули, которые никто не использует и которые ни на что не ссылаются (WARNING).
+        // Исключаем: (1) инструментальные модули — они подключаются особыми конфигурациями
+        // (lintChecks и т.п.), графом не видными; (2) пустые контейнеры-namespace (:core,
+        // :feature, :feature:<name>), которые Gradle материализует для вложенных путей.
+        noOrphanModules()
+        rule("no-orphan-modules") {
+            suppressFor(":lint")
+            suppressFor(":konsist")
+            suppressFor(":core")
+            suppressFor(":feature")
+            suppressFor(":feature:*")
+        }
+
+        // Запрет циклов включён всегда; дополнительно фиксируем регрессию количества циклов —
+        // новый цикл роняет сборку, даже если какие-то уже существовали.
+        rule("no-cyclic-dependencies") {
+            preventRegression = true
+        }
+
+        // Reachability (транзитивная достижимость), ERROR:
+        // домен не должен дотягиваться до приложения даже через цепочку.
+        forbidReachable(
+            from = ":core:domain",
+            to = ":app",
+            because = "домен остаётся независимым от приложения даже транзитивно",
+        )
+        // Общий инфраслой не должен дотягиваться до фич (зависимость обязана быть однонаправленной).
+        forbidReachable(
+            from = ":core:common",
+            to = ":feature:**",
+            because = "общий core остаётся feature-agnostic",
+        )
+        // Дизайн-система не должна дотягиваться до слоя данных.
+        forbidReachable(
+            from = ":core:uikit",
+            to = ":core:data",
+            because = "дизайн-система не должна знать о слое данных",
+        )
+        // Каждая реализация фичи обязана быть достижима из :app — иначе это мёртвый код.
+        mustBeReachableFrom(
+            module = ":feature:*:impl",
+            from = ":app",
+            because = "нереференсная фича собирается, но никому не поставляется",
+        )
+    }
+
+    // Инлайн-предикаты «X не должен зависеть от Y».
+    // Фичи — листья графа: зависеть от хоста-приложения нельзя.
+    forbid {
+        from(":feature:**")
+        to(":app")
+        because("фичи — независимые срезы; зависимость от app инвертирует граф")
+    }
+    // Домен обязан оставаться платформо-независимым (pure Kotlin), чтобы его можно было делить в KMP.
+    forbid {
+        from(":core:domain")
+        toModuleType(ModuleType.ANDROID_LIBRARY)
+        because("доменный слой не должен зависеть от Android-модулей")
+    }
+
+    // Ratchet структурных метрик: любая из них не должна ухудшиться относительно baseline.
+    // Срабатывает только после ./gradlew aalekhBaseline (он пишет снимок метрик в baseline).
+    qualityGates {
+        forbidAllRegressions()
+        severity.set(Severity.ERROR)
     }
 }
 
