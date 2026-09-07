@@ -17,8 +17,8 @@ kotlinMetadataJvm = "2.4.0"
 
 # AndroidX Core
 coreKtx = "1.19.0"
-appcompat = "1.7.1"
-lifecycleProcess = "2.10.0"
+appcompat = "1.8.0"
+lifecycleProcess = "2.11.0"
 securityCrypto = "1.1.0"
 tracingKtx = "1.3.0"
 biometricKtx = "1.4.0-alpha02"
@@ -29,11 +29,11 @@ room = "2.8.4"
 workManager = "2.11.2"
 
 # Compose
-composeBom = "2026.05.01"
+composeBom = "2026.08.00"
 materialIconsExtended = "1.7.8"
-navigation3 = "1.1.5"
+navigation3 = "1.1.7"
 # 2.11.0 требует compileSdk 37 (а он же уходит в targetSdk) — остаёмся на линейке lifecycle 2.10.x.
-lifecycleViewmodelNavigation3 = "2.10.0"
+lifecycleViewmodelNavigation3 = "2.11.0"
 kotlinxSerialization = "1.11.0"
 
 # UI Libraries
@@ -43,7 +43,7 @@ ycharts = "2.1.0"
 
 # Dependency Injection
 hilt = "2.59.2"
-hiltExt = "1.3.0"
+hiltExt = "1.4.0"
 
 # Networking
 retrofit = "3.0.0"
@@ -78,9 +78,9 @@ kotlinxCoroutinesTest = "1.11.0"
 assertjCore = "3.27.7"
 mockk = "1.14.11"
 robolectric = "4.14.1"
-junitVersion = "1.2.1"
-espressoCore = "3.6.1"
-androidxTestCore = "1.6.1"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+androidxTestCore = "1.7.0"
 ##############################################
 #                  Libraries
 ##############################################
