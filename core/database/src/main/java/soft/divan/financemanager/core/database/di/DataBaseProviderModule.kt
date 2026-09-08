@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.core.database.dao.AccountDao
 import soft.divan.financemanager.core.database.dao.CategoryDao
 import soft.divan.financemanager.core.database.dao.CurrencyDao
+import soft.divan.financemanager.core.database.dao.OutboxDao
 import soft.divan.financemanager.core.database.dao.TransactionDao
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
 import soft.divan.financemanager.core.database.util.DatabaseCleanupManager
@@ -48,8 +49,13 @@ object DataBaseProviderModule {
 
     @Provides
     @Singleton
+    fun provideOutboxDao(db: FinanceManagerDatabase): OutboxDao = db.outboxDao()
+
+    @Provides
+    @Singleton
     fun provideDatabaseCleanupManager(
         accountDao: AccountDao,
-        transactionDao: TransactionDao
-    ): DatabaseCleanupManager = DatabaseCleanupManagerImpl(accountDao, transactionDao)
+        transactionDao: TransactionDao,
+        outboxDao: OutboxDao
+    ): DatabaseCleanupManager = DatabaseCleanupManagerImpl(accountDao, transactionDao, outboxDao)
 }

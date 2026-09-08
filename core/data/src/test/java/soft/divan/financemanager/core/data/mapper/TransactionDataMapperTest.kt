@@ -109,10 +109,10 @@ class TransactionDataMapperTest {
     }
 
     @Test
-    fun `TransactionEntity toDto maps fields and keeps server id`() {
+    fun `TransactionEntity toDto sends local id as idempotency key`() {
         val result = entity.toDto(accountServerId = "server-a1")
 
-        assertThat(result.id).isEqualTo("server-t1")
+        assertThat(result.id).isEqualTo("local-t1")
         assertThat(result.accountId).isEqualTo("server-a1")
         assertThat(result.categoryId).isEqualTo("cat-1")
         assertThat(result.amount).isEqualByComparingTo(BigDecimal("42.42"))

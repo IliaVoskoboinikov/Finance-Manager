@@ -34,8 +34,24 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE serverId = :serverId")
     suspend fun getByServerId(serverId: String): TransactionEntity?
 
-    @Query("SELECT * FROM transactions WHERE serverId IN (:serverIds)")
-    suspend fun getByServerIds(serverIds: List<String>): List<TransactionEntity>
+    /**
+     * Локальные транзакции, соответствующие серверным [ids]. Используется pull'ом, чтобы понять,
+     * известна ли пришедшая с сервера запись локально.
+     *
+     * Совпадение ищется по двум признакам:
+     * 1. `serverId IN (:ids)` — обычный случай, запись уже синхронизирована;
+     * 2. `localId IN (:ids) AND serverId IS NULL` — запись создана на этом устройстве (create
+     *    уходит с `id = localId`), но ACK ещё не дошёл, поэтому `serverId` не проставлен.
+     *
+     * Без второго условия pull не узнал бы собственную неподтверждённую транзакцию и вставил бы
+     * её **дубликатом** с новым `localId`. Оговорка `serverId IS NULL` не даёт ложно сматчить
+     * уже синхронизированную запись, у которой `localId` случайно совпал бы с чужим серверным id.
+     */
+    @Query(
+        "SELECT * FROM transactions " +
+            "WHERE serverId IN (:ids) OR (localId IN (:ids) AND serverId IS NULL)"
+    )
+    suspend fun getBySyncIds(ids: List<String>): List<TransactionEntity>
 
     @Query(
         "SELECT * FROM transactions WHERE accountLocalId = :accountId ORDER BY transactionDate DESC"

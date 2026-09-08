@@ -127,10 +127,10 @@ class AccountDataMapperTest {
     }
 
     @Test
-    fun `Account toDto maps name balance and currency`() {
+    fun `Account toDto sends local id as idempotency key`() {
         val result = account.toDto()
 
-        assertThat(result.id).isNull()
+        assertThat(result.id).isEqualTo("local-1")
         assertThat(result.name).isEqualTo("Cash")
         assertThat(result.balance).isEqualByComparingTo(BigDecimal("100.50"))
         assertThat(result.currencyId).isEqualTo("rub-id")
@@ -146,10 +146,10 @@ class AccountDataMapperTest {
     }
 
     @Test
-    fun `AccountEntity toDto maps name balance and currency`() {
+    fun `AccountEntity toDto sends local id as idempotency key`() {
         val result = entity.toDto()
 
-        assertThat(result.id).isNull()
+        assertThat(result.id).isEqualTo("local-1")
         assertThat(result.name).isEqualTo("Cash")
         assertThat(result.balance).isEqualByComparingTo(BigDecimal("100.50"))
         assertThat(result.currencyId).isEqualTo("rub-id")
