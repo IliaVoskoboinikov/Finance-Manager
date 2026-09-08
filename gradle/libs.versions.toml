@@ -66,6 +66,10 @@ dependencyGuard = "0.5.0"
 konsist = "0.17.3"
 gradleDoctor = "0.12.0"
 affectedModuleDetector = "0.6.2"
+# Архитектурный анализ графа модулей (settings-плагин). Версия дублируется в
+# settings.gradle.kts литералом: каталог `libs` недоступен в блоке plugins{} settings.gradle.kts
+# (объявляется ниже в том же файле), поэтому единый источник версии — здесь.
+aalekh = "0.7.0"
 
 #Firebase
 gmsPlugin = "4.5.0"
@@ -222,6 +226,9 @@ dependency-analysis = { id = "com.autonomousapps.dependency-analysis", version.r
 dependency-guard = { id = "com.dropbox.dependency-guard", version.ref = "dependencyGuard" }
 gradle-doctor = { id = "com.osacky.doctor", version.ref = "gradleDoctor" }
 affected-module-detector = { id = "com.dropbox.affectedmoduledetector", version.ref = "affectedModuleDetector" }
+# Применяется в settings.gradle.kts (settings-плагин), не через alias() — запись здесь
+# держит версию плагина в общем каталоге рядом с остальным инструментарием.
+aalekh = { id = "io.github.shivathapaa.aalekh", version.ref = "aalekh" }
 
 #Firebase
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlyticsPlugin" }
