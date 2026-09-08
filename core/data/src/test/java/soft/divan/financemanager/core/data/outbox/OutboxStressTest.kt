@@ -88,10 +88,17 @@ class OutboxStressTest {
         /** Что «есть на сервере» — по клиентским id. Нужно для честного read-back. */
         val serverState = mutableSetOf<String>()
 
+        /** Выключает поломки — для замеров пропускной способности на исправной сети. */
+        var alwaysSucceed: Boolean = false
+
         override fun intercept(chain: Interceptor.Chain): Response {
             val request = chain.request()
             val id = entityId(request)
             sent += SentRequest(request.method, id, request.header(IDEMPOTENCY_KEY_HEADER))
+
+            if (alwaysSucceed) {
+                return response(request, id, applyMutation(request.method, id))
+            }
 
             if (request.method != "GET" && random.nextInt(100) < 25) {
                 throw IOException("оборвалась сеть")
@@ -182,15 +189,19 @@ class OutboxStressTest {
 
         processor = OutboxProcessor(
             localDataSource = outboxLocalDataSource,
-            sender = TransactionOutboxSender(
-                remoteDataSource = TransactionRemoteDataSourceImpl(apiService),
-                localDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
-                gson = Gson()
+            entryHandler = OutboxEntryHandler(
+                localDataSource = outboxLocalDataSource,
+                sender = TransactionOutboxSender(
+                    remoteDataSource = TransactionRemoteDataSourceImpl(apiService),
+                    localDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
+                    gson = Gson()
+                ),
+                retryPolicy = OutboxRetryPolicy(),
+                clock = clock,
+                errorLogger = mockk<ErrorLogger>(relaxed = true),
+                transactionRunner = RoomTransactionRunner(db, noopContext)
             ),
-            retryPolicy = OutboxRetryPolicy(),
-            clock = clock,
-            errorLogger = mockk<ErrorLogger>(relaxed = true),
-            transactionRunner = RoomTransactionRunner(db, noopContext)
+            clock = clock
         )
     }
 
@@ -355,6 +366,35 @@ class OutboxStressTest {
                 .`as`("у счёта %s первой ушла не операция создания: %s", account, log)
                 .startsWith("POST")
         }
+    }
+
+    @Test
+    fun `many independent operations drain in a few runs, not one per run`() = runTest {
+        // Регрессия на цену барьера: он обязан держать порядок, но не сериализовать ровесников.
+        // Транзакции одного счёта зависят от счёта, а не друг от друга, и должны уезжать пачкой.
+        setupWithSeed(seed = 100)
+        interceptor.alwaysSucceed = true
+
+        val accountId = "acc-0"
+        insertTransaction(accountId, accountId)
+        enqueue(accountId, accountId, OutboxOperation.CREATE)
+        repeat(30) { index ->
+            val localId = "tx-0-$index"
+            insertTransaction(localId, accountId)
+            enqueue(localId, accountId, OutboxOperation.CREATE)
+        }
+
+        var runs = 0
+        while (totalQueued() > 0 && runs < MAX_ROUNDS) {
+            processor.process()
+            clock.instant = clock.instant.plusMillis(CLOCK_STEP_MILLIS)
+            runs++
+        }
+
+        // Одного счёта и 30 его транзакций хватает на пару проходов: счёт, затем все ровесники.
+        // До исправления барьера это требовало 31 прохода и упиралось в MAX_PASSES.
+        assertThat(totalQueued()).isZero()
+        assertThat(runs).isLessThanOrEqualTo(2)
     }
 
     @Test

@@ -67,9 +67,9 @@ class OutboxDaoTest : RoomDaoTest() {
             }
         }
 
-        // Барьер порядка отбирает записи подзапросом по (dependencyKey, status).
-        // Без индекса это полное сканирование очереди на каждую строку выборки.
-        assertThat(indexedColumns).contains("dependencyKey", "status")
+        // Барьер ищет предшественников по entityLocalId, каскад dead-letter — по dependencyKey.
+        // Без индексов это полное сканирование очереди на каждую строку выборки.
+        assertThat(indexedColumns).contains("entityLocalId", "dependencyKey", "status")
     }
 
     @Test
@@ -162,11 +162,82 @@ class OutboxDaoTest : RoomDaoTest() {
 
     @Test
     fun `a transaction waits for its own account`() = runTest {
-        // Транзакция входит в группу своего счёта: сервер отвергнет её с неизвестным accountId
+        // Транзакция назвала счёт предшественником: сервер отвергнет её с неизвестным accountId
         dao.insert(
             entry("A1", entityType = OutboxEntityType.ACCOUNT, nextAttemptAt = now + 30_000)
         )
         dao.insert(entry("T1", dependencyKey = "A1"))
+
+        assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10)).isEmpty()
+    }
+
+    @Test
+    fun `siblings of one account do not wait for each other`() = runTest {
+        // Ровесники: обе транзакции ждут счёт, но друг от друга не зависят. Держать их по одной
+        // значило бы напрасно сериализовать очередь — на 50 транзакциях счёта выборка отдавала бы
+        // по одной за проход.
+        val account = dao.insert(entry("A1", entityType = OutboxEntityType.ACCOUNT))
+        repeat(5) { dao.insert(entry("T$it", dependencyKey = "A1")) }
+
+        assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId })
+            .containsExactly("A1")
+
+        dao.markCompleted(sequenceNo = account, updatedAt = now)
+
+        assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId })
+            .containsExactly("T0", "T1", "T2", "T3", "T4")
+    }
+
+    @Test
+    fun `a stuck sibling does not hold the others`() = runTest {
+        val account = dao.insert(entry("A1", entityType = OutboxEntityType.ACCOUNT))
+        dao.markCompleted(sequenceNo = account, updatedAt = now)
+        // T0 ушла в backoff, T1 и T2 к ней отношения не имеют
+        dao.insert(entry("T0", dependencyKey = "A1", nextAttemptAt = now + 30_000))
+        dao.insert(entry("T1", dependencyKey = "A1"))
+        dao.insert(entry("T2", dependencyKey = "A1"))
+
+        assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId })
+            .containsExactly("T1", "T2")
+    }
+
+    @Test
+    fun `deleting an account waits for the transactions that reference it`() = runTest {
+        // Локальное удаление счёта не каскадит на транзакции, поэтому в очереди может лежать
+        // «создать счёт → создать его транзакцию → удалить счёт». Уйди удаление вперёд —
+        // транзакция приедет к удалённому счёту и получит 400.
+        val account = dao.insert(entry("A1", entityType = OutboxEntityType.ACCOUNT))
+        dao.insert(entry("T1", dependencyKey = "A1"))
+        dao.insert(
+            entry("A1", entityType = OutboxEntityType.ACCOUNT, operation = OutboxOperation.DELETE)
+        )
+        dao.markCompleted(sequenceNo = account, updatedAt = now)
+
+        assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.operation })
+            .containsExactly(OutboxOperation.CREATE)
+    }
+
+    @Test
+    fun `an account operation waits only for what actually depends on it`() = runTest {
+        // Транзакция чужого счёта удалению A1 не помеха
+        val account = dao.insert(entry("A1", entityType = OutboxEntityType.ACCOUNT))
+        dao.insert(entry("T9", dependencyKey = "A2"))
+        dao.insert(
+            entry("A1", entityType = OutboxEntityType.ACCOUNT, operation = OutboxOperation.DELETE)
+        )
+        dao.markCompleted(sequenceNo = account, updatedAt = now)
+
+        assertThat(
+            dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId }
+        ).containsExactly("T9", "A1")
+    }
+
+    @Test
+    fun `an edit waits for its own creation even after the entity changed owner`() = runTest {
+        // Создание в группе одного счёта, правка — уже другого. Групп разные, но это одна строка,
+        // и порядок между её операциями обязан сохраниться.
+        dao.insert(entry("T1", dependencyKey = "acc-1", nextAttemptAt = now + 30_000))
+        dao.insert(entry("T1", dependencyKey = "acc-2", operation = OutboxOperation.UPDATE))
 
         assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10)).isEmpty()
     }
@@ -211,55 +282,90 @@ class OutboxDaoTest : RoomDaoTest() {
     /* ---------- каскад dead-letter ---------- */
 
     @Test
-    fun `markFailed also fails later unfinished entries of the same group`() = runTest {
-        val head = dao.insert(entry("A1"))
+    fun `markFailed cancels the entries that were waiting for it`() = runTest {
+        val head = dao.insert(entry("A1", entityType = OutboxEntityType.ACCOUNT))
         dao.insert(entry("T1", dependencyKey = "A1"))
         dao.insert(entry("T2", dependencyKey = "A1"))
 
         val affected = dao.markFailed(
             sequenceNo = head,
-            dependencyKey = "A1",
+            entityLocalId = "A1",
             attemptCount = 3,
             lastError = "HTTP 400",
             updatedAt = now
         )
 
-        // Сама запись плюс две зависящие от неё
+        // Сам счёт плюс обе транзакции, назвавшие его предшественником
         assertThat(affected).isEqualTo(3)
         assertThat(dao.observeFailedCount().first()).isEqualTo(3)
     }
 
     @Test
-    fun `markFailed leaves other groups and earlier entries alone`() = runTest {
-        val earlier = dao.insert(entry("A1"))
-        val head = dao.insert(entry("T1", dependencyKey = "A1"))
-        dao.insert(entry("B1"))
+    fun `markFailed cancels later operations of the same row`() = runTest {
+        val head = dao.insert(entry("T1"))
+        dao.insert(entry("T1", operation = OutboxOperation.UPDATE))
 
         val affected = dao.markFailed(
             sequenceNo = head,
-            dependencyKey = "A1",
+            entityLocalId = "T1",
+            attemptCount = 3,
+            lastError = "HTTP 400",
+            updatedAt = now
+        )
+
+        // Правка по строке, которую не удалось создать, обречена на 404
+        assertThat(affected).isEqualTo(2)
+    }
+
+    @Test
+    fun `markFailed leaves siblings alone`() = runTest {
+        val head = dao.insert(entry("T1", dependencyKey = "A1"))
+        dao.insert(entry("T2", dependencyKey = "A1"))
+        dao.insert(entry("T3", dependencyKey = "A1"))
+
+        val affected = dao.markFailed(
+            sequenceNo = head,
+            entityLocalId = "T1",
             attemptCount = 1,
             lastError = "HTTP 400",
             updatedAt = now
         )
 
-        // Затронута только сама запись: предшественник своей группы и чужая группа целы
+        // Ровесники от провалившейся транзакции не зависят — отменять их нельзя
         assertThat(affected).isEqualTo(1)
         assertThat(
             dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId }
-        ).containsExactly("A1", "B1")
-        assertThat(earlier).isEqualTo(1L)
+        ).containsExactly("T2", "T3")
+    }
+
+    @Test
+    fun `markFailed does not touch an entry another run is sending`() = runTest {
+        val head = dao.insert(entry("A1", entityType = OutboxEntityType.ACCOUNT))
+        dao.insert(entry("T1", dependencyKey = "A1", status = OutboxStatus.IN_PROGRESS))
+
+        val affected = dao.markFailed(
+            sequenceNo = head,
+            entityLocalId = "A1",
+            attemptCount = 1,
+            lastError = "HTTP 400",
+            updatedAt = now
+        )
+
+        // Её отправляет параллельный прогон, он и доложит об исходе: пометив её FAILED, мы
+        // получили бы гонку — его scheduleRetry вернул бы её в PENDING и отменил бы отмену
+        assertThat(affected).isEqualTo(1)
+        assertThat(dao.observeFailedCount().first()).isEqualTo(1)
     }
 
     @Test
     fun `markFailed does not touch already completed entries`() = runTest {
-        val head = dao.insert(entry("A1"))
+        val head = dao.insert(entry("A1", entityType = OutboxEntityType.ACCOUNT))
         val done = dao.insert(entry("T1", dependencyKey = "A1"))
         dao.markCompleted(sequenceNo = done, updatedAt = now)
 
         val affected = dao.markFailed(
             sequenceNo = head,
-            dependencyKey = "A1",
+            entityLocalId = "A1",
             attemptCount = 1,
             lastError = "HTTP 400",
             updatedAt = now
@@ -271,13 +377,13 @@ class OutboxDaoTest : RoomDaoTest() {
     }
 
     @Test
-    fun `a manual retry brings the whole cancelled group back`() = runTest {
-        val head = dao.insert(entry("A1"))
+    fun `a manual retry brings the whole cancelled chain back`() = runTest {
+        val head = dao.insert(entry("A1", entityType = OutboxEntityType.ACCOUNT))
         dao.insert(entry("T1", dependencyKey = "A1", attemptCount = 2))
 
         dao.markFailed(
             sequenceNo = head,
-            dependencyKey = "A1",
+            entityLocalId = "A1",
             attemptCount = 8,
             lastError = "Попытки исчерпаны",
             updatedAt = now
@@ -286,7 +392,7 @@ class OutboxDaoTest : RoomDaoTest() {
 
         dao.requeueFailed(updatedAt = now + 1)
 
-        // Вся группа снова в очереди, а барьер выдаёт её по порядку — сначала голова
+        // Обе снова в очереди, а барьер выдаёт их по порядку — сначала предшественник
         assertThat(dao.observeFailedCount().first()).isZero()
         assertThat(
             dao.getReadyToSend(now = now + 1, staleBefore = 0, limit = 10).map { it.entityLocalId }
@@ -391,7 +497,7 @@ class OutboxDaoTest : RoomDaoTest() {
 
         dao.markFailed(
             sequenceNo = id,
-            dependencyKey = "T1",
+            entityLocalId = "T1",
             attemptCount = 3,
             lastError = "HTTP 400",
             updatedAt = now

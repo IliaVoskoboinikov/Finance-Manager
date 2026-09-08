@@ -55,7 +55,7 @@ class AccountRepositoryImpl @Inject constructor(
                 outboxEnqueuer.enqueue(
                     entityType = OutboxEntityType.ACCOUNT,
                     entityLocalId = accountEntity.localId,
-                    // Счёт возглавляет собственную группу: его транзакции указывают сюда же
+                    // Счёт ни от кого не зависит, поэтому предшественник — он сам
                     dependencyKey = accountEntity.localId,
                     operation = OutboxOperation.CREATE,
                     body = accountEntity.toDto()

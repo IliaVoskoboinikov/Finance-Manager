@@ -38,13 +38,13 @@ class OutboxLocalDataSourceImpl @Inject constructor(
 
     override suspend fun markFailed(
         sequenceNo: Long,
-        dependencyKey: String,
+        entityLocalId: String,
         attemptCount: Int,
         lastError: String?,
         updatedAt: Long
     ): Int = outboxDao.markFailed(
         sequenceNo = sequenceNo,
-        dependencyKey = dependencyKey,
+        entityLocalId = entityLocalId,
         attemptCount = attemptCount,
         lastError = lastError,
         updatedAt = updatedAt

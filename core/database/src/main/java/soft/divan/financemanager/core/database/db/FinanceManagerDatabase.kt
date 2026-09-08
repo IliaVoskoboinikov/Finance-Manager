@@ -27,8 +27,9 @@ import soft.divan.financemanager.core.database.util.Converters
     // иначе Room видит одинаковую версию с другим identity hash и падает на проверке целостности.
     // Версия 5: добавлена таблица outbox (очередь исходящих операций).
     // Версия 6: в outbox добавлен targetServerId — адрес ресурса для PUT/DELETE.
-    // Версия 7: в outbox добавлены dependencyKey (группа обязательного порядка) и индекс по нему.
-    version = 7,
+    // Версия 7: в outbox добавлен dependencyKey — ссылка на обязательного предшественника.
+    // Версия 8: барьер порядка ищет предшественников по entityLocalId — сменились индексы outbox.
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

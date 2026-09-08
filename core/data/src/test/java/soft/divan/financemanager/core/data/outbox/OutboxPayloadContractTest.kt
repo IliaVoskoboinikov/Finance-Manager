@@ -160,11 +160,11 @@ class OutboxPayloadContractTest {
     private suspend fun enqueueCreate(
         amount: String,
         comment: String,
-        dependencyKey: String = "local-a1"
+        entityLocalId: String = LOCAL_ID
     ): Long = enqueuer.enqueue(
         entityType = OutboxEntityType.TRANSACTION,
-        entityLocalId = LOCAL_ID,
-        dependencyKey = dependencyKey,
+        entityLocalId = entityLocalId,
+        dependencyKey = "local-a1",
         operation = OutboxOperation.CREATE,
         body = requestDto(amount, comment)
     )
@@ -214,9 +214,9 @@ class OutboxPayloadContractTest {
     @Test
     fun `a different body always travels under a different key`() = runTest {
         db.transactionDao().insert(entity("42.42", "lunch"))
-        // Разные группы: иначе барьер порядка не выпустит вторую операцию, пока жива первая
-        val first = storedEntry(enqueueCreate("42.42", "lunch", dependencyKey = "group-1"))
-        val second = storedEntry(enqueueCreate("100.00", "ужин", dependencyKey = "group-2"))
+        // Разные строки: иначе барьер не выпустит вторую операцию, пока не закрыта первая
+        val first = storedEntry(enqueueCreate("42.42", "lunch"))
+        val second = storedEntry(enqueueCreate("100.00", "ужин", entityLocalId = "local-t2"))
 
         sender.send(first)
         sender.send(second)

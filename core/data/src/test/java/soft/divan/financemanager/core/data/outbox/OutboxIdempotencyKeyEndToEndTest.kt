@@ -128,16 +128,20 @@ class OutboxIdempotencyKeyEndToEndTest {
 
         processor = OutboxProcessor(
             localDataSource = outboxLocalDataSource,
-            sender = TransactionOutboxSender(
-                remoteDataSource = TransactionRemoteDataSourceImpl(apiService),
-                localDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
-                gson = Gson()
+            entryHandler = OutboxEntryHandler(
+                localDataSource = outboxLocalDataSource,
+                sender = TransactionOutboxSender(
+                    remoteDataSource = TransactionRemoteDataSourceImpl(apiService),
+                    localDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
+                    gson = Gson()
+                ),
+                retryPolicy = OutboxRetryPolicy(),
+                clock = clock,
+                errorLogger = mockk<ErrorLogger>(relaxed = true),
+                // Настоящий runner: обратный путь закрывается одной транзакцией на живом Room
+                transactionRunner = RoomTransactionRunner(db, noopContext)
             ),
-            retryPolicy = OutboxRetryPolicy(),
-            clock = clock,
-            errorLogger = mockk<ErrorLogger>(relaxed = true),
-            // Настоящий runner: обратный путь закрывается одной транзакцией на живом Room
-            transactionRunner = RoomTransactionRunner(db, noopContext)
+            clock = clock
         )
     }
 

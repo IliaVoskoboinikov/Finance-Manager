@@ -29,13 +29,13 @@ interface OutboxLocalDataSource {
     )
 
     /**
-     * Уводит запись в dead-letter вместе с зависящими от неё — незакрытыми операциями той же
-     * группы, стоящими после неё: без предшественника они всё равно не выполнятся.
+     * Уводит запись в dead-letter вместе с зависящими от неё — последующими операциями той же
+     * строки и теми, кто назвал её предшественником: без неё они всё равно не выполнятся.
      * Результат — сколько записей затронуто.
      */
     suspend fun markFailed(
         sequenceNo: Long,
-        dependencyKey: String,
+        entityLocalId: String,
         attemptCount: Int,
         lastError: String?,
         updatedAt: Long

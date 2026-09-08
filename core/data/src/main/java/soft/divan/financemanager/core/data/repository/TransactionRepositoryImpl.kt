@@ -62,7 +62,7 @@ class TransactionRepositoryImpl @Inject constructor(
                 outboxEnqueuer.enqueue(
                     entityType = OutboxEntityType.TRANSACTION,
                     entityLocalId = transactionEntity.localId,
-                    // Транзакция входит в группу своего счёта: сервер отвергнет её с неизвестным
+                    // Предшественник транзакции — её счёт: сервер отвергнет её с неизвестным
                     // accountId, поэтому она обязана уехать после создания счёта
                     dependencyKey = transactionEntity.accountLocalId,
                     operation = OutboxOperation.CREATE,
