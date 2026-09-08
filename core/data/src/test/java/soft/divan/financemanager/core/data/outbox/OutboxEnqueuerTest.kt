@@ -28,6 +28,11 @@ import java.time.ZoneOffset
  */
 class OutboxEnqueuerTest {
 
+    private companion object {
+        val UUID_PATTERN =
+            Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}").toPattern()
+    }
+
     private val now = Instant.parse("2024-05-01T10:00:00Z")
     private val clock = Clock.fixed(now, ZoneOffset.UTC)
     private val localDataSource = mockk<OutboxLocalDataSource>()
@@ -54,6 +59,13 @@ class OutboxEnqueuerTest {
         return slot
     }
 
+    /** Копит все поставленные записи — для проверок, где важно отличие операций друг от друга. */
+    private fun captureAllEnqueued(): MutableList<OutboxEntryEntity> {
+        val captured = mutableListOf<OutboxEntryEntity>()
+        coEvery { localDataSource.enqueue(capture(captured)) } returns 1L
+        return captured
+    }
+
     private fun requestDto() = TransactionRequestDto(
         id = "local-t1",
         accountId = "local-a1",
@@ -64,12 +76,30 @@ class OutboxEnqueuerTest {
     )
 
     @Test
+    fun `enqueue stores the dependency group of the operation`() = runTest {
+        val enqueued = captureEnqueued()
+
+        enqueuer.enqueue(
+            entityType = OutboxEntityType.TRANSACTION,
+            entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
+            operation = OutboxOperation.CREATE,
+            body = requestDto()
+        )
+
+        // Транзакция входит в группу своего счёта, а не в собственную
+        assertThat(enqueued.captured.dependencyKey).isEqualTo("local-a1")
+        assertThat(enqueued.captured.entityLocalId).isEqualTo("local-t1")
+    }
+
+    @Test
     fun `enqueue stores a json snapshot of the request body`() = runTest {
         val enqueued = captureEnqueued()
 
         enqueuer.enqueue(
             entityType = OutboxEntityType.TRANSACTION,
             entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
             operation = OutboxOperation.CREATE,
             body = requestDto()
         )
@@ -81,19 +111,66 @@ class OutboxEnqueuerTest {
     }
 
     @Test
-    fun `enqueue uses local id as the idempotency key`() = runTest {
+    fun `idempotency key is separate from the entity id`() = runTest {
         val enqueued = captureEnqueued()
 
         enqueuer.enqueue(
             entityType = OutboxEntityType.TRANSACTION,
             entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
             operation = OutboxOperation.CREATE,
             body = requestDto()
         )
 
-        // Ключ обязан быть стабильным на все попытки — поэтому это id сущности, а не новый UUID
-        assertThat(enqueued.captured.idempotencyKey).isEqualTo("local-t1")
+        // entityLocalId адресует сущность, ключ — намерение её изменить: это разные вещи
         assertThat(enqueued.captured.entityLocalId).isEqualTo("local-t1")
+        assertThat(enqueued.captured.idempotencyKey).isNotEqualTo("local-t1")
+        assertThat(enqueued.captured.idempotencyKey).matches(UUID_PATTERN)
+    }
+
+    @Test
+    fun `operations on the same entity get different idempotency keys`() = runTest {
+        val enqueued = captureAllEnqueued()
+
+        enqueuer.enqueue(
+            entityType = OutboxEntityType.TRANSACTION,
+            entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
+            operation = OutboxOperation.CREATE,
+            body = requestDto()
+        )
+        enqueuer.enqueue(
+            entityType = OutboxEntityType.TRANSACTION,
+            entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
+            operation = OutboxOperation.UPDATE,
+            targetServerId = "server-t1",
+            body = requestDto()
+        )
+
+        // Совпади ключи — сервер счёл бы правку повтором создания и молча её проглотил
+        assertThat(enqueued).hasSize(2)
+        assertThat(enqueued[0].idempotencyKey).isNotEqualTo(enqueued[1].idempotencyKey)
+        assertThat(enqueued.map { it.entityLocalId }).containsExactly("local-t1", "local-t1")
+    }
+
+    @Test
+    fun `repeated identical operations still get their own keys`() = runTest {
+        val enqueued = captureAllEnqueued()
+
+        repeat(3) {
+            enqueuer.enqueue(
+                entityType = OutboxEntityType.TRANSACTION,
+                entityLocalId = "local-t1",
+                dependencyKey = "local-a1",
+                operation = OutboxOperation.UPDATE,
+                targetServerId = "server-t1",
+                body = requestDto()
+            )
+        }
+
+        // Три сознательные правки — три разные операции, а не один повтор
+        assertThat(enqueued.map { it.idempotencyKey }.distinct()).hasSize(3)
     }
 
     @Test
@@ -103,6 +180,7 @@ class OutboxEnqueuerTest {
         enqueuer.enqueue(
             entityType = OutboxEntityType.ACCOUNT,
             entityLocalId = "local-a1",
+            dependencyKey = "local-a1",
             operation = OutboxOperation.CREATE,
             body = requestDto()
         )
@@ -122,6 +200,7 @@ class OutboxEnqueuerTest {
         enqueuer.enqueue(
             entityType = OutboxEntityType.TRANSACTION,
             entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
             operation = OutboxOperation.UPDATE,
             targetServerId = "server-t1",
             body = requestDto()
@@ -138,6 +217,7 @@ class OutboxEnqueuerTest {
         enqueuer.enqueue(
             entityType = OutboxEntityType.TRANSACTION,
             entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
             operation = OutboxOperation.DELETE,
             targetServerId = "server-t1"
         )
@@ -153,6 +233,7 @@ class OutboxEnqueuerTest {
         enqueuer.enqueue(
             entityType = OutboxEntityType.TRANSACTION,
             entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
             operation = OutboxOperation.CREATE,
             body = requestDto()
         )
@@ -167,6 +248,7 @@ class OutboxEnqueuerTest {
         val sequenceNo = enqueuer.enqueue(
             entityType = OutboxEntityType.TRANSACTION,
             entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
             operation = OutboxOperation.CREATE,
             body = requestDto()
         )

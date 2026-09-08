@@ -140,6 +140,8 @@ class TransactionRepositoryImplTest {
             outboxEnqueuer.enqueue(
                 entityType = OutboxEntityType.TRANSACTION,
                 entityLocalId = "local-t1",
+                // Транзакция входит в группу своего счёта — порядок с ним обязателен
+                dependencyKey = "local-a1",
                 operation = OutboxOperation.CREATE,
                 targetServerId = null,
                 body = any()
@@ -343,6 +345,8 @@ class TransactionRepositoryImplTest {
             outboxEnqueuer.enqueue(
                 entityType = OutboxEntityType.TRANSACTION,
                 entityLocalId = "local-t1",
+                // Транзакция входит в группу своего счёта — порядок с ним обязателен
+                dependencyKey = "local-a1",
                 operation = OutboxOperation.UPDATE,
                 targetServerId = "server-t1",
                 body = any()
@@ -365,6 +369,8 @@ class TransactionRepositoryImplTest {
             outboxEnqueuer.enqueue(
                 entityType = OutboxEntityType.TRANSACTION,
                 entityLocalId = "local-t1",
+                // Транзакция входит в группу своего счёта — порядок с ним обязателен
+                dependencyKey = "local-a1",
                 operation = OutboxOperation.UPDATE,
                 targetServerId = "local-t1",
                 body = any()
@@ -399,6 +405,8 @@ class TransactionRepositoryImplTest {
             outboxEnqueuer.enqueue(
                 entityType = OutboxEntityType.TRANSACTION,
                 entityLocalId = "local-t1",
+                // Транзакция входит в группу своего счёта — порядок с ним обязателен
+                dependencyKey = "local-a1",
                 operation = OutboxOperation.DELETE,
                 targetServerId = "server-t1",
                 body = null

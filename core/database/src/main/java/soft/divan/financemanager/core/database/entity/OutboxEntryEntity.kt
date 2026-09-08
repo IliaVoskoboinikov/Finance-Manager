@@ -1,6 +1,7 @@
 package soft.divan.financemanager.core.database.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import soft.divan.financemanager.core.database.model.OutboxEntityType
 import soft.divan.financemanager.core.database.model.OutboxOperation
@@ -25,6 +26,18 @@ import soft.divan.financemanager.core.database.model.OutboxStatus
  * @property entityType Тип доменной сущности — определяет эндпоинт отправки.
  * @property entityLocalId Клиентский `localId` сущности. Связывает запись очереди с доменной
  *   строкой (для отображения статуса и ручного повтора).
+ * @property dependencyKey Группа операций, порядок внутри которой обязателен. Операции с разными
+ *   ключами независимы и могут уезжать в любом порядке; внутри одной группы работает строгий
+ *   FIFO — следующая не отправляется, пока предыдущая не закрыта.
+ *
+ *   Счёт кладёт сюда собственный `localId`, транзакция — `localId` своего счёта. Так «счёт» и
+ *   «его транзакции» оказываются в одной группе: сервер отвергает транзакцию с неизвестным
+ *   `accountId`, поэтому её нельзя отправлять раньше создания счёта. А правки разных счетов
+ *   между собой не связаны и друг друга не ждут.
+ *
+ *   Без этого поля порядок держался только на `sequenceNo`, а он ломался фильтром готовности:
+ *   операция, ушедшая в backoff или под аренду, выпадала из выборки, и следующая операция **той
+ *   же сущности** обгоняла её (правка уезжала раньше создания и умирала с `404`).
  * @property operation Что именно делаем на сервере.
  * @property targetServerId Идентификатор ресурса на сервере — адрес для `PUT`/`DELETE`
  *   (`null` для [OutboxOperation.CREATE], где ресурса ещё нет). Хранится в записи, а не
@@ -33,8 +46,11 @@ import soft.divan.financemanager.core.database.model.OutboxStatus
  * @property payload Снимок тела запроса (JSON) на момент операции. Хранится готовым, чтобы
  *   отправка не зависела от последующих правок доменной строки: очередь — это журнал событий,
  *   а не указатель на текущее состояние. Для операций без тела (`DELETE`) — пустой объект `{}`.
- * @property idempotencyKey Ключ дедупликации, стабильный на все попытки. Для операций, адресуемых
- *   идентификатором ресурса, совпадает с [entityLocalId].
+ * @property idempotencyKey Ключ дедупликации **этой операции** — новый UUID на каждую постановку
+ *   в очередь. Стабилен на все попытки отправки (генерируется один раз и хранится вместе с
+ *   записью), но различает операции: у создания строки и её последующей правки ключи разные,
+ *   иначе сервер счёл бы правку повтором создания и молча её проглотил. Не путать с
+ *   [entityLocalId] — тот адресует **сущность**, а этот **намерение её изменить**.
  * @property status Текущее состояние записи в очереди.
  * @property attemptCount Число уже выполненных попыток отправки — основа экспоненциального
  *   backoff и критерий ухода в dead-letter.
@@ -47,12 +63,18 @@ import soft.divan.financemanager.core.database.model.OutboxStatus
  * это внутренние отметки планировщика, они не участвуют в контракте с сервером, и сравнение
  * `nextAttemptAt <= :now` прямо в SQL получается точным и дешёвым.
  */
-@Entity(tableName = "outbox")
+@Entity(
+    tableName = "outbox",
+    // Барьер порядка отбирает записи подзапросом по (dependencyKey, status) — без индекса это
+    // полное сканирование очереди на каждую строку выборки.
+    indices = [Index(value = ["dependencyKey", "status"])]
+)
 data class OutboxEntryEntity(
     @PrimaryKey(autoGenerate = true)
     val sequenceNo: Long = 0,
     val entityType: OutboxEntityType,
     val entityLocalId: String,
+    val dependencyKey: String,
     val operation: OutboxOperation,
     val targetServerId: String?,
     val payload: String,

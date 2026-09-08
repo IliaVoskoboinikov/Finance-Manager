@@ -122,6 +122,7 @@ class AccountRepositoryImplTest {
             outboxEnqueuer.enqueue(
                 entityType = OutboxEntityType.ACCOUNT,
                 entityLocalId = "local-1",
+                dependencyKey = "local-1",
                 operation = OutboxOperation.CREATE,
                 targetServerId = null,
                 body = any()
@@ -301,6 +302,7 @@ class AccountRepositoryImplTest {
             outboxEnqueuer.enqueue(
                 entityType = OutboxEntityType.ACCOUNT,
                 entityLocalId = "local-1",
+                dependencyKey = "local-1",
                 operation = OutboxOperation.UPDATE,
                 targetServerId = "server-1",
                 body = any()
@@ -323,6 +325,7 @@ class AccountRepositoryImplTest {
             outboxEnqueuer.enqueue(
                 entityType = OutboxEntityType.ACCOUNT,
                 entityLocalId = "local-1",
+                dependencyKey = "local-1",
                 operation = OutboxOperation.UPDATE,
                 targetServerId = "local-1",
                 body = any()
@@ -374,6 +377,7 @@ class AccountRepositoryImplTest {
             outboxEnqueuer.enqueue(
                 entityType = OutboxEntityType.ACCOUNT,
                 entityLocalId = "local-1",
+                dependencyKey = "local-1",
                 operation = OutboxOperation.DELETE,
                 targetServerId = "server-1",
                 body = null
@@ -400,13 +404,14 @@ class AccountRepositoryImplTest {
             outboxEnqueuer.enqueue(
                 entityType = OutboxEntityType.ACCOUNT,
                 entityLocalId = "local-1",
+                dependencyKey = "local-1",
                 operation = OutboxOperation.DELETE,
                 targetServerId = "server-1",
                 body = null
             )
         }
         coVerify(exactly = 0) {
-            outboxEnqueuer.enqueue(any(), any(), OutboxOperation.UPDATE, any(), any())
+            outboxEnqueuer.enqueue(any(), any(), any(), OutboxOperation.UPDATE, any(), any())
         }
     }
 

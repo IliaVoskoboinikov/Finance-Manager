@@ -28,7 +28,18 @@ interface OutboxLocalDataSource {
         updatedAt: Long
     )
 
-    suspend fun markFailed(sequenceNo: Long, attemptCount: Int, lastError: String?, updatedAt: Long)
+    /**
+     * Уводит запись в dead-letter вместе с зависящими от неё — незакрытыми операциями той же
+     * группы, стоящими после неё: без предшественника они всё равно не выполнятся.
+     * Результат — сколько записей затронуто.
+     */
+    suspend fun markFailed(
+        sequenceNo: Long,
+        dependencyKey: String,
+        attemptCount: Int,
+        lastError: String?,
+        updatedAt: Long
+    ): Int
 
     /** Сколько операций осело в dead-letter. */
     fun observeFailedCount(): Flow<Int>

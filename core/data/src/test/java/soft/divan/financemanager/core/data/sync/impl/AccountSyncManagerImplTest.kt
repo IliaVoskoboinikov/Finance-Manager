@@ -188,9 +188,9 @@ class AccountSyncManagerImplTest {
 
         assertThat(result).isTrue()
         coVerify(exactly = 1) { remoteDataSource.getAll() }
-        coVerify(exactly = 0) { remoteDataSource.create(any()) }
-        coVerify(exactly = 0) { remoteDataSource.update(any(), any()) }
-        coVerify(exactly = 0) { remoteDataSource.delete(any()) }
+        coVerify(exactly = 0) { remoteDataSource.create(any(), any()) }
+        coVerify(exactly = 0) { remoteDataSource.update(any(), any(), any()) }
+        coVerify(exactly = 0) { remoteDataSource.delete(any(), any()) }
     }
 
     @Test

@@ -103,6 +103,7 @@ class OutboxTransactionalEnqueueTest {
     private suspend fun enqueueCreate(localId: String) = enqueuer.enqueue(
         entityType = OutboxEntityType.ACCOUNT,
         entityLocalId = localId,
+        dependencyKey = localId,
         operation = OutboxOperation.CREATE,
         body = mapOf("id" to localId, "name" to "Cash")
     )
@@ -176,6 +177,7 @@ class OutboxTransactionalEnqueueTest {
             localEnqueuer.enqueue(
                 entityType = OutboxEntityType.ACCOUNT,
                 entityLocalId = "local-a1",
+                dependencyKey = "local-a1",
                 operation = OutboxOperation.CREATE,
                 body = mapOf("id" to "local-a1")
             )

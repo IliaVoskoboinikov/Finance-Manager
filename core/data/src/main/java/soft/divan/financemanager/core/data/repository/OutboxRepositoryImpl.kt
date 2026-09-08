@@ -35,7 +35,11 @@ class OutboxRepositoryImpl @Inject constructor(
     override suspend fun retryFailed(): DomainResult<Unit> =
         safeDbCall(errorLogger) {
             localDataSource.requeueFailed(System.currentTimeMillis())
-            processor.process()
-            Unit
+
+            // Исход прогона намеренно не влияет на результат: пользователю обещано «повторим»,
+            // а не «отправим». Что не уехало — осталось в очереди и уедет фоновым синком,
+            // поэтому возвращать здесь ошибку было бы неправдой.
+            @Suppress("unused")
+            val drained = processor.process()
         }
 }

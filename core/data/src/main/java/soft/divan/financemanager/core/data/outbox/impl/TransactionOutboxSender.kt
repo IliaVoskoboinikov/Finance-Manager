@@ -5,6 +5,7 @@ import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.dto.TransactionRequestDto
 import soft.divan.financemanager.core.data.dto.UpdateTransactionRequestDto
 import soft.divan.financemanager.core.data.outbox.OutboxCallOutcome
+import soft.divan.financemanager.core.data.outbox.OutboxLocalEffect
 import soft.divan.financemanager.core.data.outbox.OutboxSendResult
 import soft.divan.financemanager.core.data.outbox.OutboxSender
 import soft.divan.financemanager.core.data.outbox.outboxCall
@@ -45,7 +46,9 @@ class TransactionOutboxSender @Inject constructor(
      */
     private suspend fun create(entry: OutboxEntryEntity): OutboxSendResult {
         val request = gson.fromJson(entry.payload, TransactionRequestDto::class.java)
-        val outcome = outboxCall(entry.operation) { remoteDataSource.create(request) }
+        val outcome = outboxCall(entry.operation) {
+            remoteDataSource.create(request, entry.idempotencyKey)
+        }
 
         return when (outcome) {
             is OutboxCallOutcome.Ok -> confirm(entry, outcome.body)
@@ -71,7 +74,9 @@ class TransactionOutboxSender @Inject constructor(
     private suspend fun update(entry: OutboxEntryEntity): OutboxSendResult {
         val serverId = entry.targetServerId ?: return OutboxSendResult.Terminal("нет serverId")
         val request = gson.fromJson(entry.payload, UpdateTransactionRequestDto::class.java)
-        val outcome = outboxCall(entry.operation) { remoteDataSource.update(serverId, request) }
+        val outcome = outboxCall(entry.operation) {
+            remoteDataSource.update(serverId, request, entry.idempotencyKey)
+        }
 
         return when (outcome) {
             is OutboxCallOutcome.Ok -> confirm(entry, dto = null)
@@ -82,7 +87,9 @@ class TransactionOutboxSender @Inject constructor(
     private suspend fun delete(entry: OutboxEntryEntity): OutboxSendResult {
         // Записи на сервере не было — достаточно локального удаления
         val serverId = entry.targetServerId ?: return removeLocally(entry)
-        val outcome = outboxCall(entry.operation) { remoteDataSource.delete(serverId) }
+        val outcome = outboxCall(entry.operation) {
+            remoteDataSource.delete(serverId, entry.idempotencyKey)
+        }
 
         return when (outcome) {
             is OutboxCallOutcome.Ok -> removeLocally(entry)
@@ -96,25 +103,32 @@ class TransactionOutboxSender @Inject constructor(
     }
 
     /**
-     * Отмечает локальную строку синхронизированной. [dto] непустой только для создания — из него
-     * берётся присвоенный сервером идентификатор.
+     * Описывает пометку локальной строки синхронизированной. [dto] непустой только для создания —
+     * из него берётся присвоенный сервером идентификатор.
+     *
+     * Запись не выполняется здесь: её применит `OutboxProcessor` в одной транзакции с закрытием
+     * записи очереди (см. [OutboxLocalEffect]). Чтение строки тоже отложено внутрь эффекта,
+     * чтобы решение принималось по состоянию на момент транзакции.
      */
-    private suspend fun confirm(entry: OutboxEntryEntity, dto: TransactionDto?): OutboxSendResult {
-        val local = localDataSource.getByLocalId(entry.entityLocalId)
-            ?: return OutboxSendResult.Success // строки уже нет локально — подтверждать нечего
-
-        localDataSource.update(
-            local.copy(
-                serverId = dto?.id ?: local.serverId,
-                updatedAt = dto?.updatedAt ?: local.updatedAt,
-                syncStatus = SyncStatus.SYNCED
-            )
+    private fun confirm(entry: OutboxEntryEntity, dto: TransactionDto?): OutboxSendResult =
+        OutboxSendResult.Success(
+            localEffect = {
+                // строки уже нет локально — подтверждать нечего
+                val local = localDataSource.getByLocalId(entry.entityLocalId)
+                if (local != null) {
+                    localDataSource.update(
+                        local.copy(
+                            serverId = dto?.id ?: local.serverId,
+                            updatedAt = dto?.updatedAt ?: local.updatedAt,
+                            syncStatus = SyncStatus.SYNCED
+                        )
+                    )
+                }
+            }
         )
-        return OutboxSendResult.Success
-    }
 
-    private suspend fun removeLocally(entry: OutboxEntryEntity): OutboxSendResult {
-        localDataSource.delete(entry.entityLocalId)
-        return OutboxSendResult.Success
-    }
+    private fun removeLocally(entry: OutboxEntryEntity): OutboxSendResult =
+        OutboxSendResult.Success(
+            localEffect = { localDataSource.delete(entry.entityLocalId) }
+        )
 }

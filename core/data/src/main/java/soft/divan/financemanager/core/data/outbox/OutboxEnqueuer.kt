@@ -3,6 +3,7 @@ package soft.divan.financemanager.core.data.outbox
 import com.google.gson.Gson
 import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
+import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.model.OutboxEntityType
 import soft.divan.financemanager.core.database.model.OutboxOperation
@@ -41,15 +42,19 @@ class OutboxEnqueuer @Inject constructor(
      * Записывает операцию в очередь и возвращает её `sequenceNo` (он же порядок отправки).
      *
      * @param entityType тип доменной сущности — определяет эндпоинт.
-     * @param entityLocalId клиентский `localId`; он же используется как ключ идемпотентности,
-     *   стабильный на все попытки отправки.
+     * @param entityLocalId клиентский `localId` — адрес доменной строки.
+     * @param dependencyKey группа обязательного порядка: операции с одним ключом уезжают строго
+     *   друг за другом, с разными — независимо. Счёт передаёт свой `localId`, транзакция —
+     *   `localId` своего счёта.
      * @param operation что делаем на сервере.
      * @param targetServerId адрес ресурса для `PUT`/`DELETE`; для `CREATE` не нужен.
      * @param body DTO тела запроса; `null` для операций без тела.
      */
+    @Suppress("LongParameterList")
     suspend fun enqueue(
         entityType: OutboxEntityType,
         entityLocalId: String,
+        dependencyKey: String,
         operation: OutboxOperation,
         targetServerId: String? = null,
         body: Any? = null
@@ -67,10 +72,14 @@ class OutboxEnqueuer @Inject constructor(
             OutboxEntryEntity(
                 entityType = entityType,
                 entityLocalId = entityLocalId,
+                dependencyKey = dependencyKey,
                 operation = operation,
                 targetServerId = targetServerId,
                 payload = body?.let { gson.toJson(it) } ?: EMPTY_PAYLOAD,
-                idempotencyKey = entityLocalId,
+                // Ключ принадлежит ОПЕРАЦИИ, а не сущности: у создания и последующей правки одной
+                // строки ключи разные, иначе сервер счёл бы правку повтором создания. Генерируется
+                // один раз здесь и переживает все повторы вместе с записью очереди.
+                idempotencyKey = generateUUID(),
                 status = OutboxStatus.PENDING,
                 attemptCount = 0,
                 // Ноль — «можно отправлять немедленно»; backoff проставляется только при повторах.

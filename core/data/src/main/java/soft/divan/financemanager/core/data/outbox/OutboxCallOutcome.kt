@@ -67,9 +67,12 @@ private fun Throwable.classify(): OutboxSendResult = when (this) {
  * - `401` — сессия истекла: повторим после обновления токена, попытку не тратим;
  * - `5xx` — сервер временно не может обработать запрос;
  * - остальные `4xx` — запрос отвергнут по существу (валидация), повтор ничего не изменит.
+ *
+ * Успех возвращается без локальной записи ([OutboxSendResult.Success.localEffect] пуст): что
+ * именно поменять в базе, знает отправитель конкретной сущности — он и добавит описание.
  */
 private fun classify(code: Int, operation: OutboxOperation): OutboxSendResult = when {
-    code == HTTP_NOT_FOUND && operation == OutboxOperation.DELETE -> OutboxSendResult.Success
+    code == HTTP_NOT_FOUND && operation == OutboxOperation.DELETE -> OutboxSendResult.Success()
     code == HTTP_UNAUTHORIZED -> OutboxSendResult.Blocked("сессия истекла (HTTP $code)")
     code in SERVER_ERROR_RANGE -> OutboxSendResult.Transient("HTTP $code")
     else -> OutboxSendResult.Terminal("HTTP $code")

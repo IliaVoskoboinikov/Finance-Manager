@@ -62,6 +62,9 @@ class TransactionRepositoryImpl @Inject constructor(
                 outboxEnqueuer.enqueue(
                     entityType = OutboxEntityType.TRANSACTION,
                     entityLocalId = transactionEntity.localId,
+                    // Транзакция входит в группу своего счёта: сервер отвергнет её с неизвестным
+                    // accountId, поэтому она обязана уехать после создания счёта
+                    dependencyKey = transactionEntity.accountLocalId,
                     operation = OutboxOperation.CREATE,
                     body = transactionEntity.toDto(transactionEntity.accountSyncId())
                 )
@@ -171,6 +174,7 @@ class TransactionRepositoryImpl @Inject constructor(
                 outboxEnqueuer.enqueue(
                     entityType = OutboxEntityType.TRANSACTION,
                     entityLocalId = updatedEntity.localId,
+                    dependencyKey = updatedEntity.accountLocalId,
                     operation = OutboxOperation.UPDATE,
                     targetServerId = updatedEntity.syncId(),
                     body = updatedEntity.toUpdateDto(updatedEntity.accountSyncId())
@@ -194,6 +198,7 @@ class TransactionRepositoryImpl @Inject constructor(
                 outboxEnqueuer.enqueue(
                     entityType = OutboxEntityType.TRANSACTION,
                     entityLocalId = transactionEntity.localId,
+                    dependencyKey = transactionEntity.accountLocalId,
                     operation = OutboxOperation.DELETE,
                     targetServerId = transactionEntity.syncId()
                 )
@@ -206,8 +211,9 @@ class TransactionRepositoryImpl @Inject constructor(
      * Идентификатор, под которым транзакция известна серверу.
      *
      * Пока создание не подтверждено, `serverId` ещё не проставлен — но сервер узнает запись по
-     * клиентскому `localId`, с которым ушёл `POST`. Строгий порядок очереди гарантирует, что
-     * создание уедет раньше последующих правок, поэтому адресовать их можно уже сейчас.
+     * клиентскому `localId`, с которым ушёл `POST`. Адресовать правку можно уже сейчас, потому
+     * что барьер порядка по `dependencyKey` не выпустит её раньше создания той же сущности —
+     * даже если создание ушло в backoff или удерживает аренду.
      */
     private fun TransactionEntity.syncId(): String = serverId ?: localId
 

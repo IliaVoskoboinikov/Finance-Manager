@@ -92,7 +92,7 @@ flowchart TD
 - **Список/пикер**: [`AccountRepositoryImpl.getAll()`](../core/data/src/main/java/soft/divan/financemanager/core/data/repository/AccountRepositoryImpl.kt)
   отдаёт только `status != Deleted` (и без `PENDING_DELETE`). Архивный счёт исчезает из UI
   сразу — ещё до подтверждения сервером.
-- **Синхронизация**: [`AccountOutboxSender`](../core/data/src/main/java/soft/divan/financemanager/core/data/outbox/AccountOutboxSender.kt)
+- **Синхронизация**: [`AccountOutboxSender`](../core/data/src/main/java/soft/divan/financemanager/core/data/outbox/impl/AccountOutboxSender.kt)
   после успешного серверного `DELETE` по статусу решает: `Deleted` → оставить запись и пометить
   `SYNCED`; иначе → удалить физически. `serverId == null` (счёт не был на сервере) — сетевого
   вызова нет: архивную запись оставляем локально, обычную удаляем.

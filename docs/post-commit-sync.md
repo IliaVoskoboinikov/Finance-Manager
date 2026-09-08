@@ -29,9 +29,9 @@ Room-транзакции (`TransactionRunner.runInTransaction` + `rollbackOnErr
 
 | Компонент | Роль |
 |---|---|
-| [`PostCommitSyncQueue`](../core/data/src/main/java/soft/divan/financemanager/core/data/PostCommitSyncQueue.kt) | `CoroutineContext.Element` с потокобезопасной очередью отложенных действий (`add`/`drain`) |
-| [`AppCoroutineContext.launchSync`](../core/data/src/main/java/soft/divan/financemanager/core/data/util/coroutne/AppCoroutineContext.kt) | Точка входа для репозиториев: внутри транзакции — откладывает действие в очередь, вне — запускает сразу (обычный `launch`) |
-| [`RoomTransactionRunner`](../core/data/src/main/java/soft/divan/financemanager/core/data/RoomTransactionRunner.kt) | Кладёт очередь в контекст блока; после успешного commit диспатчит её, при rollback — не диспатчит |
+| [`PostCommitSyncQueue`](../core/data/src/main/java/soft/divan/financemanager/core/data/transaction/PostCommitSyncQueue.kt) | `CoroutineContext.Element` с потокобезопасной очередью отложенных действий (`add`/`drain`) |
+| [`AppCoroutineContext.launchSync`](../core/data/src/main/java/soft/divan/financemanager/core/data/util/coroutine/AppCoroutineContext.kt) | Точка входа для репозиториев: внутри транзакции — откладывает действие в очередь, вне — запускает сразу (обычный `launch`) |
+| [`RoomTransactionRunner`](../core/data/src/main/java/soft/divan/financemanager/core/data/transaction/impl/RoomTransactionRunner.kt) | Кладёт очередь в контекст блока; после успешного commit диспатчит её, при rollback — не диспатчит |
 
 ### Поток выполнения
 
@@ -67,7 +67,7 @@ sequenceDiagram
 транзакционный диспетчер, заменяется только диспетчер — `PostCommitSyncQueue` едет дальше
 и доступен репозиториям через `currentCoroutineContext()[PostCommitSyncQueue]`.
 Это поведение закреплено тестом на реальной in-memory Room
-([`RoomTransactionRunnerTest`](../core/data/src/test/java/soft/divan/financemanager/core/data/RoomTransactionRunnerTest.kt)).
+([`RoomTransactionRunnerTest`](../core/data/src/test/java/soft/divan/financemanager/core/data/transaction/impl/RoomTransactionRunnerTest.kt)).
 
 ### Два режима одного кода
 
@@ -127,8 +127,8 @@ sequenceDiagram
 
 ## Тесты
 
-- [`RoomTransactionRunnerTest`](../core/data/src/test/java/soft/divan/financemanager/core/data/RoomTransactionRunnerTest.kt)
+- [`RoomTransactionRunnerTest`](../core/data/src/test/java/soft/divan/financemanager/core/data/transaction/impl/RoomTransactionRunnerTest.kt)
   (Robolectric + in-memory Room): пуш не запускается внутри блока; запускается после
   commit; отбрасывается при rollback; несколько действий диспатчатся по порядку.
-- [`DefaultAppCoroutineContextTest`](../core/data/src/test/java/soft/divan/financemanager/core/data/util/coroutne/impl/DefaultAppCoroutineContextTest.kt):
+- [`DefaultAppCoroutineContextTest`](../core/data/src/test/java/soft/divan/financemanager/core/data/util/coroutine/impl/DefaultAppCoroutineContextTest.kt):
   маршрутизация `launchSync` (немедленный запуск без очереди / откладывание с очередью).

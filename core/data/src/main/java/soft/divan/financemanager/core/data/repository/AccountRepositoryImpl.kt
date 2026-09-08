@@ -55,6 +55,8 @@ class AccountRepositoryImpl @Inject constructor(
                 outboxEnqueuer.enqueue(
                     entityType = OutboxEntityType.ACCOUNT,
                     entityLocalId = accountEntity.localId,
+                    // Счёт возглавляет собственную группу: его транзакции указывают сюда же
+                    dependencyKey = accountEntity.localId,
                     operation = OutboxOperation.CREATE,
                     body = accountEntity.toDto()
                 )
@@ -140,6 +142,7 @@ class AccountRepositoryImpl @Inject constructor(
                 outboxEnqueuer.enqueue(
                     entityType = OutboxEntityType.ACCOUNT,
                     entityLocalId = updatedEntity.localId,
+                    dependencyKey = updatedEntity.localId,
                     operation = OutboxOperation.UPDATE,
                     targetServerId = updatedEntity.syncId(),
                     body = updatedEntity.toUpdateDto()
@@ -212,6 +215,7 @@ class AccountRepositoryImpl @Inject constructor(
                 outboxEnqueuer.enqueue(
                     entityType = OutboxEntityType.ACCOUNT,
                     entityLocalId = markedEntity.localId,
+                    dependencyKey = markedEntity.localId,
                     operation = OutboxOperation.DELETE,
                     targetServerId = markedEntity.syncId()
                 )

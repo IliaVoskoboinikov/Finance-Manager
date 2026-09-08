@@ -42,10 +42,11 @@ class AccountOutboxSenderTest {
         sequenceNo = 1,
         entityType = OutboxEntityType.ACCOUNT,
         entityLocalId = "local-a1",
+        dependencyKey = "local-a1",
         operation = operation,
         targetServerId = targetServerId,
         payload = """{"id":"local-a1","name":"Cash","balance":"100.50","currencyId":"rub-id"}""",
-        idempotencyKey = "local-a1",
+        idempotencyKey = "op-key-1",
         status = OutboxStatus.IN_PROGRESS,
         attemptCount = 0,
         nextAttemptAt = 0,
@@ -80,33 +81,33 @@ class AccountOutboxSenderTest {
 
     @Test
     fun `successful create confirms the local row`() = runTest {
-        coEvery { remoteDataSource.create(any()) } returns Response.success(dto())
+        coEvery { remoteDataSource.create(any(), any()) } returns Response.success(dto())
         coEvery { localDataSource.getByLocalId("local-a1") } returns localEntity()
         val updated = slot<AccountEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
         val result = sender.send(entry())
 
-        assertThat(result).isEqualTo(OutboxSendResult.Success)
+        assertSuccess(result)
         assertThat(updated.captured.serverId).isEqualTo("local-a1")
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
     }
 
     @Test
     fun `create succeeds when read-back finds the account after a lost ack`() = runTest {
-        coEvery { remoteDataSource.create(any()) } returns error(500)
+        coEvery { remoteDataSource.create(any(), any()) } returns error(500)
         coEvery { remoteDataSource.getById("local-a1") } returns Response.success(dto())
         coEvery { localDataSource.getByLocalId("local-a1") } returns localEntity()
 
         val result = sender.send(entry())
 
-        assertThat(result).isEqualTo(OutboxSendResult.Success)
+        assertSuccess(result)
         coVerify(exactly = 1) { localDataSource.update(any()) }
     }
 
     @Test
     fun `create is terminal when the server rejects the data`() = runTest {
-        coEvery { remoteDataSource.create(any()) } returns error(422)
+        coEvery { remoteDataSource.create(any(), any()) } returns error(422)
         coEvery { remoteDataSource.getById("local-a1") } returns error(404)
 
         val result = sender.send(entry())
@@ -116,7 +117,7 @@ class AccountOutboxSenderTest {
 
     @Test
     fun `expired session blocks the entry without spending an attempt`() = runTest {
-        coEvery { remoteDataSource.create(any()) } returns error(401)
+        coEvery { remoteDataSource.create(any(), any()) } returns error(401)
         coEvery { remoteDataSource.getById("local-a1") } returns error(401)
 
         val result = sender.send(entry())
@@ -126,21 +127,21 @@ class AccountOutboxSenderTest {
 
     @Test
     fun `successful delete removes an ordinary account locally`() = runTest {
-        coEvery { remoteDataSource.delete("server-a1") } returns Response.success(Unit)
+        coEvery { remoteDataSource.delete("server-a1", any()) } returns Response.success(Unit)
         coEvery { localDataSource.getByLocalId("local-a1") } returns localEntity()
 
         val result = sender.send(
             entry(operation = OutboxOperation.DELETE, targetServerId = "server-a1")
         )
 
-        assertThat(result).isEqualTo(OutboxSendResult.Success)
+        assertSuccess(result)
         coVerify(exactly = 1) { localDataSource.delete("local-a1") }
     }
 
     @Test
     fun `archived account survives deletion as a synced row`() = runTest {
         // Сервер перевёл счёт в архив — строка нужна истории операций, удалять её нельзя
-        coEvery { remoteDataSource.delete("server-a1") } returns Response.success(Unit)
+        coEvery { remoteDataSource.delete("server-a1", any()) } returns Response.success(Unit)
         coEvery { localDataSource.getByLocalId("local-a1") } returns
             localEntity(status = AccountStatus.Deleted.name)
         val updated = slot<AccountEntity>()
@@ -150,21 +151,33 @@ class AccountOutboxSenderTest {
             entry(operation = OutboxOperation.DELETE, targetServerId = "server-a1")
         )
 
-        assertThat(result).isEqualTo(OutboxSendResult.Success)
+        assertSuccess(result)
         coVerify(exactly = 0) { localDataSource.delete(any()) }
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
     }
 
     @Test
     fun `delete treats 404 as an idempotent success`() = runTest {
-        coEvery { remoteDataSource.delete("server-a1") } returns error(404)
+        coEvery { remoteDataSource.delete("server-a1", any()) } returns error(404)
         coEvery { localDataSource.getByLocalId("local-a1") } returns localEntity()
 
         val result = sender.send(
             entry(operation = OutboxOperation.DELETE, targetServerId = "server-a1")
         )
 
-        assertThat(result).isEqualTo(OutboxSendResult.Success)
+        assertSuccess(result)
         coVerify(exactly = 1) { localDataSource.delete("local-a1") }
+    }
+
+    /**
+     * Утверждает успех и применяет отложенную локальную запись.
+     *
+     * Отправитель в базу не пишет, а описывает нужную запись; применяет её `OutboxProcessor`
+     * в одной транзакции с закрытием записи очереди. Здесь его роль играет тест — поэтому
+     * проверки локальных изменений идут уже после этого вызова.
+     */
+    private suspend fun assertSuccess(result: OutboxSendResult) {
+        assertThat(result).isInstanceOf(OutboxSendResult.Success::class.java)
+        (result as OutboxSendResult.Success).localEffect?.apply()
     }
 }

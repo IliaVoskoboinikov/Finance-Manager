@@ -5,6 +5,7 @@ import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.data.dto.UpdateAccountRequestDto
 import soft.divan.financemanager.core.data.outbox.OutboxCallOutcome
+import soft.divan.financemanager.core.data.outbox.OutboxLocalEffect
 import soft.divan.financemanager.core.data.outbox.OutboxSendResult
 import soft.divan.financemanager.core.data.outbox.OutboxSender
 import soft.divan.financemanager.core.data.outbox.outboxCall
@@ -39,7 +40,9 @@ class AccountOutboxSender @Inject constructor(
     /** Создание с read-back: неуспех может означать «уже создано» при потерянном ACK. */
     private suspend fun create(entry: OutboxEntryEntity): OutboxSendResult {
         val request = gson.fromJson(entry.payload, CreateAccountRequestDto::class.java)
-        val outcome = outboxCall(entry.operation) { remoteDataSource.create(request) }
+        val outcome = outboxCall(entry.operation) {
+            remoteDataSource.create(request, entry.idempotencyKey)
+        }
 
         return when (outcome) {
             is OutboxCallOutcome.Ok -> confirm(entry, outcome.body)
@@ -64,7 +67,9 @@ class AccountOutboxSender @Inject constructor(
     private suspend fun update(entry: OutboxEntryEntity): OutboxSendResult {
         val serverId = entry.targetServerId ?: return OutboxSendResult.Terminal("нет serverId")
         val request = gson.fromJson(entry.payload, UpdateAccountRequestDto::class.java)
-        val outcome = outboxCall(entry.operation) { remoteDataSource.update(serverId, request) }
+        val outcome = outboxCall(entry.operation) {
+            remoteDataSource.update(serverId, request, entry.idempotencyKey)
+        }
 
         return when (outcome) {
             is OutboxCallOutcome.Ok -> confirm(entry, dto = null)
@@ -74,7 +79,9 @@ class AccountOutboxSender @Inject constructor(
 
     private suspend fun delete(entry: OutboxEntryEntity): OutboxSendResult {
         val serverId = entry.targetServerId ?: return finishLocalDelete(entry)
-        val outcome = outboxCall(entry.operation) { remoteDataSource.delete(serverId) }
+        val outcome = outboxCall(entry.operation) {
+            remoteDataSource.delete(serverId, entry.idempotencyKey)
+        }
 
         return when (outcome) {
             is OutboxCallOutcome.Ok -> finishLocalDelete(entry)
@@ -87,32 +94,41 @@ class AccountOutboxSender @Inject constructor(
         }
     }
 
-    private suspend fun confirm(entry: OutboxEntryEntity, dto: AccountDto?): OutboxSendResult {
-        val local = localDataSource.getByLocalId(entry.entityLocalId)
-            ?: return OutboxSendResult.Success
-
-        localDataSource.update(
-            local.copy(
-                serverId = dto?.id ?: local.serverId,
-                updatedAt = dto?.updatedAt ?: local.updatedAt,
-                syncStatus = SyncStatus.SYNCED
-            )
+    /**
+     * Описывает пометку локальной строки синхронизированной; саму запись выполнит
+     * `OutboxProcessor` в одной транзакции с закрытием записи очереди (см. [OutboxLocalEffect]).
+     */
+    private fun confirm(entry: OutboxEntryEntity, dto: AccountDto?): OutboxSendResult =
+        OutboxSendResult.Success(
+            localEffect = {
+                val local = localDataSource.getByLocalId(entry.entityLocalId)
+                if (local != null) {
+                    localDataSource.update(
+                        local.copy(
+                            serverId = dto?.id ?: local.serverId,
+                            updatedAt = dto?.updatedAt ?: local.updatedAt,
+                            syncStatus = SyncStatus.SYNCED
+                        )
+                    )
+                }
+            }
         )
-        return OutboxSendResult.Success
-    }
 
     /**
      * Архивный счёт остаётся локально (помечается синхронизированным), обычный — удаляется.
      */
-    private suspend fun finishLocalDelete(entry: OutboxEntryEntity): OutboxSendResult {
-        val local = localDataSource.getByLocalId(entry.entityLocalId)
-            ?: return OutboxSendResult.Success
+    private fun finishLocalDelete(entry: OutboxEntryEntity): OutboxSendResult =
+        OutboxSendResult.Success(
+            localEffect = {
+                val local = localDataSource.getByLocalId(entry.entityLocalId)
+                when {
+                    local == null -> Unit
 
-        if (local.status == AccountStatus.Deleted.name) {
-            localDataSource.update(local.copy(syncStatus = SyncStatus.SYNCED))
-        } else {
-            localDataSource.delete(local.localId)
-        }
-        return OutboxSendResult.Success
-    }
+                    local.status == AccountStatus.Deleted.name ->
+                        localDataSource.update(local.copy(syncStatus = SyncStatus.SYNCED))
+
+                    else -> localDataSource.delete(local.localId)
+                }
+            }
+        )
 }

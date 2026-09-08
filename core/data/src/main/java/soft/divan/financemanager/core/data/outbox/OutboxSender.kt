@@ -16,8 +16,14 @@ sealed interface OutboxSendResult {
      *
      * Сюда же относится идемпотентный повтор — «уже существует» для создания и «уже нет» для
      * удаления: цель операции достигнута, даже если фактическую работу выполнила прошлая попытка.
+     *
+     * @property localEffect что записать локально по итогу — проставить `serverId`, снять
+     *   pending-статус, удалить строку. Отправитель эту запись **не выполняет**, а только
+     *   описывает: применить её обязан [OutboxProcessor] в одной транзакции с закрытием записи
+     *   очереди, иначе смерть процесса между двумя записями оставит рассогласованное состояние
+     *   (подробнее — в KDoc [OutboxLocalEffect]). `null` — применять нечего.
      */
-    data object Success : OutboxSendResult
+    data class Success(val localEffect: OutboxLocalEffect? = null) : OutboxSendResult
 
     /** Временный сбой (сеть, 5xx): повторяем позже с возрастающей паузой. */
     data class Transient(val reason: String) : OutboxSendResult

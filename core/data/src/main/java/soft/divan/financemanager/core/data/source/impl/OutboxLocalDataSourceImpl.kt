@@ -38,10 +38,17 @@ class OutboxLocalDataSourceImpl @Inject constructor(
 
     override suspend fun markFailed(
         sequenceNo: Long,
+        dependencyKey: String,
         attemptCount: Int,
         lastError: String?,
         updatedAt: Long
-    ) = outboxDao.markFailed(sequenceNo, attemptCount, lastError, updatedAt)
+    ): Int = outboxDao.markFailed(
+        sequenceNo = sequenceNo,
+        dependencyKey = dependencyKey,
+        attemptCount = attemptCount,
+        lastError = lastError,
+        updatedAt = updatedAt
+    )
 
     override fun observeFailedCount(): Flow<Int> = outboxDao.observeFailedCount()
 
