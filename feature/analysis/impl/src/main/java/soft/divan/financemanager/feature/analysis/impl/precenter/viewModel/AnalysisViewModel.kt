@@ -1,8 +1,10 @@
 package soft.divan.financemanager.feature.analysis.impl.precenter.viewModel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,22 +26,24 @@ import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseC
 import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.analysis.impl.R
 import soft.divan.financemanager.feature.analysis.impl.domain.usecase.GetCategoryPieChartDataUseCase
-import soft.divan.financemanager.feature.analysis.impl.navigation.IS_INCOME_KEY
 import soft.divan.financemanager.feature.analysis.impl.precenter.mapper.toPieChartData
 import soft.divan.financemanager.feature.analysis.impl.precenter.model.AnalysisUiState
 import java.time.LocalDate
-import javax.inject.Inject
 
-@HiltViewModel
-class AnalysisViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = AnalysisViewModel.Factory::class)
+class AnalysisViewModel @AssistedInject constructor(
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
     private val getTransactionsByPeriodUseCase: GetTransactionsByPeriodUseCase,
     private val getCategoryPieChartDataUseCase: GetCategoryPieChartDataUseCase,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    savedStateHandle: SavedStateHandle
+    @Assisted private val isIncome: Boolean
 ) : ViewModel() {
 
-    private val isIncome: Boolean = savedStateHandle.get<Boolean>(IS_INCOME_KEY) ?: false
+    /** Создаёт [AnalysisViewModel] с аргументом навигации из `AnalysisKey`. */
+    @AssistedFactory
+    interface Factory {
+        fun create(isIncome: Boolean): AnalysisViewModel
+    }
 
     private val _uiState = MutableStateFlow<AnalysisUiState>(AnalysisUiState.Loading)
     val uiState: StateFlow<AnalysisUiState> = _uiState.asStateFlow()

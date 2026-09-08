@@ -3,5 +3,7 @@ plugins {
 }
 
 dependencies {
-    api(libs.androidx.navigation.compose)
+    api(platform(libs.androidx.compose.bom))
+    api(libs.androidx.navigation3.runtime)
+    api(libs.androidx.ui)
 }

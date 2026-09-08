@@ -4,44 +4,30 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.compose.currentBackStackEntryAsState
 import soft.divan.financemanager.presenter.navigation.ScreenBottom
+import soft.divan.financemanager.presenter.navigation.TopLevelBackStack
 
 @Composable
 fun RowScope.FmNavigationBarItem(
-    navController: NavController,
+    backStack: TopLevelBackStack,
     screenBottom: ScreenBottom,
     hapticToggleMenu: () -> Unit
 ) {
-    val currentBackStack by navController.currentBackStackEntryAsState()
-    // Fallback на синхронный currentDestination: на первом кадре (и в статичном
-    // @Preview) flow из currentBackStackEntryAsState ещё не эмитнул значение.
-    val currentDestination = currentBackStack?.destination ?: navController.currentDestination
-    val selected = currentDestination
-        ?.hierarchy
-        ?.any { it.route?.startsWith(screenBottom.route) == true }
-        ?: false
+    // Вкладка подсвечена по корневому ключу её стека, а не по текущему экрану: вложенные
+    // экраны вкладки (история, операция, настройки) держат подсветку своей вкладки.
+    val selected = backStack.currentTabKey == screenBottom.key
 
     NavigationBarItem(
         selected = selected,
         onClick = {
             hapticToggleMenu()
             if (!selected) {
-                navController.navigate(screenBottom.route) {
-                    popUpTo(navController.graph.startDestinationId) {
-                        saveState = true
-                    }
-                    launchSingleTop = true
-                    restoreState = true
-                }
+                backStack.switchTab(screenBottom.key)
             }
         },
         icon = {

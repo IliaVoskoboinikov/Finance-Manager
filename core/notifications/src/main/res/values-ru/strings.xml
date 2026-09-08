@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel_general_name">Общие</string>
+    <string name="notification_channel_general_description">Напоминания и сообщения приложения</string>
+
+    <string name="notification_inactivity_title">Мы скучаем!</string>
+    <string name="notification_inactivity_message">Вы не заходили в приложение уже неделю. Самое время проверить свои финансы.</string>
+
+    <string name="notification_push_default_title">Finance Manager</string>
+</resources>

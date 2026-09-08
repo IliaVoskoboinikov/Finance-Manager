@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import soft.divan.financemanager.feature.security.impl.R
@@ -18,11 +17,10 @@ import soft.divan.financemanager.feature.security.impl.presenter.viewmodel.Secur
 import soft.divan.financemanager.uikit.components.ErrorContent
 import soft.divan.financemanager.uikit.components.LoadingProgressBar
 
-@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
-@Composable
-fun PreviewPinLockScreen() {
-    PinLockScreenContent(onVerifyPin = { it == "1234" }, onPinCorrect = { }, null)
-}
+// Превью PIN-замка вынесено в PinLockScreenPreview.kt: в headless-рендере Layoutlib нельзя
+// держать @Preview в одном файле с функциями, чья сигнатура ссылается на BiometricPrompt из
+// android.hardware.biometrics — все top-level функции файла компилируются в один класс, и
+// getDeclaredMethods() при поиске превью резолвит типы соседей → NoClassDefFoundError.
 
 @Composable
 fun PinLockScreen(

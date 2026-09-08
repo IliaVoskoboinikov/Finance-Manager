@@ -1,8 +1,10 @@
 package soft.divan.financemanager.feature.history.impl.precenter.viewModel
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,21 +25,23 @@ import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
 import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.history.impl.R
-import soft.divan.financemanager.feature.history.impl.navigation.IS_INCOME_KEY
 import soft.divan.financemanager.feature.history.impl.precenter.mapper.toUi
 import soft.divan.financemanager.feature.history.impl.precenter.model.HistoryUiState
 import java.time.LocalDate
-import javax.inject.Inject
 
-@HiltViewModel
-class HistoryViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = HistoryViewModel.Factory::class)
+class HistoryViewModel @AssistedInject constructor(
     private val getTransactionsByPeriodUseCase: GetTransactionsByPeriodUseCase,
     private val getSumTransactionsUseCase: GetSumTransactionsUseCase,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    savedStateHandle: SavedStateHandle
+    @Assisted private val isIncome: Boolean
 ) : ViewModel() {
 
-    private val isIncome: Boolean = savedStateHandle.get<Boolean>(IS_INCOME_KEY) ?: false
+    /** Создаёт [HistoryViewModel] с аргументом навигации из `HistoryKey`. */
+    @AssistedFactory
+    interface Factory {
+        fun create(isIncome: Boolean): HistoryViewModel
+    }
 
     private val _uiState = MutableStateFlow<HistoryUiState>(HistoryUiState.Loading)
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()

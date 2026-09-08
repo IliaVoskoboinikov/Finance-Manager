@@ -10,11 +10,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavPreview
+import soft.divan.financemanager.feature.settings.api.AboutTheProgramKey
 import soft.divan.financemanager.feature.settings.impl.R
 import soft.divan.financemanager.uikit.components.TopBar
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
+@NavPreview(route = AboutTheProgramKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AboutTheProgramScreenPreview() {
@@ -23,6 +27,7 @@ fun AboutTheProgramScreenPreview() {
     }
 }
 
+@NavDestination(route = AboutTheProgramKey::class)
 @Composable
 fun AboutTheProgramScreen(
     modifier: Modifier = Modifier

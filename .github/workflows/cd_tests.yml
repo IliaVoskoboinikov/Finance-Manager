@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Build
@@ -31,12 +31,12 @@ jobs:
           file: app/build/reports/buildTimeTracker/build.csv
           output-file: buildTime.csv
       - name: Upload apk
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
       - name: Upload time report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: buildTime.csv
           path: buildTime.csv
@@ -48,9 +48,9 @@ jobs:
     continue-on-error: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Download apk
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-debug
       - name: Get app version
@@ -79,9 +79,9 @@ jobs:
     needs: build-app
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Download apk
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: app-debug
       - name: Get app version

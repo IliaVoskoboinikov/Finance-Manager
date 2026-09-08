@@ -11,6 +11,9 @@ class AndroidBaseConventionPlugin : Plugin<Project> {
         with(project) {
             applyPlugin("kotlin-android")
             applyPlugin("ktlint")
+            // Плагин обязан быть применён и к корню, и к каждому модулю: агрегирующая
+            // задача :buildHealth собирает отчёты именно с подпроектов.
+            applyPlugin("dependency-analysis")
 
             pluginManager.withPlugin("com.android.application") {
                 addLintChecksDependency()

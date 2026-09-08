@@ -16,6 +16,8 @@ DB migration rules below).
 
 - **Kotlin `2.4.0`, Java 11**, AGP `9.2.1`, `compileSdk 36`, `minSdk 26`.
 - **UI:** Jetpack Compose + Material 3 (custom components in `core:uikit`).
+- **Navigation:** Navigation 3 (`androidx.navigation3` `1.1.5`) — `NavKey` + `NavDisplay`,
+  ключи сериализуются kotlinx.serialization.
 - **Architecture:** Clean Architecture + MVVM + Unidirectional Data Flow (UDF), offline-first.
 - **DI:** Dagger Hilt `2.59.2`. **Async:** Coroutines + Flow.
 - **Storage:** Room `2.8.4` (`FinanceManagerDatabase`, SSOT) + DataStore.
@@ -36,14 +38,17 @@ Run checks for the modules you touched; fix every violation your change introduc
 ./gradlew detekt                        # static analysis (./gradlew detektBaseline to snapshot)
 ./gradlew lint                          # Android lint + custom :lint checkers
 ./gradlew :app:assertModuleGraph        # validate module dependency graph
+./gradlew navCheck                      # navigation graph matches the committed .nav baselines
+./gradlew navDump                       # refresh those baselines after an intentional nav change
 ./gradlew app:assembleDebug            # build debug APK
 ```
 
 CI (`.github/workflows/ci.yml`) runs, as separate jobs, on every non-`.md` push:
-`assembleDebug`, `testDebugUnitTest`, `lint`, `detekt`, `ktlintCheck`,
+`assembleDebug`, `test`, coverage (`koverVerifyFull`), `lint`, `detekt`, `ktlintCheck`,
 `:app:assertModuleGraph`, app-size (`analyzeDebugBundle`), and build-time report.
 A change that fails any of these will fail CI — run the matching command locally
-before reporting done.
+before reporting done. Full pipeline description (incl. the CD workflows and their
+secrets): `docs/ci-cd.md`.
 
 ## Big-picture architecture
 
@@ -62,13 +67,23 @@ Layers: **Presentation** = `feature:*:impl` (Compose + ViewModel mapping Domain�
 **Domain** = `core:domain` (pure Kotlin: entities, UseCases, repository interfaces — no Android/Data deps);
 **Data** = `core:data`/`core:database`/`core:network` (implements repos, DTO/Entity↔Domain mapping).
 
-### Navigation is decoupled via `FeatureApi` (`core:feature-api`)
-Each feature exposes a `<Name>FeatureApi : FeatureApi` interface from its `:api` module,
-declaring its `route` and a `registerGraph(navGraphBuilder, navController, scope, modifier)`.
-The `:impl` implements it; `app` (`presenter/navigation/RootNavGraph.kt`, `BottomNavGraph.kt`)
-injects the `FeatureApi` instances via Hilt and calls `registerGraph` to assemble the graph —
-so features never reference each other's screens directly. Routes are built with the typed
-`RouteScope` helper, not string concatenation.
+### Navigation is decoupled via `FeatureApi` (`core:feature-api`) — see `docs/navigation3.md`
+Screens are addressed by `@Serializable` `NavKey`s declared in each feature's `:api` module
+(arguments are fields of the key, never string routes). A feature exposes
+`<Name>FeatureApi : FeatureApi` and implements
+`registerEntries(scope: EntryProviderScope<NavKey>, navigator: Navigator, modifier)` in its
+`:impl`, registering **only its own** keys — a key may be registered exactly once. Navigation
+to another feature is `navigator.goTo(ItsKey)`; `back()` pops. `app` assembles the graph from a
+Hilt `Set<FeatureApi>` multibinding (`di/FeatureNavigationModule.kt`) and owns two back stacks:
+the root one (`RootNavDisplay`: splash → auth → main) and one per bottom-nav tab
+(`TopLevelBackStack`). ViewModels that need nav arguments use Hilt assisted factories —
+`SavedStateHandle` no longer carries them.
+
+Because the graph is spread across features, it is also **described in annotations** and
+extracted at build time by `compose-nav-graph` (see `docs/nav-graph.md`): a screen composable
+carries `@NavDestination(route = XKey::class)`, one `@NavEdge(to = …)` per outgoing `goTo`,
+and `@NavPreview` next to its `@Preview`. New screens/transitions MUST be annotated, and
+`./gradlew navDump` re-records the committed `*/nav/*.nav` baselines.
 
 ### Error handling: `DomainResult` (see `docs/domain-result.md`)
 The domain layer never throws across boundaries. Repositories/UseCases return
@@ -119,7 +134,7 @@ category → account → transaction sync order + last-write-wins are handled in
 @./docs/agents/release-process.md
 
 Deeper design docs live in `docs/` (`architecture.md`, `modularization.md`, `modules.md`,
-`auth.md`, `synchronization.md`, `domain-result.md`, `bd.md`).
+`navigation3.md`, `auth.md`, `synchronization.md`, `domain-result.md`, `bd.md`).
 
 ## Clarify before executing
 

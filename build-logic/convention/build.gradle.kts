@@ -13,8 +13,19 @@ dependencies {
     compileOnly(libs.agp)
     compileOnly(libs.kotlin.gradle.plugin)
     compileOnly(libs.compose.plugin)
+
+    // В отличие от compose-плагина, плагин kotlinx.serialization не входит в KGP,
+    // поэтому его нужно положить на runtime-classpath convention-плагинов —
+    // иначе pluginManager.apply("org.jetbrains.kotlin.plugin.serialization") его не найдёт.
+    implementation(libs.kotlin.serialization.plugin)
     compileOnly(libs.build.time.tracker)
     compileOnly(libs.ruler.plugin)
+    compileOnly(libs.dependency.guard.plugin)
+    compileOnly(libs.module.graph.plugin)
+
+    // Нужен только ради типов NavGraphExtension / RenderBackend в convention-плагинах:
+    // сам плагин navgraph подключается через root build.gradle.kts (`apply false`).
+    compileOnly(libs.navgraph.gradle.plugin)
 
     testImplementation(libs.junit)
     testImplementation(libs.assertj.core)
@@ -77,6 +88,16 @@ gradlePlugin {
         plugins.register("rulerConventionPlugin") {
             id = libs.plugins.soft.divan.ruler.get().pluginId
             implementationClass = "RulerConventionPlugin"
+        }
+
+        plugins.register("dependencyGuardConventionPlugin") {
+            id = libs.plugins.soft.divan.dependency.guard.get().pluginId
+            implementationClass = "DependencyGuardConventionPlugin"
+        }
+
+        plugins.register("moduleGraphConventionPlugin") {
+            id = libs.plugins.soft.divan.module.graph.get().pluginId
+            implementationClass = "ModuleGraphConventionPlugin"
         }
     }
 }

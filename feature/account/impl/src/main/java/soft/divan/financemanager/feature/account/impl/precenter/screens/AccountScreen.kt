@@ -43,7 +43,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavPreview
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.feature.account.api.AccountKey
 import soft.divan.financemanager.feature.account.impl.R
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountActions
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountEvent
@@ -69,6 +72,7 @@ import soft.divan.financemanager.uikit.icons.RoundCross
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
+@NavPreview(route = AccountKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AccountScreenPreview() {
@@ -97,12 +101,16 @@ fun PreviewCurrencySheet() {
     }
 }
 
+@NavDestination(route = AccountKey::class)
 @Composable
 fun AccountScreenScreen(
-    modifier: Modifier = Modifier,
     accountId: String?,
+    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
-    viewModel: AccountViewModel = hiltViewModel(),
+    viewModel: AccountViewModel =
+        hiltViewModel<AccountViewModel, AccountViewModel.Factory> { factory ->
+            factory.create(accountId = accountId)
+        },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

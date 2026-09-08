@@ -1,72 +1,27 @@
 package soft.divan.financemanager.feature.transaction.impl.navigation
 
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import soft.divan.financemanager.core.featureapi.RouteScope
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
+import soft.divan.financemanager.core.featureapi.Navigator
 import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
+import soft.divan.financemanager.feature.transaction.api.TransactionKey
 import soft.divan.financemanager.feature.transaction.impl.precenter.screens.TransactionScreen
 import javax.inject.Inject
 
-const val TRANSACTION_ID_KEY: String = "transactionId"
-const val IS_INCOME_KEY: String = "isIncome"
-
 class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
 
-    override val route: String = "transaction"
-
-    override fun transactionRouteWithArgs(transactionId: String, isIncome: Boolean) =
-        "$route/$transactionId/$isIncome"
-
-    override fun transactionRouteWithArgs(isIncome: Boolean) = "$route/$isIncome"
-
-    override fun registerGraph(
-        navGraphBuilder: NavGraphBuilder,
-        navController: NavHostController,
-        scope: RouteScope,
+    override fun registerEntries(
+        scope: EntryProviderScope<NavKey>,
+        navigator: Navigator,
         modifier: Modifier
     ) {
-        navGraphBuilder.composable(
-            route = "${scope.route()}/{$TRANSACTION_ID_KEY}/{$IS_INCOME_KEY}",
-            arguments = listOf(
-                navArgument(TRANSACTION_ID_KEY) {
-                    type = NavType.StringType
-                },
-                navArgument(IS_INCOME_KEY) {
-                    type = NavType.BoolType
-                    defaultValue = false
-                }
-            )
-        ) { backStackEntry ->
-
-            val isIncome = backStackEntry.arguments?.getBoolean(IS_INCOME_KEY) ?: false
-
+        scope.entry<TransactionKey> { transactionKey ->
             TransactionScreen(
                 modifier = modifier,
-                isIncome = isIncome,
-                onNavigateBack = navController::popBackStack
-            )
-        }
-
-        navGraphBuilder.composable(
-            "${scope.route()}/{$IS_INCOME_KEY}",
-            arguments = listOf(
-                navArgument(IS_INCOME_KEY) {
-                    type = NavType.BoolType
-                    defaultValue = false
-                }
-            )
-        ) { backStackEntry ->
-
-            val isIncome = backStackEntry.arguments?.getBoolean(IS_INCOME_KEY) ?: false
-
-            TransactionScreen(
-                modifier = modifier,
-                isIncome = isIncome,
-                onNavigateBack = navController::popBackStack
+                isIncome = transactionKey.isIncome,
+                transactionId = transactionKey.transactionId,
+                onNavigateBack = navigator::back
             )
         }
     }

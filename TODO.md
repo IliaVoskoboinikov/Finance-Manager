@@ -28,15 +28,65 @@
 
 ## ⚙️ CI/CD
 
-- [ ] Добавить триггер на `pull_request` (сейчас прогонов для пул-реквестов нет)
-- [ ] Добавить `cancel-in-progress`, чтобы отменялись устаревшие прогоны
-- [ ] Добавить Gradle cache для ускорения сборок (релиз — однозначно без кеша,
-      тестовые сборки — можно с кешем; пока приложение простое, проблем быть не
-      должно, но на больших проектах может быть больно)
+> Как всё устроено сейчас и обоснование каждого пункта — в [docs/ci-cd.md](docs/ci-cd.md).
+
+Критично:
+
+- [ ] Убрать инъекцию шелла в `send-file-tg`: сообщение коммита подставляется прямо
+      в `run:` — передавать через `env:` и `"$VAR"`
+- [ ] Завязать релиз на гейт качества — сейчас `cd_release.yml` публикует в Play,
+      не запуская ни тестов, ни линтеров
+- [x] Добавить минимальный блок `permissions:` во все workflow
+      (`contents: read` + `security-events: write` для SARIF) — сделано для `ci.yml`,
+      `security.yml`, `dependency-submission.yml`; остались `cd_tests.yml`
+      и `cd_release.yml`
+- [x] Настроить `moduleGraphAssert { … }` — `ModuleGraphConventionPlugin`:
+      высота графа 6 рёбер + запрет рёбер `:core:domain → data-слой`, `* → :app`,
+      `:sync → :feature:*`
+- [ ] Собирать `assembleRelease` в CI — R8/shrink включены только для release,
+      ошибки в `proguard-rules.pro` всплывают лишь в момент релиза
+
+Важно:
+
+- [x] Добавить триггер на `pull_request` (сейчас прогонов для пул-реквестов нет)
+- [x] Добавить `cancel-in-progress`, чтобы отменялись устаревшие прогоны
+- [x] Починить передачу флагов Gradle: в `ci.yml` они попали в *название* шага,
+      в `cd_release.yml` используется несуществующая `$GRADLE_FLAGS`
+- [ ] Починить версию в Telegram-отчётах: `printVersionName` печатает
+      `Const.VERSION_NAME` (`0.0.1`) и не знает про `-PversionName`
+- [x] Использовать `android-setup` во всех джобах `ci.yml` (`run-detekt`, `run-ktlint`,
+      `check-module-graph`) — в CD остались `report-telegram` и `distribute-app-firebase`
+- [x] Добавить Gradle cache для ускорения сборок и убрать дублирующий
+      `cache: gradle` в `actions/setup-java` — `setup-gradle@v6` + `setup-java@v5`,
+      кеш пишется только с `master`
+- [ ] Объединить `run-tests` и `run-coverage` — тесты сейчас прогоняются дважды;
+      заодно перевести `./gradlew test` на `testDebugUnitTest`
+- [ ] Свести порог покрытия к одному числу: фактически `minBound(95)`,
+      в KDoc — 98 %, в `docs/testing.md` — 99 % и 98 %
+
+Улучшения:
+
 - [ ] Добавить AI-ревьюера
-- [ ] Подключить `koverVerifyFull` в CI — гейт покрытия (99%) сейчас гоняется
-      только локально
-- [ ] Настроить Dependabot/Renovate для автообновления зависимостей
+- [x] Настроить Dependabot/Renovate для автообновления зависимостей — `.github/renovate.json5`
+      (нужно установить GitHub App **Mend Renovate** на репозиторий)
+- [x] Сканирование секретов (gitleaks) и уязвимых зависимостей (dependency-review
+      поверх `dependency-submission`) — `.github/workflows/security.yml`
+- [x] Черновик GitHub Release с тегом, APK/AAB и авто-changelog — джоба `github-release`
+- [ ] Перевести `uses:` на пин по SHA (Renovate: `helpers:pinGitHubActionDigests`)
+- [ ] `timeout-minutes` на джобах и `retention-days` на артефактах
+- [ ] Гейты (а не только отчёты) на размер приложения (Ruler) и время сборки
+- [ ] Включить загрузку SARIF для Android Lint (сейчас закомментирована)
+- [ ] Instrumented-тесты на эмуляторе — понадобятся для миграционных тестов Room
+- [ ] Автоматизация релиза: тег + GitHub Release + changelog, release notes для Play
+- [ ] Разобраться с `ANDROID_SDK_ROOT: /usr/lib/android-sdk` в CD-workflow —
+      на раннерах GitHub SDK лежит по другому пути
+- [ ] Завести `YANDEX_CLIENT_ID` как CI-секрет (сейчас в CI-сборках client_id пустой)
+- [ ] `CODEOWNERS`, шаблон PR, `SECURITY.md`, бейджи сборки в `README.md`
+
+Сделано:
+
+- [x] Подключить `koverVerifyFull` в CI — гейт покрытия работает в джобе `run-coverage`
+      через composite action `.github/actions/coverage`
 
 ## 🧪 Тестирование
 
@@ -65,18 +115,50 @@
 - [ ] Доделать post-commit-sync (готово на ветке `post-commit-sync` — влить в master)
 - [ ] Добавить фичу переводов
 
+
+## 🔔 Уведомления
+
+> Как устроено сейчас и обоснование решений — в [docs/notifications.md](docs/notifications.md).
+
+- [ ] Адресные пуши, бэкенд: таблица `device_tokens`, ручки `POST /api/v1/devices`
+      и `DELETE /api/v1/devices/{token}`, отправка через FCM HTTP v1 с таргетом `token`
+- [ ] Адресные пуши, бэкенд: удалять токен по ответам `UNREGISTERED` / `INVALID_ARGUMENT`,
+      иначе база зарастает мёртвыми записями
+- [ ] Адресные пуши, бэкенд: снимать привязку токена к прежнему пользователю при смене
+      аккаунта на устройстве — иначе новый пользователь получит чужие пуши (утечка ПД)
+- [ ] Адресные пуши, мобилка: регистрация токена из `onNewToken` через WorkManager
+      (сети в этот момент может не быть), плюс при старте и после логина
+- [ ] Адресные пуши, мобилка: снятие регистрации по `AuthEvent.OnLogout`
+      (`DELETE /devices` + `FirebaseMessaging.deleteToken()`)
+- [ ] Адресные пуши, мобилка: `DeviceApiService` + DTO в `core:data`,
+      `RegisterPushTokenUseCase` в `core:domain`, кеш «последний отправленный токен + user»
+- [ ] Вернуть `deepLink` в `NotificationMessage` и смапить на `NavKey`, когда пуши
+      начнут вести на конкретный экран
+- [ ] Отказаться от `DelegatingWorker`: отдать `:app` `Configuration.Provider`
+      с `HiltWorkerFactory` и убрать дефолтный `WorkManagerInitializer` из `androidx.startup` —
+      тогда `@HiltWorker` ставятся в очередь напрямую, а `:core:workmanager` удаляется
+- [ ] Дать пользователю настройку напоминания о неактивности (порог / выключить)
+
 ## 🛠 Инструменты и качество
 
 - [ ] Подключить LeakCanary
 - [ ] Улучшить документацию
 - [ ] Добавить сбор статистики в приложение
 - [ ] Доделать [help_comand.md](help_comand.md)
+- [x] Доделать [help_comand.md](help_comand.md) — шпаргалка по командам: сборка, тесты,
+      покрытие, линтеры, графы модулей и навигации, Ruler, ADB-рецепты, пути отчётов
 
 ## 🚀 Релиз
 
 - [ ] Реальные Room-миграции + миграционные тесты (`MigrationTestHelper`) вместо
       `fallbackToDestructiveMigration` — обязательно до выхода к реальным пользователям
 - [ ] Обфускация и сборка (R8/ProGuard)
+- [ ] 🔴 Починить `assembleRelease` — `:app:minifyReleaseWithR8` падает на
+      `Missing class kotlinx.parcelize.Parcelize` (тянется из `com.yandex.authsdk`).
+      Правило генерирует сам R8: `app/build/outputs/mapping/release/missing_rules.txt`
+      (`-dontwarn kotlinx.parcelize.Parcelize`) → перенести в `app/proguard-rules.pro`.
+      Заодно ломается `:app:analyzeReleaseBundle`. Всплыло только сейчас, потому что
+      CI не собирает release (см. раздел CI/CD выше)
 - [ ] Релиз
 
 ## 💡 Идеи на подумать
@@ -88,3 +170,4 @@
 - [ ] Виджет на домашний экран (быстрое добавление расхода / баланс)
 - [ ] Напоминание-нотификация «внеси расходы за день»
 - [ ] Baseline Profiles / macrobenchmark для ускорения холодного старта
+- [ ] Графана

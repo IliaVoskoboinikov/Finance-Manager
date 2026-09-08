@@ -269,3 +269,8 @@ secrets.properties
 
 keys.properties
 /.kotlin/sessions/
+
+### JVM heap dumps ###
+# gradle.properties включает -XX:+HeapDumpOnOutOfMemoryError, поэтому любой OOM
+# Gradle-демона оставляет в корне многогигабайтный дамп.
+*.hprof

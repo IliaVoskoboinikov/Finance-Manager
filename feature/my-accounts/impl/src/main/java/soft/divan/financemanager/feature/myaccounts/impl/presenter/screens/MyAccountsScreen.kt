@@ -31,7 +31,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavEdge
+import com.github.skydoves.navgraph.annotations.NavPreview
+import soft.divan.financemanager.feature.account.api.AccountKey
 import soft.divan.financemanager.feature.my_accounts.impl.R
+import soft.divan.financemanager.feature.myaccounts.impl.MyAccountsKey
 import soft.divan.financemanager.feature.myaccounts.impl.presenter.model.MyAccountsUiModel
 import soft.divan.financemanager.feature.myaccounts.impl.presenter.model.MyAccountsUiState
 import soft.divan.financemanager.feature.myaccounts.impl.presenter.model.mockMyAccountsUiStateSuccess
@@ -47,6 +52,7 @@ import soft.divan.financemanager.uikit.icons.Arrow
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
+@NavPreview(route = MyAccountsKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AccountScreenPreview() {
@@ -61,6 +67,8 @@ fun AccountScreenPreview() {
     }
 }
 
+@NavDestination(route = MyAccountsKey::class)
+@NavEdge(to = AccountKey::class, label = "создать / изменить счёт")
 @Composable
 fun MyAccountsScreen(
     modifier: Modifier = Modifier,

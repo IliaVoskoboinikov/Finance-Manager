@@ -18,6 +18,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavPreview
+import soft.divan.financemanager.feature.synchronization.api.SynchronizationKey
 import soft.divan.financemanager.feature.synchronization.impl.R
 import soft.divan.financemanager.feature.synchronization.impl.precenter.model.SynchronizationUiState
 import soft.divan.financemanager.feature.synchronization.impl.precenter.viewModel.SynchronizationViewModel
@@ -30,6 +33,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import soft.divan.financemanager.sync.worker.MAX_SYNC_INTERVAL_HOURS
 import soft.divan.financemanager.sync.worker.MIN_SYNC_INTERVAL_HOURS
 
+@NavPreview(route = SynchronizationKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Suppress("MagicNumber")
 @Composable
@@ -43,6 +47,7 @@ fun SynchronizationScreenPreview() {
     }
 }
 
+@NavDestination(route = SynchronizationKey::class)
 @Composable
 fun SynchronizationScreen(
     modifier: Modifier = Modifier,

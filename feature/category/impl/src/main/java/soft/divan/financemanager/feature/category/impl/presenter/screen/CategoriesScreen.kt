@@ -34,6 +34,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavPreview
+import soft.divan.financemanager.feature.category.api.CategoryKey
 import soft.divan.financemanager.feature.category.impl.R
 import soft.divan.financemanager.feature.category.impl.presenter.model.CategoriesUiState
 import soft.divan.financemanager.feature.category.impl.presenter.model.UiCategory
@@ -50,6 +53,7 @@ import soft.divan.financemanager.uikit.icons.Search
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
+@NavPreview(route = CategoryKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun CategoriesScreenPreview() {
@@ -62,6 +66,7 @@ fun CategoriesScreenPreview() {
     }
 }
 
+@NavDestination(route = CategoryKey::class)
 @Composable
 fun CategoriesScreen(
     modifier: Modifier = Modifier,

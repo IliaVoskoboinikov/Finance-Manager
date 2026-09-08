@@ -1,19 +1,23 @@
 package soft.divan.financemanager.core.featureapi
 
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
 
-fun NavGraphBuilder.register(
+/**
+ * Добавляет экраны [featureApi] в собираемый `entryProvider`.
+ *
+ * Синтаксический сахар над [FeatureApi.registerEntries], чтобы сборка графа в `app`
+ * читалась как список фич.
+ */
+fun EntryProviderScope<NavKey>.register(
     featureApi: FeatureApi,
-    navController: NavHostController,
-    scope: RouteScope,
+    navigator: Navigator,
     modifier: Modifier = Modifier
 ) {
-    featureApi.registerGraph(
-        navGraphBuilder = this,
-        navController = navController,
-        scope = scope,
+    featureApi.registerEntries(
+        scope = this,
+        navigator = navigator,
         modifier = modifier
     )
 }

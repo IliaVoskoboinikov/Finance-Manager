@@ -1,0 +1,55 @@
+name: "Nav Graph report"
+description: "Рендерит карту навигации и галерею @Preview (PNG + HTML), собирает nav-graph-report/ и пишет job summary"
+
+inputs:
+  gradle-flags:
+    description: "Дополнительные флаги Gradle (как в основном CI)"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate nav-graph & preview-gallery (PNG + HTML)
+      shell: bash
+      run: >
+        ./gradlew
+        :app:exportNavGraphImage :app:exportNavGraphHtml
+        :app:exportPreviewGalleryImage :app:exportPreviewGalleryHtml
+        ${{ inputs.gradle-flags }}
+
+    - name: Collect report
+      shell: bash
+      run: |
+        set -e
+        mkdir -p nav-graph-report
+        cp app/build/navgraph/nav-graph.png          nav-graph-report/
+        cp app/build/navgraph/nav-graph.html         nav-graph-report/
+        cp app/build/navgallery/preview-gallery.png  nav-graph-report/
+        cp app/build/navgallery/preview-gallery.html nav-graph-report/
+        # Красивый лендинг: обе PNG инлайном + ссылки на интерактивные HTML.
+        cat > nav-graph-report/index.html <<'HTML'
+        <!doctype html>
+        <meta charset="utf-8">
+        <title>Finance Manager — карта навигации</title>
+        <style>
+          body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:40px;background:#f8f9fa;color:#24292e}
+          @media (prefers-color-scheme:dark){body{background:#0d1117;color:#c9d1d9}}
+          h1{margin-top:0} h2{margin-top:32px}
+          a.btn{display:inline-block;margin:8px 12px 8px 0;padding:8px 16px;border-radius:6px;background:#2da44e;color:#fff;text-decoration:none;font-weight:600}
+          img{max-width:100%;border:1px solid #d0d7de;border-radius:6px;margin-top:12px}
+        </style>
+        <h1>🗺️ Finance Manager — карта навигации</h1>
+        <p>Сгенерировано автоматически из аннотаций <code>@NavDestination</code> / <code>@NavEdge</code> / <code>@NavPreview</code>.</p>
+        <h2>Граф экранов</h2>
+        <a class="btn" href="nav-graph.html">Открыть интерактивный граф →</a>
+        <img src="nav-graph.png" alt="Nav graph">
+        <h2>Галерея всех @Preview</h2>
+        <a class="btn" href="preview-gallery.html">Открыть галерею превью →</a>
+        <img src="preview-gallery.png" alt="Preview gallery">
+        HTML
+
+    - name: Write job summary
+      if: always()
+      shell: bash
+      run: python3 "${{ github.action_path }}/nav-graph-report.py" >> "$GITHUB_STEP_SUMMARY"

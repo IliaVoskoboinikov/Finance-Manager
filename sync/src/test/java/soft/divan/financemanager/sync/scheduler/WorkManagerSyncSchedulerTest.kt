@@ -18,9 +18,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import soft.divan.financemanager.core.workmanager.WORKER_CLASS_NAME
 import soft.divan.financemanager.sync.initializers.SYNC_ONE_TIME_WORK
 import soft.divan.financemanager.sync.initializers.SYNC_PERIODIC_WORK
-import soft.divan.financemanager.sync.worker.WORKER_CLASS_NAME
 
 class WorkManagerSyncSchedulerTest {
 

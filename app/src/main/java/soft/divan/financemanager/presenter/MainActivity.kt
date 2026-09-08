@@ -1,10 +1,13 @@
 package soft.divan.financemanager.presenter
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
@@ -22,19 +26,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
+import soft.divan.financemanager.core.featureapi.FeatureApi
+import soft.divan.financemanager.core.notifications.fcm.PushSubscriptionManager
+import soft.divan.financemanager.core.notifications.scheduler.InactivityReminderScheduler
 import soft.divan.financemanager.feature.auth.api.AuthFeatureApi
-import soft.divan.financemanager.feature.category.api.CategoryFeatureApi
 import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetThemeModeUseCase
-import soft.divan.financemanager.feature.myaccounts.impl.MyAccountsFeatureApi
 import soft.divan.financemanager.feature.security.impl.domain.usecase.IsPinSetUseCase
 import soft.divan.financemanager.feature.security.impl.presenter.screen.PinLockScreen
-import soft.divan.financemanager.feature.settings.api.SettingsFeatureApi
 import soft.divan.financemanager.feature.splashscreen.api.SplashScreenFeatureApi
-import soft.divan.financemanager.feature.transactionstoday.api.TransactionsTodayFeatureApi
-import soft.divan.financemanager.presenter.navigation.RootNavGraph
+import soft.divan.financemanager.presenter.navigation.RootNavDisplay
 import soft.divan.financemanager.presenter.screens.MainScreen
 import soft.divan.financemanager.uikit.theme.AccentColor
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
@@ -49,17 +52,9 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var authFeatureApi: AuthFeatureApi
 
+    /** Все фичи основного графа — см. `FeatureNavigationModule`. */
     @Inject
-    lateinit var transactionsTodayFeatureApi: TransactionsTodayFeatureApi
-
-    @Inject
-    lateinit var myAccountsFeatureApi: MyAccountsFeatureApi
-
-    @Inject
-    lateinit var categoryFeatureApi: CategoryFeatureApi
-
-    @Inject
-    lateinit var settingsFeatureApi: SettingsFeatureApi
+    lateinit var features: Set<@JvmSuppressWildcards FeatureApi>
 
     @Inject
     lateinit var getAuthStatusUseCase: GetAuthStatusUseCase
@@ -75,6 +70,12 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     lateinit var isPinSetUseCase: IsPinSetUseCase
+
+    @Inject
+    lateinit var inactivityReminderScheduler: InactivityReminderScheduler
+
+    @Inject
+    lateinit var pushSubscriptionManager: PushSubscriptionManager
 
     private val shouldLock = mutableStateOf(false)
 
@@ -97,9 +98,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * ON_START у `ProcessLifecycleOwner` — это выход приложения на передний план, то есть
+     * реальное присутствие пользователя. Именно от него отсчитывается неактивность.
+     *
+     */
+    private val inactivityObserver = LifecycleEventObserver { _, event ->
+        if (event == Lifecycle.Event.ON_START) {
+            inactivityReminderScheduler.onUserActive()
+        }
+    }
+
+    private val requestNotificationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+            // Отказ — штатный сценарий: NotificationHelper сам молча пропустит показ.
+        }
+
     private fun refreshPinSet() {
         lifecycleScope.launch {
             isPinSet.value = withContext(Dispatchers.IO) { isPinSetUseCase() }
+        }
+    }
+
+    /** С Android 13 показ уведомлений требует runtime-разрешения. */
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+
+        val granted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!granted) {
+            requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -108,7 +139,12 @@ class MainActivity : AppCompatActivity() {
         enableEdgeToEdge()
 
         refreshPinSet()
+        requestNotificationPermissionIfNeeded()
+        // Здесь, а не в App.onCreate(): к моменту старта Activity FirebaseApp гарантированно
+        // поднят своим ContentProvider'ом, и подписка не зависит от фоновых стартов процесса.
+        pushSubscriptionManager.subscribeToBroadcasts()
         ProcessLifecycleOwner.get().lifecycle.addObserver(autoLockObserver)
+        ProcessLifecycleOwner.get().lifecycle.addObserver(inactivityObserver)
 
         setContent {
             val themeMode by getThemeModeUseCase().collectAsState(initial = ThemeMode.LIGHT)
@@ -140,17 +176,12 @@ class MainActivity : AppCompatActivity() {
                         shouldLock.value = false
                     })
                 } else {
-                    RootNavGraph(
+                    RootNavDisplay(
                         splashFeatureApi = splashFeatureApi,
                         authFeatureApi = authFeatureApi,
                         getAuthStatusUseCase = getAuthStatusUseCase,
                         mainScreen = {
-                            MainScreen(
-                                transactionsTodayFeatureApi = transactionsTodayFeatureApi,
-                                myAccountsFeatureApi = myAccountsFeatureApi,
-                                categoryFeatureApi = categoryFeatureApi,
-                                settingsFeatureApi = settingsFeatureApi
-                            )
+                            MainScreen(features = features)
                         }
                     )
                 }
@@ -176,5 +207,6 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         ProcessLifecycleOwner.get().lifecycle.removeObserver(autoLockObserver)
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(inactivityObserver)
     }
 }

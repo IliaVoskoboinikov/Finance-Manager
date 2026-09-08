@@ -1,13 +1,13 @@
 package soft.divan.financemanager.presenter.navigation
 
 import androidx.compose.material.icons.Icons
-import io.mockk.every
-import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import soft.divan.financemanager.R
-import soft.divan.financemanager.core.featureapi.FeatureApi
-import soft.divan.financemanager.feature.transactionstoday.api.TransactionsTodayFeatureApi
+import soft.divan.financemanager.feature.category.api.CategoryKey
+import soft.divan.financemanager.feature.myaccounts.impl.MyAccountsKey
+import soft.divan.financemanager.feature.settings.api.SettingsKey
+import soft.divan.financemanager.feature.transactionstoday.api.TransactionsTodayKey
 import soft.divan.financemanager.uikit.icons.Calculator
 import soft.divan.financemanager.uikit.icons.Chart90
 import soft.divan.financemanager.uikit.icons.Downtrend
@@ -16,20 +16,27 @@ import soft.divan.financemanager.uikit.icons.Uptrend
 
 class ScreenBottomTest {
 
-    private val transactionsToday = mockk<TransactionsTodayFeatureApi> {
-        every { expenseRoute } returns "expenses"
-        every { incomeRoute } returns "income"
-    }
-    private val myAccounts = mockk<FeatureApi> { every { route } returns "my_accounts" }
-    private val category = mockk<FeatureApi> { every { route } returns "category" }
-    private val settings = mockk<FeatureApi> { every { route } returns "settings" }
-
-    private val items = ScreenBottom.items(transactionsToday, myAccounts, category, settings)
+    private val items = ScreenBottom.items()
 
     @Test
     fun `items build five bottom destinations in fixed order`() {
-        assertThat(items.map { it.route })
-            .containsExactly("expenses", "income", "my_accounts", "category", "settings")
+        assertThat(items.map { it.key }).containsExactly(
+            TransactionsTodayKey(isIncome = false),
+            TransactionsTodayKey(isIncome = true),
+            MyAccountsKey,
+            CategoryKey,
+            SettingsKey
+        )
+    }
+
+    @Test
+    fun `expenses and income are different tabs of the same screen`() {
+        val expenses = items[0].key as TransactionsTodayKey
+        val income = items[1].key as TransactionsTodayKey
+
+        assertThat(expenses.isIncome).isFalse()
+        assertThat(income.isIncome).isTrue()
+        assertThat(expenses).isNotEqualTo(income)
     }
 
     @Test

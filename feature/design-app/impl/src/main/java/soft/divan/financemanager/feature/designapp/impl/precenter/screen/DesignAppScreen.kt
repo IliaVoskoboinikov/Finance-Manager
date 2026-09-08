@@ -48,7 +48,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavPreview
 import soft.divan.financemanager.feature.design_app.impl.R
+import soft.divan.financemanager.feature.designapp.api.DesignAppKey
 import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.designapp.impl.precenter.model.DesignUiState
 import soft.divan.financemanager.feature.designapp.impl.precenter.model.mockDesignUiStateSuccess
@@ -60,6 +63,7 @@ import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.AccentColor
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
+@NavPreview(route = DesignAppKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun TransactionScreenPreview() {
@@ -74,6 +78,7 @@ fun TransactionScreenPreview() {
     }
 }
 
+@NavDestination(route = DesignAppKey::class)
 @Composable
 fun DesignAppScreen(
     modifier: Modifier = Modifier,

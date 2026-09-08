@@ -10,10 +10,15 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
+import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavGraphRoot
+import com.github.skydoves.navgraph.annotations.NavPreview
 import kotlinx.coroutines.delay
 import soft.divan.financemanager.feature.splash_screen.impl.R
+import soft.divan.financemanager.feature.splashscreen.api.SplashKey
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
+@NavPreview(route = SplashKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AboutTheProgramScreenPreview() {
@@ -24,6 +29,8 @@ fun AboutTheProgramScreenPreview() {
 
 private const val SPLASH_DELAY_MS = 1_000L
 
+@NavGraphRoot
+@NavDestination(route = SplashKey::class)
 @Composable
 fun SplashScreen(
     onFinish: () -> Unit

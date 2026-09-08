@@ -1,6 +1,5 @@
 package soft.divan.financemanager.feature.history.impl.precenter.viewModel
 
-import androidx.lifecycle.SavedStateHandle
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -24,7 +23,6 @@ import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.usecase.GetSumTransactionsUseCase
 import soft.divan.financemanager.core.domain.usecase.GetTransactionsByPeriodUseCase
-import soft.divan.financemanager.feature.history.impl.navigation.IS_INCOME_KEY
 import soft.divan.financemanager.feature.history.impl.precenter.model.HistoryUiState
 import java.math.BigDecimal
 import java.time.Instant
@@ -73,7 +71,7 @@ class HistoryViewModelTest {
         getTransactionsByPeriodUseCase = getTransactionsByPeriodUseCase,
         getSumTransactionsUseCase = getSumTransactionsUseCase,
         ioDispatcher = UnconfinedTestDispatcher(),
-        savedStateHandle = SavedStateHandle(mapOf(IS_INCOME_KEY to isIncome))
+        isIncome = isIncome
     )
 
     private fun stubSuccess(transactions: List<Transaction>) {

@@ -1,71 +1,53 @@
 package soft.divan.financemanager.feature.auth.impl.navigation
 
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.composable
-import soft.divan.financemanager.core.featureapi.RouteScope
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.runtime.NavKey
+import soft.divan.financemanager.core.featureapi.Navigator
 import soft.divan.financemanager.feature.auth.api.AuthFeatureApi
+import soft.divan.financemanager.feature.auth.api.AuthKey
+import soft.divan.financemanager.feature.auth.api.ProfileAuthKey
+import soft.divan.financemanager.feature.auth.api.ProfileKey
 import soft.divan.financemanager.feature.auth.impl.presenter.screen.AuthScreen
 import soft.divan.financemanager.feature.auth.impl.presenter.screen.ProfileScreen
 import javax.inject.Inject
 
-private const val AUTH_ROUTE = "auth-screen"
-private const val PROFILE_ROUTE = "profile-screen"
-
 class AuthFeatureImpl @Inject constructor() : AuthFeatureApi {
 
-    override val route: String = AUTH_ROUTE
-    override val profileRoute: String = PROFILE_ROUTE
-
     /**
-     * Используется для вложенной навигации (например, внутри Settings)
+     * Вложенный сценарий: профиль и открытая из него повторная авторизация.
+     * После успешного входа просто возвращаемся в профиль.
      */
-    override fun registerGraph(
-        navGraphBuilder: NavGraphBuilder,
-        navController: NavHostController,
-        scope: RouteScope,
+    override fun registerEntries(
+        scope: EntryProviderScope<NavKey>,
+        navigator: Navigator,
         modifier: Modifier
     ) {
-        // Профиль регистрируем как корень этого scope
-        navGraphBuilder.composable(scope.route()) {
+        scope.entry<ProfileKey> {
             ProfileScreen(
-                onNavigateToAuth = {
-                    navController.navigate(scope.route(AUTH_ROUTE))
-                }
+                onNavigateToAuth = { navigator.goTo(ProfileAuthKey) }
             )
         }
 
-        // Авторизация остается дочерним роутом
-        navGraphBuilder.composable(scope.route(AUTH_ROUTE)) {
+        scope.entry<ProfileAuthKey> {
             AuthScreen(
-                onAuthSuccess = {
-                    navController.popBackStack()
-                }
+                onAuthSuccess = navigator::back
             )
         }
     }
 
     /**
-     * Используется для корневой навигации (после SplashScreen)
+     * Корневой сценарий: авторизация как точка входа в приложение.
+     * Куда уходить после успешного входа, решает хост.
      */
-    override fun registerGraph(
-        navGraphBuilder: NavGraphBuilder,
-        navController: NavHostController,
-        modifier: Modifier,
-        onFinish: () -> Unit
+    override fun registerRootEntries(
+        scope: EntryProviderScope<NavKey>,
+        onAuthSuccess: () -> Unit,
+        modifier: Modifier
     ) {
-        navGraphBuilder.composable(route) {
+        scope.entry<AuthKey> {
             AuthScreen(
-                onAuthSuccess = { onFinish() }
-            )
-        }
-
-        navGraphBuilder.composable(profileRoute) {
-            ProfileScreen(
-                onNavigateToAuth = {
-                    navController.navigate(route)
-                }
+                onAuthSuccess = onAuthSuccess
             )
         }
     }
