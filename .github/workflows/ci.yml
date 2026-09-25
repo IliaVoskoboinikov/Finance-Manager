@@ -16,8 +16,9 @@ concurrency:
 # Явные права токена: раньше воркфлоу полагался на настройку репозитория по умолчанию.
 permissions:
   contents: read
-  security-events: write  # upload-sarif (detekt, ktlint)
+  security-events: write  # upload-sarif (detekt, ktlint, aalekh)
   checks: write           # action-junit-report создаёт check-run с аннотациями
+  pull-requests: write    # aalekhDiff — комментарий об изменениях архитектуры в PR
 
 env:
   gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
@@ -293,6 +294,70 @@ jobs:
         with:
           name: all_modules.png
           path: all_modules.png
+
+  # Блокирующая проверка архитектуры графа модулей (Aalekh): слои, изоляция фич,
+  # reachability, запрет циклов и ratchet структурных метрик. В отличие от
+  # check-module-graph (jraska), правила здесь реально настроены (build.gradle.kts →
+  # блок aalekh { }). Падает только на НОВЫХ нарушениях — текущие заморожены в
+  # aalekh-baseline.json. Полное описание — docs/aalekh.md.
+  check-architecture:
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 — aalekhDiff сравнивает граф ветки с закоммиченным aalekh-snapshot.json,
+      # а комментарий в PR требует доступа к истории для корректного diff.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
+      - name: Architecture check (Aalekh)
+        run: ./gradlew aalekhCheck $gradleFlags
+      # Нарушения — инлайн-аннотациями прямо в диффе PR (SARIF).
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: build/reports/aalekh/aalekh-results.sarif
+          category: aalekh
+      # Интерактивный HTML-отчёт + метрики (CSV) как артефакт сборки.
+      - name: Generate interactive report
+        if: always()
+        run: ./gradlew aalekhReport $gradleFlags
+      - name: Upload Aalekh report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: aalekh-report
+          path: build/reports/aalekh/
+      # Что PR сделал с архитектурой (добавленные/удалённые рёбра, модули, циклы) — одним
+      # «липким» комментарием, который обновляется на каждый push, а не плодит новые.
+      - name: Architecture diff
+        if: github.event_name == 'pull_request'
+        run: ./gradlew aalekhDiff $gradleFlags
+      - name: Tag diff for a sticky comment
+        if: github.event_name == 'pull_request'
+        run: |
+          DIFF=build/reports/aalekh/aalekh-diff.md
+          if [ -f "$DIFF" ]; then
+            printf '<!-- aalekh-diff -->\n\n' | cat - "$DIFF" > "$DIFF.tmp" && mv "$DIFF.tmp" "$DIFF"
+          fi
+      - name: Find existing architecture comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/find-comment@v3
+        id: aalekh-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- aalekh-diff -->'
+      - name: Comment architecture diff on PR
+        if: ${{ github.event_name == 'pull_request' && hashFiles('build/reports/aalekh/aalekh-diff.md') != '' }}
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.aalekh-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: build/reports/aalekh/aalekh-diff.md
+          edit-mode: replace
 
   nav-graph:
     runs-on: ubuntu-latest
