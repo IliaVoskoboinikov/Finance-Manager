@@ -38,7 +38,7 @@ kotlinxSerialization = "1.11.0"
 
 # UI Libraries
 lottieCompose = "6.7.1"
-colorPicker = "1.2.0"
+colorPicker = "1.3.0"
 ycharts = "2.1.0"
 
 # Dependency Injection
