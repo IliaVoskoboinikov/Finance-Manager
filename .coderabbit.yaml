@@ -519,10 +519,14 @@ reviews:
 knowledge_base:
   code_guidelines:
     enabled: true
-    # По умолчанию CodeRabbit уже читает AGENTS.md и .github/copilot-instructions.md,
-    # но не файлы, на которые они ссылаются.
+    # По умолчанию CodeRabbit читает AGENTS.md и .github/copilot-instructions.md, но не файлы,
+    # на которые они ссылаются. Область применения задана явно: без applyTo гайд может
+    # действовать только на файлы своего каталога, а эти правила — для всего репозитория.
     filePatterns:
-      - "docs/agents/*.md"
+      - files: "docs/agents/*.md"
+        applyTo: "**/*"
+      - files: ".github/copilot-instructions.md"
+        applyTo: "**/*"
 
 code_generation:
   docstrings:
