@@ -66,7 +66,8 @@
 
 Улучшения:
 
-- [ ] Добавить AI-ревьюера
+- [x] Добавить AI-ревьюера — CodeRabbit (`.coderabbit.yaml`, общие правила в
+      `.github/copilot-instructions.md`)
 - [x] Настроить Dependabot/Renovate для автообновления зависимостей — `.github/renovate.json5`
       (нужно установить GitHub App **Mend Renovate** на репозиторий)
 - [x] Сканирование секретов (gitleaks) и уязвимых зависимостей (dependency-review
