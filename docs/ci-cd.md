@@ -47,6 +47,22 @@ Workflow разделены по назначению:
 actions мержатся автоматически, major — только через Dependency Dashboard.
 Требует установки GitHub App **Mend Renovate** на репозиторий.
 
+AI-ревью PR — **CodeRabbit** (бесплатен для публичных репозиториев). Это GitHub App, а не
+workflow: после установки приложения он ревьюит каждый PR, кроме черновиков и PR Renovate,
+и дообновляет ревью на каждый push. Ревью рекомендательное — мерж не блокирует, гейт
+качества остаётся за CI. Правила разложены по трём уровням:
+
+| Где | Что |
+|---|---|
+| [`.coderabbit.yaml`](../.coderabbit.yaml) | Настройки бота, правила по областям кода (`path_instructions`) и pre-merge проверки: версия БД при изменении схемы, `.nav`-бейзлайн, оформление нового модуля, пары строк `values` / `values-ru`. |
+| [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) | Общие правила ревью: шкала важности, что не комментировать, осознанные решения, инварианты. Читается и CodeRabbit, и Copilot. |
+| [`docs/agents/*.md`](./agents/) | Подробные гайды по областям — подключены как code guidelines. |
+
+Проверки, которые уже есть в CI (detekt, gitleaks, dependency-review), в боте выключены,
+чтобы не дублировать замечания; включены actionlint, zizmor и shellcheck — workflow и скрипты
+в CI больше никто не проверяет. В текстах инструкций `.coderabbit.yaml` нельзя использовать
+обратные кавычки, `${…}` и обратные слэши — CodeRabbit на них ломается.
+
 Общие настройки во всех workflow, запускающих Gradle:
 
 ```yaml
@@ -429,6 +445,8 @@ CI намеренно тонкий, поэтому «где что настро�
 | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | gitleaks + dependency-review. |
 | [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Граф зависимостей для Dependabot alerts. |
 | [`.github/renovate.json5`](../.github/renovate.json5) | Правила автообновления зависимостей и actions. |
+| [`.coderabbit.yaml`](../.coderabbit.yaml) | Настройки AI-ревьюера CodeRabbit и правила по областям кода. |
+| [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) | Общие правила AI-ревью PR. |
 | [`.github/actions/`](../.github/actions/) | Composite actions: setup, отчёты, доставка. |
 | [`konsist/`](../konsist/README.md) | Архитектурные тесты уровня классов. |
 | [`app/dependencies/`](../app/dependencies/) | Слепок release-classpath (dependency-guard). |

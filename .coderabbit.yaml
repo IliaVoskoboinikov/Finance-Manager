@@ -1,0 +1,507 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# Конфигурация AI-ревьюера CodeRabbit (бесплатен для публичных репозиториев).
+# Общие правила ревью — в .github/copilot-instructions.md и docs/agents/*.md: CodeRabbit
+# читает их как code guidelines. Здесь — настройки бота и правила по областям кода.
+# Описание и обоснование — docs/ci-cd.md, раздел про AI-ревью.
+#
+# В текстах инструкций нет обратных кавычек, выражений с долларом и фигурной скобкой
+# и обратных слэшей: по документации CodeRabbit они ломают разбор инструкций.
+
+language: ru-RU
+tone_instructions: >-
+  Пиши по-русски, кратко: проблема → чем грозит → как исправить. Без похвалы и воды.
+  Не дублируй то, что ловят ktlint, detekt, Android Lint и Konsist. Осознанные решения
+  проекта не оспаривай.
+
+reviews:
+  # chill — баланс между полнотой и шумом; assertive добавит мелких замечаний.
+  profile: chill
+  # Ревью рекомендательное: мерж не блокирует, гейт качества — CI.
+  request_changes_workflow: false
+  high_level_summary: true
+  sequence_diagrams: true
+  suggested_reviewers: false
+  in_progress_fortune: false
+  poem: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+    # PR обновления зависимостей проверяет CI (сборка, тесты, dependency-review).
+    ignore_usernames:
+      - "renovate[bot]"
+
+  path_filters:
+    # Сгенерированные карты модулей и навигации (PNG/HTML).
+    - "!docs/graphs/**"
+
+  tools:
+    # Уже работают в CI со своими конфигами — второй прогон дал бы дубли замечаний.
+    detekt:
+      enabled: false
+    gitleaks:
+      enabled: false
+    osvScanner:
+      enabled: false
+    # Шумят на русскоязычной документации и длинных строках YAML.
+    markdownlint:
+      enabled: false
+    languagetool:
+      enabled: false
+    yamllint:
+      enabled: false
+    # Workflow и скрипты в CI никто не линтует — здесь от бота реальная польза.
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    shellcheck:
+      enabled: true
+    github-checks:
+      enabled: true
+
+  pre_merge_checks:
+    # KDoc требуем только на публичном API (см. инструкции), а метрика покрытия по всем
+    # функциям дала бы ложные предупреждения на превью и приватных функциях.
+    docstrings:
+      mode: "off"
+    title:
+      mode: warning
+      requirements: >-
+        Conventional Commits: type(scope): описание. type — feat, fix, refactor, perf,
+        test, docs, ci, build, chore, style или revert; scope — затронутый модуль или
+        область, необязателен. Описание на русском, с маленькой буквы, без точки в конце.
+    custom_checks:
+      - name: "Версия БД при изменении схемы"
+        mode: warning
+        instructions: |
+          Проверь, меняет ли PR схему Room в core/database: добавляет, удаляет или
+          переименовывает поле класса с аннотацией @Entity, меняет тип поля, добавляет
+          или удаляет сущность в списке entities аннотации @Database, добавляет индекс.
+          Pass — схема не менялась, либо в этом же PR увеличено значение version
+          в аннотации @Database класса FinanceManagerDatabase.
+          Fail — схема изменилась, а version осталась прежней.
+      - name: "Бейзлайн графа навигации"
+        mode: warning
+        instructions: |
+          Проверь, меняет ли PR граф навигации: добавляет, удаляет или изменяет аннотации
+          @NavDestination, @NavEdge или @NavPreview, либо добавляет новые вызовы
+          navigator.goTo(...).
+          Pass — граф не менялся, либо в этом же PR изменены соответствующие файлы
+          */nav/*.nav (их генерирует ./gradlew navDump).
+          Fail — граф изменился, а .nav-файлы нет.
+      - name: "Новый модуль оформлен"
+        mode: warning
+        instructions: |
+          Проверь, добавляет ли PR новый Gradle-модуль: новый файл build.gradle.kts
+          вне каталога build-logic.
+          Pass — новых модулей нет, либо для каждого нового модуля в этом же PR
+          выполнено всё: модуль подключён в settings.gradle.kts, в каталоге модуля есть
+          README.md, ссылка на модуль добавлена в docs/modules.md.
+          Fail — хотя бы одно условие не выполнено.
+      - name: "Строки переведены"
+        mode: warning
+        instructions: |
+          Проверь строковые ресурсы. Если PR добавляет элемент string или plurals
+          с атрибутом name в res/values/strings.xml какого-либо модуля, ресурс с тем же
+          name должен существовать в res/values-ru/strings.xml того же модуля, и наоборот.
+          Pass — непарных новых ресурсов нет.
+          Fail — есть ресурс, добавленный только в одну из двух локалей.
+
+  path_instructions:
+    - path: "**/*.kt"
+      instructions: |
+        Общие правила Kotlin для всего проекта.
+        - Неизменяемость: val, data class, read-only коллекции в публичных сигнатурах;
+          изменяемое состояние (var, MutableList, MutableStateFlow) наружу не торчит.
+        - Деньги — только BigDecimal, никогда Double или Float. Сравнение — compareTo,
+          а не equals (scale: 100 и 100.00 не равны по equals); округление — с явным
+          RoundingMode.
+        - Даты — java.time; при переводе момента в дату и при сравнении периодов
+          учитывается таймзона.
+        - when по sealed-типам и enum — исчерпывающий, без else, чтобы новый вариант
+          ломал компиляцию, а не молча уходил в ветку по умолчанию.
+        - Оператор !! без очевидной гарантии — замечание: requireNotNull с сообщением,
+          элвис-оператор или ранний выход.
+        - catch (e: Exception), catch (e: Throwable) и runCatching внутри suspend-кода
+          глотают CancellationException — она должна пробрасываться. Правило detekt
+          SuspendFunSwallowedCancellation выключено, это зона ревью.
+        - GlobalScope и runBlocking в продуктовом коде — ошибка (detekt
+          GlobalCoroutineUsage выключен). Фоновая работа — через инжектированный скоуп
+          (@ApplicationScope) или AppCoroutineContext.
+        - Диспетчеры инжектятся квалификаторами @IoDispatcher и @MainImmediateDispatcher.
+        - Новые публичные классы и функции — с KDoc на русском, объясняющим «зачем».
+        - Нет println и printStackTrace; логирование — android.util.Log или ErrorLogger,
+          без токенов, PIN и персональных данных.
+
+    - path: "core/domain/**"
+      instructions: |
+        Domain-слой — чистый Kotlin.
+        - Никаких импортов android.*, Room, Retrofit, Gson, DataStore. Граф модулей
+          запрещает зависимости на data-модули, но импорт транзитивно доступного класса
+          ловит только ревью.
+        - Интерфейсы репозиториев и UseCase возвращают DomainResult или
+          Flow от DomainResult. Исключения наружу не бросаются; внешние ошибки приводятся
+          к DomainError (NoData, Unauthorized, OperationNotAllowed, NetworkUnavailable,
+          Unknown с причиной).
+        - UseCase — интерфейс плюс реализация в пакете impl, одна ответственность,
+          operator fun invoke. При комбинировании нескольких DomainResult возвращается
+          первая ошибка; ошибка не теряется и не превращается в пустой успех.
+        - Доменные модели — неизменяемые data class. Enum, приходящие извне, разбираются
+          безопасно, как AccountStatus.fromWire: неизвестное значение даёт безопасный
+          вариант по умолчанию, а не исключение.
+        - Логика UseCase покрывается тестами полностью: успех, пустые данные, каждая ветка
+          ошибки.
+
+    - path: "core/data/**"
+      instructions: |
+        Data-слой: репозитории, источники данных, sync-менеджеры, маппинг.
+        - DTO и Room Entity не выходят из data-слоя — наружу только доменные модели.
+          Маппинг — toDomain(), toEntity(), toDto(); проверь каждое поле, особенно
+          BigDecimal, даты, status, syncStatus, localId и serverId.
+        - Сеть — через safeApiCall, база — через safeDbCall и safeDbFlow: они переводят
+          исключения и HTTP-коды в DomainResult.Failure. Голый try/catch вокруг Retrofit
+          или Room — повод спросить, почему не helper.
+        - Offline-first: запись сначала в Room (единственный источник истины), UI получает
+          изменения из Flow базы, сеть — только синхронизация. Ошибка сети не ломает
+          чтение локальных данных.
+        - Раздельные localId и serverId: новая запись живёт без serverId до первой
+          синхронизации; поиск по серверному id не путается с локальным.
+        - Удаление мягкое: syncStatus = PENDING_DELETE до подтверждения сервером;
+          запросы для UI такие записи отфильтровывают.
+        - Конфликты — last-write-wins по updatedAt; порядок синхронизации:
+          категории → счета → транзакции.
+        - Многошаговые изменения (баланс счёта вместе с транзакцией) — атомарно через
+          RoomTransactionRunner или withTransaction. Внутри транзакции нельзя запускать
+          неоткатываемые эффекты (сетевой синк через AppCoroutineContext.launch) —
+          только после успешного коммита.
+        - Счёт: удаление и архивация — один запрос DELETE, решение принимает сервер.
+          Архивировать через PUT нельзя — он сбросит статус в Active;
+          UpdateAccountRequestDto не несёт status.
+        - Ошибки логируются через ErrorLogger без тел запросов, токенов и персональных
+          данных.
+        - Новые ветки репозиториев покрываются тестами маппинга и ошибок; фоновые блоки
+          проверяются через RecordingAppCoroutineContext.
+
+    - path: "core/database/**"
+      instructions: |
+        Room: FinanceManagerDatabase, сущности, DAO.
+        - Любое изменение схемы (поле @Entity, его тип, таблица, индекс) — в этом же PR
+          поднята version в @Database. Версия обязана оставаться строго больше
+          user_version предзаполненного ассета category_db.db (сейчас 1), иначе падение
+          на identity hash.
+        - fallbackToDestructiveMigration до релиза — осознанное решение. Если PR готовит
+          релиз, нужны настоящие Migration и тест на MigrationTestHelper.
+        - @ForeignKey и @Index не используются намеренно (offline-first, мягкие удаления,
+          порядок синка в коде) — не предлагай добавить FK. Индекс как оптимизация
+          допустим только с поднятием версии.
+        - core:database не зависит от core:domain: enum хранятся строкой (имя),
+          преобразование — в data-слое.
+        - DAO: чтение для UI — Flow, разовые операции — suspend; не LiveData и не
+          блокирующие вызовы.
+        - Даты в запросах сравниваются строками через date(..., 'localtime') — проверь
+          границы периода и поведение на смене суток.
+        - Новые DAO-методы покрываются Robolectric-тестами на in-memory базе (RoomDaoTest).
+
+    - path: "core/network/**"
+      instructions: |
+        Сеть: Retrofit + OkHttp + Gson.
+        - Два Retrofit: основной (с AuthInterceptor, TokenAuthenticator,
+          GuestAccessInterceptor) и базовый только для /auth/* без авторизационных
+          интерцепторов — иначе рекурсивный дедлок при обновлении токена. Новый
+          auth-эндпоинт живёт в базовом.
+        - В интерцепторах и Authenticator нет runBlocking: токен берётся синхронно
+          из состояния AuthStateHolder.
+        - LoggingInterceptor: уровень BODY только в debug, NONE в release; заголовок
+          Authorization и тела с персональными данными в логи не попадают.
+        - Наружу из data-слоя не выходят ни Retrofit Response, ни HttpException.
+        - Суммы в DTO — BigDecimal (BigDecimalTypeAdapter), не Double.
+        - Повтор запросов (RetryInterceptor) — только для временных ошибок;
+          неидемпотентный POST без ключа идемпотентности повторять опасно — возможны
+          дубли операций.
+        - Продакшн-трафик — HTTPS; cleartext допустим только для локального бэкенда
+          (BuildConfig.HOST).
+
+    - path: "core/security/**"
+      instructions: |
+        Криптография.
+        - Шифрование — только через CryptoManager (AES/GCM/NoPadding, ключ в Android
+          KeyStore). androidx.security.crypto (EncryptedSharedPreferences, MasterKey)
+          не использовать — библиотека deprecated.
+        - IV случайный и уникальный на каждое шифрование и хранится вместе
+          с шифротекстом; повтор IV с тем же ключом в GCM — критическая уязвимость.
+        - Ключи не экспортируются и не логируются. Ошибка расшифровки (например, после
+          сброса KeyStore) обрабатывается штатно, а не роняет приложение.
+
+    - path: "core/auth/**"
+      instructions: |
+        Сессия и токены.
+        - AuthStateHolder — единственный источник правды о сессии: события
+          обрабатываются последовательно под Mutex; состояние сначала обновляется
+          в памяти, затем побочные эффекты (DataStore, KeyStore, очистка БД); sendEvent —
+          suspend и дожидается эффектов.
+        - JWT хранится только зашифрованным через CryptoManager в DataStore.
+        - Любая правка переходов (OnLoginSuccess, OnLogout, OnSessionExpired, OnClearData)
+          проверяется на гонки и на то, что при истечении сессии приватные данные БД
+          очищаются. Новый переход — с тестом.
+
+    - path: "feature/security/**"
+      instructions: |
+        PIN и биометрия.
+        - PIN хешируется (PinHasher: PBKDF2 + соль), затем хеш шифруется CryptoManager
+          и хранится в SharedPreferences. Сырой PIN не сохраняется и не логируется.
+        - Хеши сравниваются за постоянное время (MessageDigest.isEqual), не через ==
+          или contentEquals.
+        - В presentation-слой не поднимаются ни PIN, ни хеш — наружу только verify(...).
+        - Типы android.hardware.biometrics.* не должны встречаться в сигнатурах функций
+          в одном файле с @Preview: headless-рендер карты навигации падает
+          с NoClassDefFoundError. Превью выносится в отдельный файл.
+
+    - path: "sync/**"
+      instructions: |
+        Фоновая синхронизация (WorkManager).
+        - Порядок шагов в SyncWorker фиксирован: категории → счета → транзакции. Ошибка
+          шага — Result.retry(); SetLastSyncTimeUseCase вызывается только после успеха
+          всех шагов.
+        - Работа ставится через DelegatingWorker с уникальными именами
+          (enqueueUniqueWork, enqueueUniquePeriodicWork) и осознанной политикой: KEEP для
+          периодической, REPLACE для разовой.
+        - Ограничения — SyncConstraints; долгая работа показывает foreground-уведомление.
+        - Диспетчер инжектится; в воркере нет runBlocking.
+
+    - path: "core/{workmanager,notifications}/**"
+      instructions: |
+        Общий WorkManager и уведомления.
+        - DelegatingWorker — общий посредник для :sync и :core:notifications; новый
+          воркер ставится через него, а не отдельной фабрикой.
+        - FirebaseMessaging внедряется как Provider: прямое внедрение дёргает SDK при
+          сборке Hilt-графа и роняет процессы без Firebase, включая Robolectric-тесты.
+        - Проверка POST_NOTIFICATIONS (checkSelfPermission) стоит прямо в месте показа:
+          lint MissingPermission не видит межпроцедурный поток. Отказ в разрешении —
+          штатный сценарий, без падений.
+        - Новое уведомление не затирает другие (уникальный id); пуш без текста
+          игнорируется.
+        - onNewToken не делает сетевой вызов напрямую — только ставит задачу
+          в WorkManager: сети может не быть, а токен терять нельзя.
+
+    - path: "feature/*/api/**"
+      instructions: |
+        Публичный контракт фичи.
+        - Здесь только NavKey-ключи, интерфейс NameFeatureApi (наследник FeatureApi)
+          и минимальные публичные модели. Никакого UI, ViewModel и DI-модулей.
+        - Ключ помечен @Serializable (без этого приложение падает при сохранении back
+          stack); поля — id и примитивы. Нельзя класть лямбды, Context, доменные модели
+          целиком.
+        - Ключи с разными аргументами различаются по equals (data class или data object),
+          иначе ViewModel не пересоздаётся при смене аргумента.
+        - :api не зависит от других фич. Изменение ключа — изменение публичного API:
+          проверь всех пользователей и keep-правила R8 в app/proguard-rules.pro.
+
+    - path: "feature/*/impl/**"
+      instructions: |
+        Реализация фичи: экраны, ViewModel, DI.
+
+        Навигация
+        - registerEntries в NameFeatureImpl регистрирует только свои ключи: один ключ —
+          ровно один entry во всём приложении. Переход к другой фиче —
+          navigator.goTo(ЕёKey), назад — navigator::back. NavBackStack и NavDisplay фиче
+          недоступны.
+        - Зависимости — только на :api других фич, не на их :impl и не на их
+          screen-композаблы.
+        - Экран размечен для карты навигации: @NavDestination(route = XKey::class) на
+          composable экрана, по одному @NavEdge(to = ..., label = "...") на каждый goTo,
+          @NavPreview(route = XKey::class, primary = true) на основном превью. Изменение
+          графа сопровождается обновлённым nav/*.nav в этом же PR — navCheck в CI не
+          запускается.
+
+        ViewModel
+        - @HiltViewModel; аргументы навигации — через @AssistedInject + @AssistedFactory
+          и hiltViewModel с фабрикой, не через SavedStateHandle.
+        - Состояние — StateFlow с UiState на sealed-иерархии (Loading, Success, Error,
+          Empty), обычно через stateIn(viewModelScope, WhileSubscribed(DEFAULT_STOP_TIMEOUT_MS), ...);
+          наружу только read-only StateFlow.
+        - Одноразовые события через MutableSharedFlow теряются, если в момент эмиссии нет
+          подписчика, — проверь, что потеря безопасна или событие не уходит до подписки.
+        - DomainResult маппится в UiState через fold, onSuccess, onFailure; ошибка
+          показывается через @StringRes, а не текстом исключения.
+        - В ViewModel нет Context, Resources, View-типов и бизнес-логики, которой место
+          в UseCase. Диспетчер — @IoDispatcher CoroutineDispatcher из конструктора.
+        - Новые состояния и события ViewModel покрыты тестами.
+
+        DI
+        - Интерфейс → реализация через @Binds; @Provides — только для внешних классов.
+          Фича попадает в граф через @Binds @IntoSet в app/di/FeatureNavigationModule.kt.
+
+    - path: "{feature/*/impl,core/uikit,app}/src/main/**/*.kt"
+      instructions: |
+        Jetpack Compose — для файлов с @Composable. Compose-правила detekt
+        (io.nlopez.compose.rules) в проекте не подключены, поэтому это зона ревью.
+        - Экран делится на XScreen (берёт ViewModel, собирает состояние через
+          collectAsStateWithLifecycle()) и stateless XContent(uiState, on...).
+          Компоненты получают значения и лямбды; состояние поднято наверх.
+        - Composable, который что-то рисует, принимает modifier: Modifier = Modifier
+          первым необязательным параметром и применяет его к корневому элементу ровно
+          один раз.
+        - Параметры стабильны: неизменяемые data class или @Immutable, без изменяемых
+          коллекций; лишние лямбды не пересоздаются на каждой рекомпозиции.
+        - Дорогие вычисления — в remember с ключами или derivedStateOf, а лучше
+          в ViewModel; в теле composable нет IO, сортировок и форматирования больших
+          списков.
+        - LazyColumn и LazyRow: у items есть стабильный key (id), для разнородных
+          элементов — contentType.
+        - Эффекты: LaunchedEffect и DisposableEffect с правильными ключами;
+          LaunchedEffect(Unit), зависящий от меняющихся значений, — ошибка; лямбды
+          в долгоживущих эффектах — через rememberUpdatedState.
+        - Ввод пользователя и UI-состояние, которое должно пережить поворот, —
+          rememberSaveable.
+        - Тексты — stringResource; цвета, типографика и отступы — из темы и компонентов
+          core:uikit, без захардкоженных цветов и размеров шрифта. Компонент, нужный
+          нескольким фичам, выносится в core:uikit.
+        - Доступность: contentDescription у информативных иконок и изображений (null —
+          только у декоративных), область касания не меньше 48dp.
+        - У нового экрана и компонента есть @Preview (светлая и тёмная тема, где уместно —
+          крупный шрифт). Превью DI-free: рисует XContent с mock-состоянием, а не
+          XScreen() с hiltViewModel(). @Preview не лежит в одном файле с функцией, чья
+          сигнатура ссылается на android.hardware.*.
+
+    - path: "core/uikit/**"
+      instructions: |
+        Дизайн-система.
+        - Компоненты не знают о доменных моделях, ViewModel и навигации — принимают
+          примитивы, UI-модели и лямбды.
+        - Цвета, типографика и формы — через MaterialTheme и токены темы, с поддержкой
+          светлой и тёмной схемы.
+        - Публичный компонент — с KDoc и @Preview. Изменение его сигнатуры затрагивает
+          все фичи — проверь вызовы.
+
+    - path: "app/**"
+      instructions: |
+        Модуль приложения: точка входа, корневая навигация, сборка DI-графа.
+        - Граф навигации собирается из Set of FeatureApi (di/FeatureNavigationModule.kt,
+          @Binds @IntoSet); фича без привязки — падение «нет NavEntry для ключа».
+        - Back stack создаются через rememberNavBackStack (не remember); NavDisplay
+          получает rememberSaveableStateHolderNavEntryDecorator() и
+          rememberViewModelStoreNavEntryDecorator().
+        - Переходы, которыми владеет хост (RootNavDisplay: старт → авторизация → главный
+          экран), размечены @NavEdge с явным from.
+        - proguard-rules.pro: новые @Serializable-ключи, DTO под Gson и классы Room должны
+          попадать под keep-правила. R8 включён в release, а assembleRelease в CI на PR
+          не собирается — ошибки всплывут только при релизе.
+        - Манифест: allowBackup="false" и правила бэкапа не ослабляются (финансовые
+          данные); новые exported="true" компоненты и разрешения — с обоснованием;
+          usesCleartextTraffic допустим, только пока бэкенд локальный.
+
+    - path: "**/src/{test,androidTest}/**"
+      instructions: |
+        Тесты.
+        - Стек: JUnit 4, MockK, AssertJ, kotlinx-coroutines-test, Robolectric для Room,
+          WorkManager и системных API. JUnit 5, Mockito, Truth и прочие новые библиотеки
+          без веской причины не подключать.
+        - Проверяется поведение, а не реализация: успех, граничные случаи (пустые списки,
+          null, ноль, отрицательные суммы, границы периода), ошибки (DomainError, сеть,
+          401).
+        - Корутины: runTest; диспетчер передаётся в конструктор (UnconfinedTestDispatcher
+          или StandardTestDispatcher); Dispatchers.setMain в @Before и resetMain
+          в @After. Никаких Thread.sleep и реальных задержек.
+        - mockkStatic и mockkObject парятся с unmockk в @After.
+        - BigDecimal сравнивается через isEqualByComparingTo.
+        - Фоновые блоки репозиториев — через RecordingAppCoroutineContext (runAll()).
+        - Время и даты не зависят от таймзоны машины.
+        - Имя теста описывает сценарий; один тест — одно поведение. Тест без проверок
+          или проверяющий собственный мок — замечание.
+
+    - path: "{**/*.gradle.kts,gradle/libs.versions.toml,build-logic/**}"
+      instructions: |
+        Сборка.
+        - Модули подключают convention-плагины soft.divan.* (soft.divan.core,
+          soft.divan.jvm.library, soft.divan.feature.api, soft.divan.feature.impl,
+          soft.divan.android.app и другие); то, что даёт плагин, в модуле не повторяется.
+        - Версии — только через gradle/libs.versions.toml; захардкоженная версия
+          в build.gradle.kts — замечание.
+        - Направление зависимостей: core:* не зависит от feature:* и app;
+          feature:*:impl — от чужого :impl; :core:domain — от data-модулей. Это проверяют
+          :app:assertModuleGraph и CheckConventionsPlugin, но если правка к этому ведёт —
+          объясни автору заранее.
+        - По умолчанию implementation; api — только когда тип зависимости виден
+          в публичном API модуля. Кодогенерация — KSP, не kapt.
+        - Изменение release-classpath требует обновить слепок app/dependencies/
+          (dependencyGuard).
+        - Изменения в build-logic покрываются тестами (ProjectBuilder, Gradle TestKit).
+
+    - path: ".github/**"
+      instructions: |
+        GitHub Actions.
+        - Данные событий (github.event.*, github.head_ref, входы composite actions) не
+          подставляются выражением GitHub прямо в текст run: — только через env:
+          и обращение к переменной в двойных кавычках, иначе shell-инъекция. В
+          send-file-tg такая проблема уже есть — не копировать паттерн.
+        - У workflow явный минимальный блок permissions:; pull_request_target — только
+          с серьёзным обоснованием.
+        - Секреты не печатаются ни в лог, ни в Step Summary.
+        - Новые сторонние actions — с обоснованием; версии запинены.
+        - Gradle в джобах — через composite action android-setup и флаги gradleFlags.
+        - У долгих джоб есть timeout-minutes; отчёты публикуются с if: always().
+        - Изменение пайплайна отражается в docs/ci-cd.md.
+
+    - path: "**/*.md"
+      instructions: |
+        Документация.
+        - Язык — русский. Дизайн-документы в docs/ — уровня «почему и как связаны части»,
+          с mermaid-схемами и таблицей «Ключевые файлы».
+        - Документ не противоречит коду из этого же PR (имена классов, пороги, команды),
+          относительные ссылки ведут на существующие файлы.
+        - Новый документ в docs/ добавлен в docs/README.md; изменённый модуль —
+          с обновлённым README.md.
+        - Не придирайся к стилю и форматированию Markdown.
+
+    - path: "**/nav/*.nav"
+      instructions: |
+        Сгенерированный слепок графа навигации (./gradlew navDump) — руками не правится,
+        правки в самом файле не предлагай. Проверь, что изменения dest и edge
+        соответствуют аннотациям @NavDestination и @NavEdge и вызовам navigator.goTo
+        в этом PR и что новые переходы ожидаемы.
+
+    - path: "app/dependencies/**"
+      instructions: |
+        Сгенерированный слепок release-classpath (dependency-guard) — руками не правится.
+        Обрати внимание на неожиданные новые runtime-зависимости и смену мажорных версий.
+
+    - path: "**/res/values*/strings.xml"
+      instructions: |
+        Строковые ресурсы. Новая строка есть и в values/ (английский), и в values-ru/;
+        перевод осмысленный. Без конкатенации — позиционные плейсхолдеры и plurals для
+        чисел; суммы и даты форматируются кодом, а не вклеиваются строкой.
+
+    - path: "lint/**"
+      instructions: |
+        Кастомные Android Lint-проверки. Детектор зарегистрирован в FmIssueRegistry,
+        у Issue понятные id, описание и severity, где возможно — quick fix. Каждый
+        детектор покрыт тестами lint-tests с позитивными и негативными случаями.
+
+    - path: "konsist/**"
+      instructions: |
+        Архитектурные тесты Konsist. У правила есть KDoc с объяснением «зачем»; оно
+        не дублирует assertModuleGraph, CheckConventionsPlugin или lint без причины
+        и не проходит молча на пустом scope.
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    # По умолчанию CodeRabbit уже читает AGENTS.md и .github/copilot-instructions.md,
+    # но не файлы, на которые они ссылаются.
+    filePatterns:
+      - "docs/agents/*.md"
+
+code_generation:
+  docstrings:
+    language: ru-RU
+  unit_tests:
+    path_instructions:
+      - path: "**/*.kt"
+        instructions: |
+          JUnit 4 + MockK + AssertJ + kotlinx-coroutines-test; Robolectric — только для
+          Room, WorkManager и системных API. Диспетчер передаётся в конструктор, BigDecimal
+          сравнивается через isEqualByComparingTo, имя теста описывает сценарий. Покрывай
+          успех, граничные случаи и каждую ветку DomainError.
