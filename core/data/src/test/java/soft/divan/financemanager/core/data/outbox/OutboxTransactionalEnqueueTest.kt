@@ -15,6 +15,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import soft.divan.financemanager.core.data.source.impl.OutboxLocalDataSourceImpl
+import soft.divan.financemanager.core.data.testing.OpenDatabaseHolder
 import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
 import soft.divan.financemanager.core.data.transaction.impl.RoomTransactionRunner
 import soft.divan.financemanager.core.data.transaction.rollbackOnError
@@ -76,9 +77,9 @@ class OutboxTransactionalEnqueueTest {
             FinanceManagerDatabase::class.java
         ).allowMainThreadQueries().build()
 
-        runner = RoomTransactionRunner(db, NoopAppCoroutineContext())
+        runner = RoomTransactionRunner(OpenDatabaseHolder(db), NoopAppCoroutineContext())
         enqueuer = OutboxEnqueuer(
-            localDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
+            localDataSource = OutboxLocalDataSourceImpl(OpenDatabaseHolder(db)),
             gson = Gson(),
             clock = Clock.fixed(now, ZoneOffset.UTC),
             appCoroutineContext = NoopAppCoroutineContext(),
@@ -161,10 +162,10 @@ class OutboxTransactionalEnqueueTest {
         // ещё не зафиксированную запись (то же соединение Room) и отправил бы её на сервер до
         // commit — при откате получился бы ровно тот фантом, от которого защищает outbox.
         val context = CollectingAppCoroutineContext()
-        val localRunner = RoomTransactionRunner(db, context)
+        val localRunner = RoomTransactionRunner(OpenDatabaseHolder(db), context)
         val processor = mockk<OutboxProcessor>(relaxed = true)
         val localEnqueuer = OutboxEnqueuer(
-            localDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
+            localDataSource = OutboxLocalDataSourceImpl(OpenDatabaseHolder(db)),
             gson = Gson(),
             clock = Clock.fixed(now, ZoneOffset.UTC),
             appCoroutineContext = context,

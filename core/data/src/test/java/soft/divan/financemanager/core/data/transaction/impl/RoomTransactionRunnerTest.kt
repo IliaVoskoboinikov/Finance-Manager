@@ -11,6 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import soft.divan.financemanager.core.data.testing.OpenDatabaseHolder
 import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
 import soft.divan.financemanager.core.data.transaction.rollbackOnError
 import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
@@ -49,7 +50,7 @@ class RoomTransactionRunnerTest {
             RuntimeEnvironment.getApplication(),
             FinanceManagerDatabase::class.java
         ).allowMainThreadQueries().build()
-        runner = RoomTransactionRunner(db, appContext)
+        runner = RoomTransactionRunner(OpenDatabaseHolder(db), appContext)
     }
 
     @After

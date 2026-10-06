@@ -557,14 +557,15 @@ class OutboxDaoTest : RoomDaoTest() {
     }
 
     @Test
-    fun `deleteAll empties the queue`() = runTest {
-        dao.insert(entry("T1"))
-        dao.insert(entry("T2", status = OutboxStatus.FAILED))
+    fun `countUnsent counts operations still on their way`() = runTest {
+        assertThat(dao.countUnsent()).isZero()
+        dao.insert(entry("pending"))
+        dao.insert(entry("in-progress", status = OutboxStatus.IN_PROGRESS))
+        dao.insert(entry("done", status = OutboxStatus.COMPLETED))
+        dao.insert(entry("failed", status = OutboxStatus.FAILED))
 
-        dao.deleteAll()
-
-        assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10)).isEmpty()
-        assertThat(dao.observeFailedCount().first()).isZero()
+        // Dead-letter автоматически не уедет никогда — его в пути не считаем
+        assertThat(dao.countUnsent()).isEqualTo(2)
     }
 
     /* ---------- сохранность полей ---------- */

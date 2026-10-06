@@ -1,15 +1,11 @@
 package soft.divan.financemanager.core.network.di
 
-import android.content.Context
-import io.mockk.every
 import io.mockk.mockk
 import okhttp3.Authenticator
 import okhttp3.Interceptor
 import okhttp3.logging.HttpLoggingInterceptor
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 import soft.divan.financemanager.core.network.BuildConfig
 import soft.divan.financemanager.core.network.interceptor.AuthInterceptor
 import soft.divan.financemanager.core.network.interceptor.LoggingInterceptor
@@ -19,27 +15,12 @@ import soft.divan.financemanager.core.network.util.ConnectivityManagerNetworkMon
 
 class NetworkProviderModuleTest {
 
-    @get:Rule
-    val tempFolder = TemporaryFolder()
-
     private val authInterceptor = mockk<Interceptor>()
     private val networkInterceptor = mockk<Interceptor>()
     private val retryInterceptor = mockk<Interceptor>()
     private val guestInterceptor = mockk<Interceptor>()
     private val loggingInterceptor = HttpLoggingInterceptor()
     private val authenticator = mockk<Authenticator>()
-
-    @Test
-    fun `provideCache creates 10MB cache in http_cache dir`() {
-        val context = mockk<Context> {
-            every { cacheDir } returns tempFolder.root
-        }
-
-        val cache = NetworkProviderModule.provideCache(context)
-
-        assertThat(cache.maxSize()).isEqualTo(10L * 1024 * 1024)
-        assertThat(cache.directory.name).isEqualTo("http_cache")
-    }
 
     @Test
     fun `interceptor factories create project interceptors`() {
@@ -71,18 +52,14 @@ class NetworkProviderModuleTest {
     }
 
     @Test
-    fun `main client wires interceptors in safety order with authenticator and cache`() {
-        val context = mockk<Context> { every { cacheDir } returns tempFolder.root }
-        val cache = NetworkProviderModule.provideCache(context)
-
+    fun `main client wires interceptors in safety order with authenticator and no cache`() {
         val client = NetworkProviderModule.provideOkHttpClient(
             auth = authInterceptor,
             network = networkInterceptor,
             retry = retryInterceptor,
             guest = guestInterceptor,
             loggingInterceptor = loggingInterceptor,
-            authenticator = authenticator,
-            cache = cache
+            authenticator = authenticator
         )
 
         // network → guest → auth → retry → logging: гость блокируется до авторизации,
@@ -95,7 +72,8 @@ class NetworkProviderModuleTest {
             loggingInterceptor
         )
         assertThat(client.authenticator).isSameAs(authenticator)
-        assertThat(client.cache).isSameAs(cache)
+        // Ответы API с суммами не должны оседать на диске открытым текстом
+        assertThat(client.cache).isNull()
     }
 
     @Test

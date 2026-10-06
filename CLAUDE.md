@@ -20,7 +20,8 @@ DB migration rules below).
   ключи сериализуются kotlinx.serialization.
 - **Architecture:** Clean Architecture + MVVM + Unidirectional Data Flow (UDF), offline-first.
 - **DI:** Dagger Hilt `2.59.2`. **Async:** Coroutines + Flow.
-- **Storage:** Room `2.8.4` (`FinanceManagerDatabase`, SSOT) + DataStore.
+- **Storage:** Room `2.8.4` (`FinanceManagerDatabase`, SSOT) on SQLCipher `4.17.0`
+  (`sqlcipher-android`; 4.18+ needs `compileSdk 37`) + DataStore.
 - **Network:** Retrofit + OkHttp + Gson; custom interceptors (Auth, Retry, NetworkConnection, Logging).
 - **Background:** WorkManager (`:sync`). **Security:** `core:security` `CryptoManager` (AES/GCM + KeyStore).
 - **Quality:** Detekt, ktlint, Android Lint + custom lint rules (`:lint`).
@@ -101,11 +102,15 @@ category → account → transaction sync order + last-write-wins are handled in
 
 ## Non-obvious constraints
 
-- **DB migrations:** pre-release the DB uses `fallbackToDestructiveMigration`. The `@Database`
-  version MUST stay strictly greater than the prepackaged `category_db.db` asset's
-  `user_version` (currently 1), or Room fails at runtime with an identity-hash mismatch.
-  Adding an index = schema change = version bump. Real `Migration`s + migration tests are
-  required before release (`exportSchema = true`).
+- **DB migrations:** real `Migration`s only — base schema v8, exported to
+  `core/database/schemas`. Any schema change (an index too) = version bump + `Migration` in
+  `DatabaseMigrations.ALL` + test in `MigrationTest`; no destructive fallback on upgrade.
+  Default categories are seeded in code (`SeedDatabaseCallback`), there is no DB asset.
+- **DB access & encryption:** the database is SQLCipher-encrypted and can be closed (PIN level,
+  auto-lock, wipe), so DAOs are **not** injectable — go through `DatabaseHolder`
+  (`withDatabase {}` for one-shot calls, `observe {}` for flows). Database keys live in
+  `core:security` (`DekEnvelope`, `KeysetStore`) and change only via `core:data` `VaultCore`
+  (verify → atomic write → delete old Keystore aliases). See `docs/encryption.md`.
 - **Layer isolation:** never leak Room `Entity`, Retrofit `Response`/DTOs, or `HttpException`
   past the data layer. Map with `toDomain()` / `toEntity()` / `toDto()`. No business logic in UI.
 - **Custom lint:** the `:lint` module enforces project rules — e.g. `OldDate` bans
@@ -114,6 +119,7 @@ category → account → transaction sync order + last-write-wins are handled in
   deprecated `androidx.security.crypto`. JWT is encrypted → DataStore (`core:auth`); PIN is
   hashed (PBKDF2 + salt) then the hash encrypted → SharedPreferences (`feature:security`).
   Never lift a raw secret/PIN into the presentation layer — expose only `verify(...)`.
+  Never silently recreate a lost database Keystore key — that is `LocalDataState.KeyLost`.
 - **Coroutines:** inject `CoroutineDispatcher`; never hardcode `Dispatchers.IO`/`Default` or
   use `GlobalScope`. Collect flows in UI with `collectAsStateWithLifecycle()`.
 - **Editing:** never mutate source with shell `sed`/`awk`/`echo >` — use the Edit/Write tools.

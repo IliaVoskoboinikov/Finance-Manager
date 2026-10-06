@@ -7,7 +7,7 @@ import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
 import soft.divan.financemanager.core.data.transaction.TransactionRollbackException
 import soft.divan.financemanager.core.data.transaction.TransactionRunner
 import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
-import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
+import soft.divan.financemanager.core.database.holder.DatabaseHolder
 import soft.divan.financemanager.core.domain.result.DomainResult
 import javax.inject.Inject
 
@@ -26,9 +26,13 @@ import javax.inject.Inject
  *
  * Гарантию доставки при крэше между commit и диспатчем обеспечивает не эта очередь,
  * а `syncStatus = PENDING_*` + фоновый синк: немедленный пуш — только оптимизация.
+ *
+ * База берётся из [DatabaseHolder] на всю транзакцию: аренда не даёт закрыть её посередине, а
+ * репозитории внутри блока видят эту аренду и работают с тем же экземпляром. Закрытая база —
+ * `DatabaseLockedException`, как любая другая ошибка базы на старте транзакции.
  */
 class RoomTransactionRunner @Inject constructor(
-    private val db: FinanceManagerDatabase,
+    private val holder: DatabaseHolder,
     private val appCoroutineContext: AppCoroutineContext
 ) : TransactionRunner {
 
@@ -44,8 +48,10 @@ class RoomTransactionRunner @Inject constructor(
         val postCommitQueue = PostCommitSyncQueue()
         return try {
             val result = withContext(postCommitQueue) {
-                db.withTransaction {
-                    block()
+                holder.withDatabase { db ->
+                    db.withTransaction {
+                        block()
+                    }
                 }
             }
             // Commit прошёл — запускаем отложенные синки. При rollback сюда не попадаем,
@@ -73,5 +79,5 @@ class RoomTransactionRunner @Inject constructor(
      * равно откатилась бы — состояние и результат разошлись бы.
      */
     private suspend fun <T> joinOuterTransaction(block: suspend () -> T): T =
-        db.withTransaction { block() }
+        holder.withDatabase { db -> db.withTransaction { block() } }
 }

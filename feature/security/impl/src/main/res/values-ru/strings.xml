@@ -12,4 +12,75 @@
     <string name="security">Безопасность</string>
     <string name="pin_codes_do_not_match">PIN-коды не совпадают</string>
     <string name="wrong_pin">Неверный PIN, попробуйте снова</string>
+
+    <!-- Экран замка -->
+    <string name="use_pin_instead">Ввести PIN</string>
+    <string name="unlock_with_biometrics">Войти по биометрии</string>
+    <string name="erase_digit">Стереть цифру</string>
+    <string name="forgot_pin">Забыли PIN?</string>
+    <string name="wrong_pin_last_attempt">Неверный PIN. Осталась последняя попытка — после неё данные будут стёрты</string>
+    <string name="pin_last_attempt_warning">Осталась последняя попытка — после неё данные будут стёрты</string>
+    <plurals name="wrong_pin_attempts_left">
+        <item quantity="one">Неверный PIN. Осталась %d попытка</item>
+        <item quantity="few">Неверный PIN. Осталось %d попытки</item>
+        <item quantity="many">Неверный PIN. Осталось %d попыток</item>
+        <item quantity="other">Неверный PIN. Осталось %d попытки</item>
+    </plurals>
+    <string name="pin_locked_out">Слишком много попыток. Повторите через %1$s</string>
+    <string name="biometric_invalidated">Вход по отпечатку отключён: на устройстве изменились отпечатки. Войдите по PIN и включите его снова в настройках.</string>
+    <string name="forgot_pin_title">Сбросить PIN?</string>
+    <string name="forgot_pin_message">Чтобы сбросить PIN, данные на этом устройстве будут удалены, а вы выйдете из аккаунта. После входа данные загрузятся с сервера. Изменения, которые не успели отправиться, пропадут.</string>
+    <string name="forgot_pin_message_guest">Чтобы сбросить PIN, все данные будут удалены. В гостевом режиме они хранятся только на этом устройстве — восстановить их будет нельзя.</string>
+    <string name="wipe_data_action">Удалить данные</string>
+    <string name="data_wiped">Данные на этом устройстве удалены</string>
+
+    <!-- Ключ утерян -->
+    <string name="key_lost_title">Данные недоступны</string>
+    <string name="key_lost_message">Ключ шифрования данных на этом устройстве утерян — например, после сброса блокировки экрана или восстановления системы. Прочитать сохранённые данные больше нельзя.</string>
+    <string name="key_lost_retry">Попробовать снова</string>
+    <string name="key_lost_wipe">Удалить данные и начать заново</string>
+    <string name="key_lost_wipe_message">Недоступные данные будут удалены. Данные снова загрузятся с сервера; изменения, которые не успели отправиться, пропадут.</string>
+    <string name="key_lost_wipe_message_guest">Недоступные данные будут удалены. В гостевом режиме они хранятся только на этом устройстве — восстановить их будет нельзя.</string>
+
+    <!-- Настройки безопасности -->
+    <string name="section_data_protection">Защита данных</string>
+    <string name="section_pin">PIN-код</string>
+    <string name="section_screen">Экран</string>
+    <string name="level_none_title">Без защиты ключа</string>
+    <string name="level_none_description">Файл данных зашифрован, но ключ хранится рядом с ним. Защищает только от чтения одного файла базы.</string>
+    <string name="level_device_title">Ключ устройства (рекомендуется)</string>
+    <string name="level_device_description">Ключ хранится в защищённом хранилище Android. Скопированные с телефона файлы без него бесполезны. Фоновая синхронизация работает.</string>
+    <string name="level_pin_title">PIN-код</string>
+    <string name="level_pin_description">Данные открываются только по PIN или отпечатку. Фоновой синхронизации нет, забытый PIN означает стирание данных.</string>
+    <string name="change_pin">Сменить PIN</string>
+    <string name="enter_current_pin">Введите текущий PIN</string>
+    <string name="come_up_with_new_pin">Придумайте новый PIN</string>
+    <string name="biometric_unlock_title">Вход по отпечатку</string>
+    <string name="biometric_unlock_description">Отпечаток открывает данные вместо PIN</string>
+    <string name="secure_screen_title">Скрывать содержимое</string>
+    <string name="secure_screen_description">Запрещает скриншоты и прячет приложение в списке недавних</string>
+    <string name="confirm_level_none_title">Хранить ключ без защиты?</string>
+    <string name="confirm_level_none_message">Ключ шифрования будет лежать рядом с данными. Любой, кто скопирует файлы приложения, сможет их прочитать.</string>
+    <string name="confirm_level_device_title">Отключить защиту PIN-кодом?</string>
+    <string name="confirm_level_device_message">Данные будут открываться без PIN, фоновая синхронизация возобновится. PIN останется замком приложения.</string>
+    <string name="confirm_level_pin_title">Защитить данные PIN-кодом?</string>
+    <string name="confirm_level_pin_message">Данные будут открываться только по PIN или отпечатку.\n\n• Фоновая синхронизация остановится: данные синхронизируются, только пока приложение открыто.\n• Если забыть PIN, данные придётся стереть и войти в аккаунт заново.</string>
+    <string name="confirm_level_pin_guest_warning">Вы в гостевом режиме: данные хранятся только на этом устройстве, и при забытом PIN они будут потеряны безвозвратно.</string>
+    <string name="continue_action">Продолжить</string>
+    <string name="unsent_changes_title">Изменения не отправлены</string>
+    <string name="unsent_changes_message">Защита PIN-кодом не включена: на этом уровне нет фоновой синхронизации, и неотправленные изменения зависли бы. Подключитесь к сети и попробуйте снова.</string>
+    <string name="ok_action">Понятно</string>
+    <string name="offer_biometric_title">Входить по отпечатку?</string>
+    <string name="offer_biometric_message">Отпечаток откроет данные вместо PIN. Если отпечатки на устройстве изменятся, останется вход по PIN.</string>
+    <string name="enable_action">Включить</string>
+    <string name="not_now_action">Не сейчас</string>
+    <string name="enable_biometric_title">Вход по отпечатку</string>
+    <string name="enable_biometric_subtitle">Подтвердите, чтобы открывать данные отпечатком</string>
+    <string name="message_level_changed">Защита данных изменена</string>
+    <string name="message_change_failed">Не удалось изменить защиту. Попробуйте ещё раз</string>
+    <string name="message_pin_changed">PIN изменён</string>
+    <string name="message_pin_deleted">PIN удалён</string>
+    <string name="message_delete_not_allowed">Сначала отключите защиту данных PIN-кодом</string>
+    <string name="message_biometric_enabled">Вход по отпечатку включён</string>
+    <string name="message_biometric_failed">Не удалось включить вход по отпечатку</string>
 </resources>

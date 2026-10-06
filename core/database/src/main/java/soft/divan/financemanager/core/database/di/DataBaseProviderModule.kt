@@ -1,61 +1,20 @@
 package soft.divan.financemanager.core.database.di
 
-import android.content.Context
-import androidx.room.Room
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import soft.divan.financemanager.core.database.dao.AccountDao
-import soft.divan.financemanager.core.database.dao.CategoryDao
-import soft.divan.financemanager.core.database.dao.CurrencyDao
-import soft.divan.financemanager.core.database.dao.OutboxDao
-import soft.divan.financemanager.core.database.dao.TransactionDao
-import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
-import soft.divan.financemanager.core.database.util.DatabaseCleanupManager
-import soft.divan.financemanager.core.database.util.DatabaseCleanupManagerImpl
-import javax.inject.Singleton
+import soft.divan.financemanager.core.database.holder.DatabaseFactory
+import soft.divan.financemanager.core.database.holder.SqlCipherDatabaseFactory
 
+/**
+ * База больше не синглтон Hilt: её открывает и закрывает `DatabaseHolder` (провайдер — в
+ * `:core:data`, рядом с ключами). Отсюда — только способ открыть файл.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
-object DataBaseProviderModule {
+interface DataBaseProviderModule {
 
-    @Provides
-    @Singleton
-    fun provideDatabase(
-        @ApplicationContext context: Context
-    ): FinanceManagerDatabase =
-        Room.databaseBuilder(context, FinanceManagerDatabase::class.java, "finance_manager_db.db")
-            .fallbackToDestructiveMigration(true)
-            .createFromAsset("database/category_db.db")
-            .build()
-
-    @Provides
-    @Singleton
-    fun provideTransactionDao(db: FinanceManagerDatabase): TransactionDao = db.transactionDao()
-
-    @Provides
-    @Singleton
-    fun provideCategoryDao(db: FinanceManagerDatabase): CategoryDao = db.categoryDao()
-
-    @Provides
-    @Singleton
-    fun provideAccountDao(db: FinanceManagerDatabase): AccountDao = db.accountDao()
-
-    @Provides
-    @Singleton
-    fun provideCurrencyDao(db: FinanceManagerDatabase): CurrencyDao = db.currencyDao()
-
-    @Provides
-    @Singleton
-    fun provideOutboxDao(db: FinanceManagerDatabase): OutboxDao = db.outboxDao()
-
-    @Provides
-    @Singleton
-    fun provideDatabaseCleanupManager(
-        accountDao: AccountDao,
-        transactionDao: TransactionDao,
-        outboxDao: OutboxDao
-    ): DatabaseCleanupManager = DatabaseCleanupManagerImpl(accountDao, transactionDao, outboxDao)
+    @Binds
+    fun bindDatabaseFactory(impl: SqlCipherDatabaseFactory): DatabaseFactory
 }

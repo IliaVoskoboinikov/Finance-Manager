@@ -14,7 +14,9 @@ import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import soft.divan.financemanager.feature.security.impl.R
 import soft.divan.financemanager.feature.security.impl.presenter.util.Dimens
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
@@ -31,10 +33,25 @@ fun PreviewKeyboard() {
     }
 }
 
+@Preview(showBackground = true, name = "Keyboard — disabled")
+@Composable
+fun PreviewKeyboardDisabled() {
+    FinanceManagerTheme {
+        Keyboard(enabled = false, onNumberClick = {}, onBackspaceClick = {})
+    }
+}
+
+/**
+ * Цифровая клавиатура PIN.
+ *
+ * @param enabled `false` — ввод запрещён (пауза после ошибок или идёт проверка): клавиши
+ *   приглушены и не нажимаются.
+ */
 @Composable
 fun Keyboard(
     modifier: Modifier = Modifier,
     showBiometricButton: Boolean = false,
+    enabled: Boolean = true,
     onNumberClick: (String) -> Unit,
     onBackspaceClick: () -> Unit,
     onFingerprintClick: () -> Unit = {}
@@ -51,7 +68,7 @@ fun Keyboard(
         ).forEach { row ->
             Row {
                 row.forEach { number ->
-                    NumberButton(number, onClick = { onNumberClick(number) })
+                    NumberButton(number, onClick = { onNumberClick(number) }, enabled = enabled)
                 }
             }
         }
@@ -60,7 +77,9 @@ fun Keyboard(
             if (showBiometricButton) {
                 IconButton(
                     icon = Icons.Default.Fingerprint,
-                    onClick = onFingerprintClick
+                    contentDescription = stringResource(R.string.unlock_with_biometrics),
+                    onClick = onFingerprintClick,
+                    enabled = enabled
                 )
             } else {
                 Spacer(
@@ -74,11 +93,13 @@ fun Keyboard(
                 )
             }
 
-            NumberButton("0", onClick = { onNumberClick("0") })
+            NumberButton("0", onClick = { onNumberClick("0") }, enabled = enabled)
 
             IconButton(
                 icon = Icons.AutoMirrored.Filled.Backspace,
-                onClick = onBackspaceClick
+                contentDescription = stringResource(R.string.erase_digit),
+                onClick = onBackspaceClick,
+                enabled = enabled
             )
         }
     }

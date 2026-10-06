@@ -6,6 +6,8 @@ plugins {
 dependencies {
     implementation(projects.core.data)
     implementation(projects.core.common)
+    // Состояние локальных данных: на запертой базе (уровень PIN) синк не запускается
+    implementation(projects.core.domain)
     // DelegatingWorker + delegatedData(): общий примитив для @HiltWorker в библиотечных
     // модулях. Отдаёт androidx.work и hilt-work транзитивно через api().
     implementation(projects.core.workmanager)

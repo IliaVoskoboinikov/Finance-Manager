@@ -175,6 +175,13 @@ interface OutboxDao {
     fun observeFailedCount(): Flow<Int>
 
     /**
+     * Сколько операций ещё в пути: ждут отправки или отправляются. Dead-letter сюда не входит —
+     * автоматически эти записи не уйдут никогда, их повторяет пользователь.
+     */
+    @Query("SELECT COUNT(*) FROM outbox WHERE status IN ('PENDING', 'IN_PROGRESS')")
+    suspend fun countUnsent(): Int
+
+    /**
      * Возвращает записи из dead-letter в очередь по явной команде пользователя.
      *
      * Счётчик попыток и время следующей попытки сбрасываются: ручной повтор — это утверждение
@@ -189,7 +196,4 @@ interface OutboxDao {
     /** Чистит успешно отправленные записи, чтобы очередь не росла бесконечно. */
     @Query("DELETE FROM outbox WHERE status = 'COMPLETED'")
     suspend fun deleteCompleted()
-
-    @Query("DELETE FROM outbox")
-    suspend fun deleteAll()
 }

@@ -44,6 +44,9 @@ interface OutboxLocalDataSource {
     /** Сколько операций осело в dead-letter. */
     fun observeFailedCount(): Flow<Int>
 
+    /** Сколько операций ещё ждут отправки или отправляются (без dead-letter). */
+    suspend fun countUnsent(): Int
+
     /** Возвращает записи из dead-letter в очередь; результат — сколько записей вернулось. */
     suspend fun requeueFailed(updatedAt: Long): Int
 

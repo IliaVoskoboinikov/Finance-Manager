@@ -23,6 +23,22 @@ dead-letter. Дизайн — [docs/outbox.md](../../docs/outbox.md), гаран
 репозиториев для запуска фонового синка после записи используйте
 `AppCoroutineContext.launchSync`, а не `launch`.
 
+## Ключи базы и доступ к данным
+
+Пакет `vault/` связывает ключи (`:core:security`) с базой (`:core:database`):
+
+- `LocalDataVault` — первый запуск (новый DEK, уровень L1), открытие базы, запирание уровня PIN,
+  крипто-стирание; `PinUnlocker` — разблокировка по PIN с учётом попыток; `BiometricVault` —
+  биометрическая копия ключа; `ProtectionLevelSwitcher` — смена уровня и PIN;
+- `VaultCore` — общая очередь операций с ключами, состояние `LocalDataState` и протокол смены
+  набора ключей (проверить → записать атомарно → удалить старые ключи Keystore);
+- `CryptoShredCleanupManager` — выход из аккаунта стирает ключ и файл базы, а не строки;
+- репозитории `LocalDataAccessRepositoryImpl` (стирание с выходом из аккаунта, восстановление) и
+  `DataProtectionRepositoryImpl` (досылка outbox перед уровнем PIN).
+
+Источники данных и `RoomTransactionRunner` берут базу через `DatabaseHolder` на каждый вызов;
+холдер предоставляет `LocalDataModule`. Дизайн — [docs/encryption.md](../../docs/encryption.md).
+
 ## Module dependency graph
 
 <!--region graph-->
@@ -41,5 +57,6 @@ graph TB
     :core:data --> :core:domain
     :core:data --> :core:network
     :core:data --> :core:auth
+    :core:data --> :core:security
     classDef android-library fill: #9BF6FF, stroke: #000, stroke-width: 2px, color: #000;
 ```

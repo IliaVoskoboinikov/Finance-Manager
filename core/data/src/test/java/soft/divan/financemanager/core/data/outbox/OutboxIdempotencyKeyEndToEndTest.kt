@@ -28,6 +28,7 @@ import soft.divan.financemanager.core.data.outbox.impl.TransactionOutboxSender
 import soft.divan.financemanager.core.data.source.impl.OutboxLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.TransactionLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.TransactionRemoteDataSourceImpl
+import soft.divan.financemanager.core.data.testing.OpenDatabaseHolder
 import soft.divan.financemanager.core.data.transaction.impl.RoomTransactionRunner
 import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
@@ -116,7 +117,8 @@ class OutboxIdempotencyKeyEndToEndTest {
             .build()
             .create(TransactionApiService::class.java)
 
-        val outboxLocalDataSource = OutboxLocalDataSourceImpl(db.outboxDao())
+        val holder = OpenDatabaseHolder(db)
+        val outboxLocalDataSource = OutboxLocalDataSourceImpl(holder)
 
         enqueuer = OutboxEnqueuer(
             localDataSource = outboxLocalDataSource,
@@ -132,14 +134,14 @@ class OutboxIdempotencyKeyEndToEndTest {
                 localDataSource = outboxLocalDataSource,
                 sender = TransactionOutboxSender(
                     remoteDataSource = TransactionRemoteDataSourceImpl(apiService),
-                    localDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
+                    localDataSource = TransactionLocalDataSourceImpl(holder),
                     gson = Gson()
                 ),
                 retryPolicy = OutboxRetryPolicy(),
                 clock = clock,
                 errorLogger = mockk<ErrorLogger>(relaxed = true),
                 // Настоящий runner: обратный путь закрывается одной транзакцией на живом Room
-                transactionRunner = RoomTransactionRunner(db, noopContext)
+                transactionRunner = RoomTransactionRunner(holder, noopContext)
             ),
             clock = clock
         )

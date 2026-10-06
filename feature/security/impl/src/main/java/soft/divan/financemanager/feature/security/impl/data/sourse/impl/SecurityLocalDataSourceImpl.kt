@@ -4,6 +4,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import soft.divan.financemanager.core.security.CryptoManager
 import soft.divan.financemanager.feature.security.impl.data.sourse.SecurityLocalDataSource
 import javax.inject.Inject
@@ -39,6 +43,16 @@ class SecurityLocalDataSourceImpl @Inject constructor(
     }
 
     override fun isPinSet(): Boolean = sharedPrefs.contains(USER_PIN_KEY)
+
+    override fun observePinSet(): Flow<Boolean> = callbackFlow {
+        // key == null — файл очищен целиком (API 30+)
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == null || key == USER_PIN_KEY) trySend(isPinSet())
+        }
+        sharedPrefs.registerOnSharedPreferenceChangeListener(listener)
+        trySend(isPinSet())
+        awaitClose { sharedPrefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }.distinctUntilChanged()
 
     override fun deletePin() {
         sharedPrefs.edit { remove(USER_PIN_KEY) }

@@ -1,50 +1,86 @@
 package soft.divan.financemanager.feature.security.impl.presenter.screen
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import soft.divan.financemanager.feature.security.impl.R
-import soft.divan.financemanager.feature.security.impl.presenter.components.Keyboard
-import soft.divan.financemanager.feature.security.impl.presenter.components.PinCodeScreenHeader
-import soft.divan.financemanager.feature.security.impl.presenter.components.RoundedBoxesRow
+import soft.divan.financemanager.feature.security.impl.domain.model.PinLockStatus
+import soft.divan.financemanager.feature.security.impl.presenter.model.PinLockError
+import soft.divan.financemanager.feature.security.impl.presenter.model.PinLockUiState
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 /**
- * Превью экрана PIN-замка для галереи `@Preview`.
+ * Превью экрана замка для галереи `@Preview`.
  *
- * Живёт в отдельном файле (не в `PinLockScreen.kt`) намеренно: реальный экран использует
- * `BiometricPrompt.AuthenticationCallback` из `android.hardware.biometrics`, а этот тип не
- * загружается в headless-рендере Layoutlib. Все top-level функции одного `.kt` компилируются
- * в один класс, и при поиске превью через `getDeclaredMethods()` резолвятся сигнатуры соседей
- * — поэтому `@Preview` рядом с биометрией падает с `NoClassDefFoundError`. Здесь превью собрано
- * из под-компонентов (заголовок + индикатор ввода + клавиатура с кнопкой биометрии) и от
- * `android.hardware.*` не зависит.
+ * Живёт отдельно от `PinLockScreen.kt`: там экран тянет `hiltViewModel()` и `BiometricPrompt`, а
+ * превью обязано рисоваться без DI. Здесь — только [PinLockContent] с подставленным состоянием.
  */
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun PreviewPinLockScreen() {
     FinanceManagerTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            PinCodeScreenHeader(text = stringResource(R.string.input_password))
-            RoundedBoxesRow(startQuantity = 4, quantity = 2)
-            Keyboard(
-                showBiometricButton = true,
-                onNumberClick = {},
-                onBackspaceClick = {}
-            )
-        }
+        PinLockContent(
+            uiState = PinLockUiState(biometricEnabled = true),
+            lockoutSecondsLeft = 0,
+            showBiometricButton = true,
+            actions = PinLockActions.NONE
+        )
+    }
+}
+
+@Preview(name = "Wrong PIN — dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun PreviewPinLockScreenWrongPin() {
+    FinanceManagerTheme(darkTheme = true) {
+        PinLockContent(
+            uiState = PinLockUiState(
+                status = PinLockStatus(attemptsLeft = 3),
+                error = PinLockError.WrongPin(attemptsLeft = 3),
+                dataProtectedByPin = true
+            ),
+            lockoutSecondsLeft = 0,
+            showBiometricButton = false,
+            actions = PinLockActions.NONE
+        )
+    }
+}
+
+@Preview(name = "Locked out — large font", showBackground = true, fontScale = 1.5f)
+@Composable
+fun PreviewPinLockScreenLockedOut() {
+    FinanceManagerTheme {
+        PinLockContent(
+            uiState = PinLockUiState(
+                status = PinLockStatus(attemptsLeft = 4),
+                error = PinLockError.LockedOut,
+                dataProtectedByPin = true
+            ),
+            lockoutSecondsLeft = 272,
+            showBiometricButton = true,
+            actions = PinLockActions.NONE
+        )
+    }
+}
+
+@Preview(name = "Last attempt — dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+fun PreviewPinLockScreenLastAttempt() {
+    FinanceManagerTheme(darkTheme = true) {
+        PinLockContent(
+            uiState = PinLockUiState(
+                status = PinLockStatus(attemptsLeft = 1),
+                dataProtectedByPin = true
+            ),
+            lockoutSecondsLeft = 0,
+            showBiometricButton = false,
+            actions = PinLockActions.NONE
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewForgotPinDialogGuest() {
+    FinanceManagerTheme {
+        ForgotPinDialog(isGuest = true, onConfirm = {}, onDismiss = {})
     }
 }

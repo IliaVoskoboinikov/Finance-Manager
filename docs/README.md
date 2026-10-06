@@ -17,6 +17,7 @@
 - [Post-commit sync](./post-commit-sync.md) — отложенный запуск сетевых пушей до commit БД-транзакции.
 - [Outbox](./outbox.md) — очередь исходящих операций: как локальное изменение доезжает до сервера.
 - [Idempotency](./idempotency.md) — ACK, дедупликация, ключ идемпотентности и read-back: почему ретраи не портят данные.
+- [Encryption](./encryption.md) — шифрование локальной базы (SQLCipher + envelope DEK/KEK): уровни защиты ключа, модель угроз, `DatabaseHolder`, состояния данных, PIN и биометрия, стирание и восстановление.
 - [DomainResult & errors](./domain-result.md) — подход к доменным результатам и обработке ошибок.
 - [Bd](./bd.md) — локальная база данных.
 - [Testing & Coverage](./testing.md) — уровни тестов, инструменты (MockK, Robolectric, TestKit), измерение покрытия через Kover, как запускать.

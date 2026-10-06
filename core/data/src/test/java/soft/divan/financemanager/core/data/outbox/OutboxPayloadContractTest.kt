@@ -29,6 +29,7 @@ import soft.divan.financemanager.core.data.outbox.impl.TransactionOutboxSender
 import soft.divan.financemanager.core.data.source.impl.OutboxLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.TransactionLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.TransactionRemoteDataSourceImpl
+import soft.divan.financemanager.core.data.testing.OpenDatabaseHolder
 import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
 import soft.divan.financemanager.core.database.entity.TransactionEntity
@@ -112,7 +113,7 @@ class OutboxPayloadContractTest {
             .create(TransactionApiService::class.java)
 
         enqueuer = OutboxEnqueuer(
-            localDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
+            localDataSource = OutboxLocalDataSourceImpl(OpenDatabaseHolder(db)),
             gson = Gson(),
             clock = clock,
             appCoroutineContext = noopContext,
@@ -121,7 +122,7 @@ class OutboxPayloadContractTest {
 
         sender = TransactionOutboxSender(
             remoteDataSource = TransactionRemoteDataSourceImpl(apiService),
-            localDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
+            localDataSource = TransactionLocalDataSourceImpl(OpenDatabaseHolder(db)),
             gson = Gson()
         )
 

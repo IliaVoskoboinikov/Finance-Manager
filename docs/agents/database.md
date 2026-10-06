@@ -4,6 +4,19 @@
 *   **SSOT:** The database is the Single Source of Truth. UI should observe data from Room.
 *   **DAOs:** Return `Flow<T>` for reactive updates. Use `suspend` for one-shot operations.
 
+## Access Through `DatabaseHolder`
+*   The database is encrypted (SQLCipher) and can be **closed** (PIN level, auto-lock, wipe), so
+    DAOs and `FinanceManagerDatabase` are **not** injectable. Data sources get the database from
+    `DatabaseHolder` on every call:
+    *   one-shot: `holder.withDatabase { it.accountDao().getByLocalId(id) }` — holds a lease so the
+        database is not closed mid-operation; throws `DatabaseLockedException` when closed;
+    *   reactive: `holder.observe { it.accountDao().getAll() }` — silent while closed,
+        re-subscribes to the new instance after reopening.
+*   Never return a Room `Flow` from inside `withDatabase` — it would stay bound to the instance
+    that was current at the call; use `observe`.
+*   Do not open/close/wipe the database from inside `withDatabase` (it would wait for itself).
+    Design: [docs/encryption.md](../encryption.md).
+
 ## Relations & Indices
 *   Entity relations are **logical**, not enforced: transactions reference a account/category
     via `accountLocalId` / `categoryId` (resolved in code), and Room `@ForeignKey` / `@Index`
@@ -22,14 +35,16 @@
     immediately. Mechanism and caveats: [docs/post-commit-sync.md](../post-commit-sync.md).
 
 ## Migrations
-*   For production, schema changes REQUIRE a `Migration` plus a migration test
-    (`MigrationTestHelper`); `exportSchema = true` is enabled for this.
-*   **Current pre-release state:** the DB uses `fallbackToDestructiveMigration`. The `@Database`
-    version MUST stay strictly greater than the prepackaged `category_db.db` asset's `user_version`
-    (currently 1) — with an equal version but a different schema, Room fails at runtime with an
-    identity-hash mismatch. This destructive setup is acceptable only while there are no real users
-    (offline-first, data re-syncs from the server) and MUST be replaced with real migrations before
-    release.
+*   Every schema change (including adding an index) REQUIRES a version bump, a
+    `Migration(n, n + 1)` in `DatabaseMigrations.ALL` and a test in `MigrationTest`
+    (`MigrationTestHelper`). The base schema is **v8**; schemas are exported by the Room Gradle
+    plugin to `core/database/schemas` — commit the new `<version>.json`.
+*   There is no destructive fallback on upgrade: a missing migration fails on open (and in tests)
+    instead of silently dropping user data. Only a downgrade recreates the database
+    (developer branch switching).
+*   Default categories are seeded in code (`SeedDatabaseCallback`, `DefaultCategories`) on
+    database creation — there is no prepackaged asset anymore (`createFromAsset` cannot be
+    encrypted). Every builder (production and tests) uses `withAppDefaults()`.
 
 ## Data Isolation
 *   Room `Entity` classes are internal to the data layer.

@@ -14,7 +14,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import soft.divan.financemanager.core.data.source.impl.CurrencyLocalDataSourceImpl
 import soft.divan.financemanager.core.data.util.coroutine.impl.DefaultAppCoroutineContext
-import soft.divan.financemanager.core.database.dao.CurrencyDao
+import soft.divan.financemanager.core.database.holder.DatabaseHolder
 
 class CoreDataDiModulesTest {
 
@@ -43,9 +43,9 @@ class CoreDataDiModulesTest {
     @Test
     fun `provideCurrencyLocalDataSource builds datastore-backed implementation`() {
         val dataStore = mockk<DataStore<Preferences>>()
-        val dao = mockk<CurrencyDao>()
+        val holder = mockk<DatabaseHolder>()
 
-        val source = DataProviderModule.provideCurrencyLocalDataSource(dataStore, dao)
+        val source = DataProviderModule.provideCurrencyLocalDataSource(dataStore, holder)
 
         assertThat(source).isInstanceOf(CurrencyLocalDataSourceImpl::class.java)
     }

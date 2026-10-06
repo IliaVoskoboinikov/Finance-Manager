@@ -1,12 +1,17 @@
 package soft.divan.financemanager.feature.security.impl.data.sourse.impl
 
+import android.os.Looper
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import soft.divan.financemanager.core.security.CryptoManager
 
 @RunWith(RobolectricTestRunner::class)
@@ -59,6 +64,23 @@ class SecurityLocalDataSourceImplTest {
         dataSource.deletePin()
 
         assertThat(dataSource.isPinSet()).isFalse()
+    }
+
+    @Test
+    fun `observePinSet follows saves and deletions`() = runTest {
+        every { cryptoManager.encrypt(any(), any()) } returns ENCRYPTED
+        val values = mutableListOf<Boolean>()
+        val job = launch(UnconfinedTestDispatcher(testScheduler)) {
+            dataSource.observePinSet().collect { values += it }
+        }
+
+        dataSource.savePin(HASH)
+        shadowOf(Looper.getMainLooper()).idle()
+        dataSource.deletePin()
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertThat(values).containsExactly(false, true, false)
+        job.cancel()
     }
 
     private companion object {
