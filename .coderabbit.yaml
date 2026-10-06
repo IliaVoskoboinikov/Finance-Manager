@@ -59,6 +59,9 @@ reviews:
     enabled: true
     drafts: false
     auto_incremental_review: true
+    # По умолчанию авторевью встаёт на паузу после 5 проверенных коммитов в PR, и его
+    # приходится возобновлять вручную (@coderabbitai resume). Нам нужно ревью на каждый push.
+    auto_pause_after_reviewed_commits: 0
     # PR обновления зависимостей проверяет CI (сборка, тесты, dependency-review).
     ignore_usernames:
       - "renovate[bot]"
