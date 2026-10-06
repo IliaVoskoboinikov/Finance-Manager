@@ -58,9 +58,11 @@ workflow: после установки приложения он ревьюит
 | [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) | Общие правила ревью: шкала важности, что не комментировать, осознанные решения, инварианты. Читается и CodeRabbit, и Copilot. |
 | [`docs/agents/*.md`](./agents/) | Подробные гайды по областям — подключены как code guidelines. |
 
-Проверки, которые уже есть в CI (detekt, gitleaks, dependency-review), в боте выключены,
-чтобы не дублировать замечания; включены actionlint, zizmor и shellcheck — workflow и скрипты
-в CI больше никто не проверяет. В текстах инструкций `.coderabbit.yaml` нельзя использовать
+Инструменты бота, которые дублировали бы CI, выключены: detekt и gitleaks (работают в CI) и
+osvScanner (уязвимые зависимости в CI ловит dependency-review). markdownlint, languagetool и
+yamllint тоже выключены — шумят на русскоязычной документации и длинных строках YAML.
+Включены actionlint, zizmor и shellcheck — workflow и скрипты в CI больше никто не проверяет.
+В текстах инструкций `.coderabbit.yaml` нельзя использовать
 обратные кавычки, `${…}` и обратные слэши — CodeRabbit на них ломается.
 
 Общие настройки во всех workflow, запускающих Gradle:
@@ -397,7 +399,7 @@ CI намеренно тонкий, поэтому «где что настро�
 ### 🟡 Улучшения
 
 - [ ] **Gradle-кеш для сборок.** Тестовые прогоны — с кешем, релизные — принципиально без.
-- [ ] **AI-ревьюер на PR.**
+- [x] **AI-ревьюер на PR.** CodeRabbit — см. абзац про AI-ревью в «Общей картине».
 - [ ] **Пин actions по SHA.** Сейчас `uses:` запинены только по мажору. Renovate умеет
       переводить их на digest — достаточно добавить `helpers:pinGitHubActionDigests`
       в `extends` его конфига.
