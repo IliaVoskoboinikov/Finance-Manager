@@ -13,7 +13,7 @@ pluginManagement {
     }
 }
 plugins {
-    id("com.gradle.develocity") version "4.5.0"
+    id("com.gradle.develocity") version "4.6.0"
     // Aalekh — анализ и enforcement архитектуры графа модулей. Обязательно settings-вариант:
     // на Gradle 9.x с включённым configuration cache project-вариант промахивается мимо кэша
     // каждый второй запуск. Конфигурация — в блоке `aalekh { }` корневого build.gradle.kts.

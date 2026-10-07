@@ -47,6 +47,24 @@ Workflow разделены по назначению:
 actions мержатся автоматически, major — только через Dependency Dashboard.
 Требует установки GitHub App **Mend Renovate** на репозиторий.
 
+AI-ревью PR — **CodeRabbit** (бесплатен для публичных репозиториев). Это GitHub App, а не
+workflow: после установки приложения он ревьюит каждый PR, кроме черновиков и PR Renovate,
+и дообновляет ревью на каждый push. Ревью рекомендательное — мерж не блокирует, гейт
+качества остаётся за CI. Правила разложены по трём уровням:
+
+| Где | Что |
+|---|---|
+| [`.coderabbit.yaml`](../.coderabbit.yaml) | Настройки бота, формат сводки в описании PR (что сделано, зачем, затронутые модули, тесты, риски), правила по областям кода (`path_instructions`) и pre-merge проверки: версия БД при изменении схемы, `.nav`-бейзлайн, оформление нового модуля, пары строк `values` / `values-ru`. |
+| [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) | Общие правила ревью: шкала важности, что не комментировать, осознанные решения, инварианты. Читается и CodeRabbit, и Copilot. |
+| [`docs/agents/*.md`](./agents/) | Подробные гайды по областям — подключены как code guidelines. |
+
+Инструменты бота, которые дублировали бы CI, выключены: detekt и gitleaks (работают в CI) и
+osvScanner (уязвимые зависимости в CI ловит dependency-review). markdownlint, languagetool и
+yamllint тоже выключены — шумят на русскоязычной документации и длинных строках YAML.
+Включены actionlint, zizmor и shellcheck — workflow и скрипты в CI больше никто не проверяет.
+В текстах инструкций `.coderabbit.yaml` нельзя использовать
+обратные кавычки, `${…}` и обратные слэши — CodeRabbit на них ломается.
+
 Общие настройки во всех workflow, запускающих Gradle:
 
 ```yaml
@@ -381,7 +399,7 @@ CI намеренно тонкий, поэтому «где что настро�
 ### 🟡 Улучшения
 
 - [ ] **Gradle-кеш для сборок.** Тестовые прогоны — с кешем, релизные — принципиально без.
-- [ ] **AI-ревьюер на PR.**
+- [x] **AI-ревьюер на PR.** CodeRabbit — см. абзац про AI-ревью в «Общей картине».
 - [ ] **Пин actions по SHA.** Сейчас `uses:` запинены только по мажору. Renovate умеет
       переводить их на digest — достаточно добавить `helpers:pinGitHubActionDigests`
       в `extends` его конфига.
@@ -429,6 +447,8 @@ CI намеренно тонкий, поэтому «где что настро�
 | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | gitleaks + dependency-review. |
 | [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Граф зависимостей для Dependabot alerts. |
 | [`.github/renovate.json5`](../.github/renovate.json5) | Правила автообновления зависимостей и actions. |
+| [`.coderabbit.yaml`](../.coderabbit.yaml) | Настройки AI-ревьюера CodeRabbit и правила по областям кода. |
+| [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) | Общие правила AI-ревью PR. |
 | [`.github/actions/`](../.github/actions/) | Composite actions: setup, отчёты, доставка. |
 | [`konsist/`](../konsist/README.md) | Архитектурные тесты уровня классов. |
 | [`app/dependencies/`](../app/dependencies/) | Слепок release-classpath (dependency-guard). |

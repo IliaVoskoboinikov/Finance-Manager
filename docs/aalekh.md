@@ -151,4 +151,4 @@ graph TD
 ## Ссылки
 
 - Документация плагина: <https://github.com/shivathapaa/Aalekh> · [docs](https://github.com/shivathapaa/Aalekh/tree/main/docs) · [API reference](https://shivathapaa.github.io/Aalekh/api/)
-- Совместимость: Gradle 9.0+, Kotlin 2.3+, AGP 9.1+, JDK 11/17/21 (у нас Gradle 9.7.1 / Kotlin 2.4.0 / AGP 9.2.1).
+- Совместимость: Gradle 9.0+, Kotlin 2.3+, AGP 9.1+, JDK 11/17/21 (у нас Gradle 9.7.1 / Kotlin 2.4.0 / AGP 9.4.1).
