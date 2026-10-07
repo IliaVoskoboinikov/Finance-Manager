@@ -254,8 +254,8 @@ reviews:
         - Повтор запросов (RetryInterceptor) — только для временных ошибок;
           неидемпотентный POST без ключа идемпотентности повторять опасно — возможны
           дубли операций.
-        - Продакшн-трафик — HTTPS; cleartext допустим только для локального бэкенда
-          (BuildConfig.HOST).
+        - Продакшн-трафик — HTTPS; cleartext допустим, только пока BuildConfig.HOST
+          указывает на тестовый стенд yourflow.pro; новых HTTP-адресов не добавлять.
 
     - path: "core/security/**"
       instructions: |
@@ -424,7 +424,7 @@ reviews:
           не собирается — ошибки всплывут только при релизе.
         - Манифест: allowBackup="false" и правила бэкапа не ослабляются (финансовые
           данные); новые exported="true" компоненты и разрешения — с обоснованием;
-          usesCleartextTraffic допустим, только пока бэкенд локальный.
+          usesCleartextTraffic допустим, только пока бэкенд — тестовый стенд yourflow.pro.
 
     - path: "**/src/{test,androidTest}/**"
       instructions: |

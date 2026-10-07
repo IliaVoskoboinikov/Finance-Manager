@@ -187,9 +187,9 @@ HTML через Pandoc.
 
 * **`secret-scan`** — [gitleaks](https://github.com/gitleaks/gitleaks-action) по всей истории
   (`fetch-depth: 0`, иначе секрет, удалённый последним коммитом, не найдётся). Прямо
-  поддерживает требование [`docs/agents/security.md`](./agents/security.md): пароли от
-  keystore, `API_TOKEN`, `YANDEX_CLIENT_ID` и JWT живут только в `local.properties` и
-  CI-секретах. Лицензия нужна только организациям — для личного аккаунта бесплатно.
+  поддерживает требование [`docs/agents/security.md`](./agents/security.md): `API_TOKEN`,
+  `YANDEX_CLIENT_ID` и JWT живут только в `local.properties` и CI-секретах, а пароли от
+  keystore — только в переменных окружения (в CI — из секретов `JKS_*`). Лицензия нужна только организациям — для личного аккаунта бесплатно.
   Отдельный шаг разбирает SARIF через `jq` и пишет результат в Step Summary: на зелёном
   прогоне — сколько правил отработало, на красном — таблица «правило → файл → строка».
   Значение найденного секрета (`region.snippet`) в сводку намеренно не попадает:
