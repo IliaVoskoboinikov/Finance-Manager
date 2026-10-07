@@ -18,7 +18,11 @@ permissions:
   contents: read
   security-events: write  # upload-sarif (detekt, ktlint, aalekh)
   checks: write           # action-junit-report создаёт check-run с аннотациями
-  pull-requests: write    # aalekhDiff — комментарий об изменениях архитектуры в PR
+
+# Во всех джобах checkout идёт с persist-credentials: false. Ни одна джоба не пушит в git,
+# а история (AffectedModuleDetector, aalekhDiff) читается локально без авторизации. Без флага
+# токен остаётся в .git/config, где его может прочитать код PR (Gradle-скрипты), — а
+# сохранять его незачем.
 
 env:
   gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
@@ -31,6 +35,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Build project
@@ -54,6 +60,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       # На master — полный прогон: основная ветка проверяется целиком.
@@ -89,6 +96,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Coverage report & gate
@@ -107,6 +116,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Run Android Lint
@@ -130,6 +141,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Run Detekt
@@ -165,6 +178,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Run KtLint composite action
@@ -194,6 +209,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Analyze size
@@ -212,6 +229,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Dependency guard
@@ -231,6 +250,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       # Задачи анализа исполняются через IsolatedClassloaderWorker: каждый work item
@@ -271,6 +292,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Check Graph
@@ -302,13 +325,24 @@ jobs:
   # aalekh-baseline.json. Полное описание — docs/aalekh.md.
   check-architecture:
     runs-on: ubuntu-latest
+    # Право писать в PR нужно только этой джобе (sticky-комментарий aalekhDiff), поэтому оно
+    # выдаётся здесь, а не всему workflow. Job-level permissions заменяют workflow-level
+    # целиком — отсюда повтор contents/security-events.
+    permissions:
+      contents: read
+      security-events: write  # upload-sarif
+      pull-requests: write    # комментарий об изменениях архитектуры в PR
     steps:
       # fetch-depth: 0 — aalekhDiff сравнивает граф ветки с закоммиченным aalekh-snapshot.json,
       # а комментарий в PR требует доступа к истории для корректного diff.
+      # persist-credentials: false — код PR (Gradle-скрипты) выполняется в этой же джобе до
+      # шага с комментарием; токен с правом записи не должен оставаться в .git/config.
+      # Пушить джоба ничего не должна, а git-история читается локально без авторизации.
       - name: Checkout
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Architecture check (Aalekh)
@@ -342,8 +376,11 @@ jobs:
           if [ -f "$DIFF" ]; then
             printf '<!-- aalekh-diff -->\n\n' | cat - "$DIFF" > "$DIFF.tmp" && mv "$DIFF.tmp" "$DIFF"
           fi
+      # Комментарий — информационный и не должен ронять блокирующую проверку. В PR из форков
+      # и от Dependabot токен read-only, запись комментария там упадёт — отсюда continue-on-error.
       - name: Find existing architecture comment
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         uses: peter-evans/find-comment@v3
         id: aalekh-comment
         with:
@@ -352,6 +389,7 @@ jobs:
           body-includes: '<!-- aalekh-diff -->'
       - name: Comment architecture diff on PR
         if: ${{ github.event_name == 'pull_request' && hashFiles('build/reports/aalekh/aalekh-diff.md') != '' }}
+        continue-on-error: true
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.aalekh-comment.outputs.comment-id }}
@@ -364,6 +402,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Nav graph report

@@ -118,6 +118,11 @@ graph TD
 3. `aalekhReport` → HTML + CSV метрик в артефакты сборки;
 4. на PR: `aalekhDiff` → один «липкий» комментарий о том, что изменение сделало с архитектурой.
 
+Право `pull-requests: write` выдано только этой джобе (не всему workflow), а checkout идёт с
+`persist-credentials: false`, потому что код PR выполняется в той же джобе до шага с комментарием.
+Шаги с комментарием помечены `continue-on-error`: в PR из форков и от Dependabot токен read-only,
+и неудачная запись комментария не должна ронять блокирующую проверку.
+
 `openBrowserAfterReport` выключен глобально — в CI браузер не открывается, локально путь к отчёту
 печатается в лог (`open build/reports/aalekh/index.html`).
 
