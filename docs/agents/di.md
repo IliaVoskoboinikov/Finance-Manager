@@ -10,5 +10,6 @@
 *   **Binds vs Provides:** Use `@Binds` for interface-to-implementation mapping. Use `@Provides` only for external library classes or complex initialization.
 
 ## Organization
-*   Place Hilt modules in the `:impl` module of a feature or in the appropriate `core` module.
+*   Place Hilt modules in the `:impl` module of a feature or in the appropriate `core` module (also `:sync`,
+    and `app`'s `di/` for app-level wiring such as `FeatureNavigationModule`).
 *   Use `@InstallIn(SingletonComponent::class)` for app-wide dependencies and `@InstallIn(ViewModelComponent::class)` for ViewModel-scoped ones.
