@@ -15,9 +15,9 @@ permissions:
   contents: read
 
 jobs:
-  # Ищет утёкшие секреты в коде и во всей истории коммитов: keystore-пароли,
-  # API_TOKEN, YANDEX_CLIENT_ID, JWT — всё, что по docs/agents/security.md обязано
-  # жить только в local.properties и CI-секретах.
+  # Ищет утёкшие секреты в коде и во всей истории коммитов: API_TOKEN, YANDEX_CLIENT_ID,
+  # JWT (по docs/agents/security.md — только local.properties и CI-секреты) и
+  # keystore-пароли (только переменные окружения).
   secret-scan:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest

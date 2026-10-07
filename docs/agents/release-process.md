@@ -6,8 +6,9 @@ Before marking a task as complete, you MUST run:
 # Run all checks for modified modules
 ./gradlew :feature:<name>:impl:check
 
-# Run unit tests
+# Run unit tests (pure JVM modules have only `test`)
 ./gradlew testDebugUnitTest
+./gradlew :core:domain:test :konsist:test :lint:test
 
 # Run static analysis
 ./gradlew ktlintCheck
