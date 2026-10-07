@@ -62,9 +62,9 @@ reviews:
     # По умолчанию авторевью встаёт на паузу после 5 проверенных коммитов в PR, и его
     # приходится возобновлять вручную (@coderabbitai resume). Нам нужно ревью на каждый push.
     auto_pause_after_reviewed_commits: 0
-    # PR обновления зависимостей проверяет CI (сборка, тесты, dependency-review).
-    ignore_usernames:
-      - "renovate[bot]"
+    # PR Renovate ревьюятся наравне с остальными: он ошибается (несовместимые версии,
+    # breaking changes), а CI ловит только то, что ломает сборку и тесты. Чтобы бот вообще
+    # взялся за PR от бота, в панели CodeRabbit пользователю renovate[bot] нужен seat.
 
   path_filters:
     # Сгенерированные карты модулей и навигации (PNG/HTML).
@@ -463,6 +463,31 @@ reviews:
           (dependencyGuard).
         - Изменения в build-logic покрываются тестами (ProjectBuilder, Gradle TestKit).
 
+    - path: "{gradle/libs.versions.toml,gradle/wrapper/gradle-wrapper.properties}"
+      instructions: |
+        Обновление версий. Такие PR чаще всего открывает Renovate, и он ошибается — проверяй
+        их так же строго, как написанные руками, даже если CI зелёный.
+        - Для каждой изменённой версии найди release notes или changelog и перечисли
+          breaking changes, удалённые и deprecated API, которые затрагивают проект; по каждому
+          укажи, где в коде это используется. Нет ничего важного — так и напиши, коротко.
+        - Мажорное обновление — отдельный риск: смена минимальных требований (minSdk 26,
+          compileSdk 36, байткод Java 11, сборка на JDK 21), обязательные миграции, переезд
+          артефакта на другие координаты.
+        - Связанные версии меняются только вместе: Kotlin, KSP и Hilt (KSP собирается под
+          конкретную версию компилятора); AGP и Gradle — сверь по таблице совместимости AGP;
+          detekt и его плагины. Обновление одной без другой — замечание.
+        - Известные ограничения: lifecycle-viewmodel-navigation3 держится на 2.10.x, потому что
+          2.11 требует compileSdk 37; если подключены compose-rules для detekt — только линейка
+          0.4.x, 0.5 и новее требуют detekt 2.x. Если PR поднимает их выше — замечание.
+        - Изменилась runtime-зависимость приложения — джоба check-dependency-guard упадёт, пока
+          не обновлён слепок app/dependencies/ (./gradlew :app:dependencyGuardBaseline);
+          напомни об этом.
+        - gradle-wrapper.properties: distributionUrl ведёт на services.gradle.org; если задан
+          distributionSha256Sum, он обновлён вместе с версией.
+        - Если обновление попадает под автомерж Renovate (патчи инструментов статанализа,
+          минорные и патч-версии actions), а риск выше минимального, — прямо напиши, что этот
+          PR стоит смержить вручную после проверки.
+
     - path: ".github/**"
       instructions: |
         GitHub Actions.
@@ -474,6 +499,9 @@ reviews:
           с серьёзным обоснованием.
         - Секреты не печатаются ни в лог, ни в Step Summary.
         - Новые сторонние actions — с обоснованием; версии запинены.
+        - Обновление версии action (обычно от Renovate): по release notes проверь изменения
+          входов, выходов, требуемых permissions и версии рантайма; при мажорном обновлении
+          найди все места использования action в .github/ и оцени, что сломается.
         - Gradle в джобах — через composite action android-setup и флаги gradleFlags.
         - У долгих джоб есть timeout-minutes; отчёты публикуются с if: always().
         - Изменение пайплайна отражается в docs/ci-cd.md.
