@@ -116,15 +116,6 @@ reviews:
           Pass — схема не менялась, либо в этом же PR увеличено значение version
           в аннотации @Database класса FinanceManagerDatabase.
           Fail — схема изменилась, а version осталась прежней.
-      - name: "Бейзлайн графа навигации"
-        mode: warning
-        instructions: |
-          Проверь, меняет ли PR граф навигации: добавляет, удаляет или изменяет аннотации
-          @NavDestination, @NavEdge или @NavPreview, либо добавляет новые вызовы
-          navigator.goTo(...).
-          Pass — граф не менялся, либо в этом же PR изменены соответствующие файлы
-          */nav/*.nav (их генерирует ./gradlew navDump).
-          Fail — граф изменился, а .nav-файлы нет.
       - name: "Новый модуль оформлен"
         mode: warning
         instructions: |
@@ -345,9 +336,8 @@ reviews:
           screen-композаблы.
         - Экран размечен для карты навигации: @NavDestination(route = XKey::class) на
           composable экрана, по одному @NavEdge(to = ..., label = "...") на каждый goTo,
-          @NavPreview(route = XKey::class, primary = true) на основном превью. Изменение
-          графа сопровождается обновлённым nav/*.nav в этом же PR — navCheck в CI не
-          запускается.
+          @NavPreview(route = XKey::class, primary = true) на основном превью. Совпадение
+          аннотаций с nav/*.nav проверяет navCheck в CI — об этом не пиши.
 
         ViewModel
         - @HiltViewModel; аргументы навигации — через @AssistedInject + @AssistedFactory

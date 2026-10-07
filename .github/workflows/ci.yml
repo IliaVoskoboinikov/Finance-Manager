@@ -294,6 +294,9 @@ jobs:
           name: all_modules.png
           path: all_modules.png
 
+  # Гейт navCheck (граф из аннотаций == закоммиченные */nav/*.nav) + отчёт с картой
+  # и галереей превью. Гейт живёт здесь, а не отдельной джобой: KSP, на котором он
+  # работает, этой джобе нужен всё равно, а отдельная джоба — ещё одна холодная сборка.
   nav-graph:
     runs-on: ubuntu-latest
     steps:
@@ -301,7 +304,31 @@ jobs:
         uses: actions/checkout@v7
       - name: Setup environment
         uses: ./.github/actions/android-setup
+      # Отдельный шаг и отдельный вызов Gradle, до рендера: Layoutlib бывает flaky,
+      # и в общем вызове с экспортом его падение скрыло бы результат navCheck.
+      # --continue — чтобы увидеть расхождения всех модулей, а не только первого.
+      - name: Check nav graph baselines
+        id: nav-check
+        run: |
+          set -o pipefail
+          if ./gradlew navCheck $gradleFlags --continue 2>&1 | tee nav-check.log; then
+            echo '## ✅ Граф навигации совпадает с бейзлайнами `*/nav/*.nav`' >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo '## ❌ Граф навигации разошёлся с бейзлайнами `*/nav/*.nav`'
+              echo 'Если изменение осознанное — `./gradlew navDump` и закоммитить обновлённые `.nav`.'
+              echo '```diff'
+              # Только блоки «What went wrong»: с --stacktrace дифф повторяется в стеке.
+              sed -n '/^\* What went wrong:/,/^\* Try:/p' nav-check.log \
+                | grep -E '^> navgraph:|^ +[-+] ' \
+                | sed -E -e "s|$GITHUB_WORKSPACE/||g" -e 's/^ +//' || true
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+      # Отчёт нужен и при разошедшемся бейзлайне: по карте видно, что поменялось.
       - name: Nav graph report
+        if: success() || steps.nav-check.outcome == 'failure'
         uses: ./.github/actions/nav-graph
         with:
           gradle-flags: ${{ env.gradleFlags }}

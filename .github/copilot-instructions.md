@@ -20,6 +20,7 @@ Navigation 3, WorkManager). Модули: `app`, `core:*`, `feature:*:api` / `fe
   - пакеты UseCase/Repository, `Entity` вне `core:database`, DTO вне `..dto..`,
     `@HiltViewModel` (Konsist);
   - рёбра между модулями (`assertModuleGraph`, `CheckConventionsPlugin`);
+  - совпадение аннотаций навигации с бейзлайнами `*/nav/*.nav` (`navCheck`);
   - порог покрытия (Kover).
 - Не предлагай переименований «по вкусу» и смены публичного API без явной причины.
 
@@ -59,7 +60,7 @@ Navigation 3, WorkManager). Модули: `app`, `core:*`, `feature:*:api` / `fe
 - Новые публичные классы и функции — KDoc; новый UI-компонент — `@Preview`.
 - Изменение схемы Room — поднятая `version` в `@Database`.
 - Изменение навигации — аннотации `@NavDestination` / `@NavEdge` / `@NavPreview` и обновлённые
-  `*/nav/*.nav` (`./gradlew navDump`; `navCheck` в CI не запускается, так что следит ревью).
+  `*/nav/*.nav` (`./gradlew navDump`).
 - Новая строка — в `values/` и `values-ru/`.
 - Изменённый модуль — обновлённый `README.md`; новый модуль — ещё и `settings.gradle.kts`
   и `docs/modules.md`; сложная сквозная фича — дизайн-документ в `docs/`.

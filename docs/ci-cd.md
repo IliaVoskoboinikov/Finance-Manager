@@ -23,7 +23,7 @@ flowchart TD
     wd["workflow_dispatch"] -.-> cdt
     wd -.-> cdr
 
-    ci --> art1["APK debug, отчёты:<br/>Kover, Lint, Detekt, KtLint,<br/>Ruler, граф модулей, build time,<br/>dependency analysis"]
+    ci --> art1["APK debug, отчёты:<br/>Kover, Lint, Detekt, KtLint,<br/>Ruler, граф модулей, build time,<br/>dependency analysis, карта навигации"]
     sec --> art4["Алерты о секретах и<br/>уязвимых зависимостях"]
     dep --> art5["Dependabot alerts,<br/>основа для dependency-review"]
     cdt --> art2["APK debug →<br/>Telegram + Firebase App Distribution"]
@@ -34,7 +34,7 @@ Workflow разделены по назначению:
 
 | Workflow | Файл | Назначение |
 |---|---|---|
-| **CI** | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества: сборка, тесты, покрытие, статический анализ, размер приложения, граф модулей, здоровье зависимостей. |
+| **CI** | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества: сборка, тесты, покрытие, статический анализ, размер приложения, граф модулей, бейзлайн графа навигации, здоровье зависимостей. |
 | **Security** | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | Поиск утёкших секретов (gitleaks) и уязвимых зависимостей в PR (dependency-review). |
 | **Dependency submission** | [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Отдаёт GitHub граф зависимостей — без него не работают Dependabot alerts. |
 | **App test** | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Доставка тестовой (debug) сборки тестировщикам. |
@@ -54,7 +54,7 @@ workflow: после установки приложения он ревьюит
 
 | Где | Что |
 |---|---|
-| [`.coderabbit.yaml`](../.coderabbit.yaml) | Настройки бота, формат сводки в описании PR (что сделано, зачем, затронутые модули, тесты, риски), правила по областям кода (`path_instructions`) и pre-merge проверки: версия БД при изменении схемы, `.nav`-бейзлайн, оформление нового модуля, пары строк `values` / `values-ru`. |
+| [`.coderabbit.yaml`](../.coderabbit.yaml) | Настройки бота, формат сводки в описании PR (что сделано, зачем, затронутые модули, тесты, риски), правила по областям кода (`path_instructions`) и pre-merge проверки: версия БД при изменении схемы, оформление нового модуля, пары строк `values` / `values-ru`. `.nav`-бейзлайн сюда не входит — его проверяет `navCheck` в CI. |
 | [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) | Общие правила ревью: шкала важности, что не комментировать, осознанные решения, инварианты. Читается и CodeRabbit, и Copilot. |
 | [`docs/agents/*.md`](./agents/) | Подробные гайды по областям — подключены как code guidelines. |
 
@@ -107,7 +107,7 @@ CI не гоняют намеренно: у `push` и `pull_request` разны�
 | `run-ktlint` | [`actions/ktlint`](../.github/actions/ktlint/action.yml) | Форматирование/стиль. | `ktlint-html-report`, SARIF в Code Scanning, Markdown в Step Summary. |
 | `check-app-size` | `./gradlew :app:analyzeDebugBundle` | Размер приложения (Ruler). | `ruler-report.html`. |
 | `check-module-graph` | `./gradlew :app:assertModuleGraph` + `generateModulesGraphvizText` | Архитектурные границы модулей. | `all_modules.png` (Graphviz), DOT-граф в Step Summary. |
-| `nav-graph` | [`actions/nav-graph`](../.github/actions/nav-graph/action.yml) | Карта экранов и галерея `@Preview` собираются без ошибок. | `nav-graph-report` (PNG + интерактивный HTML + `index.html`). |
+| `nav-graph` | `./gradlew navCheck --continue` + [`actions/nav-graph`](../.github/actions/nav-graph/action.yml) | Граф навигации из аннотаций совпадает с бейзлайнами `*/nav/*.nav`; карта экранов и галерея `@Preview` собираются без ошибок. | `nav-graph-report` (PNG + интерактивный HTML + `index.html`); результат `navCheck` с диффом расхождения и таблицы экранов/переходов в Step Summary. |
 
 ### Как устроены отдельные джобы
 
@@ -144,6 +144,34 @@ HTML через Pandoc.
 Работает это на **любом** запуске Gradle, а не только в этой джобе. Джоба всё равно полезна
 (она гарантированно конфигурирует проект и рисует граф), но название вводит в заблуждение —
 см. раздел «Что нужно доделать».
+
+**`nav-graph`.** Гейт `navCheck` (граф навигации из аннотаций совпадает с закоммиченными
+`*/nav/*.nav`, см. [nav-graph.md](./nav-graph.md#бейзлайн-nav)) и отчёт с картой экранов
+живут в одной джобе. Гейт встроен шагом, а не отдельной джобой: `navCheck` нужен только KSP
+модулей с разметкой, а этот KSP джоба и так выполняет ради отчёта. Отдельная джоба была бы
+ещё одной холодной сборкой; шаг стоит одну лишнюю фазу конфигурации Gradle.
+
+```mermaid
+flowchart LR
+    setup["android-setup"] --> check["navCheck --continue<br/>(только KSP)"]
+    check -->|"success / failure"| render["actions/nav-graph<br/>рендер Layoutlib"]
+    render --> upload["upload nav-graph-report<br/>(if: always)"]
+    check -.->|"результат + дифф"| summary["Step Summary"]
+    render -.->|"таблицы экранов<br/>и переходов"| summary
+```
+
+* `navCheck` идёт **первым и отдельным вызовом Gradle**. Рендер превью через Layoutlib бывает
+  flaky; в общем вызове с экспортом его падение остановило бы сборку, и результат `navCheck`
+  остался бы неизвестным. `--continue` — чтобы при расхождении увидеть все модули сразу.
+  Дифф из блоков «What went wrong» (пути — относительно репозитория) уходит в Step Summary.
+* Рендер выполняется с `if: success() || steps.nav-check.outcome == 'failure'`: и при красном
+  `navCheck` (по карте видно, что поменялось), но не после упавшего checkout/setup.
+  Загрузка `nav-graph-report` — `if: always()`.
+* Джобу валит и `navCheck`, и, как раньше, падение рендера, но шаги разделены: зелёный
+  «Check nav graph baselines» значит, что граф в порядке, даже если джоба красная.
+
+Расхождение лечится `./gradlew navDump` и коммитом `.nav` — если изменение навигации
+осознанное. Иначе это сигнал, что экран потерял или получил переход по ошибке.
 
 **`run-tests`.** На `master` гоняется полный `./gradlew test`. На ветках и в PR —
 `runAffectedUnitTests` из плагина
@@ -275,6 +303,7 @@ VERSION_CODE = X * 1_000_000 + Y * 1_000 + Z
 | [`report-renderer`](../.github/actions/report-renderer/action.yml) | Markdown → styled HTML через Pandoc (со светлой и тёмной темой). |
 | [`build-time-report`](../.github/actions/build-time-report/action.yaml) | CSV от `build-time-tracker` → Markdown-таблица в Step Summary (`csv2md.sh`). |
 | [`draw-graph`](../.github/actions/draw-graph/action.yaml) | DOT → PNG через Graphviz. |
+| [`nav-graph`](../.github/actions/nav-graph/action.yml) | Рендер карты навигации и галереи `@Preview` (PNG + HTML), лендинг `index.html`, таблицы экранов и переходов в Step Summary. Гейт `navCheck` — не здесь, а отдельным шагом джобы. |
 | [`send-file-tg`](../.github/actions/send-file-tg/action.yaml) | Отправка файла и подписи в Telegram (`sendDocument`, поддержка тредов). |
 
 ## Секреты
@@ -312,6 +341,7 @@ CI намеренно тонкий, поэтому «где что настро�
 | Граф модулей | [`ModuleGraphConventionPlugin`](../build-logic/convention/src/main/kotlin/ModuleGraphConventionPlugin.kt) | `:app:assertModuleGraph` (высота + запрещённые рёбра), `:app:generateModulesGraphvizText` |
 | Архитектура на уровне классов | модуль [`:konsist`](../konsist/README.md) | `:konsist:test` (входит в обычный `test`) |
 | Анализ зависимостей | корневой `build.gradle.kts` + `AndroidBaseConventionPlugin` / `JvmLibraryConventionPlugin` | `buildHealth` |
+| Бейзлайн графа навигации | [`NavGraph.kt`](../build-logic/convention/src/main/kotlin/soft/divan/financemanager/NavGraph.kt) (`configureNavGraph()`), плагин `com.github.skydoves.navgraph` | `navCheck` / `navDump`, экспорт карты и галереи превью |
 | Слепок release-classpath | [`DependencyGuardConventionPlugin`](../build-logic/convention/src/main/kotlin/DependencyGuardConventionPlugin.kt) | `:app:dependencyGuard`, `:app:dependencyGuardBaseline` |
 | Отбор затронутых модулей | корневой `build.gradle.kts` (AffectedModuleDetector) | `runAffectedUnitTests` |
 | Диагностика скорости сборки | корневой `build.gradle.kts` (Gradle Doctor) | выполняется на любом запуске Gradle |
@@ -331,7 +361,7 @@ CI намеренно тонкий, поэтому «где что настро�
 ## Локальный прогон «как в CI»
 
 ```bash
-./gradlew assembleDebug test koverVerifyFull lint detekt ktlintCheck :app:assertModuleGraph :app:dependencyGuard
+./gradlew assembleDebug test koverVerifyFull lint detekt ktlintCheck :app:assertModuleGraph :app:dependencyGuard navCheck
 ./gradlew buildHealth
 ```
 
@@ -382,9 +412,10 @@ CI намеренно тонкий, поэтому «где что настро�
       `report-telegram` и `distribute-app-firebase` по-прежнему запускают Gradle без
       `init-gradle` — на JDK раннера по умолчанию и без кеша Gradle. Версия JDK не
       зафиксирована: смена образа `ubuntu-latest` может неожиданно сломать сборку.
-- [ ] **Восемь джоб = восемь холодных сборок.** `run-tests` и `run-coverage` прогоняют тесты
-      дважды (Kover требует своего прогона). Стоит либо объединить их, либо включить
-      общий remote/GHA build cache.
+- [ ] **Одиннадцать джоб = одиннадцать холодных сборок.** `run-tests` и `run-coverage`
+      прогоняют тесты дважды (Kover требует своего прогона). Стоит либо объединить их, либо
+      включить общий remote/GHA build cache. Пока этого нет, новые проверки по возможности
+      встраиваются шагом в джобу, которая уже собирает нужное, — так подключён `navCheck`.
 - [ ] **`run-tests` гоняет `./gradlew test`** — это debug + release варианты, вдвое дольше
       нужного. В `CLAUDE.md` и в документации указан `testDebugUnitTest`; надо привести к
       одному.
