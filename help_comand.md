@@ -231,7 +231,7 @@ cat app/build/intermediates/analyze_dependencies_report/debug/analyzeDebugDepend
 
 | Команда | Что делает |
 |---------|-----------|
-| `./gradlew navCheck` | ⚠️ обязательна после правки навигации: падает, если граф разошёлся с `*/nav/*.nav` |
+| `./gradlew navCheck` | ⚠️ обязательна после правки навигации: падает, если граф разошёлся с `*/nav/*.nav` (в CI — джоба `nav-graph`) |
 | `./gradlew navDump` | перезаписать `.nav`-бейзлайны (коммитим вместе с изменением графа) |
 | `./gradlew :app:aggregateNavGraph` | склеить графы всех модулей → `app/build/navgraph-aggregated/nav-graph.json` |
 | `./gradlew :app:exportNavGraphHtml` | интерактивный HTML-граф → `app/build/navgraph/` |
@@ -271,7 +271,8 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:exportNavGraphToDocs
 ## Полный прогон «как в CI»
 
 CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, `detekt`, `ktlintCheck`,
-`:app:assertModuleGraph`, размер приложения, время сборки и `nav-graph`.
+`:app:assertModuleGraph`, размер приложения, время сборки и `nav-graph` (`navCheck` + карта
+навигации).
 
 Локальный эквивалент перед пушем (проверено — проходит целиком):
 

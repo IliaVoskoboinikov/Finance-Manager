@@ -45,7 +45,8 @@ Run checks for the modules you touched; fix every violation your change introduc
 
 CI (`.github/workflows/ci.yml`) runs, as separate jobs, on every non-`.md` push:
 `assembleDebug`, `test`, coverage (`koverVerifyFull`), `lint`, `detekt`, `ktlintCheck`,
-`:app:assertModuleGraph`, app-size (`analyzeDebugBundle`), and build-time report.
+`:app:assertModuleGraph`, `navCheck` (job `nav-graph`), app-size (`analyzeDebugBundle`),
+and build-time report.
 A change that fails any of these will fail CI — run the matching command locally
 before reporting done. Full pipeline description (incl. the CD workflows and their
 secrets): `docs/ci-cd.md`.
