@@ -8,10 +8,10 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun BottomNavigationBar(
-    modifier: Modifier,
     backStack: TopLevelBackStack,
     screens: List<ScreenBottom>,
-    hapticToggleMenu: () -> Unit
+    hapticToggleMenu: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     NavigationBar(
         modifier = modifier,

@@ -12,13 +12,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun PinCodeScreenHeader(text: String) {
+fun PinCodeScreenHeader(text: String, modifier: Modifier = Modifier) {
     Text(
         text = text,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp,
         textAlign = TextAlign.Center,
-        modifier = Modifier
+        modifier = modifier
             .wrapContentSize()
             .padding(horizontal = 16.dp, vertical = 0.dp),
         color = MaterialTheme.colorScheme.onBackground

@@ -69,7 +69,7 @@ fun PinLockScreenContent(
         titleId = R.string.input_password,
         errorMessage = errorMessage,
         showBiometricButton = true,
-        onPinEntered = { enteredPin ->
+        onPinEnter = { enteredPin ->
             if (onVerifyPin(enteredPin)) {
                 errorMessage = ""
                 onPinCorrect()

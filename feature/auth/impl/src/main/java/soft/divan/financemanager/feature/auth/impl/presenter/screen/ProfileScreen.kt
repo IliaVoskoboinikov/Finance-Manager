@@ -3,6 +3,7 @@ package soft.divan.financemanager.feature.auth.impl.presenter.screen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,7 +53,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = ProfileKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun ProfileScreenPreview() {
+private fun ProfileScreenPreview() {
     FinanceManagerTheme {
         ProfileContent(
             uiState = AuthUiState.Success(),
@@ -90,9 +91,11 @@ fun ProfileScreen(
 fun ProfileContent(
     uiState: AuthUiState,
     authStatus: AuthStatus,
-    actions: ProfileActions
+    actions: ProfileActions,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(
                 topBar = TopBarModel(
@@ -146,7 +149,7 @@ private fun ProfileSuccessContent(
 }
 
 @Composable
-private fun ProfileInfo(authStatus: AuthStatus, actions: ProfileActions) {
+private fun ColumnScope.ProfileInfo(authStatus: AuthStatus, actions: ProfileActions) {
     when (authStatus) {
         AuthStatus.GUEST -> {
             Text(text = stringResource(R.string.profile_guest_message))

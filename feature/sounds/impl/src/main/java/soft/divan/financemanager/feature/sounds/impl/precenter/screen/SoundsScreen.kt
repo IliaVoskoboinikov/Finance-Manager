@@ -35,7 +35,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = SoundsKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun SoundsScreenPreview() {
+private fun SoundsScreenPreview() {
     FinanceManagerTheme {
         SoundsContent(
             uiState = SoundsUiState.Success(true),
@@ -49,8 +49,8 @@ fun SoundsScreenPreview() {
 @NavDestination(route = SoundsKey::class)
 @Composable
 fun SoundsScreen(
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: SoundViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,13 +66,14 @@ fun SoundsScreen(
 
 @Composable
 fun SoundsContent(
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     uiState: SoundsUiState,
     loadData: () -> Unit,
-    setSoundsEnabled: (Boolean) -> Unit
+    setSoundsEnabled: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(
                 topBar = TopBarModel(
@@ -83,14 +84,13 @@ fun SoundsContent(
             )
         }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is SoundsUiState.Error -> ErrorContent(onClick = { loadData() })
 
                 is SoundsUiState.Loading -> LoadingProgressBar()
 
                 is SoundsUiState.Success -> SoundsSuccessContent(
-                    modifier = modifier,
                     uiState = uiState,
                     setSoundsEnabled = setSoundsEnabled
                 )
@@ -101,9 +101,9 @@ fun SoundsContent(
 
 @Composable
 private fun SoundsSuccessContent(
-    modifier: Modifier = Modifier,
     uiState: SoundsUiState.Success,
-    setSoundsEnabled: (Boolean) -> Unit
+    setSoundsEnabled: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier.padding(16.dp),

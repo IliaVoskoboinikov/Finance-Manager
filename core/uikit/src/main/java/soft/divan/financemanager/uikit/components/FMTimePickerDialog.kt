@@ -20,7 +20,7 @@ import java.time.LocalTime
 @Composable
 fun FMTimePickerDialog(
     initialTime: LocalTime,
-    onTimeSelected: (LocalTime) -> Unit,
+    onTimeSelect: (LocalTime) -> Unit,
     onDismissRequest: () -> Unit = {}
 ) {
     val state = rememberTimePickerState(
@@ -34,7 +34,7 @@ fun FMTimePickerDialog(
         confirmButton = {
             TextButton(onClick = {
                 val selectedTime = LocalTime.of(state.hour, state.minute)
-                onTimeSelected(selectedTime)
+                onTimeSelect(selectedTime)
                 onDismissRequest()
             }) {
                 Text(stringResource(R.string.ok))

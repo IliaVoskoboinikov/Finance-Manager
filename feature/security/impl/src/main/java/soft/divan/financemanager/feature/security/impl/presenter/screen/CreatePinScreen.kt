@@ -39,7 +39,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = CreatePinKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun CreatePinScreenPreview() {
+private fun CreatePinScreenPreview() {
     FinanceManagerTheme {
         Column(
             modifier = Modifier
@@ -104,7 +104,7 @@ fun CreatePinScreen(
     PinEntryCommonScreen(
         titleId = headerId,
         errorMessage = notification,
-        onPinEntered = { pinCode ->
+        onPinEnter = { pinCode ->
             if (tempPin == null) {
                 viewModel.changeState(CreatePinScreenState.EnteringPinState(pinCode))
             } else {

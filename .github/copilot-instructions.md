@@ -16,6 +16,10 @@ Navigation 3, WorkManager). Модули: `app`, `core:*`, `feature:*:api` / `fe
 - Не комментируй то, что уже проверяет CI:
   - форматирование и стиль (ktlint);
   - сложность, длину, магические числа, захардкоженные `Dispatchers.*` (detekt);
+  - механику Compose-API: параметр `modifier` и его применение к корню, порядок параметров,
+    `MutableState` и изменяемые коллекции в параметрах, лямбды в эффектах без
+    `rememberUpdatedState`, имена событий (`onClick`, а не `onClicked`), приватность
+    `@Preview`, Material 2 (detekt + `io.nlopez.compose.rules`);
   - `java.util.Date` / `Calendar` (lint `OldDate`, Konsist);
   - пакеты UseCase/Repository, `Entity` вне `core:database`, DTO вне `..dto..`,
     `@HiltViewModel` (Konsist);

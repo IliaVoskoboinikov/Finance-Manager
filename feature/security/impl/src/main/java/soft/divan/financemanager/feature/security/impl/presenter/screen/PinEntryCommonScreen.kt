@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,27 +32,29 @@ private const val PIN_INPUT_CONFIRMATION_DELAY_MS = 200L
 @Composable
 fun PinEntryCommonScreen(
     titleId: Int,
+    onPinEnter: (String) -> Unit,
+    modifier: Modifier = Modifier,
     pinSize: Int = DEFAULT_PIN_SIZE,
     errorMessage: String = "",
     showBiometricButton: Boolean = false,
-    onPinEntered: (String) -> Unit,
     onBackspaceClick: () -> Unit = {},
     onFingerprintClick: () -> Unit = {},
     authenticationCallback: BiometricPrompt.AuthenticationCallback? = null
 ) {
     val inputPin = remember { mutableStateListOf<Int>() }
     var showBiometricScreen by remember { mutableStateOf(true) }
+    val currentOnPinEnter by rememberUpdatedState(onPinEnter)
 
     // Проверка длины и отправка результата
     LaunchedEffect(inputPin.size) {
         if (inputPin.size == pinSize) {
             delay(PIN_INPUT_CONFIRMATION_DELAY_MS) // чтобы пользователь успел увидеть ввод
-            onPinEntered(inputPin.joinToString(""))
+            currentOnPinEnter(inputPin.joinToString(""))
             inputPin.clear()
         }
     }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally,
