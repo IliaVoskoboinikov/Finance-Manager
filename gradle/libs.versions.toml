@@ -6,14 +6,17 @@
 
 # Build & Kotlin
 agp = "9.4.1"
-kotlin = "2.4.0"
+kotlin = "2.4.20"
 ksp = "2.3.9"
 coroutines = "1.11.0"
 buildTimeTracker = "5.0.2"
 graphPlugin = "2.9.1"
 ktlint = "14.2.0"
+# Версия самого ktlint (CLI), а не gradle-плагина выше. Общая для корня и build-logic:
+# без неё build-logic молча брал дефолт плагина (1.5.0) с уязвимым logback.
+ktlintCli = "1.8.0"
 ruler = "2.0.0-beta-3"
-kotlinMetadataJvm = "2.4.0"
+kotlinMetadataJvm = "2.4.20"
 
 # AndroidX Core
 coreKtx = "1.19.0"
@@ -77,10 +80,25 @@ junit = "4.13.2"
 kotlinxCoroutinesTest = "1.11.0"
 assertjCore = "3.27.7"
 mockk = "1.14.11"
-robolectric = "4.14.1"
+robolectric = "4.17"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 androidxTestCore = "1.6.1"
+
+# Security constraints
+# Исправленные версии транзитивных зависимостей build-tooling (в APK они не попадают).
+# Сами плагины уже на последних версиях, но тянут библиотеки с известными CVE
+# (Dependabot). Подключаются как constraints — см. docs/dependency-vulnerabilities.md.
+# Когда родитель сам подтянет версию не ниже этой, constraint можно удалить.
+bouncycastle = "1.86"        # было 1.80.2: AGP/lint → sdk-common
+commonsLang3 = "3.21.0"      # было 3.16.0: AGP/lint → commons-compress
+apacheHttpclient = "4.5.14"  # было 4.5.6: lint → sdklib
+jose4j = "0.9.7"             # было 0.9.5: AGP → bundletool
+jdom2 = "2.0.6.1"            # было 2.0.6: AGP → jetifier-processor
+freemarker = "2.3.35"        # было 2.3.32: Kover → intellij coverage-report
+snakeyaml = "2.7"            # было 1.30: Ruler
+logback = "1.5.38"           # было 1.3.16: ktlint-cli
+
 ##############################################
 #                  Libraries
 ##############################################
@@ -181,6 +199,22 @@ konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
+# Security constraints — не зависимости, а только constraints (см. [versions] → Security constraints)
+bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+bouncycastle-bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
+bouncycastle-bcutil = { module = "org.bouncycastle:bcutil-jdk18on", version.ref = "bouncycastle" }
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commonsLang3" }
+apache-httpclient = { module = "org.apache.httpcomponents:httpclient", version.ref = "apacheHttpclient" }
+jose4j = { module = "org.bitbucket.b_c:jose4j", version.ref = "jose4j" }
+jdom2 = { module = "org.jdom:jdom2", version.ref = "jdom2" }
+freemarker = { module = "org.freemarker:freemarker", version.ref = "freemarker" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback" }
+# Нигде не подключается: версия ktlint CLI задаётся строкой в KtlintExtension, а запись
+# здесь нужна, чтобы Renovate видел ktlintCli и предлагал обновления.
+ktlint-cli = { module = "com.pinterest.ktlint:ktlint-cli", version.ref = "ktlintCli" }
+
 ##############################################
 #                  Bundles
 ##############################################
@@ -189,6 +223,14 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 
 # Default unit-test stack applied to every module via the soft.divan convention plugins.
 unit-test = ["junit", "mockk", "assertj-core", "kotlinx-coroutines-test"]
+
+# Security constraints по месту резолва (docs/dependency-vulnerabilities.md):
+# AGP/lint — buildscript classpath корня и androidLintTool каждого модуля;
+security-constraints-agp = ["bouncycastle-bcprov", "bouncycastle-bcpkix", "bouncycastle-bcutil", "commons-lang3", "apache-httpclient"]
+# прочие плагины — только buildscript classpath корня (Kover, Ruler, AGP → bundletool/jetifier);
+security-constraints-buildscript = ["freemarker", "snakeyaml", "jose4j", "jdom2"]
+# ktlint — его конфигурация `ktlint` (корень и build-logic).
+security-constraints-ktlint = ["logback-classic", "logback-core"]
 
 ##############################################
 #                  Plugins

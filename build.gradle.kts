@@ -175,13 +175,45 @@ buildscript {
         // Как и ruler: convention-плагин применяет его по id, значит плагин должен
         // лежать на runtime-classpath сборки, а не только compileOnly в build-logic.
         classpath(libs.dependency.guard.plugin)
+
+        // Исправленные версии транзитивных зависимостей плагинов (AGP, Kover, Ruler):
+        // сами плагины на последних версиях, но тянут библиотеки с CVE из Dependabot.
+        // Constraint только поднимает версию и в APK не попадает.
+        // Подробности и условия удаления — docs/dependency-vulnerabilities.md.
+        constraints {
+            val fixed = libs.bundles.security.constraints.agp.get() +
+                libs.bundles.security.constraints.buildscript.get()
+            fixed.forEach {
+                add("classpath", it) { because("Dependabot: исправленная версия зависимости плагина") }
+            }
+        }
+    }
+}
+
+/** Пояснение для `dependencyInsight`: откуда взялась версия, которую никто не объявлял. */
+val securityConstraintReason = "Dependabot: исправленная версия транзитивной зависимости build-tooling"
+
+// lint исполняется в отдельном classloader из конфигурации `androidLintTool` (её создаёт
+// AGP в каждом модуле с lint), поэтому constraint из buildscript сюда не доходит.
+allprojects {
+    val module = this
+    configurations.matching { it.name == "androidLintTool" }.configureEach {
+        libs.bundles.security.constraints.agp.get().forEach {
+            module.dependencies.constraints.add(name, it) { because(securityConstraintReason) }
+        }
     }
 }
 
 subprojects {
     plugins.withId("org.jlleitschuh.gradle.ktlint") {
+        // logback приходит транзитивно из ktlint-cli — в его конфигурацию `ktlint`.
+        dependencies.constraints {
+            libs.bundles.security.constraints.ktlint.get().forEach {
+                add("ktlint", it) { because(securityConstraintReason) }
+            }
+        }
         configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-            version.set("1.8.0")
+            version.set(libs.versions.ktlintCli)
             debug.set(true)
             verbose.set(true)
             android.set(true)

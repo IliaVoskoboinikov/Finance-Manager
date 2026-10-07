@@ -18,5 +18,6 @@
 - [Bd](./bd.md) — локальная база данных.
 - [Testing & Coverage](./testing.md) — уровни тестов, инструменты (MockK, Robolectric, TestKit), измерение покрытия через Kover, как запускать.
 - [CI/CD](./ci-cd.md) — workflow GitHub Actions, composite actions, секреты, релизный пайплайн и что в нём ещё не сделано.
+- [Dependency vulnerabilities](./dependency-vulnerabilities.md) — откуда алерты Dependabot, где резолвится build-tooling, реестр security constraints и когда их удалять.
 - [Полезные команды](../help_comand.md) — шпаргалка: сборка, тесты и покрытие, линтеры, графы модулей и навигации, ADB-рецепты, пути отчётов.
 
