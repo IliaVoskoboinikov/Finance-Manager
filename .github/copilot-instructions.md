@@ -16,10 +16,15 @@ Navigation 3, WorkManager). Модули: `app`, `core:*`, `feature:*:api` / `fe
 - Не комментируй то, что уже проверяет CI:
   - форматирование и стиль (ktlint);
   - сложность, длину, магические числа, захардкоженные `Dispatchers.*` (detekt);
+  - механику Compose-API: параметр `modifier` и его применение к корню, порядок параметров,
+    `MutableState` и изменяемые коллекции в параметрах, лямбды в эффектах без
+    `rememberUpdatedState`, имена событий (`onClick`, а не `onClicked`), приватность
+    `@Preview`, Material 2 (detekt + `io.nlopez.compose.rules`);
   - `java.util.Date` / `Calendar` (lint `OldDate`, Konsist);
   - пакеты UseCase/Repository, `Entity` вне `core:database`, DTO вне `..dto..`,
     `@HiltViewModel` (Konsist);
   - рёбра между модулями (`assertModuleGraph`, `CheckConventionsPlugin`);
+  - совпадение аннотаций навигации с бейзлайнами `*/nav/*.nav` (`navCheck`);
   - порог покрытия (Kover).
 - Не предлагай переименований «по вкусу» и смены публичного API без явной причины.
 
@@ -30,7 +35,8 @@ Navigation 3, WorkManager). Модули: `app`, `core:*`, `feature:*:api` / `fe
 - `fallbackToDestructiveMigration`: до релиза реальных пользователей нет, данные
   пересинхронизируются с сервера.
 - Логирование через `android.util.Log` — принятая в проекте конвенция.
-- `usesCleartextTraffic` и HTTP допустимы, пока бэкенд локальный (`BuildConfig.HOST`).
+- `usesCleartextTraffic` и HTTP допустимы, пока `BuildConfig.HOST` указывает на тестовый стенд
+  (`http://yourflow.pro/`); переход на HTTPS перед прод-бэкендом — в `TODO.md`.
 - Compose UI не покрыт тестами и исключён из Kover — Compose-тесты отложены осознанно.
 - `lifecycle-viewmodel-navigation3` зафиксирован на 2.10.x: 2.11 требует `compileSdk 37`.
 
@@ -58,7 +64,7 @@ Navigation 3, WorkManager). Модули: `app`, `core:*`, `feature:*:api` / `fe
 - Новые публичные классы и функции — KDoc; новый UI-компонент — `@Preview`.
 - Изменение схемы Room — поднятая `version` в `@Database`.
 - Изменение навигации — аннотации `@NavDestination` / `@NavEdge` / `@NavPreview` и обновлённые
-  `*/nav/*.nav` (`./gradlew navDump`; `navCheck` в CI не запускается, так что следит ревью).
+  `*/nav/*.nav` (`./gradlew navDump`).
 - Новая строка — в `values/` и `values-ru/`.
 - Изменённый модуль — обновлённый `README.md`; новый модуль — ещё и `settings.gradle.kts`
   и `docs/modules.md`; сложная сквозная фича — дизайн-документ в `docs/`.

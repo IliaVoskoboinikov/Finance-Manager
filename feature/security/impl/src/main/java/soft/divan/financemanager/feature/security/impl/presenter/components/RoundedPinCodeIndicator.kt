@@ -19,16 +19,16 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewRoundedBoxesRow() {
+private fun PreviewRoundedBoxesRow() {
     FinanceManagerTheme {
         RoundedBoxesRow(startQuantity = 4, quantity = 2)
     }
 }
 
 @Composable
-fun RoundedBoxesRow(startQuantity: Int, quantity: Int) {
+fun RoundedBoxesRow(startQuantity: Int, quantity: Int, modifier: Modifier = Modifier) {
     LazyRow(
-        modifier = Modifier
+        modifier = modifier
             .wrapContentSize()
             .padding(horizontal = 16.dp, vertical = 20.dp),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -43,9 +43,9 @@ fun RoundedBoxesRow(startQuantity: Int, quantity: Int) {
 }
 
 @Composable
-fun RoundedBox(isFilled: Boolean) {
+fun RoundedBox(isFilled: Boolean, modifier: Modifier = Modifier) {
     val color = MaterialTheme.colorScheme.onSurface
-    val boxModifier = Modifier
+    val boxModifier = modifier
         .size(35.dp)
         .padding(9.dp)
         .let {

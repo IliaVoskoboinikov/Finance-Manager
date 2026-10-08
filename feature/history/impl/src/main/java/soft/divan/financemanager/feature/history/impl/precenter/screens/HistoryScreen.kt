@@ -15,10 +15,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -58,7 +58,7 @@ import java.time.LocalDate
 @NavPreview(route = HistoryKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun HistoryScreenPreview() {
+private fun HistoryScreenPreview() {
     val today = remember { LocalDate.now() }
     FinanceManagerTheme {
         HistoryContent(
@@ -83,10 +83,10 @@ fun HistoryScreenPreview() {
 @Composable
 fun HistoryScreen(
     isIncome: Boolean,
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     onNavigateToTransaction: (String) -> Unit,
     onNavigateToAnalysis: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: HistoryViewModel =
         hiltViewModel<HistoryViewModel, HistoryViewModel.Factory> { factory ->
             factory.create(isIncome = isIncome)
@@ -114,14 +114,15 @@ fun HistoryScreen(
 
 @Composable
 private fun HistoryContent(
-    modifier: Modifier = Modifier,
     uiState: HistoryUiState,
     startDate: LocalDate,
     endDate: LocalDate,
     actions: HistoryActions,
+    modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             HistoryTopBar(
                 onNavigateBack = actions.onNavigateBack,
@@ -130,7 +131,7 @@ private fun HistoryContent(
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
-        Column(modifier = modifier.padding(paddingValues)) {
+        Column(modifier = Modifier.padding(paddingValues)) {
             PeriodSelector(
                 startDate = startDate,
                 endDate = endDate,
@@ -167,17 +168,17 @@ private fun PeriodSelector(
     onUpdateStartDate: (LocalDate) -> Unit,
     onUpdateEndDate: (LocalDate) -> Unit
 ) {
-    val showStartPicker = remember { mutableStateOf(false) }
-    val showEndPicker = remember { mutableStateOf(false) }
+    var showStartPicker by remember { mutableStateOf(false) }
+    var showEndPicker by remember { mutableStateOf(false) }
 
-    DatePicker(showStartPicker, startDate, onUpdateStartDate)
-    DatePicker(showEndPicker, endDate, onUpdateEndDate)
+    DatePicker(showStartPicker, { showStartPicker = false }, startDate, onUpdateStartDate)
+    DatePicker(showEndPicker, { showEndPicker = false }, endDate, onUpdateEndDate)
 
     Column {
         DateItem(
             label = stringResource(R.string.start),
             value = UiDateFormatter.formatDate(startDate),
-            onClick = { showStartPicker.value = true }
+            onClick = { showStartPicker = true }
         )
 
         FMDriver()
@@ -185,7 +186,7 @@ private fun PeriodSelector(
         DateItem(
             label = stringResource(R.string.end),
             value = UiDateFormatter.formatDate(endDate),
-            onClick = { showEndPicker.value = true }
+            onClick = { showEndPicker = true }
         )
 
         FMDriver()
@@ -194,18 +195,16 @@ private fun PeriodSelector(
 
 @Composable
 private fun DatePicker(
-    state: MutableState<Boolean>,
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
     currentDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelect: (LocalDate) -> Unit
 ) {
-    if (state.value) {
+    if (isVisible) {
         FMDatePickerDialog(
             initialDate = currentDate,
-            onDateSelected = {
-                state.value = false
-                onDateSelected(it)
-            },
-            onDismissRequest = { state.value = false }
+            onDateSelect = onDateSelect,
+            onDismissRequest = onDismiss
         )
     }
 }

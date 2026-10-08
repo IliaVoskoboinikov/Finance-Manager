@@ -29,7 +29,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
  */
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun PreviewPinLockScreen() {
+private fun PreviewPinLockScreen() {
     FinanceManagerTheme {
         Column(
             modifier = Modifier

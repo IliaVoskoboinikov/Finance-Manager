@@ -244,7 +244,7 @@ DI-free** — рендер идёт без запущенного Hilt-граф�
 | `./gradlew :app:exportPreviewGalleryHtml` | галерея превью отдельным HTML → `app/build/navgallery/` |
 | `./gradlew :app:exportPreviewGalleryImage` | галерея превью одной PNG → `app/build/navgallery/` |
 | `./gradlew navDump` | перезаписать `.nav`-бейзлайны во всех модулях |
-| `./gradlew navCheck` | проверить, что граф не разошёлся с бейзлайнами |
+| `./gradlew navCheck` | проверить, что граф не разошёлся с бейзлайнами (гоняется в CI, джоба `nav-graph`) |
 
 Обновить закоммиченную карту и галерею в `docs/graphs/nav_graph/` после изменения графа:
 
@@ -271,8 +271,14 @@ edge SettingsKey -> SecurityKey  "безопасность"
 `navCheck` падает при расхождении (`failOnNavChange = true`) и при отсутствии бейзлайна у
 нового модуля.
 
-`navCheck` **не входит** в `check` и пока не подключён к CI — при желании это отдельная
-джоба в [`ci.yml`](../.github/workflows/ci.yml) рядом с `assertModuleGraph`.
+`navCheck` **не входит** в `check`, но гоняется в CI — первым шагом джобы `nav-graph`
+([`ci.yml`](../.github/workflows/ci.yml)), до рендера карты и галереи. Разошедшийся или
+отсутствующий бейзлайн валит джобу, дифф по всем модулям попадает в Step Summary, а отчёт
+`nav-graph-report` всё равно публикуется. Почему шаг, а не отдельная джоба, — в
+[`ci-cd.md`](./ci-cd.md#как-устроены-отдельные-джобы).
+
+Задаче нужен только KSP: Layoutlib и рендер превью в её граф не входят, поэтому flaky-рендер
+на результат `navCheck` не влияет.
 
 ## Подключение в проекте
 
@@ -322,7 +328,7 @@ extensions.configure<NavGraphExtension> {
    превью того же экрана можно пометить без `primary` (так сделано у `AuthScreen` — пять
    состояний). Превью должно быть **DI-free** (рисовать `XContent(mock)`, а не `XScreen()`) —
    иначе headless-рендер упадёт. Подробнее — раздел «Превью и миниатюры».
-5. `./gradlew navDump` и закоммитить обновлённый `.nav`.
+5. `./gradlew navDump` и закоммитить обновлённый `.nav` — иначе CI упадёт на `navCheck`.
 6. `./gradlew :app:exportNavGraphToDocs` — обновить карту и галерею в
    `docs/graphs/nav_graph/` и закоммитить их вместе с изменениями.
 
@@ -351,8 +357,8 @@ extensions.configure<NavGraphExtension> {
   скомпилирован под **Java 21** (class file version 65), поэтому Gradle-JVM для рендера
   обязан быть **JDK 21** — на JDK 17 рендер падает с `UnsupportedClassVersionError`, и **все**
   превью выходят «no preview» (граф и рёбра при этом строятся корректно — их даёт KSP, а он на
-  17 работает). Локальная разработка идёт на JDK 21; в CI джоба `nav-graph` (`.github/workflows/ci.yml`)
-  явно поднимает JDK 21 отдельным шагом, т.к. общий `android-setup` ставит 17.
+  17 работает). Локальная разработка идёт на JDK 21; в CI JDK 21 во всех джобах ставит общий
+  `init-gradle` (см. [`ci-cd.md`](./ci-cd.md)).
 - Плагин относительно новый (0.2.1, июль 2026) и на сборку не влияет: ни одна его задача
   не входит в `assembleDebug`, `check` или `testDebugUnitTest`.
 
@@ -371,4 +377,6 @@ extensions.configure<NavGraphExtension> {
 | `app/.../presenter/navigation/RootNavDisplay.kt` | рёбра корневого стека (явный `from`) |
 | `app/.../presenter/screens/MainScreen.kt` | узел `MainKey` и рёбра вкладок |
 | `*/nav/*.nav` | закоммиченные бейзлайны графа |
+| `.github/workflows/ci.yml`, джоба `nav-graph` | гейт `navCheck` + публикация отчёта |
+| `.github/actions/nav-graph/` | рендер карты и галереи в CI, сводка в Step Summary |
 | `app/build/navgraph-aggregated/nav-graph.json` | итоговый граф (генерируется) |

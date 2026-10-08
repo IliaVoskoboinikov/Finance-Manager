@@ -116,15 +116,6 @@ reviews:
           Pass — схема не менялась, либо в этом же PR увеличено значение version
           в аннотации @Database класса FinanceManagerDatabase.
           Fail — схема изменилась, а version осталась прежней.
-      - name: "Бейзлайн графа навигации"
-        mode: warning
-        instructions: |
-          Проверь, меняет ли PR граф навигации: добавляет, удаляет или изменяет аннотации
-          @NavDestination, @NavEdge или @NavPreview, либо добавляет новые вызовы
-          navigator.goTo(...).
-          Pass — граф не менялся, либо в этом же PR изменены соответствующие файлы
-          */nav/*.nav (их генерирует ./gradlew navDump).
-          Fail — граф изменился, а .nav-файлы нет.
       - name: "Новый модуль оформлен"
         mode: warning
         instructions: |
@@ -254,8 +245,8 @@ reviews:
         - Повтор запросов (RetryInterceptor) — только для временных ошибок;
           неидемпотентный POST без ключа идемпотентности повторять опасно — возможны
           дубли операций.
-        - Продакшн-трафик — HTTPS; cleartext допустим только для локального бэкенда
-          (BuildConfig.HOST).
+        - Продакшн-трафик — HTTPS; cleartext допустим, только пока BuildConfig.HOST
+          указывает на тестовый стенд yourflow.pro; новых HTTP-адресов не добавлять.
 
     - path: "core/security/**"
       instructions: |
@@ -345,9 +336,8 @@ reviews:
           screen-композаблы.
         - Экран размечен для карты навигации: @NavDestination(route = XKey::class) на
           composable экрана, по одному @NavEdge(to = ..., label = "...") на каждый goTo,
-          @NavPreview(route = XKey::class, primary = true) на основном превью. Изменение
-          графа сопровождается обновлённым nav/*.nav в этом же PR — navCheck в CI не
-          запускается.
+          @NavPreview(route = XKey::class, primary = true) на основном превью. Совпадение
+          аннотаций с nav/*.nav проверяет navCheck в CI — об этом не пиши.
 
         ViewModel
         - @HiltViewModel; аргументы навигации — через @AssistedInject + @AssistedFactory
@@ -369,24 +359,29 @@ reviews:
 
     - path: "{feature/*/impl,core/uikit,app}/src/main/**/*.kt"
       instructions: |
-        Jetpack Compose — для файлов с @Composable. Compose-правила detekt
-        (io.nlopez.compose.rules) в проекте не подключены, поэтому это зона ревью.
+        Jetpack Compose — для файлов с @Composable. Механику Compose-API проверяет detekt
+        с правилами io.nlopez.compose.rules: параметр modifier, его применение к корню
+        и порядок параметров, MutableState и изменяемые коллекции в параметрах,
+        mutableStateOf без remember, лямбды-параметры в эффектах без rememberUpdatedState,
+        имена событий в настоящем времени, приватность превью, Material 2,
+        CompositionLocal вне allowlist. Это не комментируй; ревьюй то, что правила
+        не ловят.
         - Экран делится на XScreen (берёт ViewModel, собирает состояние через
           collectAsStateWithLifecycle()) и stateless XContent(uiState, on...).
           Компоненты получают значения и лямбды; состояние поднято наверх.
-        - Composable, который что-то рисует, принимает modifier: Modifier = Modifier
-          первым необязательным параметром и применяет его к корневому элементу ровно
-          один раз.
-        - Параметры стабильны: неизменяемые data class или @Immutable, без изменяемых
-          коллекций; лишние лямбды не пересоздаются на каждой рекомпозиции.
+        - Подавление Compose-правила через @Suppress — только с комментарием,
+          почему правило здесь неприменимо.
+        - Параметры стабильны: неизменяемые data class или @Immutable; лишние лямбды
+          не пересоздаются на каждой рекомпозиции.
         - Дорогие вычисления — в remember с ключами или derivedStateOf, а лучше
           в ViewModel; в теле composable нет IO, сортировок и форматирования больших
           списков.
         - LazyColumn и LazyRow: у items есть стабильный key (id), для разнородных
           элементов — contentType.
         - Эффекты: LaunchedEffect и DisposableEffect с правильными ключами;
-          LaunchedEffect(Unit), зависящий от меняющихся значений, — ошибка; лямбды
-          в долгоживущих эффектах — через rememberUpdatedState.
+          LaunchedEffect(Unit), зависящий от меняющихся значений, — ошибка. Побочные
+          действия (навигация, вызовы ViewModel) — в эффекте или обработчике события,
+          а не прямо в теле composable.
         - Ввод пользователя и UI-состояние, которое должно пережить поворот, —
           rememberSaveable.
         - Тексты — stringResource; цвета, типографика и отступы — из темы и компонентов
@@ -424,7 +419,7 @@ reviews:
           не собирается — ошибки всплывут только при релизе.
         - Манифест: allowBackup="false" и правила бэкапа не ослабляются (финансовые
           данные); новые exported="true" компоненты и разрешения — с обоснованием;
-          usesCleartextTraffic допустим, только пока бэкенд локальный.
+          usesCleartextTraffic допустим, только пока бэкенд — тестовый стенд yourflow.pro.
 
     - path: "**/src/{test,androidTest}/**"
       instructions: |

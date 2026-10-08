@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import soft.divan.financemanager.uikit.icons.AddRound
 
 @Composable
-fun FloatingButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun FloatingButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
         onClick = { onClick() },
         modifier = modifier,

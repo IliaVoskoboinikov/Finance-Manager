@@ -58,7 +58,9 @@ navgraph = "0.2.1"
 
 # Lint & QA Tools
 detekt = "1.23.8"
-detektCompose = "0.6.7"
+# 0.4.x — последняя линейка compose-rules под detekt 1.23.x; с 0.5.0 правила собраны
+# под detekt 2.x и с 1.23.8 не загружаются (Renovate держит < 0.5.0, см. renovate.json5).
+detektCompose = "0.4.28"
 lint = "32.4.1"
 kover = "0.9.11"
 dependencyAnalysis = "3.19.2"

@@ -55,7 +55,7 @@ fun DeleteAccountDialog(
 
 @Preview(showBackground = true, name = "Delete (no transactions)")
 @Composable
-fun DeleteAccountDialogPreview() {
+private fun DeleteAccountDialogPreview() {
     FinanceManagerTheme {
         DeleteAccountDialog(hasTransactions = false, onConfirm = {}, onDismiss = {})
     }
@@ -67,7 +67,7 @@ fun DeleteAccountDialogPreview() {
     uiMode = Configuration.UI_MODE_NIGHT_YES
 )
 @Composable
-fun ArchiveAccountDialogPreview() {
+private fun ArchiveAccountDialogPreview() {
     FinanceManagerTheme {
         DeleteAccountDialog(hasTransactions = true, onConfirm = {}, onDismiss = {})
     }

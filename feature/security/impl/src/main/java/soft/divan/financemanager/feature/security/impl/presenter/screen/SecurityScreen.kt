@@ -1,6 +1,7 @@
 package soft.divan.financemanager.feature.security.impl.presenter.screen
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -35,7 +36,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = SecurityKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun PreviewSecurityScreen() {
+private fun PreviewSecurityScreen() {
     FinanceManagerTheme {
         SecurityContent(
             uiState = SecurityUiState.Success(hasPin = true),
@@ -50,9 +51,9 @@ fun PreviewSecurityScreen() {
 @NavEdge(to = CreatePinKey::class, label = "установить PIN")
 @Composable
 fun SecurityScreen(
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     onNavigateToCreatePin: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: SecurityViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -68,16 +69,17 @@ fun SecurityScreen(
 
 @Composable
 fun SecurityContent(
-    modifier: Modifier = Modifier,
     uiState: SecurityUiState,
     deletePin: () -> Unit,
     onNavigateBack: () -> Unit,
-    onNavigateToCreatePin: () -> Unit
+    onNavigateToCreatePin: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = { TopBarSecurity(onNavigateBack) }
     ) { paddingValues ->
-        Column(modifier = modifier.padding(paddingValues)) {
+        Column(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is SecurityUiState.Error -> ErrorContent(onClick = {})
 
@@ -94,7 +96,7 @@ fun SecurityContent(
 }
 
 @Composable
-private fun SecuritySucsessState(
+private fun ColumnScope.SecuritySucsessState(
     uiState: SecurityUiState.Success,
     onNavigateToCreatePin: () -> Unit,
     deletePin: () -> Unit

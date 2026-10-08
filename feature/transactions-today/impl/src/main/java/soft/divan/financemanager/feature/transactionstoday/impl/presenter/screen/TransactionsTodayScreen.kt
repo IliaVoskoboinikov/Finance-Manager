@@ -54,7 +54,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = TransactionsTodayKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun TransactionsTodayPreview() {
+private fun TransactionsTodayPreview() {
     FinanceManagerTheme {
         TransactionsTodayContent(
             isIncome = false,
@@ -76,11 +76,11 @@ fun TransactionsTodayPreview() {
 @NavEdge(to = TransactionKey::class, label = "новая / существующая операция")
 @Composable
 fun TransactionsTodayScreen(
-    modifier: Modifier = Modifier,
-    isIncome: Boolean = false,
     onNavigateToHistory: () -> Unit,
     onNavigateToNewTransaction: () -> Unit,
     onNavigateToOldTransaction: (idTransaction: String) -> Unit,
+    modifier: Modifier = Modifier,
+    isIncome: Boolean = false,
     viewModel: TransactionsTodayViewModel = hiltViewModel(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 
@@ -108,13 +108,14 @@ fun TransactionsTodayScreen(
 
 @Composable
 fun TransactionsTodayContent(
-    modifier: Modifier = Modifier,
     isIncome: Boolean,
     uiState: TransactionsTodayUiState,
     actions: TransactionsTodayActions,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(
                 topBar = TopBarModel(
@@ -133,14 +134,13 @@ fun TransactionsTodayContent(
         }
     ) { paddingValues ->
 
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is TransactionsTodayUiState.Loading -> LoadingProgressBar()
 
                 is TransactionsTodayUiState.Error -> ErrorContent(onClick = { actions.onRetry() })
 
                 is TransactionsTodayUiState.Success -> TransactionsList(
-                    modifier = modifier,
                     uiState = uiState,
                     onNavigateToOldTransaction = actions.onNavigateToOldTransaction
                 )
@@ -151,9 +151,9 @@ fun TransactionsTodayContent(
 
 @Composable
 fun TransactionsList(
-    modifier: Modifier = Modifier,
     uiState: TransactionsTodayUiState.Success,
-    onNavigateToOldTransaction: (idTransaction: String) -> Unit
+    onNavigateToOldTransaction: (idTransaction: String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
         SummaryItem(sum = uiState.sumTransaction)

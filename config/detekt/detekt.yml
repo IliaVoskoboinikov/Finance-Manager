@@ -332,8 +332,11 @@ naming:
   FunctionNaming:
     active: true
     excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/androidUnitTest/**', '**/androidInstrumentedTest/**', '**/jsTest/**', '**/iosTest/**' ]
-    functionPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    functionPattern: '[a-z][a-zA-Z0-9]*'
     excludeClassPattern: '$^'
+    # Имена @Composable проверяет Compose > ComposableNaming (PascalCase для UI,
+    # camelCase для возвращающих значение) — здесь их не трогаем.
+    ignoreAnnotated: [ 'Composable' ]
   FunctionParameterNaming:
     active: true
     parameterPattern: '[a-z][A-Za-z0-9]*'
@@ -739,6 +742,8 @@ style:
   UnusedPrivateMember:
     active: true
     allowedNames: ''
+    # Превью приватные (Compose > PreviewPublic), их вызывает только тулинг.
+    ignoreAnnotated: [ 'Preview' ]
   UnusedPrivateProperty:
     active: true
     allowedNames: '_|ignored|expected|serialVersionUID'
@@ -783,3 +788,85 @@ style:
     active: true
     excludeImports:
       - 'java.util.*'
+
+# Compose-правила io.nlopez.compose.rules (плагин detekt-compose, корневой build.gradle.kts).
+# Набор правил сверен с документацией версии 0.4.28 — последней под detekt 1.23.x:
+# https://github.com/mrmans0n/compose-rules/blob/v0.4.28/docs/detekt.md
+# Описание каждого правила: https://mrmans0n.github.io/compose-rules/rules/
+Compose:
+  ComposableAnnotationNaming:
+    active: true
+  ComposableNaming:
+    active: true
+  ComposableParamOrder:
+    active: true
+  CompositionLocalAllowlist:
+    active: true
+    # Своих CompositionLocal в проекте нет: зависимости передаются параметрами, тема —
+    # через MaterialTheme. Новый Local добавляется сюда осознанно, после ревью.
+    allowedCompositionLocals: [ ]
+  CompositionLocalNaming:
+    active: true
+  ContentEmitterReturningValues:
+    active: true
+  ContentSlotReused:
+    active: true
+  ContentTrailingLambda:
+    active: true
+  DefaultsVisibility:
+    active: true
+  LambdaParameterEventTrailing:
+    active: true
+  LambdaParameterInRestartableEffect:
+    active: true
+  # Opt-in: UI только на Material 3 (core:uikit). Из пакета androidx.compose.material
+  # разрешены лишь иконки — material-icons-extended общий для M2 и M3.
+  Material2:
+    active: true
+    allowedFromM2: [ 'icons' ]
+  ModifierClickableOrder:
+    active: true
+  ModifierComposed:
+    active: true
+  ModifierMissing:
+    active: true
+  ModifierNaming:
+    active: true
+  ModifierNotUsedAtRoot:
+    active: true
+  ModifierReused:
+    active: true
+  ModifierWithoutDefault:
+    active: true
+  MultipleEmitters:
+    active: true
+  MutableParams:
+    active: true
+  MutableStateAutoboxing:
+    active: true
+  MutableStateParam:
+    active: true
+  ParameterNaming:
+    active: true
+  PreviewAnnotationNaming:
+    active: true
+  # Opt-in, выключено: превью именуются и XPreview, и PreviewX — переименование ради
+  # единообразия не стоит шума в диффе.
+  PreviewNaming:
+    active: false
+  # Превью — private. compose-nav-graph видимость не проверяет (рендер идёт через
+  # рефлексию), а UnusedPrivateMember настроен игнорировать @Preview.
+  PreviewPublic:
+    active: true
+  RememberContentMissing:
+    active: true
+  RememberMissing:
+    active: true
+  # Opt-in, выключено: Kotlin 2.x включает strong skipping, нестабильные List/Set
+  # в параметрах больше не ломают пропуск рекомпозиции.
+  UnstableCollections:
+    active: false
+  ViewModelForwarding:
+    active: true
+  ViewModelInjection:
+    active: true

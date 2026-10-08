@@ -19,10 +19,10 @@ import androidx.compose.ui.unit.dp
 import soft.divan.financemanager.core.uikit.R
 
 @Composable
-fun SaveButton(onClick: () -> Unit) {
+fun SaveButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .height(56.dp),
