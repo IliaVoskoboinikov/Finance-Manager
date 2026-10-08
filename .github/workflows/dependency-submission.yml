@@ -34,6 +34,14 @@ jobs:
       # поэтому отдельный setup-gradle (init-gradle) здесь не нужен.
       - name: Generate and submit dependency graph
         uses: gradle/actions/dependency-submission@v6
+        env:
+          # Scope в Dependabot: runtime — только то, что уезжает в APK; всё остальное
+          # (плагины, lint, ktlint, detekt, KSP) помечается development, и алерты
+          # фильтруются по scope:runtime / scope:development. Входа у action для этого
+          # нет — переменную напрямую читает dependency-graph плагин внутри Gradle.
+          DEPENDENCY_GRAPH_RUNTIME_INCLUDE_CONFIGURATIONS: 'releaseRuntimeClasspath'
         with:
           # Тестовые и инструментальные конфигурации в проде не живут — не шумим ими в алертах.
-          dependency-graph-exclude-configurations: '.*[Tt]est(Compile|Runtime)Classpath'
+          # *TestLintChecksClasspath — конфигурации AGP 9 для lint юнит-/android-тестов:
+          # в них протекают testImplementation-зависимости (robolectric, mockk, junit).
+          dependency-graph-exclude-configurations: '.*[Tt]est(Compile|Runtime|LintChecks)Classpath'
