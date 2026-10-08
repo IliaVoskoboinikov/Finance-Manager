@@ -10,6 +10,7 @@
 - [Modules](./modules.md) — список всех модулей с сылками на их структуру.
 - [Navigation 3](./navigation3.md) — навигация на `androidx.navigation3`: ключи, сборка графа, back stack вкладок.
 - [Nav graph map](./nav-graph.md) — карта экранов из аннотаций (`compose-nav-graph`): как собирается, как размечать, `navDump` / `navCheck`.
+- [Aalekh — архитектура графа модулей](./aalekh.md) — контроль слоёв, изоляции фич и reachability (`aalekhCheck`), метрики, отчёт и дифф в PR.
 - [Auth & Session](./auth.md) — авторизация, управление JWT и состояниями сессии.
 - [Synchronization](./synchronization.md) — как устроена фоновая синхронизация данных.
 - [Notifications](./notifications.md) — уведомления: напоминание о неактивности, приём пушей, модель адресации и что нужно для адресных пушей.

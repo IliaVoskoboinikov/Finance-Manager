@@ -23,6 +23,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Граф уходит через API (токен передаёт сам action), git-токен в .git/config не нужен.
+          persist-credentials: false
       - name: Create google-services.json
         uses: ./.github/actions/create-google-services
       - name: Set up JDK 21

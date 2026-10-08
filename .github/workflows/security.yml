@@ -27,6 +27,9 @@ jobs:
         with:
           # Полная история — иначе секрет, удалённый последним коммитом, не найдётся.
           fetch-depth: 0
+          # gitleaks читает историю локально, а токен для API получает через env —
+          # сохранять его в .git/config незачем.
+          persist-credentials: false
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@v3
         env:
@@ -80,6 +83,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Review dependencies
         uses: actions/dependency-review-action@v5
         with:
