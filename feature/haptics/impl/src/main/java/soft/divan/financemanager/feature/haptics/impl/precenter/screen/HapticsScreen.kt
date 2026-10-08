@@ -35,7 +35,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = HapticsKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun HapticsScreenPreview() {
+private fun HapticsScreenPreview() {
     FinanceManagerTheme {
         HapticsContent(
             uiState = HapticsUiState.Success(true),
@@ -49,8 +49,8 @@ fun HapticsScreenPreview() {
 @NavDestination(route = HapticsKey::class)
 @Composable
 fun HapticsScreen(
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: HapticsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,13 +66,14 @@ fun HapticsScreen(
 
 @Composable
 private fun HapticsContent(
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     uiState: HapticsUiState,
     loadData: () -> Unit,
-    setHapticEnabled: (Boolean) -> Unit
+    setHapticEnabled: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(
                 topBar = TopBarModel(
@@ -83,14 +84,13 @@ private fun HapticsContent(
             )
         }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is HapticsUiState.Error -> ErrorContent(onClick = { loadData() })
 
                 is HapticsUiState.Loading -> LoadingProgressBar()
 
                 is HapticsUiState.Success -> HapticsSuccessContent(
-                    modifier = modifier,
                     uiState = uiState,
                     setHapticEnabled = setHapticEnabled
                 )
@@ -101,9 +101,9 @@ private fun HapticsContent(
 
 @Composable
 private fun HapticsSuccessContent(
-    modifier: Modifier = Modifier,
     uiState: HapticsUiState.Success,
-    setHapticEnabled: (Boolean) -> Unit
+    setHapticEnabled: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier.padding(16.dp),

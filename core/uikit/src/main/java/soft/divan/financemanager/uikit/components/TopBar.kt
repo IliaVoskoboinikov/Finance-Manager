@@ -21,7 +21,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun TopBarPreview() {
+private fun TopBarPreview() {
     FinanceManagerTheme {
         TopBar(
             topBar = TopBarModel(
@@ -42,6 +42,7 @@ fun TopBar(
     modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
+        modifier = modifier,
         colors = TopAppBarDefaults.topAppBarColors()
             .copy(containerColor = MaterialTheme.colorScheme.primary),
         title = {
@@ -53,8 +54,7 @@ fun TopBar(
                     lineHeight = MaterialTheme.typography.titleLarge.lineHeight,
                     letterSpacing = MaterialTheme.typography.titleLarge.letterSpacing,
                     color = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = modifier
+                )
             )
         },
         actions = {

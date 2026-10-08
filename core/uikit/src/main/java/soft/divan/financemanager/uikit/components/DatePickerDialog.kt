@@ -19,7 +19,7 @@ import java.time.ZoneId
 @Composable
 fun FMDatePickerDialog(
     initialDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit,
+    onDateSelect: (LocalDate) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     val pickerState = rememberDatePickerState(
@@ -33,7 +33,7 @@ fun FMDatePickerDialog(
                 pickerState.selectedDateMillis?.let {
                     val selectedDate =
                         Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
-                    onDateSelected(selectedDate)
+                    onDateSelect(selectedDate)
                     onDismissRequest()
                 }
             }) {

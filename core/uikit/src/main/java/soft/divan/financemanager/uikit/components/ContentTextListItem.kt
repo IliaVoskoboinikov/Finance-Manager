@@ -12,8 +12,8 @@ import androidx.compose.ui.text.style.TextOverflow
 @Composable
 fun ContentTextListItem(
     text: String,
-    color: Color = MaterialTheme.colorScheme.onSurface,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurface
 ) {
     Text(
         text = text,

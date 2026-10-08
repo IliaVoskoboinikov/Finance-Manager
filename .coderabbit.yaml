@@ -359,24 +359,29 @@ reviews:
 
     - path: "{feature/*/impl,core/uikit,app}/src/main/**/*.kt"
       instructions: |
-        Jetpack Compose — для файлов с @Composable. Compose-правила detekt
-        (io.nlopez.compose.rules) в проекте не подключены, поэтому это зона ревью.
+        Jetpack Compose — для файлов с @Composable. Механику Compose-API проверяет detekt
+        с правилами io.nlopez.compose.rules: параметр modifier, его применение к корню
+        и порядок параметров, MutableState и изменяемые коллекции в параметрах,
+        mutableStateOf без remember, лямбды-параметры в эффектах без rememberUpdatedState,
+        имена событий в настоящем времени, приватность превью, Material 2,
+        CompositionLocal вне allowlist. Это не комментируй; ревьюй то, что правила
+        не ловят.
         - Экран делится на XScreen (берёт ViewModel, собирает состояние через
           collectAsStateWithLifecycle()) и stateless XContent(uiState, on...).
           Компоненты получают значения и лямбды; состояние поднято наверх.
-        - Composable, который что-то рисует, принимает modifier: Modifier = Modifier
-          первым необязательным параметром и применяет его к корневому элементу ровно
-          один раз.
-        - Параметры стабильны: неизменяемые data class или @Immutable, без изменяемых
-          коллекций; лишние лямбды не пересоздаются на каждой рекомпозиции.
+        - Подавление Compose-правила через @Suppress — только с комментарием,
+          почему правило здесь неприменимо.
+        - Параметры стабильны: неизменяемые data class или @Immutable; лишние лямбды
+          не пересоздаются на каждой рекомпозиции.
         - Дорогие вычисления — в remember с ключами или derivedStateOf, а лучше
           в ViewModel; в теле composable нет IO, сортировок и форматирования больших
           списков.
         - LazyColumn и LazyRow: у items есть стабильный key (id), для разнородных
           элементов — contentType.
         - Эффекты: LaunchedEffect и DisposableEffect с правильными ключами;
-          LaunchedEffect(Unit), зависящий от меняющихся значений, — ошибка; лямбды
-          в долгоживущих эффектах — через rememberUpdatedState.
+          LaunchedEffect(Unit), зависящий от меняющихся значений, — ошибка. Побочные
+          действия (навигация, вызовы ViewModel) — в эффекте или обработчике события,
+          а не прямо в теле composable.
         - Ввод пользователя и UI-состояние, которое должно пережить поворот, —
           rememberSaveable.
         - Тексты — stringResource; цвета, типографика и отступы — из темы и компонентов

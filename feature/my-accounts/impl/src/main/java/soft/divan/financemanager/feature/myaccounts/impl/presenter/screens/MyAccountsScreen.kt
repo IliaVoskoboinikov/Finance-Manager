@@ -55,7 +55,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = MyAccountsKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun AccountScreenPreview() {
+private fun AccountScreenPreview() {
     FinanceManagerTheme {
         MyAccounts(
             uiState = mockMyAccountsUiStateSuccess,
@@ -71,9 +71,9 @@ fun AccountScreenPreview() {
 @NavEdge(to = AccountKey::class, label = "создать / изменить счёт")
 @Composable
 fun MyAccountsScreen(
-    modifier: Modifier = Modifier,
     onNavigateToUpdateAccount: (idAccount: String) -> Unit,
     onNavigateToCreateAccount: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: MyAccountsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -91,15 +91,16 @@ fun MyAccountsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyAccounts(
-    modifier: Modifier = Modifier,
     uiState: MyAccountsUiState,
     loadAccounts: () -> Unit,
     onNavigateToUpdateAccount: (idAccount: String) -> Unit,
     onNavigateToCreateAccount: () -> Unit,
     hapticNavigation: () -> Unit,
+    modifier: Modifier = Modifier,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = { AccountTopBar() },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
@@ -109,7 +110,7 @@ fun MyAccounts(
             })
         }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             MyAccountsStatefulContent(
                 uiState = uiState,
                 loadAccounts = loadAccounts,
@@ -153,9 +154,10 @@ private fun MyAccountsStatefulContent(
 @Composable
 fun AccountsSuccessContent(
     accounts: List<MyAccountsUiModel>,
-    onNavigateToUpdateAccount: (idAccount: String) -> Unit
+    onNavigateToUpdateAccount: (idAccount: String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    LazyColumn {
+    LazyColumn(modifier = modifier) {
         items(
             items = accounts,
             key = { it.id }

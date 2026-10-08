@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,6 +83,7 @@ fun AuthScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val currentOnAuthSuccess by rememberUpdatedState(onAuthSuccess)
 
     val yandexLauncher = rememberLauncherForActivityResult(viewModel.yandexAuthContract) { result ->
         viewModel.onYandexResult(result)
@@ -89,7 +92,7 @@ fun AuthScreen(
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
-                is AuthEvent.NavigateToMain -> onAuthSuccess()
+                is AuthEvent.NavigateToMain -> currentOnAuthSuccess()
 
                 is AuthEvent.ShowToast -> Toast.makeText(
                     context,
@@ -126,7 +129,8 @@ fun AuthScreen(
 fun AuthContent(
     uiState: AuthUiState,
     actions: AuthActions,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier
 ) {
     if (uiState is AuthUiState.Success && uiState.showMergeDialog) {
         MergeDialog(
@@ -136,6 +140,7 @@ fun AuthContent(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             if (uiState is AuthUiState.Success) {
                 TopBar(
@@ -356,7 +361,7 @@ private fun AlternativeAuthButtons(
 }
 
 @Composable
-private fun AuthFields(
+private fun ColumnScope.AuthFields(
     authUi: AuthUi,
     error: String?,
     onUpdateName: (String) -> Unit,
@@ -489,7 +494,7 @@ private fun SyncingOverlay() {
 @NavPreview(route = ProfileAuthKey::class, primary = true)
 @Preview(showBackground = true, name = "Profile re-auth")
 @Composable
-fun ProfileAuthScreenPreview() {
+private fun ProfileAuthScreenPreview() {
     FinanceManagerTheme {
         AuthContent(
             uiState = AuthUiState.Success(
@@ -504,7 +509,7 @@ fun ProfileAuthScreenPreview() {
 @NavPreview(route = AuthKey::class, primary = true)
 @Preview(showBackground = true, name = "Login Mode - Light")
 @Composable
-fun AuthScreenLoginLightPreview() {
+private fun AuthScreenLoginLightPreview() {
     FinanceManagerTheme(darkTheme = false) {
         AuthContent(
             uiState = AuthUiState.Success(
@@ -523,7 +528,7 @@ fun AuthScreenLoginLightPreview() {
 @NavPreview(route = AuthKey::class)
 @Preview(showBackground = true, name = "Login Mode - Dark")
 @Composable
-fun AuthScreenLoginDarkPreview() {
+private fun AuthScreenLoginDarkPreview() {
     FinanceManagerTheme(darkTheme = true) {
         AuthContent(
             uiState = AuthUiState.Success(
@@ -542,7 +547,7 @@ fun AuthScreenLoginDarkPreview() {
 @NavPreview(route = AuthKey::class)
 @Preview(showBackground = true, name = "Register Mode")
 @Composable
-fun AuthScreenRegisterPreview() {
+private fun AuthScreenRegisterPreview() {
     FinanceManagerTheme {
         AuthContent(
             uiState = AuthUiState.Success(
@@ -561,7 +566,7 @@ fun AuthScreenRegisterPreview() {
 @NavPreview(route = AuthKey::class)
 @Preview(showBackground = true, name = "Error State")
 @Composable
-fun AuthScreenErrorPreview() {
+private fun AuthScreenErrorPreview() {
     FinanceManagerTheme {
         AuthContent(
             uiState = AuthUiState.Success(
@@ -581,7 +586,7 @@ fun AuthScreenErrorPreview() {
 @NavPreview(route = AuthKey::class)
 @Preview(showBackground = true, name = "Russian Localization", locale = "ru")
 @Composable
-fun AuthScreenRussianPreview() {
+private fun AuthScreenRussianPreview() {
     FinanceManagerTheme {
         AuthContent(
             uiState = AuthUiState.Success(

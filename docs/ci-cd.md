@@ -103,7 +103,7 @@ CI не гоняют намеренно: у `push` и `pull_request` разны�
 | `dependency-analysis` | `./gradlew buildHealth` | Неиспользуемые и неверно объявленные зависимости. Не блокирует (`continue-on-error`). | `dependency-analysis-report`; первые 200 строк отчёта в Step Summary. |
 | `run-coverage` | [`actions/coverage`](../.github/actions/coverage/action.yml) | Порог покрытия Kover. | `kover-coverage-html`; таблица LINE/BRANCH в Step Summary. |
 | `run-lint` | `./gradlew lint` | Android Lint + кастомные чекеры модуля `:lint`. | `lint-html` (HTML-отчёты всех модулей). |
-| `run-detekt` | `./gradlew detekt --continue` | Статический анализ Kotlin. | `detekt.html`, SARIF в Code Scanning, Markdown в Step Summary. |
+| `run-detekt` | `./gradlew detekt --continue` | Статический анализ Kotlin, включая Compose-правила (`io.nlopez.compose.rules`). | `detekt.html`, SARIF в Code Scanning, Markdown в Step Summary. |
 | `run-ktlint` | [`actions/ktlint`](../.github/actions/ktlint/action.yml) | Форматирование/стиль. | `ktlint-html-report`, SARIF в Code Scanning, Markdown в Step Summary. |
 | `check-app-size` | `./gradlew :app:analyzeDebugBundle` | Размер приложения (Ruler). | `ruler-report.html`. |
 | `check-module-graph` | `./gradlew :app:assertModuleGraph` + `generateModulesGraphvizText` | Архитектурные границы модулей. | `all_modules.png` (Graphviz), DOT-граф в Step Summary. |
@@ -122,6 +122,12 @@ CI не гоняют намеренно: у `push` и `pull_request` разны�
 **`run-detekt`.** Шаг с Detekt помечен `continue-on-error: true`, чтобы успели выполниться
 шаги публикации отчётов; фактический провал джобы делает последний шаг — `grep -q "<error"`
 по `detekt.xml`. SARIF уходит в GitHub Code Scanning с `category: detekt`.
+Detekt запускается одной агрегированной задачей по всему репозиторию, поэтому плагин
+Compose-правил (`detektPlugins(libs.detekt.compose)`) подключён только в корневом
+`build.gradle.kts` и проверяет `app`, `core:*` и `feature:*` разом; сами правила — секция
+`Compose:` в `config/detekt/detekt.yml`. Версия плагина привязана к detekt: compose-rules
+0.5+ требуют detekt 2.x, поэтому на detekt 1.23.x используется линейка 0.4, и Renovate
+не поднимает её выше `0.5.0`.
 
 **`run-ktlint`.** `ktlintCheck --continue` собирает SARIF по всем модулям, action склеивает
 их в один `merged-ktlint.sarif` через `jq`, отдельно строит подробный Markdown-отчёт
@@ -332,7 +338,7 @@ CI намеренно тонкий, поэтому «где что настро�
 | Инструмент | Где настроен | Задача |
 |---|---|---|
 | Kover (покрытие + гейт) | корневой `build.gradle.kts` | `koverHtmlReportFull`, `koverXmlReportFull`, `koverVerifyFull` |
-| Detekt | корневой `build.gradle.kts` + `config/detekt/detekt.yml` | `detekt` (xml + html + sarif + md) |
+| Detekt (+ Compose-правила `io.nlopez.compose.rules`) | корневой `build.gradle.kts` + `config/detekt/detekt.yml` | `detekt` (xml + html + sarif + md) |
 | KtLint | `subprojects { … }` в корневом `build.gradle.kts` | `ktlintCheck` / `ktlintFormat` |
 | Android Lint + кастомные правила | конвеншен-плагины, модуль `:lint` | `lint` |
 | Ruler (размер приложения) | [`RulerConventionPlugin`](../build-logic/convention/src/main/kotlin/RulerConventionPlugin.kt) | `:app:analyzeDebugBundle` |

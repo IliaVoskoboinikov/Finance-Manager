@@ -203,6 +203,15 @@ detekt {
     buildUponDefaultConfig = true
 }
 
+/**
+ * Compose-правила (io.nlopez.compose.rules) — набор `Compose:` в `detekt.yml`.
+ * Detekt подключён только в корне и сканирует весь репозиторий одной задачей,
+ * поэтому плагин достаточно добавить сюда — он покрывает `app`, `core:*` и `feature:*`.
+ */
+dependencies {
+    detektPlugins(libs.detekt.compose)
+}
+
 tasks.withType<Detekt>().configureEach {
     group = "verification"
     description = "Run Detekt on all modules (aggregated)"

@@ -56,7 +56,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = CategoryKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun CategoriesScreenPreview() {
+private fun CategoriesScreenPreview() {
     FinanceManagerTheme {
         CategoriesContent(
             uiState = mockCategoriesUiStateSuccess,
@@ -84,19 +84,20 @@ fun CategoriesScreen(
 
 @Composable
 private fun CategoriesContent(
-    modifier: Modifier = Modifier,
     uiState: CategoriesUiState,
     onSearch: (String) -> Unit,
-    loadCategories: () -> Unit
+    loadCategories: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var query by remember { mutableStateOf("") }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(topBar = TopBarModel(title = R.string.my_articles))
         }
     ) { paddingValues ->
-        Column(modifier = modifier.padding(paddingValues)) {
+        Column(modifier = Modifier.padding(paddingValues)) {
             SearchBar(
                 query = query,
                 onQueryChange = {
@@ -160,9 +161,9 @@ private fun CategoriesList(categories: List<UiCategory>) {
 }
 
 @Composable
-fun CategoryListItem(categoryUiModel: UiCategory) {
+fun CategoryListItem(categoryUiModel: UiCategory, modifier: Modifier = Modifier) {
     ListItem(
-        modifier = Modifier.height(70.dp),
+        modifier = modifier.height(70.dp),
         lead = {
             EmojiCircle(emoji = categoryUiModel.emoji)
         },

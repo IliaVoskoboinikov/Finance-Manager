@@ -31,10 +31,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
@@ -81,7 +82,7 @@ import java.time.LocalTime
 @NavPreview(route = TransactionKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun TransactionScreenPreview() {
+private fun TransactionScreenPreview() {
     FinanceManagerTheme {
         TransactionContent(
             uiState = mockTransactionUiStateSuccess,
@@ -104,7 +105,7 @@ fun TransactionScreenPreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun CategoryPreview() {
+private fun CategoryPreview() {
     FinanceManagerTheme {
         CategorySheetContent(mockCategories, {}, {})
     }
@@ -112,7 +113,7 @@ fun CategoryPreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun AccountPreview() {
+private fun AccountPreview() {
     FinanceManagerTheme {
         AccountSheetContent(mockAccounts, {}, {})
     }
@@ -123,8 +124,8 @@ fun AccountPreview() {
 fun TransactionScreen(
     isIncome: Boolean,
     transactionId: String?,
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: TransactionViewModel =
         hiltViewModel<TransactionViewModel, TransactionViewModel.Factory> { factory ->
             factory.create(isIncome = isIncome, transactionId = transactionId)
@@ -134,11 +135,12 @@ fun TransactionScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val resources = LocalResources.current
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
-                is TransactionEvent.TransactionDeleted -> onNavigateBack()
+                is TransactionEvent.TransactionDeleted -> currentOnNavigateBack()
 
                 is TransactionEvent.ShowError ->
                     snackbarHostState.showSnackbar(
@@ -146,7 +148,7 @@ fun TransactionScreen(
                         withDismissAction = true
                     )
 
-                is TransactionEvent.TransactionSaved -> onNavigateBack()
+                is TransactionEvent.TransactionSaved -> currentOnNavigateBack()
             }
         }
     }
@@ -172,24 +174,24 @@ fun TransactionScreen(
 
 @Composable
 fun TransactionContent(
-    modifier: Modifier = Modifier,
     isIncome: Boolean,
     uiState: TransactionUiState,
     actions: TransactionActions,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = { TopBarTransaction(isIncome, actions.onNavigateBack, actions.onSave) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is TransactionUiState.Loading -> LoadingProgressBar()
 
                 is TransactionUiState.Error -> ErrorContent(onClick = actions.onSave)
 
                 is TransactionUiState.Success -> TransactionForm(
-                    modifier = modifier,
                     uiState = uiState,
                     actions = actions
                 )
@@ -217,53 +219,55 @@ private fun TopBarTransaction(
 
 @Composable
 fun TransactionForm(
-    modifier: Modifier = Modifier,
     uiState: TransactionUiState.Success,
-    actions: TransactionActions
+    actions: TransactionActions,
+    modifier: Modifier = Modifier
 ) {
-    val isShowAccountsSheet = remember { mutableStateOf(false) }
-    val isShowDatePicker = remember { mutableStateOf(false) }
-    val isShowTimePicker = remember { mutableStateOf(false) }
-    val isShowCategorySheet = remember { mutableStateOf(false) }
-    val isShowDeleteDialog = remember { mutableStateOf(false) }
+    var isShowAccountsSheet by remember { mutableStateOf(false) }
+    var isShowDatePicker by remember { mutableStateOf(false) }
+    var isShowTimePicker by remember { mutableStateOf(false) }
+    var isShowCategorySheet by remember { mutableStateOf(false) }
+    var isShowDeleteDialog by remember { mutableStateOf(false) }
 
-    ShowDataPickerDialog(isShowDatePicker = isShowDatePicker, onDateChange = actions.onDateChange)
-    ShowTimePickerDialog(isShowTimePicker = isShowTimePicker, onTimeChange = actions.onTimeChange)
+    ShowDataPickerDialog(isShowDatePicker, { isShowDatePicker = false }, actions.onDateChange)
+    ShowTimePickerDialog(isShowTimePicker, { isShowTimePicker = false }, actions.onTimeChange)
     ShowCategoryBottomSheet(
-        isShowCategorySheet = isShowCategorySheet,
+        isVisible = isShowCategorySheet,
+        onDismiss = { isShowCategorySheet = false },
         categories = uiState.categories,
         onCategoryChange = actions.onCategoryChange
     )
     ShowAccountsBottomSheet(
-        isShowAccountsSheet = isShowAccountsSheet,
+        isVisible = isShowAccountsSheet,
+        onDismiss = { isShowAccountsSheet = false },
         accounts = uiState.accounts.filterNot { it.archived },
         onAccountChange = actions.onAccountChange
     )
 
-    ShowDeleteDialog(isShowDeleteDialog, actions.onDelete)
+    ShowDeleteDialog(isShowDeleteDialog, { isShowDeleteDialog = false }, actions.onDelete)
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        Account(uiState = uiState, onClick = { isShowAccountsSheet.value = true })
+        Account(uiState = uiState, onClick = { isShowAccountsSheet = true })
         FMDriver()
         Category(
             category = uiState.transaction.category.emoji + " " + uiState.transaction.category.name,
-            onClick = { isShowCategorySheet.value = true }
+            onClick = { isShowCategorySheet = true }
         )
         FMDriver()
         Amount(amount = uiState.transaction.amount, onAmountChange = actions.onAmountChange)
         FMDriver()
         Data(
             transactionDate = uiState.transaction.date,
-            isShowStartDatePicker = isShowDatePicker
+            onClick = { isShowDatePicker = true }
         )
         FMDriver()
         Time(
             transactionDate = uiState.transaction.time,
-            isShowTimePicker = isShowTimePicker
+            onClick = { isShowTimePicker = true }
         )
         FMDriver()
         CommentInputField(
@@ -275,83 +279,77 @@ fun TransactionForm(
         FMDriver()
         Spacer(modifier = Modifier.height(24.dp))
         if (uiState.transaction.mode is TransactionMode.Edit) {
-            DeleteButton { isShowDeleteDialog.value = true }
+            DeleteButton(onClick = { isShowDeleteDialog = true })
         }
     }
 }
 
 @Composable
 private fun ShowDataPickerDialog(
-    isShowDatePicker: MutableState<Boolean>,
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
     onDateChange: (LocalDate) -> Unit
 ) {
-    if (isShowDatePicker.value) {
+    if (isVisible) {
         FMDatePickerDialog(
             initialDate = LocalDate.now(),
-            onDateSelected = { date ->
-                onDateChange(date)
-            },
-            onDismissRequest = { isShowDatePicker.value = false }
+            onDateSelect = onDateChange,
+            onDismissRequest = onDismiss
         )
     }
 }
 
 @Composable
 private fun ShowTimePickerDialog(
-    isShowTimePicker: MutableState<Boolean>,
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
     onTimeChange: (LocalTime) -> Unit
 ) {
-    if (isShowTimePicker.value) {
+    if (isVisible) {
         FMTimePickerDialog(
             initialTime = LocalTime.now(),
-            onTimeSelected = { time ->
-                onTimeChange(time)
-            },
-            onDismissRequest = {
-                isShowTimePicker.value = false
-            }
+            onTimeSelect = onTimeChange,
+            onDismissRequest = onDismiss
         )
     }
 }
 
 @Composable
 private fun ShowCategoryBottomSheet(
-    isShowCategorySheet: MutableState<Boolean>,
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
     categories: List<CategoryUi>,
     onCategoryChange: (CategoryUi) -> Unit
 ) {
-    if (isShowCategorySheet.value) {
+    if (isVisible) {
         CategoryBottomSheet(
             categories = categories,
-            onCategorySelected = {
-                onCategoryChange(it)
-            },
-            onDismissRequest = { isShowCategorySheet.value = false }
+            onCategorySelect = onCategoryChange,
+            onDismissRequest = onDismiss
         )
     }
 }
 
 @Composable
 private fun ShowAccountsBottomSheet(
-    isShowAccountsSheet: MutableState<Boolean>,
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
     accounts: List<AccountUi>,
     onAccountChange: (AccountUi) -> Unit
 ) {
-    if (isShowAccountsSheet.value) {
+    if (isVisible) {
         AccountsBottomSheet(
             accounts = accounts,
-            onAccountsSelected = {
-                onAccountChange(it)
-            },
-            onDismissRequest = { isShowAccountsSheet.value = false }
+            onAccountSelect = onAccountChange,
+            onDismissRequest = onDismiss
         )
     }
 }
 
 @Composable
-private fun ShowDeleteDialog(isShowDeleteDialog: MutableState<Boolean>, onDelete: () -> Unit) {
-    if (isShowDeleteDialog.value) {
-        DeleteDialog(isShowDeleteDialog, onDelete)
+private fun ShowDeleteDialog(isVisible: Boolean, onDismiss: () -> Unit, onDelete: () -> Unit) {
+    if (isVisible) {
+        DeleteDialog(onDismissRequest = onDismiss, onDelete = onDelete)
     }
 }
 
@@ -418,7 +416,7 @@ private fun Category(
 @Composable
 fun CategoryBottomSheet(
     categories: List<CategoryUi>,
-    onCategorySelected: (CategoryUi) -> Unit,
+    onCategorySelect: (CategoryUi) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     ModalBottomSheet(
@@ -426,7 +424,7 @@ fun CategoryBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
-        CategorySheetContent(categories, onCategorySelected, onDismissRequest)
+        CategorySheetContent(categories, onCategorySelect, onDismissRequest)
     }
 }
 
@@ -434,7 +432,7 @@ fun CategoryBottomSheet(
 @Composable
 fun AccountsBottomSheet(
     accounts: List<AccountUi>,
-    onAccountsSelected: (AccountUi) -> Unit,
+    onAccountSelect: (AccountUi) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     ModalBottomSheet(
@@ -442,14 +440,14 @@ fun AccountsBottomSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
-        AccountSheetContent(accounts, onAccountsSelected, onDismissRequest)
+        AccountSheetContent(accounts, onAccountSelect, onDismissRequest)
     }
 }
 
 @Composable
 private fun AccountSheetContent(
     accounts: List<AccountUi>,
-    onAccountSelected: (AccountUi) -> Unit,
+    onAccountSelect: (AccountUi) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     Column(
@@ -472,7 +470,7 @@ private fun AccountSheetContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            onAccountSelected(account)
+                            onAccountSelect(account)
                             onDismissRequest()
                         },
                     content = {
@@ -492,7 +490,7 @@ private fun AccountSheetContent(
 @Composable
 private fun CategorySheetContent(
     categories: List<CategoryUi>,
-    onCategorySelected: (CategoryUi) -> Unit,
+    onCategorySelect: (CategoryUi) -> Unit,
     onDismissRequest: () -> Unit
 ) {
     Column(
@@ -515,7 +513,7 @@ private fun CategorySheetContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            onCategorySelected(category)
+                            onCategorySelect(category)
                             onDismissRequest()
                         },
                     content = {
@@ -582,25 +580,25 @@ private fun AmountTextField(
 @Composable
 private fun Data(
     transactionDate: String,
-    isShowStartDatePicker: MutableState<Boolean>
+    onClick: () -> Unit
 ) {
     ListItem(
         modifier = Modifier
             .height(70.dp)
             .fillMaxWidth()
-            .clickable { isShowStartDatePicker.value = true },
+            .clickable(onClick = onClick),
         content = { ContentTextListItem(stringResource(R.string.data)) },
         trail = { ContentTextListItem(transactionDate) }
     )
 }
 
 @Composable
-private fun Time(transactionDate: String, isShowTimePicker: MutableState<Boolean>) {
+private fun Time(transactionDate: String, onClick: () -> Unit) {
     ListItem(
         modifier = Modifier
             .height(70.dp)
             .fillMaxWidth()
-            .clickable { isShowTimePicker.value = true },
+            .clickable(onClick = onClick),
         content = { ContentTextListItem(stringResource(R.string.time)) },
         trail = { ContentTextListItem(transactionDate) }
     )
