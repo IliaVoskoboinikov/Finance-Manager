@@ -9,6 +9,7 @@ import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import soft.divan.financemanager.core.auth.data.interceptor.GuestModeNetworkBlockedException
 import soft.divan.financemanager.core.auth.data.interceptor.UnauthorizedNetworkBlockedException
+import soft.divan.financemanager.core.network.interceptor.NoInternetException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -92,6 +93,9 @@ private fun Throwable.toFailure(errorLogger: ErrorLogger): DomainResult.Failure 
         is UnauthorizedNetworkBlockedException ->
             DomainResult.Failure(DataError.UnauthorizedBlocked.toDomainError())
 
+        // NoInternetException бросает NetworkConnectionInterceptor при отсутствии сети —
+        // это штатное офлайн-состояние, а не сбой, поэтому в Crashlytics не уходит.
+        is NoInternetException,
         is UnknownHostException,
         is ConnectException,
         is SocketTimeoutException ->
