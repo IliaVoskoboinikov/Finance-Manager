@@ -10,7 +10,8 @@ commands are in [`.github/scripts/board.py`](../../.github/scripts/board.py).
 *   Branch: `feature/FM-<number>-<snake_case_name>`, e.g. `feature/FM-42-fix_navigation`.
     Task branches live under `feature/` like all others; the automation finds the card by the
     `FM-N` part.
-*   Commit subject: Conventional Commits in Russian, key at the end:
+*   Commit subject: Conventional Commits in Russian, key at the end, at most 72 characters —
+    GitHub cuts a longer subject when it becomes a PR title:
     `fix(navigation): починить возврат с экрана счёта (FM-42)`.
 *   PR body: `Closes #42` (the automation adds it if it is missing).
 *   Git stays with the user: propose the branch name and the commit message, don't create them.

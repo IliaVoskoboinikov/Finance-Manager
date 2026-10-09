@@ -185,4 +185,5 @@ otherwise pick the sensible default and note it.
 - Prefer the smallest change that satisfies the requirement; mirror existing style and patterns.
 - Don't rename public APIs or restructure packages without an explicit request.
 - When done, give a short report: what changed, architecture/module-graph impact, tests added, risks,
-  and the task card (`FM-N`, its status, follow-up cards to create).
+  and the task card (`FM-N <title>`, its status, proposed branch `feature/FM-N-…`, commit message
+  ending with `(FM-N)`, follow-up cards to create).

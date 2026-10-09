@@ -30,4 +30,4 @@ Provide a summary including:
 2. **Architecture impact:** Any changes to module graph or core layers.
 3. **Test coverage:** List of new tests.
 4. **Risks:** Potential side effects or limitations.
-5. **Task:** Card key and status (`FM-N`), proposed branch `feature/FM-N-…`, commit message ending with `(FM-N)`, drafts of follow-up cards (see `task-board.md`).
+5. **Task:** Card key and title (`FM-N <title>`), its status, proposed branch `feature/FM-N-…`, commit message ending with `(FM-N)`, drafts of follow-up cards (see `task-board.md`).
