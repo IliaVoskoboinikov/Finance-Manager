@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       run_id:
-        description: Id прогона на master, по которому проверить логику
+        description: Id прогона на master; проверка «прогон самый свежий» при ручном запуске отключена
         type: string
         required: true
       dry_run:
@@ -38,9 +38,13 @@ jobs:
       || github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    # Два прогона подряд (например, CI и Security) не должны гонять друг друга по одному issue.
+    # Очередь — своя у каждого workflow: у CI и Security разные issue, и общая группа давала бы
+    # им вытеснять друг друга. GitHub держит в группе один ожидающий запуск и при появлении
+    # нового отменяет прежний ожидающий. Внутри одного workflow это и нужно: решает только
+    # самый свежий прогон (ci_failure.py это проверяет), а два отчёта по одному issue
+    # параллельно не идут, поэтому дублей нет.
     concurrency:
-      group: ci-failure
+      group: ci-failure-${{ github.event.workflow_run.name || 'manual' }}
       cancel-in-progress: false
     steps:
       - name: Checkout
@@ -53,9 +57,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           flags=()
           if [ "$DRY_RUN" = "true" ]; then
             flags+=(--dry-run)
+          fi
+          # Ручной запуск проверяет логику на выбранном прогоне, даже если он не самый свежий.
+          if [ "$MANUAL" = "true" ]; then
+            flags+=(--force)
           fi
           python3 .github/scripts/ci_failure.py --run-id "$RUN_ID" "${flags[@]}"

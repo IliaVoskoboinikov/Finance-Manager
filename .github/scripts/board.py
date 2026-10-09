@@ -75,6 +75,9 @@ query($owner: String!, $repo: String!, $number: Int!) {
           status: fieldValueByName(name: "Status") {
             ... on ProjectV2ItemFieldSingleSelectValue { name }
           }
+          priority: fieldValueByName(name: "Priority") {
+            ... on ProjectV2ItemFieldSingleSelectValue { name }
+          }
         }
       }
     }
@@ -101,7 +104,7 @@ query($owner: String!, $number: Int!, $after: String) {
         pageInfo { hasNextPage endCursor }
         nodes {
           status: fieldValueByName(name: "Status") {
-            ... on ProjectV2ItemFieldSingleSelectValue { name }
+            ... on ProjectV2ItemFieldSingleSelectValue { name updatedAt }
           }
           priority: fieldValueByName(name: "Priority") {
             ... on ProjectV2ItemFieldSingleSelectValue { name }
@@ -112,7 +115,6 @@ query($owner: String!, $number: Int!, $after: String) {
               title
               state
               closedAt
-              updatedAt
               labels(first: 20) { nodes { name } }
               subIssuesSummary { total completed }
             }
@@ -146,6 +148,7 @@ class Issue:
     state: str
     item_id: Optional[str]
     status: Optional[str]
+    priority: Optional[str]
 
 
 @dataclass
@@ -158,7 +161,9 @@ class Card:
     status: Optional[str]
     priority: Optional[str]
     labels: frozenset
-    updated_at: datetime
+    # Когда последний раз менялся Status: время issue сдвигают и комментарии, и лейблы,
+    # а «застрявшая» карточка — та, что давно не меняла колонку.
+    status_changed_at: datetime
     closed_at: Optional[datetime]
     sub_total: int
     sub_done: int
@@ -223,7 +228,10 @@ def get_issue(number: int) -> Optional[Issue]:
         (n for n in data["projectItems"]["nodes"] if n["project"]["url"] == PROJECT_URL), None
     )
     status = ((item or {}).get("status") or {}).get("name")
-    return Issue(number, data["id"], data["title"], data["state"], item and item["id"], status)
+    priority = ((item or {}).get("priority") or {}).get("name")
+    return Issue(
+        number, data["id"], data["title"], data["state"], item and item["id"], status, priority
+    )
 
 
 def require_issue(number: int) -> Issue:
@@ -304,6 +312,21 @@ def add_issue(number: int, priority=None, status=None, dry_run=False) -> str:
     )
 
 
+def ensure_on_board(number: int, default_priority: str, dry_run=False) -> str:
+    """Карточка issue есть на доске, а приоритет задан; уже выставленный приоритет не трогает.
+
+    Повторный вызов чинит то, что не доделал прошлый (например, issue завели, а до доски
+    не дошли), и не перетирает приоритет, который человек поменял руками.
+    """
+    issue = require_issue(number)
+    if issue.item_id and issue.priority:
+        return f"#{number} уже на доске с приоритетом {issue.priority}"
+    board = load_board()
+    item_id = ensure_item(board, issue, dry_run)
+    set_single_select(board, item_id, "Priority", default_priority, dry_run)
+    return f"#{number} на доске, Priority {default_priority}"
+
+
 def ensure_closes(body: str, number: int) -> Optional[str]:
     """Новый текст описания PR со строкой Closes #N или None, если она уже есть."""
     if number in {int(n) for n in CLOSING_RE.findall(body)}:
@@ -367,6 +390,10 @@ def pr_sync(number: int, dry_run=False) -> None:
 # --- Сводка -------------------------------------------------------------------------------
 
 
+def now_utc() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 def parse_ts(value: Optional[str]) -> Optional[datetime]:
     if not value:
         return None
@@ -383,15 +410,16 @@ def fetch_cards() -> list:
             if "number" not in content:  # PR или черновик — на нашей доске их не бывает
                 continue
             summary = content.get("subIssuesSummary") or {}
+            status = node.get("status") or {}
             cards.append(
                 Card(
                     number=content["number"],
                     title=content["title"],
                     state=content["state"],
-                    status=(node.get("status") or {}).get("name"),
+                    status=status.get("name"),
                     priority=(node.get("priority") or {}).get("name"),
                     labels=frozenset(n["name"] for n in content["labels"]["nodes"]),
-                    updated_at=parse_ts(content["updatedAt"]),
+                    status_changed_at=parse_ts(status.get("updatedAt")) or now_utc(),
                     closed_at=parse_ts(content.get("closedAt")),
                     sub_total=summary.get("total", 0),
                     sub_done=summary.get("completed", 0),
@@ -422,7 +450,7 @@ def build_digest(cards, now: datetime) -> str:
     in_progress = [c for c in work if c.status == "In Progress"]
     in_review = [c for c in work if c.status == "In Review"]
     backlog = [c for c in work if (c.status or "Backlog") == "Backlog"]
-    stale = [c for c in in_progress if (now - c.updated_at).days >= STALE_DAYS]
+    stale = [c for c in in_progress if (now - c.status_changed_at).days >= STALE_DAYS]
     startable = sorted((c for c in backlog if not c.labels & set(FLAG_LABELS)), key=priority_rank)
     p0 = [c for c in backlog if c.priority == "P0"]
     no_priority = [c for c in work if c.priority is None]
@@ -444,8 +472,8 @@ def build_digest(cards, now: datetime) -> str:
     if in_review:
         lines.append(f"👀 На ревью ({len(in_review)}): {describe(in_review)}")
     if stale:
-        aged = ", ".join(f"{c.key} ({(now - c.updated_at).days} дн.)" for c in stale)
-        lines.append(f"⏳ Без движения {STALE_DAYS}+ дней: {aged}")
+        aged = ", ".join(f"{c.key} ({(now - c.status_changed_at).days} дн.)" for c in stale)
+        lines.append(f"⏳ В In Progress {STALE_DAYS}+ дней: {aged}")
     if startable:
         top = startable[0]
         label = top.priority or "без приоритета"
@@ -526,7 +554,7 @@ def run(args) -> None:
     elif args.command == "pr-sync":
         pr_sync(args.pr, args.dry_run)
     elif args.command == "digest":
-        text = build_digest(fetch_cards(), datetime.now(timezone.utc))
+        text = build_digest(fetch_cards(), now_utc())
         print(text)
         if args.github_output:
             write_github_output("text", text)

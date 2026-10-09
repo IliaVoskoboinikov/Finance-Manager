@@ -8,8 +8,12 @@
   * прошёл (success) — закрывает открытый issue этого workflow;
   * остальное (cancelled, skipped…) игнорирует.
 
+Решает только самый свежий прогон workflow на master. Прогоны соседних коммитов идут
+параллельно и могут закончиться в любом порядке: без этой проверки поздно завершившийся
+старый зелёный прогон закрыл бы issue, хотя master уже снова красный (и наоборот).
+
 Issue заводят и правят с GH_TOKEN, доску — через board.py (BOARD_TOKEN).
-Использование: ci_failure.py --run-id N [--dry-run]
+Использование: ci_failure.py --run-id N [--dry-run] [--force]
 """
 from __future__ import annotations
 
@@ -84,6 +88,8 @@ def report_red(run: dict, jobs, dry_run: bool) -> None:
                 ["issue", "comment", str(existing), "--repo", board.REPO, "--body-file", "-"],
                 stdin=comment_body(run, jobs),
             )
+        # Прошлый прогон мог завести issue, но не дойти до доски.
+        print(board.ensure_on_board(existing, "P1", dry_run))
         return
     body = issue_body(run, jobs, board.REPO)
     if dry_run:
@@ -96,7 +102,7 @@ def report_red(run: dict, jobs, dry_run: bool) -> None:
     url = board.run_gh(args, stdin=body).strip()
     number = int(url.rsplit("/", 1)[-1])
     print(f"Завёл issue #{number}: {url}")
-    print(board.add_issue(number, priority="P1"))
+    print(board.ensure_on_board(number, "P1"))
 
 
 def report_green(run: dict, dry_run: bool) -> None:
@@ -113,10 +119,32 @@ def report_green(run: dict, dry_run: bool) -> None:
         )
 
 
-def run(run_id: int, dry_run: bool) -> None:
+def is_latest_run(run: dict, latest) -> bool:
+    """Прогон — самый свежий для своего workflow на master (или новее нет)."""
+    return latest is None or latest["id"] == run["id"]
+
+
+def latest_master_run(run: dict):
+    """Самый свежий push-прогон того же workflow на master, в том числе ещё идущий."""
+    query = f"branch={DEFAULT_BRANCH}&event=push&per_page=1"
+    out = board.run_gh(
+        ["api", f"repos/{board.REPO}/actions/workflows/{run['workflow_id']}/runs?{query}"]
+    )
+    runs = json.loads(out)["workflow_runs"]
+    return runs[0] if runs else None
+
+
+def run(run_id: int, dry_run: bool, force: bool = False) -> None:
     data = json.loads(board.run_gh(["api", f"repos/{board.REPO}/actions/runs/{run_id}"]))
     if data["head_branch"] != DEFAULT_BRANCH:
         print(f"Прогон на ветке {data['head_branch']}, не на {DEFAULT_BRANCH} — пропускаю")
+        return
+    latest = None if force else latest_master_run(data)
+    if not is_latest_run(data, latest):
+        print(
+            f"Есть более свежий прогон {data['name']} #{latest['run_number']} "
+            f"({latest['status']}) — этот устарел, решать будет свежий"
+        )
         return
     conclusion = data["conclusion"]
     if conclusion in FAILED:
@@ -136,9 +164,12 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Красный master → issue с лейблом ci-failure")
     parser.add_argument("--run-id", type=int, required=True)
     parser.add_argument("--dry-run", action="store_true", help="печатать действия, не выполнять")
+    parser.add_argument(
+        "--force", action="store_true", help="не проверять, что прогон самый свежий (ручная проверка)"
+    )
     args = parser.parse_args(argv)
     try:
-        run(args.run_id, args.dry_run)
+        run(args.run_id, args.dry_run, args.force)
     except board.BoardError as error:
         print(f"Ошибка: {error}", file=sys.stderr)
         return 1

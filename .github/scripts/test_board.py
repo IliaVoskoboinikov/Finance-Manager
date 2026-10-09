@@ -13,7 +13,7 @@ NOW = datetime(2026, 10, 12, 6, 0, tzinfo=timezone.utc)
 
 
 def card(number, title="Задача", status="Backlog", priority=None, labels=(), state="OPEN",
-         updated_days_ago=0, closed_days_ago=None, sub=(0, 0)):
+         status_days_ago=0, closed_days_ago=None, sub=(0, 0)):
     return board.Card(
         number=number,
         title=title,
@@ -21,7 +21,7 @@ def card(number, title="Задача", status="Backlog", priority=None, labels=(
         status=status,
         priority=priority,
         labels=frozenset(labels),
-        updated_at=NOW - timedelta(days=updated_days_ago),
+        status_changed_at=NOW - timedelta(days=status_days_ago),
         closed_at=None if closed_days_ago is None else NOW - timedelta(days=closed_days_ago),
         sub_total=sub[1],
         sub_done=sub[0],
@@ -78,7 +78,7 @@ class DigestTest(unittest.TestCase):
     def test_full_digest(self):
         cards = [
             card(1, "Эпик", status="In Progress", labels=["epic"], sub=(2, 5)),
-            card(2, "В работе", status="In Progress", priority="P1", updated_days_ago=9),
+            card(2, "В работе", status="In Progress", priority="P1", status_days_ago=9),
             card(3, "На ревью", status="In Review", priority="P1"),
             card(4, "Срочный баг", priority="P0", labels=["bug"]),
             card(5, "Обычная", priority="P2"),
@@ -91,7 +91,7 @@ class DigestTest(unittest.TestCase):
         self.assertIn("неделя 42", text)
         self.assertIn("🔨 В работе (1): FM-2 В работе", text)
         self.assertIn("👀 На ревью (1): FM-3 На ревью", text)
-        self.assertIn("⏳ Без движения 7+ дней: FM-2 (9 дн.)", text)
+        self.assertIn("⏳ В In Progress 7+ дней: FM-2 (9 дн.)", text)
         # Следующая — P0 без блокирующих флагов: FM-7 ждёт бэкенд и не годится.
         self.assertIn("➡️ Дальше: FM-4 Срочный баг (P0)", text)
         self.assertIn("🔴 P0 в Backlog: 2", text)
@@ -138,6 +138,13 @@ class CiFailureTest(unittest.TestCase):
         "html_url": "https://github.com/o/r/actions/runs/1",
         "head_commit": {"message": "Merge branch 'x'\n\nподробности"},
     }
+
+    def test_only_latest_run_decides(self):
+        run = {"id": 10}
+        self.assertTrue(ci_failure.is_latest_run(run, {"id": 10}))
+        self.assertTrue(ci_failure.is_latest_run(run, None))
+        # Более свежий прогон (даже ещё идущий) — старый результат не должен трогать issue.
+        self.assertFalse(ci_failure.is_latest_run(run, {"id": 11}))
 
     def test_title_is_per_workflow(self):
         self.assertEqual(ci_failure.issue_title("CI"), "Красный master: CI")
