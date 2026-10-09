@@ -1,0 +1,60 @@
+name: CI failure
+
+# Красный master → issue с лейблами bug, ci-failure, area:ci и приоритетом P1; повторное
+# падение дописывает комментарий, а зелёный прогон того же workflow закрывает issue.
+# Логика — в .github/scripts/ci_failure.py. Событие workflow_run и ручной запуск работают
+# только с файла из ветки по умолчанию, поэтому сначала нужен мерж в master.
+#
+# Секрет PROJECT_TOKEN нужен, чтобы положить issue на доску с приоритетом
+# (см. docs/task-tracking.md).
+
+on:
+  workflow_run:
+    workflows: [CI, Security]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Id прогона на master, по которому проверить логику
+        type: string
+        required: true
+      dry_run:
+        description: Только напечатать действия, ничего не создавать
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  actions: read   # список джоб прогона
+  issues: write   # завести, дополнить и закрыть issue
+
+jobs:
+  report:
+    name: Report master status
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Два прогона подряд (например, CI и Security) не должны гонять друг друга по одному issue.
+    concurrency:
+      group: ci-failure
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Report
+        env:
+          BOARD_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          flags=()
+          if [ "$DRY_RUN" = "true" ]; then
+            flags+=(--dry-run)
+          fi
+          python3 .github/scripts/ci_failure.py --run-id "$RUN_ID" "${flags[@]}"

@@ -30,8 +30,8 @@ PR, переезжает сама задача.
 | Статус | Что значит | Как карточка туда попадает |
 | :--- | :--- | :--- |
 | Backlog | задача заведена, работа не начата | сама, при создании или переоткрытии issue |
-| In Progress | работа идёт, есть ветка | push ветки `FM-N-…` или старт работы агентом; сейчас — вручную (#49) |
-| In Review | открыт PR, идут CI и ревью | автоматика по PR (#49); сейчас — вручную |
+| In Progress | работа идёт, есть ветка | push ветки `FM-N-…` или старт работы агентом; PR, закрытый без мержа или переведённый в черновик, возвращает сюда |
+| In Review | открыт PR (не черновик), идут CI и ревью | автоматика по PR |
 | Done | issue закрыт | `Closes #N` при мерже закрывает issue, встроенное правило переводит в Done |
 
 Жёсткого лимита на колонки нет. Ориентир — не больше двух задач в работе одновременно: чем
@@ -104,20 +104,35 @@ issue #42 в коммитах, PR и комментариях.
 
 ## Автоматизации
 
-| Автоматизация | Что делает | Где | Статус |
-| :--- | :--- | :--- | :--- |
-| Auto-add | issue без лейбла `dependencies` попадает на доску (`is:issue is:open -label:dependencies`) | встроенная, UI | работает |
-| Item added / reopened | Status = Backlog | встроенная, UI | работает |
-| Item closed, PR merged | Status = Done | встроенная, UI | работает |
-| Auto-close issue | перенос карточки в Done закрывает issue | встроенная, UI | работает |
-| Auto-archive | закрытые карточки без движения две недели уходят в архив (`is:closed updated:<@today-2w`) | встроенная, UI | работает |
-| Auto-add sub-issues | подзадачи эпика попадают на доску | встроенная, UI | работает |
-| Ветка → In Progress, PR → In Review, PR закрыт без мержа → In Progress | двигают карточку по ветке `FM-N-…` и PR | `board.yml` | #49 |
-| Дайджест | сводка доски в Telegram по понедельникам | `board.yml` | #49 |
-| Красный `master` | issue с лейблами `bug` и `ci-failure` и приоритетом P1; зелёный прогон закрывает его | `ci-failure.yml` | #49 |
-| Связь PR и задачи | CodeRabbit проверяет, закрывает ли PR связанный issue | `.coderabbit.yaml` | работает |
+| Автоматизация | Что делает | Где |
+| :--- | :--- | :--- |
+| Auto-add | issue без лейбла `dependencies` попадает на доску (`is:issue is:open -label:dependencies`) | встроенная, UI |
+| Item added / reopened | Status = Backlog | встроенная, UI |
+| Item closed, PR merged | Status = Done | встроенная, UI |
+| Auto-close issue | перенос карточки в Done закрывает issue | встроенная, UI |
+| Auto-archive | закрытые карточки без движения две недели уходят в архив (`is:closed updated:<@today-2w`) | встроенная, UI |
+| Auto-add sub-issues | подзадачи эпика попадают на доску | встроенная, UI |
+| Ветка → In Progress | первый push ветки `FM-N-…` переводит задачу из Backlog; задачу в другом статусе не трогает | `board.yml` |
+| PR → статус и `Closes #N` | открытый PR — In Review; черновик или PR, закрытый без мержа, — In Progress; в описание PR дописывается `Closes #N`, если его нет. PR из ветки не по схеме получает замечание в сводке джобы | `board.yml` |
+| Дайджест | сводка доски в Telegram по понедельникам: в работе, на ревью, застрявшее, что брать дальше, P0, без приоритета, заблокированное, прогресс эпиков | `board.yml` |
+| Красный `master` | issue с лейблами `bug` и `ci-failure` и приоритетом P1; повторное падение — комментарий; зелёный прогон того же workflow закрывает issue | `ci-failure.yml` |
+| Связь PR и задачи | CodeRabbit проверяет, закрывает ли PR связанный issue | `.coderabbit.yaml` |
 
 Дополнительно шаблон PR подставляет `Closes #` и чек-лист того, чего не видит CI.
+
+Логика `board.yml` и `ci-failure.yml` живёт в скриптах `.github/scripts/` (stdlib Python и `gh`),
+поэтому её можно запускать и локально, а флаг `--dry-run` показывает изменения, не внося их:
+
+```bash
+python3 .github/scripts/board.py digest
+python3 .github/scripts/board.py --dry-run move "In Progress" --issue 42 --only-from Backlog
+python3 .github/scripts/ci_failure.py --dry-run --run-id <id прогона на master>
+python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+```
+
+Операции с доской идут с секретом `PROJECT_TOKEN`, остальное — с токеном Actions и минимальными
+правами. Для сводки в Telegram используются `TG_TOKEN` и `TG_CHAT_BUILD`; отдельную тему чата
+задаёт необязательный `TG_THREAD_BOARD`.
 
 ## Еженедельный разбор
 
@@ -170,7 +185,12 @@ issue #42 в коммитах, PR и комментариях.
 - Бесплатный план: одно правило Auto-add на доску. Репозиторий бэкенда подключить нельзя, да и
   прав на него нет.
 - Репозиторий публичный: карточки видны всем, включая находки по безопасности.
-- Формы issue и шаблон PR начинают действовать только после попадания в `master`.
+- Формы issue и шаблон PR начинают действовать только после попадания в `master`. То же верно
+  для расписания сводки, события `workflow_run` и ручного запуска: GitHub берёт их из файла в
+  ветке по умолчанию. Переходы по веткам и PR срабатывают уже из самой ветки.
+- Автоматика узнаёт задачу только по имени ветки `FM-N-…`. Ветка с другим именем карточку не
+  двигает — статус тогда меняется вручную.
+- PR из форков автоматику не запускают: у них нет доступа к секретам.
 
 ## Связанные задачи
 
@@ -188,5 +208,11 @@ AI-агента (#50), инвентаризация (#51), перенос (#52),
 | [`.github/ISSUE_TEMPLATE/tech-debt.yml`](../.github/ISSUE_TEMPLATE/tech-debt.yml) | форма техдолга |
 | [`.github/ISSUE_TEMPLATE/config.yml`](../.github/ISSUE_TEMPLATE/config.yml) | пустые issue разрешены, ссылка на этот документ |
 | [`.github/pull_request_template.md`](../.github/pull_request_template.md) | `Closes #` и чек-лист, место под сводку CodeRabbit |
+| [`.github/workflows/board.yml`](../.github/workflows/board.yml) | статусы по веткам и PR, недельная сводка |
+| [`.github/workflows/ci-failure.yml`](../.github/workflows/ci-failure.yml) | красный `master` → issue |
+| [`.github/scripts/board.py`](../.github/scripts/board.py) | команды доски: `add`, `move`, `priority`, `pr-sync`, `digest` |
+| [`.github/scripts/ci_failure.py`](../.github/scripts/ci_failure.py) | завести, дополнить и закрыть issue по прогону |
+| [`.github/scripts/test_board.py`](../.github/scripts/test_board.py) | тесты чистой логики скриптов |
+| [`.github/actions/send-message-tg/action.yml`](../.github/actions/send-message-tg/action.yml) | отправка текста в Telegram |
 | [`.coderabbit.yaml`](../.coderabbit.yaml) | проверка связи PR и задачи (`issue_assessment`) |
 | [`.github/renovate.json5`](../.github/renovate.json5) | лейбл `dependencies` на Dependency Dashboard, чтобы он не попадал на доску |

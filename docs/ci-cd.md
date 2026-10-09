@@ -37,6 +37,8 @@ Workflow разделены по назначению:
 | **CI** | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества: сборка, тесты, покрытие, статический анализ, размер приложения, граф модулей, бейзлайн графа навигации, здоровье зависимостей. |
 | **Security** | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | Поиск утёкших секретов (gitleaks) и уязвимых зависимостей в PR (dependency-review). |
 | **Dependency submission** | [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Отдаёт GitHub граф зависимостей — без него не работают Dependabot alerts. APK-classpath помечен scope `runtime`, build-tooling — `development` (см. [Dependency vulnerabilities](./dependency-vulnerabilities.md)). |
+| **Board** | [`.github/workflows/board.yml`](../.github/workflows/board.yml) | Доска задач: ветка `FM-N-…` → In Progress, PR → In Review, недельная сводка в Telegram. См. [Доска задач](./task-tracking.md). |
+| **CI failure** | [`.github/workflows/ci-failure.yml`](../.github/workflows/ci-failure.yml) | Красный `master` → issue с лейблом `ci-failure`; зелёный прогон закрывает его. |
 | **App test** | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Доставка тестовой (debug) сборки тестировщикам. |
 | **App release** | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз: APK + AAB, публикация в Google Play, черновик GitHub Release. |
 
@@ -239,6 +241,24 @@ flowchart LR
   уязвимостью уровня `high` и выше. Работает поверх графа, который публикует
   `dependency-submission.yml`, поэтому без него бесполезен.
 
+## Доска задач (`board.yml`, `ci-failure.yml`)
+
+Эти два workflow не проверяют код, а ведут доску задач; модель доски описана в
+[Доске задач](./task-tracking.md), здесь — только то, что нужно знать про CI.
+
+* **`board.yml`** — три независимые джобы: `branch-started` (push ветки `FM-*`),
+  `pr-sync` (события `pull_request`, только PR из этого же репозитория) и `digest`
+  (понедельник 06:00 UTC и ручной запуск; по умолчанию ручной запуск только печатает
+  сводку). Вся логика — в [`.github/scripts/board.py`](../.github/scripts/board.py).
+* **`ci-failure.yml`** — реагирует на завершение `CI` и `Security` на `master`. Логика — в
+  [`ci_failure.py`](../.github/scripts/ci_failure.py). Событие `workflow_run` и ручной запуск
+  работают только с файла из ветки по умолчанию.
+* Доску меняет секрет `PROJECT_TOKEN` (classic PAT, scope `project`): токен Actions не может
+  менять доски пользователя. Остальные операции идут с токеном Actions и минимальными правами
+  (`pull-requests: write`, `issues: write`).
+* Скрипты — на stdlib Python, их чистая логика покрыта тестами; в CI они не подключены:
+  `python3 -m unittest discover -s .github/scripts -p 'test_*.py'`.
+
 ## CD: тестовые сборки (`cd_tests.yml`)
 
 Триггер — `push` в `tests/**` либо ручной `workflow_dispatch`.
@@ -315,6 +335,7 @@ VERSION_CODE = X * 1_000_000 + Y * 1_000 + Z
 | [`draw-graph`](../.github/actions/draw-graph/action.yaml) | DOT → PNG через Graphviz. |
 | [`nav-graph`](../.github/actions/nav-graph/action.yml) | Рендер карты навигации и галереи `@Preview` (PNG + HTML), лендинг `index.html`, таблицы экранов и переходов в Step Summary. Гейт `navCheck` — не здесь, а отдельным шагом джобы. |
 | [`send-file-tg`](../.github/actions/send-file-tg/action.yaml) | Отправка файла и подписи в Telegram (`sendDocument`, поддержка тредов). |
+| [`send-message-tg`](../.github/actions/send-message-tg/action.yml) | Отправка текста в Telegram (`sendMessage`, поддержка тредов). Значения передаются через `env:`, текст уходит без разметки. |
 
 ## Секреты
 
@@ -330,6 +351,8 @@ protection rules сейчас нет.
 | `PLAY_SERVICE_ACCOUNT_JSON`, `PLAY_PACKAGE_NAME` | `cd_release` | Сервисный аккаунт и applicationId для Play Publishing API. |
 | `FIREBASE_APP_ID_DEBUG`, `FIREBASE_SERVICE_ACCOUNT`, `FIREBASE_GROUPS` | `cd_tests` | App Distribution. |
 | `TG_TOKEN`, `TG_CHAT_BUILD`, `TG_THREAD_TEST`, `TG_THREAD_RELEASE` | `cd_tests`, `cd_release` | Бот, чат и треды для отчётов о сборках. |
+| `PROJECT_TOKEN` | `board`, `ci-failure` | Classic PAT со scope `project`: менять карточки доски задач. Истекает — срок стоит отслеживать. |
+| `TG_THREAD_BOARD` | `board` | Тема чата для недельной сводки; необязателен, без него сводка уходит в общий чат. |
 
 > `YANDEX_CLIENT_ID` (см. [`app/build.gradle.kts`](../app/build.gradle.kts)) читается по той же
 > схеме «env или `local.properties`», но как CI-секрет пока **не** заведён — в CI-сборках
@@ -487,6 +510,9 @@ CI намеренно тонкий, поэтому «где что настро�
 | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз и публикация в Play. |
 | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | gitleaks + dependency-review. |
 | [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Граф зависимостей для Dependabot alerts. |
+| [`.github/workflows/board.yml`](../.github/workflows/board.yml) | Статусы карточек по веткам и PR, недельная сводка. |
+| [`.github/workflows/ci-failure.yml`](../.github/workflows/ci-failure.yml) | Красный `master` → issue. |
+| [`.github/scripts/`](../.github/scripts/) | `board.py`, `ci_failure.py` и их тесты. |
 | [`.github/renovate.json5`](../.github/renovate.json5) | Правила автообновления зависимостей и actions. |
 | [`.coderabbit.yaml`](../.coderabbit.yaml) | Настройки AI-ревьюера CodeRabbit и правила по областям кода. |
 | [`.github/copilot-instructions.md`](../.github/copilot-instructions.md) | Общие правила AI-ревью PR. |

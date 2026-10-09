@@ -140,7 +140,8 @@ Priority (P0 сверху), так что следующая задача — в
 | Autolink | — | `FM-42` → ссылка на issue #42 | настройка репо |
 
 **Общий помощник** `.github/scripts/board.py` (stdlib Python + `gh api graphql`): команды
-`move <issue> <status>`, `priority <issue> <P>`, `add <issue>`, `digest`, флаг `--dry-run`.
+`move <status> --issue N | --branch REF`, `priority <issue> <P>`, `add <issue>`, `pr-sync --pr N`,
+`digest`, флаг `--dry-run`.
 Его вызывают и Actions, и агент локально, так что логика поиска карточки и смены полей
 живёт в одном месте.
 
@@ -242,15 +243,21 @@ flowchart LR
 
 ### Этап 3 — автоматизации (агент, файлы; живая проверка после твоего пуша)
 
-1. `.github/scripts/board.py`.
-2. `.github/actions/send-message-tg/action.yml`.
-3. `.github/workflows/board.yml` (ветка, PR, дайджест) и `.github/workflows/ci-failure.yml`.
-   Минимальный `permissions:`, `timeout-minutes`, `concurrency`.
-4. **Локальная проверка:** `board.py --dry-run` на настоящей доске, разбор YAML; `actionlint` —
-   если разрешишь его поставить.
-5. **Живая проверка:** тестовый issue → ветка `FM-N-board_smoke_test` → draft PR → ready → закрыть
-   без мержа → переоткрыть → закрыть issue. Дайджест — через `workflow_dispatch`. `ci-failure` —
-   через `workflow_dispatch` с `dry_run`.
+1. `.github/scripts/board.py` (+ `ci_failure.py` для красного `master`, `test_board.py` с тестами
+   чистой логики) — **сделано**, проверено `--dry-run` на настоящей доске и на реальных
+   прогонах и PR; 20 тестов.
+2. `.github/actions/send-message-tg/action.yml` — **сделано**.
+3. `.github/workflows/board.yml` (ветка, PR, дайджест) и `.github/workflows/ci-failure.yml` с
+   минимальным `permissions:`, `timeout-minutes`, `concurrency` — **сделано**.
+   Для ветки выбран триггер `push` по `FM-*`, а не `create`: `push` срабатывает из самой ветки,
+   `create` — только с файла в ветке по умолчанию.
+4. **Локальная проверка:** разбор YAML и проверка, что в `run:` нет подстановок `${{ }}`, —
+   сделано. `actionlint` и `zizmor` не установлены (ждут разрешения скачать); их прогонит
+   CodeRabbit на PR.
+5. **Живая проверка** (нужны твои push и PR): тестовый issue → ветка `FM-N-board_smoke_test` →
+   draft PR → ready → закрыть без мержа → переоткрыть → закрыть issue. Переходы по веткам и PR
+   работают уже из ветки; дайджест (`workflow_dispatch`, `schedule`) и `ci-failure`
+   (`workflow_run`, `workflow_dispatch` с `dry_run`) — только после мержа в `master`.
 
 ### Этап 4 — инструкции агента (агент)
 
@@ -342,7 +349,7 @@ flowchart LR
 | `.github/pull_request_template.md` | 2 | `Closes #N` и чек-лист готовности |
 | `.coderabbit.yaml` | 2 | оценка связанного issue |
 | `docs/task-tracking.md` | 2 | дизайн процесса — заменяет этот план |
-| `.github/scripts/board.py` | 3 | общий помощник для Actions и агента |
+| `.github/scripts/board.py`, `ci_failure.py`, `test_board.py` | 3 | общий помощник для Actions и агента, красный `master`, тесты |
 | `.github/actions/send-message-tg/action.yml` | 3 | безопасная отправка текста в Telegram |
 | `.github/workflows/board.yml` | 3 | ветка → In Progress, PR → In Review, дайджест |
 | `.github/workflows/ci-failure.yml` | 3 | красный `master` → баг, зелёный → закрыть |

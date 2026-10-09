@@ -1,0 +1,39 @@
+name: send-message-tg
+description: Отправляет текстовое сообщение в Telegram
+
+# Значения inputs попадают в скрипт только через env: подстановка ${{ }} прямо в run:
+# позволила бы тексту (названия задач, сообщения коммитов) выполнить произвольную команду.
+# Текст уходит без parse_mode: названия с «_» и «*» не должны ломать разметку.
+
+inputs:
+  tg-token:
+    description: Токен бота
+    required: true
+  tg-chat:
+    description: Id чата
+    required: true
+  thread-id:
+    description: Id темы в чате; пустое значение — сообщение уйдёт в общий чат
+    required: false
+    default: ''
+  text:
+    description: Текст сообщения (до 4096 символов)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Send message
+      shell: bash
+      env:
+        TG_TOKEN: ${{ inputs.tg-token }}
+        TG_CHAT: ${{ inputs.tg-chat }}
+        TG_THREAD: ${{ inputs.thread-id }}
+        TG_TEXT: ${{ inputs.text }}
+      run: |
+        args=(--data-urlencode "chat_id=${TG_CHAT}" --data-urlencode "text=${TG_TEXT}")
+        if [ -n "${TG_THREAD}" ]; then
+          args+=(--data-urlencode "message_thread_id=${TG_THREAD}")
+        fi
+        curl --silent --show-error --fail-with-body --request POST \
+          "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" "${args[@]}" > /dev/null
