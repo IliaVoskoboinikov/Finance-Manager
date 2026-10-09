@@ -134,6 +134,7 @@ category → account → transaction sync order + last-write-wins are handled in
 @./docs/agents/security.md
 @./docs/agents/di.md
 @./docs/agents/release-process.md
+@./docs/agents/task-board.md
 
 Deeper design docs live in `docs/` (`architecture.md`, `modularization.md`, `modules.md`,
 `navigation3.md`, `auth.md`, `synchronization.md`, `domain-result.md`, `bd.md`).
@@ -167,6 +168,11 @@ otherwise pick the sensible default and note it.
   e.g. `fix(network): …`) for the user to copy — do not run `git commit`.
 - **No Claude/Anthropic attribution** in commits or generated text (no `Co-Authored-By`,
   no "Generated with Claude Code").
+- **Task board:** work is tracked on the GitHub Projects board, a task's key is `FM-<issue>`.
+  Propose the branch `feature/FM-N-<snake_case_name>` and end the commit subject with `(FM-N)`.
+  Move the card to In Progress when you start; create new cards only after the user's "yes";
+  never move cards to Done or close issues. Rules: `docs/agents/task-board.md`; commands: the
+  `board` skill.
 - **KDoc** required on new public classes/functions; every new UI component needs a `@Preview`
   (dark mode / font scale where relevant); update the module `README.md` when you change a module.
 - **Design docs for complex features:** when a change introduces non-trivial technical design —
@@ -178,4 +184,5 @@ otherwise pick the sensible default and note it.
   for small, local, or self-evident changes — KDoc/README is enough there.
 - Prefer the smallest change that satisfies the requirement; mirror existing style and patterns.
 - Don't rename public APIs or restructure packages without an explicit request.
-- When done, give a short report: what changed, architecture/module-graph impact, tests added, risks.
+- When done, give a short report: what changed, architecture/module-graph impact, tests added, risks,
+  and the task card (`FM-N`, its status, follow-up cards to create).

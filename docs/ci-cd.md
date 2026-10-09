@@ -37,7 +37,7 @@ Workflow разделены по назначению:
 | **CI** | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества: сборка, тесты, покрытие, статический анализ, размер приложения, граф модулей, бейзлайн графа навигации, здоровье зависимостей. |
 | **Security** | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | Поиск утёкших секретов (gitleaks) и уязвимых зависимостей в PR (dependency-review). |
 | **Dependency submission** | [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Отдаёт GitHub граф зависимостей — без него не работают Dependabot alerts. APK-classpath помечен scope `runtime`, build-tooling — `development` (см. [Dependency vulnerabilities](./dependency-vulnerabilities.md)). |
-| **Board** | [`.github/workflows/board.yml`](../.github/workflows/board.yml) | Доска задач: ветка `FM-N-…` → In Progress, PR → In Review, недельная сводка в Telegram. См. [Доска задач](./task-tracking.md). |
+| **Board** | [`.github/workflows/board.yml`](../.github/workflows/board.yml) | Доска задач: ветка `feature/FM-N-…` → In Progress, PR → In Review, недельная сводка в Telegram. См. [Доска задач](./task-tracking.md). |
 | **CI failure** | [`.github/workflows/ci-failure.yml`](../.github/workflows/ci-failure.yml) | Красный `master` → issue с лейблом `ci-failure`; зелёный прогон закрывает его. |
 | **App test** | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Доставка тестовой (debug) сборки тестировщикам. |
 | **App release** | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз: APK + AAB, публикация в Google Play, черновик GitHub Release. |
@@ -246,7 +246,7 @@ flowchart LR
 Эти два workflow не проверяют код, а ведут доску задач; модель доски описана в
 [Доске задач](./task-tracking.md), здесь — только то, что нужно знать про CI.
 
-* **`board.yml`** — три независимые джобы: `branch-started` (push ветки `FM-*`),
+* **`board.yml`** — три независимые джобы: `branch-started` (push ветки `feature/FM-*`),
   `pr-sync` (события `pull_request`, только PR из этого же репозитория) и `digest`
   (понедельник 06:00 UTC и ручной запуск; по умолчанию ручной запуск только печатает
   сводку). Вся логика — в [`.github/scripts/board.py`](../.github/scripts/board.py).

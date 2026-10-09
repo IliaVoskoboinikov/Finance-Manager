@@ -29,11 +29,13 @@ The following documents contain mandatory rules for specific areas of developmen
 @./docs/agents/security.md
 @./docs/agents/di.md
 @./docs/agents/release-process.md
+@./docs/agents/task-board.md
 
 ---
 
 ## 🚀 Agent Workflow
 
+0.  **Task Card:** Work happens under a board card `FM-N` — move it to In Progress, propose the branch `feature/FM-N-…` (see `task-board.md`).
 1.  **Requirement Discovery:** Analyze the task and locate relevant modules/files.
 2.  **Pattern Matching:** Find similar existing implementations to mirror.
 3.  **Implementation:** Write clean, modular code following the linked guidelines.
