@@ -1,0 +1,6 @@
+# Пустые issue разрешены: быстрые заметки и карточки, которые заводят из командной строки.
+blank_issues_enabled: true
+contact_links:
+  - name: Как устроена доска задач
+    url: https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/task-tracking.md
+    about: Статусы, приоритеты, лейблы, имена веток и автоматизации

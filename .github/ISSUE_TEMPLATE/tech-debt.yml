@@ -1,0 +1,46 @@
+name: Техдолг
+description: Рефакторинг, чистка, улучшение инструментов — пользователь изменений не увидит
+labels: ["tech-debt"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Приоритет и область выставляются при разборе доски. Задача на доску попадёт сама,
+        её ключ — `FM-<номер issue>`. Как устроен процесс —
+        [docs/task-tracking.md](https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/task-tracking.md).
+  - type: textarea
+    id: why
+    attributes:
+      label: Зачем
+      description: Что сейчас мешает или чем грозит, если оставить как есть.
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: Что сделать
+      description: Объём работы по существу, без построчного плана.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Готово, когда
+      description: Проверяемые условия; если есть метрика или проверка в CI — какая.
+    validations:
+      required: true
+  - type: textarea
+    id: modules
+    attributes:
+      label: Затронутые модули
+      description: "`app`, `core:*`, `feature:*:api` / `:impl`, `sync`, `build-logic`; отдельно — схема БД, навигация, DI."
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Вне задачи
+      description: Что осознанно не делаем в этой карточке.
+  - type: textarea
+    id: source
+    attributes:
+      label: Источник
+      description: Откуда задача — ревью, аудит, найдено при работе над FM-N.

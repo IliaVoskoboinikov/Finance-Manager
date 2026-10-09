@@ -1,0 +1,103 @@
+name: Board
+
+# Карточки доски задач двигаются по веткам и PR, раз в неделю приходит сводка в Telegram.
+# Логика — в .github/scripts/board.py, описание процесса — docs/task-tracking.md.
+#
+# Карточка двигается только для веток вида FM-<номер issue>-<имя>. Смерженный PR и закрытие
+# issue переводят её в Done встроенные workflows самой доски. Операции с доской идут с
+# секретом PROJECT_TOKEN (classic PAT, scope project): токен Actions не может менять доски
+# пользователя. Для PR из форков секретов нет, поэтому их job пропускает.
+
+on:
+  push:
+    branches:
+      - 'FM-*'
+  pull_request:
+    types: [opened, reopened, ready_for_review, converted_to_draft, closed]
+  schedule:
+    - cron: '0 6 * * 1'  # понедельник, 09:00 по Москве
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Только показать сводку, в Telegram не отправлять
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Первый push ветки FM-N-… переводит задачу из Backlog в In Progress. Задача, которая уже
+  # на ревью или закрыта, не трогается: повторные push этот job не сдвигают назад.
+  branch-started:
+    name: Branch → In Progress
+    if: github.event_name == 'push' && !github.event.deleted
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: board-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Move card
+        env:
+          BOARD_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+        run: python3 .github/scripts/board.py move "In Progress" --branch "$BRANCH" --only-from Backlog
+
+  # Состояние PR определяет статус задачи: открыт — In Review, черновик или закрыт без мержа —
+  # In Progress. Заодно в описание PR дописывается Closes #N, чтобы мерж закрыл задачу.
+  pr-sync:
+    name: PR → card status
+    if: >-
+      github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write  # дописать Closes #N в описание PR
+    concurrency:
+      group: board-pr-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Sync card with PR
+        env:
+          BOARD_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python3 .github/scripts/board.py pr-sync --pr "$PR_NUMBER"
+
+  digest:
+    name: Weekly digest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build digest
+        id: digest
+        env:
+          BOARD_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/board.py digest --github-output
+      - name: Send to Telegram
+        # Ручной запуск по умолчанию только показывает сводку в логе; по расписанию — шлёт.
+        if: github.event_name == 'schedule' || !inputs.dry_run
+        uses: ./.github/actions/send-message-tg
+        with:
+          tg-token: ${{ secrets.TG_TOKEN }}
+          tg-chat: ${{ secrets.TG_CHAT_BUILD }}
+          thread-id: ${{ secrets.TG_THREAD_BOARD }}
+          text: ${{ steps.digest.outputs.text }}
