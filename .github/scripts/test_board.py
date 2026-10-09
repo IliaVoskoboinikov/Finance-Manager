@@ -30,13 +30,15 @@ def card(number, title="Задача", status="Backlog", priority=None, labels=(
 
 class IssueFromBranchTest(unittest.TestCase):
     def test_extracts_number_from_task_branch(self):
-        self.assertEqual(board.issue_from_branch("FM-42-fix_navigation"), 42)
-        self.assertEqual(board.issue_from_branch("refs/heads/FM-7-x"), 7)
-        self.assertEqual(board.issue_from_branch("FM-123"), 123)
+        self.assertEqual(board.issue_from_branch("feature/FM-42-fix_navigation"), 42)
+        self.assertEqual(board.issue_from_branch("refs/heads/feature/FM-7-x"), 7)
+        self.assertEqual(board.issue_from_branch("feature/FM-123"), 123)
 
     def test_ignores_other_branches(self):
-        for ref in ("feature/task-board", "master", "renovate/gradle-9.x", "FM-", "FM-x-1",
-                    "fm-42-lower", "xFM-42-y", "FM42-no-dash"):
+        # Ветка задачи в корне (без feature/) — не по схеме.
+        for ref in ("FM-42-fix_navigation", "feature/task-board", "master", "renovate/gradle-9.x",
+                    "feature/FM-", "feature/FM-x-1", "feature/fm-42-lower", "fix/FM-42-y",
+                    "feature/xFM-42-y", "feature/FM42-no-dash"):
             self.assertIsNone(board.issue_from_branch(ref), ref)
 
 

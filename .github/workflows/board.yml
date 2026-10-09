@@ -3,7 +3,7 @@ name: Board
 # Карточки доски задач двигаются по веткам и PR, раз в неделю приходит сводка в Telegram.
 # Логика — в .github/scripts/board.py, описание процесса — docs/task-tracking.md.
 #
-# Карточка двигается только для веток вида FM-<номер issue>-<имя>. Смерженный PR и закрытие
+# Карточка двигается только для веток вида feature/FM-<номер issue>-<имя>. Смерженный PR и закрытие
 # issue переводят её в Done встроенные workflows самой доски. Операции с доской идут с
 # секретом PROJECT_TOKEN (classic PAT, scope project): токен Actions не может менять доски
 # пользователя. Для PR из форков секретов нет, поэтому их job пропускает.
@@ -11,7 +11,7 @@ name: Board
 on:
   push:
     branches:
-      - 'FM-*'
+      - 'feature/FM-*'
   pull_request:
     types: [opened, reopened, ready_for_review, converted_to_draft, closed]
   schedule:
@@ -27,7 +27,7 @@ permissions:
   contents: read
 
 jobs:
-  # Первый push ветки FM-N-… переводит задачу из Backlog в In Progress. Задача, которая уже
+  # Первый push ветки feature/FM-N-… переводит задачу из Backlog в In Progress. Задача, которая уже
   # на ревью или закрыта, не трогается: повторные push этот job не сдвигают назад.
   branch-started:
     name: Branch → In Progress

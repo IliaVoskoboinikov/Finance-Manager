@@ -5,7 +5,7 @@
   add <issue> [--priority P0..P3] [--status Backlog|In Progress|In Review|Done]
   move <status> (--issue N | --branch REF) [--only-from S1,S2]
   priority <issue> <P0..P3>
-  pr-sync --pr N      состояние карточки и строка Closes по PR из ветки FM-N-…
+  pr-sync --pr N      состояние карточки и строка Closes по PR из ветки feature/FM-N-…
   digest [--github-output]   недельная сводка доски; текст печатается в stdout
 
 Токены. Операции с доской идут с BOARD_TOKEN (classic PAT со scope project): токен Actions
@@ -41,7 +41,9 @@ CLOSED_WINDOW_DAYS = 7
 # Лимит Telegram на сообщение — 4096 символов; запас на многоточие.
 TELEGRAM_LIMIT = 3900
 
-BRANCH_RE = re.compile(r"^FM-(\d+)(?:-|$)")
+# Ветки задач живут в feature/, как и остальные: feature/FM-42-fix_navigation.
+BRANCH_RE = re.compile(r"^feature/FM-(\d+)(?:-|$)")
+BRANCH_PATTERN = "feature/FM-N-…"
 # Эти ветки заводят не по задачам доски, замечание про имя им не нужно.
 IGNORED_BRANCH_PREFIXES = ("renovate/", "releases/", "tests/", "dependabot/")
 CLOSING_RE = re.compile(
@@ -269,7 +271,7 @@ def set_single_select(board: Board, item_id: str, field: str, option: str, dry_r
 
 
 def issue_from_branch(ref: str) -> Optional[int]:
-    """Номер задачи из имени ветки FM-42-fix_navigation; для остальных веток None."""
+    """Номер задачи из имени ветки feature/FM-42-fix_navigation; для остальных веток None."""
     match = BRANCH_RE.match(ref.removeprefix("refs/heads/"))
     return int(match.group(1)) if match else None
 
@@ -363,7 +365,9 @@ def pr_sync(number: int, dry_run=False) -> None:
     issue_number = issue_from_branch(ref)
     if issue_number is None:
         if not ref.startswith(IGNORED_BRANCH_PREFIXES):
-            notice(f"PR #{number}: ветка {ref} не по схеме FM-N-…, задача на доске не обновлена")
+            notice(
+                f"PR #{number}: ветка {ref} не по схеме {BRANCH_PATTERN}, задача на доске не обновлена"
+            )
         return
     issue = get_issue(issue_number)
     if issue is None:
@@ -524,7 +528,9 @@ def build_parser() -> argparse.ArgumentParser:
     move.add_argument("status", choices=STATUSES)
     target = move.add_mutually_exclusive_group(required=True)
     target.add_argument("--issue", type=int)
-    target.add_argument("--branch", help="ветка FM-N-…; для других веток команда ничего не делает")
+    target.add_argument(
+        "--branch", help=f"ветка {BRANCH_PATTERN}; для других веток команда ничего не делает"
+    )
     move.add_argument("--only-from", default="", help="статусы через запятую, откуда разрешён переход")
 
     priority = commands.add_parser("priority", help="поставить приоритет")
@@ -545,7 +551,7 @@ def run(args) -> None:
     elif args.command == "move":
         number = args.issue if args.issue else issue_from_branch(args.branch)
         if number is None:
-            print(f"Ветка {args.branch} не по схеме FM-N-… — карточку не трогаю")
+            print(f"Ветка {args.branch} не по схеме {BRANCH_PATTERN} — карточку не трогаю")
             return
         only_from = tuple(s.strip() for s in args.only_from.split(",") if s.strip())
         print(move_issue(number, args.status, only_from, args.dry_run))
