@@ -256,8 +256,9 @@ flowchart LR
    CodeRabbit на PR.
 5. **Живая проверка** (нужны твои push и PR): тестовый issue → ветка `FM-N-board_smoke_test` →
    draft PR → ready → закрыть без мержа → переоткрыть → закрыть issue. Переходы по веткам и PR
-   работают уже из ветки; дайджест (`workflow_dispatch`, `schedule`) и `ci-failure`
-   (`workflow_run`, `workflow_dispatch` с `dry_run`) — только после мержа в `master`.
+   работают уже из ветки; сводку можно запустить с ветки через `gh workflow run board.yml
+   --ref <ветка>` (проверено: `PROJECT_TOKEN` читает доску, сводка собирается), а `schedule` и
+   `ci-failure` (`workflow_run`, ручной запуск с `dry_run`) — только после мержа в `master`.
 
 ### Этап 4 — инструкции агента (агент)
 

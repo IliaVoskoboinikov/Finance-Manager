@@ -251,8 +251,8 @@ flowchart LR
   (понедельник 06:00 UTC и ручной запуск; по умолчанию ручной запуск только печатает
   сводку). Вся логика — в [`.github/scripts/board.py`](../.github/scripts/board.py).
 * **`ci-failure.yml`** — реагирует на завершение `CI` и `Security` на `master`. Логика — в
-  [`ci_failure.py`](../.github/scripts/ci_failure.py). Событие `workflow_run` и ручной запуск
-  работают только с файла из ветки по умолчанию.
+  [`ci_failure.py`](../.github/scripts/ci_failure.py). Событие `workflow_run` работает только с
+  файла из ветки по умолчанию, поэтому workflow включается после мержа в `master`.
 * Доску меняет секрет `PROJECT_TOKEN` (classic PAT, scope `project`): токен Actions не может
   менять доски пользователя. Остальные операции идут с токеном Actions и минимальными правами
   (`pull-requests: write`, `issues: write`).
