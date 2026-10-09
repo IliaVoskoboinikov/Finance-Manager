@@ -9,6 +9,8 @@
   // Дашборд-issue со списком всех доступных обновлений, в т.ч. отложенных.
   dependencyDashboard: true,
   dependencyDashboardTitle: "🤖 Dependency Dashboard",
+  // Без лейбла auto-add доски задач (фильтр -label:dependencies) затянул бы дашборд на доску.
+  dependencyDashboardLabels: ["dependencies"],
   prConcurrentLimit: 5,
   prHourlyLimit: 2,
   // Свежие релизы регулярно ломают сборку — даём им отлежаться.

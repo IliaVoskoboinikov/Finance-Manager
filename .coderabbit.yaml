@@ -106,6 +106,10 @@ reviews:
         Conventional Commits: type(scope): описание. type — feat, fix, refactor, perf,
         test, docs, ci, build, chore, style или revert; scope — затронутый модуль или
         область, необязателен. Описание на русском, с маленькой буквы, без точки в конце.
+    # Встроенная проверка: PR закрывает связанную задачу (строка Closes в описании по шаблону)
+    # и не тащит лишних изменений. Режим warning — мерж не блокирует.
+    issue_assessment:
+      mode: warning
     custom_checks:
       - name: "Версия БД при изменении схемы"
         mode: warning

@@ -1,0 +1,44 @@
+name: Баг
+description: Что-то работает не так, как задумано
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Приоритет и область выставляются при разборе доски. Задача на доску попадёт сама,
+        её ключ — `FM-<номер issue>`. Как устроен процесс —
+        [docs/task-tracking.md](https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/task-tracking.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: Что происходит
+      description: "Факты: что видит пользователь, какие данные портятся, какая ошибка в логе."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Как воспроизвести
+      description: Шаги по порядку; версия приложения и Android, если важно.
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидание
+      description: Как должно работать.
+    validations:
+      required: true
+  - type: textarea
+    id: where
+    attributes:
+      label: Где в коде
+      description: Модуль, класс или функция, если уже известно.
+  - type: textarea
+    id: source
+    attributes:
+      label: Источник
+      description: Откуда задача — найдено при работе над FM-N, отзыв тестера, сбой CI.
