@@ -239,9 +239,9 @@ subprojects {
  * Что он закрывает сверх уже имеющихся проверок:
  * - `CheckConventionsPlugin` (build-logic) проверяет применение конвеншен-плагинов и грубые
  *   рёбра, но не даёт ни отчёта, ни диффа в PR;
- * - `:app:assertModuleGraph` (jraska) на данный момент правил не содержит и по факту `UP-TO-DATE`
- *   (см. help_comand.md) — Aalekh закрывает именно это: машинно-проверяемые слои, изоляция фич,
- *   reachability, метрики и интерактивный HTML-отчёт.
+ * - `:app:assertModuleGraph` (jraska) проверяет только высоту графа и запрещённые рёбра по
+ *   регуляркам (`ModuleGraphConventionPlugin`) — Aalekh добавляет машинно-проверяемые слои,
+ *   изоляцию фич, reachability, метрики и интерактивный HTML-отчёт.
  *
  * Слои повторяют Clean Architecture проекта: foundation (инфраструктурные core) → domain
  * (чистый Kotlin) → data (Room/Retrofit/sync) → ui (дизайн-система) → feature (:feature:*:impl/api)

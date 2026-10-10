@@ -36,7 +36,7 @@ Navigation 3, WorkManager). Модули: `app`, `core:*`, `feature:*:api` / `fe
   пересинхронизируются с сервера.
 - Логирование через `android.util.Log` — принятая в проекте конвенция.
 - `usesCleartextTraffic` и HTTP допустимы, пока `BuildConfig.HOST` указывает на тестовый стенд
-  (`http://yourflow.pro/`); переход на HTTPS перед прод-бэкендом — в `TODO.md`.
+  (`http://yourflow.pro/`); переход на HTTPS перед прод-бэкендом — задача FM-99 на доске.
 - Compose UI не покрыт тестами и исключён из Kover — Compose-тесты отложены осознанно.
 - `lifecycle-viewmodel-navigation3` зафиксирован на 2.10.x: 2.11 требует `compileSdk 37`.
 

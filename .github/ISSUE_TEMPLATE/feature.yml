@@ -40,6 +40,11 @@ body:
       label: Вне задачи
       description: Что осознанно не делаем в этой карточке.
   - type: textarea
+    id: backend
+    attributes:
+      label: Что нужно от бэкенда
+      description: "Только если задаче нужны изменения на сервере: какие ручки, поля, поведение. Отдельную карточку для бэкенда не заводим, у задачи будет лейбл `needs-backend`."
+  - type: textarea
     id: source
     attributes:
       label: Источник

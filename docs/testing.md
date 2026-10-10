@@ -1,4 +1,4 @@
-# Testing & Coverage
+# Тестирование и покрытие
 
 Документ описывает подход к тестированию **Finance Manager**: какие уровни тестов есть,
 какими инструментами они пишутся, как измеряется покрытие (Kover) и как всё это запускать.
@@ -71,7 +71,7 @@ Android-`debug`-варианты). Ключевые задачи:
 - **Сгенерированный код** — Hilt/Dagger (`*_Factory`, `*_HiltModules*`, `Hilt_*`, `Dagger*`),
   Room `*_Impl`, `BuildConfig`, `ComposableSingletons*`, `androidGeneratedClasses()`.
 - **UI-слой** — всё с `@Composable`/`@Preview`, `*Activity`, `App`, navigation `*FeatureImpl`.
-  Compose-тесты осознанно отложены (см. «Отложено»), поэтому экраны не входят в метрику.
+  Compose-тестов пока нет (см. «Ограничения»), поэтому экраны не входят в метрику.
 
 Важно: `build-logic` (конвеншен-плагины) — это **included build**, он не попадает в
 Kover-метрику основного проекта. Его тесты запускаются и считаются отдельно.
@@ -136,13 +136,6 @@ Kover-метрику основного проекта. Его тесты зап
 - **build-logic** — `CheckConventionsPlugin` (проверки плагинов и архитектурных зависимостей),
   `generateNamespace`, константы — ProjectBuilder + Gradle TestKit.
 
-## Отложено (stage 2 / отдельные инфраструктуры)
-
-- **Compose UI** — экраны и компоненты `core:uikit`. Требуют Robolectric + `compose-ui-test`
-  и/или Paparazzi (скриншот-тесты). Исключены из Kover-метрики, тесты пока не пишутся.
-- **Настоящие миграции Room** — до релиза нужны `Migration` + `MigrationTestHelper`
-  (instrumented), сейчас БД на `fallbackToDestructiveMigration` (см. `bd.md`).
-
 ## CI
 
 Покрытие проверяется в CI отдельной джобой `run-coverage` (`.github/workflows/ci.yml`), которая
@@ -158,3 +151,42 @@ Kover-метрику основного проекта. Его тесты зап
    `build.gradle.kts` (единственный источник истины для числа).
 
 Сама джоба после action грузит HTML-отчёт артефактом `kover-coverage-html` (`if: always()`).
+
+## Ограничения
+
+- **Compose UI не тестируется.** Экраны и компоненты `core:uikit` исключены из Kover-метрики,
+  тестов на них пока нет.
+- **Instrumented-тестов нет.** Папки `src/androidTest` пустые, эмулятора в CI нет. БД работает
+  на `fallbackToDestructiveMigration` (см. [bd.md](./bd.md)), поэтому миграционных тестов
+  (`MigrationTestHelper`) тоже нет.
+- **Compose Preview Screenshot Testing не подключён.** Официальная настройка плагина
+  `com.android.compose.screenshot` — два шага: флаг `android.experimental.enableScreenshotTest=true`
+  в корневом `gradle.properties` и `experimentalProperties["android.experimental.enableScreenshotTest"] = true`
+  в блоке `android {}` модуля. Без глобального флага не обойтись: плагин читает его в момент
+  применения, одного `experimentalProperties` или флага в `gradle.properties` модуля мало. А с
+  глобальным флагом ktlint 14.2.0 падает в `:app` с `Cannot add task
+  'runKtlintCheckOverAndroidTestSourceSet' as a task with that name already exists`, более новой
+  версии ktlint-плагина нет. Рабочая альтернатива — Roborazzi: Robolectric, обычный
+  `test`-source set, без экспериментальных флагов AGP. Начиная с AGP 9.5.0-alpha03 Google
+  рекомендует настраивать скриншот-тесты через AGP test suites вместо отдельного плагина —
+  после обновления AGP этот путь стоит перепроверить.
+
+## Связанные задачи
+
+| Задача | О чём |
+| :--- | :--- |
+| [FM-111](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/111) | Compose UI-тесты: экраны, `core:uikit`, `*FeatureImpl` |
+| [FM-112](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/112) | скриншот-тесты на Roborazzi |
+| [FM-107](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/107) | настоящие миграции Room и `MigrationTestHelper` |
+| [FM-83](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/83) | instrumented-тесты и эмулятор в CI |
+| [FM-78](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/78) | свести порог покрытия к одному числу в документации |
+| [FM-135](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/135) | добить покрытие: хвосты и фильтры Kover |
+
+## Ключевые файлы
+
+| Файл | Роль |
+| :--- | :--- |
+| [`build.gradle.kts`](../build.gradle.kts) | Kover: фильтры знаменателя и порог `minBound` |
+| [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | бандл `unit-test`: JUnit, MockK, AssertJ, coroutines-test |
+| [`.github/actions/coverage/action.yml`](../.github/actions/coverage/action.yml) | отчёты, сводка и гейт покрытия в CI |
+| [`build-logic/convention/`](../build-logic/convention/) | конвеншен-плагины, которые подключают тестовый стек, и их TestKit-тесты |

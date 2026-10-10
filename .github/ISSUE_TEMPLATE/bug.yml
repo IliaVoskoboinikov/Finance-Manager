@@ -38,6 +38,11 @@ body:
       label: Где в коде
       description: Модуль, класс или функция, если уже известно.
   - type: textarea
+    id: backend
+    attributes:
+      label: Что нужно от бэкенда
+      description: "Только если для исправления нужны изменения на сервере: что именно сервер должен делать иначе. Отдельную карточку для бэкенда не заводим, у задачи будет лейбл `needs-backend`."
+  - type: textarea
     id: source
     attributes:
       label: Источник
