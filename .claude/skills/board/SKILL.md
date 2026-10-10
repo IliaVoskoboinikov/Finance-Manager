@@ -58,8 +58,11 @@ Body sections (Russian, `### ` headings):
 
 | Type | Sections |
 | :--- | :--- |
-| `bug` | Что происходит · Как воспроизвести · Ожидание · Где в коде · Источник |
-| `enhancement`, `tech-debt`, `documentation`, epic | Зачем · Что сделать · Готово, когда · Затронутые модули · Вне задачи · Источник |
+| `bug` | Что происходит · Как воспроизвести · Ожидание · Где в коде · Что нужно от бэкенда · Источник |
+| `enhancement`, `tech-debt`, `documentation`, epic | Зачем · Что сделать · Готово, когда · Затронутые модули · Вне задачи · Что нужно от бэкенда · Источник |
+
+«Что нужно от бэкенда» goes only into cards with the `needs-backend` label, and such a card
+always has it. Never create a separate card for the server part.
 
 ## Epic and sub-issues
 
