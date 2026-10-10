@@ -58,10 +58,10 @@ class AccountLocalDataSourceImplTest {
     }
 
     @Test
-    fun `getByServerIds delegates to dao`() = runTest {
-        coEvery { dao.getByServerIds(listOf("server-1")) } returns listOf(entity)
+    fun `getBySyncIds delegates to dao`() = runTest {
+        coEvery { dao.getBySyncIds(listOf("server-1")) } returns listOf(entity)
 
-        assertThat(dataSource.getByServerIds(listOf("server-1"))).containsExactly(entity)
+        assertThat(dataSource.getBySyncIds(listOf("server-1"))).containsExactly(entity)
     }
 
     @Test

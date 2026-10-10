@@ -1,7 +1,7 @@
 package soft.divan.financemanager.feature.transaction.impl.domain.usecase.impl
 
-import soft.divan.financemanager.core.data.TransactionRunner
-import soft.divan.financemanager.core.data.rollbackOnError
+import soft.divan.financemanager.core.data.transaction.TransactionRunner
+import soft.divan.financemanager.core.data.transaction.rollbackOnError
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.repository.TransactionRepository

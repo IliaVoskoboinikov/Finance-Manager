@@ -3,21 +3,17 @@ package soft.divan.financemanager.core.data.sync.impl
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import soft.divan.financemanager.core.data.dto.AccountDto
-import soft.divan.financemanager.core.data.dto.CreateAccountRequestDto
 import soft.divan.financemanager.core.data.mapper.TimeMapper
-import soft.divan.financemanager.core.data.mapper.toDto
 import soft.divan.financemanager.core.data.mapper.toEntity
-import soft.divan.financemanager.core.data.mapper.toUpdateDto
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
-import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.sync.Synchronizer
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
-import soft.divan.financemanager.core.domain.model.AccountStatus
 import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
@@ -26,17 +22,15 @@ import javax.inject.Inject
 /**
  * Реализация [AccountSyncManager].
  *
- * Отвечает за двустороннюю синхронизацию аккаунтов:
- *
- * 1. Pull — получение данных с сервера (server → local)
- * 2. Push — отправка локальных изменений (local → server)
+ * Отвечает за одно направление — **pull**, получение данных с сервера (server → local).
+ * Обратное направление обеспечивает очередь исходящих операций (см. `docs/outbox.md`).
  *
  * Особенности реализации:
  * - Offline-first: локальная БД является источником истины
- * - Разрешение конфликтов по updatedAt (last-write-wins)
+ * - Разрешение конфликтов по updatedAt (last-write-wins), но строку с неотправленной операцией
+ *   серверная версия не перезаписывает — см. [canBeOverwritten]
  * - Double-check locking через Mutex для защиты от параллельного pull
  * - Все операции обёрнуты в safeApiCall / safeDbCall
- *
  */
 class AccountSyncManagerImpl @Inject constructor(
     private val remoteDataSource: AccountRemoteDataSource,
@@ -64,17 +58,13 @@ class AccountSyncManagerImpl @Inject constructor(
     /**
      * Точка входа для полной синхронизации.
      *
-     * Порядок выполнения:
-     * 1. pullServerData() — обновление локальной БД
-     * 2. pushLocalChanges() — отправка pending-изменений
+     * Тянет актуальные данные с сервера. Отправку локальных изменений выполняет очередь
+     * исходящих операций, а не этот менеджер.
      *
-     * Возвращает true, если оба шага завершились без исключений.
+     * Возвращает true, если шаг завершился без исключений.
      */
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
-        return runCatching {
-            pullServerData()
-            pushLocalChanges()
-        }.isSuccess
+        return runCatching { pullServerData() }.isSuccess
     }
 
     /**
@@ -121,10 +111,13 @@ class AccountSyncManagerImpl @Inject constructor(
             val serverIds = accountDtos.map { it.id }
 
             val localAccounts = safeDbCall(errorLogger) {
-                localDataSource.getByServerIds(serverIds)
+                localDataSource.getBySyncIds(serverIds)
             }.getOrNull().orEmpty()
 
-            val localMap = localAccounts.associateBy { it.serverId }
+            // Ключ — serverId, а для созданных здесь и ещё не подтверждённых записей (create ушёл
+            // с `id = localId`, но ACK не дошёл) — их localId: сервер знает их именно под ним.
+            // Без этого pull принял бы собственный счёт за новый и вставил дубликат.
+            val localMap = localAccounts.associateBy { it.serverId ?: it.localId }
 
             accountDtos.forEach { accountDto ->
                 val localAccount = localMap[accountDto.id]
@@ -139,7 +132,7 @@ class AccountSyncManagerImpl @Inject constructor(
                             )
                         )
                     }
-                } else if (TimeMapper.isAfter(accountDto.updatedAt, localAccount.updatedAt)) {
+                } else if (localAccount.canBeOverwritten(accountDto.updatedAt)) {
                     // Конфликт → побеждает тот, кто обновлялся позже
                     updateLocalFromRemote(
                         accountDto = accountDto,
@@ -151,108 +144,21 @@ class AccountSyncManagerImpl @Inject constructor(
     }
 
     /**
-     * Отправляет новый локальный аккаунт на сервер.
+     * Можно ли принять серверную версию поверх локальной.
      *
-     * После успешного ответа:
-     * - обновляет локальную запись
-     * - устанавливает serverId
-     * - помечает как SYNCED
+     * Два условия. Первое — обычный last-write-wins по времени изменения.
+     *
+     * Второе: строка не должна ждать отправки. Пока `syncStatus` не `SYNCED`, у записи есть
+     * незавершённая операция в очереди, и серверная версия заведомо не знает о ней. Перезапись
+     * в этот момент откатила бы правку на глазах у пользователя, а `PENDING_DELETE` и вовсе
+     * воскресила бы удалённый счёт в списках. Данные при этом не терялись бы — очередь хранит
+     * снимок и всё равно доотправит его, — но состояние на экране успело бы соврать.
+     *
+     * Дождаться отправки безопасно: после неё запись станет `SYNCED`, и ближайший pull разрешит
+     * конфликт уже честно.
      */
-    override suspend fun syncCreate(accountDto: CreateAccountRequestDto, localId: String) {
-        safeApiCall(errorLogger) {
-            remoteDataSource.create(accountDto)
-        }.onSuccess { dto ->
-            updateLocalFromRemote(accountDto = dto, localId = localId)
-        }
-    }
-
-    /**
-     * Отправляет обновление аккаунта на сервер.
-     *
-     * Требует наличия serverId.
-     * После успешного ответа синхронизирует локальную запись.
-     */
-    override suspend fun syncUpdate(accountEntity: AccountEntity) {
-        accountEntity.serverId?.let { idAccount ->
-            safeApiCall(errorLogger) {
-                remoteDataSource.update(
-                    id = idAccount,
-                    account = accountEntity.toUpdateDto()
-                )
-            }.onSuccess {
-                safeDbCall(errorLogger) {
-                    localDataSource.update(accountEntity.copy(syncStatus = SyncStatus.SYNCED))
-                }
-            }
-        }
-    }
-
-    /**
-     * Удаляет аккаунт на сервере (`DELETE /accounts/{id}`). Сервер сам решает: нет операций →
-     * физическое удаление, есть → перевод в статус `Deleted` (архив).
-     *
-     * Локальное отражение зависит от статуса записи [AccountEntity.status]:
-     * - не `Deleted` → после успешного серверного удаления запись удаляется локально;
-     * - `Deleted` → запись сохраняется как архивная (переводится в [SyncStatus.SYNCED]),
-     *   чтобы история операций могла подтянуть её имя/валюту.
-     *
-     * Если serverId == null (запись никогда не была на сервере), удалять/архивировать на сервере
-     * нечего: архивную запись оставляем локально, обычную — удаляем.
-     */
-    override suspend fun syncDelete(accountEntity: AccountEntity) {
-        if (accountEntity.serverId == null) {
-            finishLocalDelete(accountEntity)
-        } else {
-            safeApiCall(errorLogger) {
-                remoteDataSource.delete(accountEntity.serverId!!)
-            }.onSuccess {
-                finishLocalDelete(accountEntity)
-            }
-        }
-    }
-
-    /**
-     * Завершает удаление локально: архивную запись (статус `Deleted`) оставляет — помечает
-     * [SyncStatus.SYNCED], обычную — физически удаляет.
-     */
-    private suspend fun finishLocalDelete(accountEntity: AccountEntity) {
-        if (accountEntity.status == AccountStatus.Deleted.name) {
-            safeDbCall(errorLogger) {
-                localDataSource.update(accountEntity.copy(syncStatus = SyncStatus.SYNCED))
-            }
-        } else {
-            deleteLocalAccount(accountEntity.localId)
-        }
-    }
-
-    /**
-     * Обрабатывает все локальные записи со статусом pending.
-     *
-     * Для каждой записи:
-     * - PENDING_CREATE  → syncCreate
-     * - PENDING_UPDATE  → syncUpdate
-     * - PENDING_DELETE  → syncDelete
-     *
-     * Используется при background-синхронизации.
-     */
-    private suspend fun pushLocalChanges() {
-        safeDbCall(errorLogger) { localDataSource.getPendingSync() }.onSuccess { accountEntities ->
-            accountEntities.forEach { accountEntity ->
-                when (accountEntity.syncStatus) {
-                    SyncStatus.SYNCED -> Unit
-
-                    SyncStatus.PENDING_CREATE -> syncCreate(
-                        accountDto = accountEntity.toDto(),
-                        localId = accountEntity.localId
-                    )
-
-                    SyncStatus.PENDING_UPDATE -> syncUpdate(accountEntity)
-
-                    SyncStatus.PENDING_DELETE -> syncDelete(accountEntity)
-                }
-            }
-        }
-    }
+    private fun AccountEntity.canBeOverwritten(serverUpdatedAt: String): Boolean =
+        syncStatus == SyncStatus.SYNCED && TimeMapper.isAfter(serverUpdatedAt, updatedAt)
 
     /**
      * Унифицированный метод обновления локальной записи
@@ -270,18 +176,6 @@ class AccountSyncManagerImpl @Inject constructor(
                     syncStatus = SyncStatus.SYNCED
                 )
             )
-        }
-    }
-
-    /**
-     * Физическое удаление записи из локальной БД.
-     *
-     * Используется только после успешного server-delete
-     * или если запись не была синхронизирована.
-     */
-    private suspend fun deleteLocalAccount(localId: String) {
-        safeDbCall(errorLogger) {
-            localDataSource.delete(localId)
         }
     }
 }

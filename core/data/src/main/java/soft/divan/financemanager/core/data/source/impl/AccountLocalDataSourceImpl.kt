@@ -17,8 +17,8 @@ class AccountLocalDataSourceImpl @Inject constructor(
 
     override suspend fun getByServerId(id: String): AccountEntity? = accountDao.getByServerId(id)
 
-    override suspend fun getByServerIds(serverIds: List<String>): List<AccountEntity> =
-        accountDao.getByServerIds(serverIds)
+    override suspend fun getBySyncIds(ids: List<String>): List<AccountEntity> =
+        accountDao.getBySyncIds(ids)
 
     override suspend fun getPendingSync(): List<AccountEntity> = accountDao.getPendingSync()
 

@@ -10,13 +10,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
 import soft.divan.financemanager.core.data.dto.TransactionDto
-import soft.divan.financemanager.core.data.mapper.toDto
-import soft.divan.financemanager.core.data.mapper.toUpdateDto
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
-import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.sync.Synchronizer
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.entity.CategoryEntity
 import soft.divan.financemanager.core.database.entity.TransactionEntity
@@ -108,7 +106,7 @@ class TransactionSyncManagerImplTest {
         coEvery {
             remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
         } returns Response.success(listOf(transactionDto()))
-        coEvery { localDataSource.getByServerIds(listOf("server-t1")) } returns emptyList()
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns emptyList()
         coEvery { categoryLocalDataSource.getById("cat-1") } returns
             categoryEntity(isIncome = true)
         val inserted = slot<TransactionEntity>()
@@ -130,7 +128,7 @@ class TransactionSyncManagerImplTest {
         coEvery {
             remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
         } returns Response.success(listOf(transactionDto(updatedAt = "2024-02-01T00:00:00Z")))
-        coEvery { localDataSource.getByServerIds(listOf("server-t1")) } returns listOf(local)
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns listOf(local)
         coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
         val updated = slot<TransactionEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
@@ -148,7 +146,7 @@ class TransactionSyncManagerImplTest {
         coEvery {
             remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
         } returns Response.success(listOf(transactionDto(updatedAt = "2024-02-01T00:00:00Z")))
-        coEvery { localDataSource.getByServerIds(listOf("server-t1")) } returns listOf(local)
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns listOf(local)
         coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
 
         syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
@@ -163,7 +161,7 @@ class TransactionSyncManagerImplTest {
         coEvery {
             remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
         } returns Response.success(listOf(transactionDto(categoryId = "cat-unknown")))
-        coEvery { localDataSource.getByServerIds(listOf("server-t1")) } returns emptyList()
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns emptyList()
         coEvery { categoryLocalDataSource.getById("cat-unknown") } returns null
 
         syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
@@ -208,129 +206,81 @@ class TransactionSyncManagerImplTest {
         }
     }
 
-    /* ---------- syncCreate ---------- */
-
     @Test
-    fun `syncCreate pushes transaction and stores server id locally`() = runTest {
-        val local = transactionEntity(serverId = null, syncStatus = SyncStatus.PENDING_CREATE)
-        coEvery { remoteDataSource.create(local.toDto("server-a1")) } returns
-            Response.success(transactionDto())
-        val updated = slot<TransactionEntity>()
-        coEvery { localDataSource.update(capture(updated)) } returns Unit
+    fun `pull does not duplicate locally created transaction awaiting confirmation`() = runTest {
+        // Потеря ACK: сервер создал транзакцию с нашим клиентским id, локальная ещё PENDING_CREATE
+        // (serverId == null), поэтому по serverId она не находится — но это та же сущность.
+        val pending = transactionEntity(
+            serverId = null,
+            syncStatus = SyncStatus.PENDING_CREATE,
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
+        } returns Response.success(listOf(transactionDto(id = "local-t1")))
+        coEvery { localDataSource.getBySyncIds(listOf("local-t1")) } returns listOf(pending)
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
 
-        syncManager.syncCreate(local)
+        syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
 
-        assertThat(updated.captured.localId).isEqualTo("local-t1")
-        assertThat(updated.captured.serverId).isEqualTo("server-t1")
-        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
-    }
-
-    @Test
-    fun `syncCreate skips transactions without account server id`() = runTest {
-        syncManager.syncCreate(transactionEntity(accountServerId = null))
-
-        coVerify(exactly = 0) { remoteDataSource.create(any()) }
-    }
-
-    @Test
-    fun `syncCreate does not touch local db when server call fails`() = runTest {
-        coEvery { remoteDataSource.create(any()) } throws RuntimeException("offline")
-
-        syncManager.syncCreate(transactionEntity(serverId = null))
-
+        // Дубликат не создаётся: запись опознана по тому же localId.
+        // Подтвердит её отправитель очереди — pull в чужую незавершённую операцию не лезет.
+        coVerify(exactly = 0) { localDataSource.insert(any()) }
         coVerify(exactly = 0) { localDataSource.update(any()) }
     }
 
-    /* ---------- syncUpdate ---------- */
-
     @Test
-    fun `syncUpdate pushes update and marks local as SYNCED`() = runTest {
-        val local = transactionEntity(syncStatus = SyncStatus.PENDING_UPDATE)
+    fun `pull does not overwrite a transaction with unsent local changes`() = runTest {
+        // Пользователь поправил сумму, операция ещё в очереди; серверная версия её не знает
+        val edited = transactionEntity(
+            syncStatus = SyncStatus.PENDING_UPDATE,
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
         coEvery {
-            remoteDataSource.update("server-t1", local.toUpdateDto("server-a1"))
-        } returns Response.success(Unit)
-        val updated = slot<TransactionEntity>()
-        coEvery { localDataSource.update(capture(updated)) } returns Unit
+            remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
+        } returns Response.success(listOf(transactionDto(updatedAt = "2024-02-01T00:00:00Z")))
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns listOf(edited)
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
 
-        syncManager.syncUpdate(local)
+        syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
 
-        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
+        // Иначе правка откатилась бы на глазах у пользователя до отправки из очереди
+        coVerify(exactly = 0) { localDataSource.update(any()) }
     }
 
     @Test
-    fun `syncUpdate skips transactions without server id`() = runTest {
-        syncManager.syncUpdate(transactionEntity(serverId = null))
+    fun `pull does not resurrect a transaction awaiting deletion`() = runTest {
+        val deleted = transactionEntity(
+            syncStatus = SyncStatus.PENDING_DELETE,
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
+        } returns Response.success(listOf(transactionDto(updatedAt = "2024-02-01T00:00:00Z")))
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns listOf(deleted)
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
 
-        coVerify(exactly = 0) { remoteDataSource.update(any(), any()) }
-    }
+        syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
 
-    @Test
-    fun `syncUpdate skips transactions without account server id`() = runTest {
-        syncManager.syncUpdate(transactionEntity(accountServerId = null))
-
-        coVerify(exactly = 0) { remoteDataSource.update(any(), any()) }
-    }
-
-    /* ---------- syncDelete ---------- */
-
-    @Test
-    fun `syncDelete removes unsynced transaction locally without server call`() = runTest {
-        syncManager.syncDelete(transactionEntity(serverId = null))
-
-        coVerify(exactly = 1) { localDataSource.delete("local-t1") }
-        coVerify(exactly = 0) { remoteDataSource.delete(any()) }
-    }
-
-    @Test
-    fun `syncDelete removes transaction on server then locally`() = runTest {
-        coEvery { remoteDataSource.delete("server-t1") } returns Response.success(Unit)
-
-        syncManager.syncDelete(transactionEntity())
-
-        coVerify(exactly = 1) { remoteDataSource.delete("server-t1") }
-        coVerify(exactly = 1) { localDataSource.delete("local-t1") }
-    }
-
-    @Test
-    fun `syncDelete keeps local record when server delete fails`() = runTest {
-        coEvery { remoteDataSource.delete("server-t1") } throws RuntimeException("offline")
-
-        syncManager.syncDelete(transactionEntity())
-
-        coVerify(exactly = 0) { localDataSource.delete(any()) }
+        // Перезапись вернула бы транзакцию в списки: PENDING_DELETE скрывает её, SYNCED — нет
+        coVerify(exactly = 0) { localDataSource.update(any()) }
     }
 
     /* ---------- syncWith ---------- */
 
     @Test
-    fun `syncWith pulls server data and pushes pending changes`() = runTest {
+    fun `syncWith only pulls server data`() = runTest {
+        // Отправку локальных изменений выполняет очередь исходящих операций, а не менеджер
         coEvery { accountLocalDataSource.getAll() } returns flowOf(emptyList())
-        val pendingCreate = transactionEntity(
-            localId = "local-c",
-            serverId = null,
-            syncStatus = SyncStatus.PENDING_CREATE
-        )
-        val pendingUpdate = transactionEntity(
-            localId = "local-u",
-            syncStatus = SyncStatus.PENDING_UPDATE
-        )
-        val pendingDelete = transactionEntity(
-            localId = "local-d",
-            serverId = null,
-            syncStatus = SyncStatus.PENDING_DELETE
-        )
-        coEvery { localDataSource.getPendingSync() } returns
-            listOf(pendingCreate, pendingUpdate, pendingDelete)
-        coEvery { remoteDataSource.create(any()) } returns Response.success(transactionDto())
-        coEvery { remoteDataSource.update(any(), any()) } returns Response.success(Unit)
 
         val result = syncManager.syncWith(object : Synchronizer {})
 
         assertThat(result).isTrue()
-        coVerify(exactly = 1) { remoteDataSource.create(pendingCreate.toDto("server-a1")) }
-        coVerify(exactly = 1) {
-            remoteDataSource.update("server-t1", pendingUpdate.toUpdateDto("server-a1"))
-        }
-        coVerify(exactly = 1) { localDataSource.delete("local-d") }
+        coVerify(exactly = 0) { remoteDataSource.create(any(), any()) }
+        coVerify(exactly = 0) { remoteDataSource.update(any(), any(), any()) }
+        coVerify(exactly = 0) { remoteDataSource.delete(any(), any()) }
     }
 }

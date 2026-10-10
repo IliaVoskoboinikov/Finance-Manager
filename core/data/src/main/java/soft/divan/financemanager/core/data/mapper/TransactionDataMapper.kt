@@ -40,8 +40,16 @@ fun TransactionEntity.toUpdateDto(accountServerId: String): UpdateTransactionReq
         comment = comment
     )
 
+/**
+ * Собирает запрос на создание транзакции (`POST /transaction`).
+ *
+ * `id = localId` — клиент передаёт свой стабильный UUID как идемпотентный ключ. Сервер
+ * принимает клиентский id (upsert-by-id) и на повторную отправку того же id отбивает дубль
+ * по первичному ключу. Это защищает от двойного создания транзакции (и, как следствие,
+ * двойного пересчёта баланса на бэке) при потере ACK и ретраях.
+ */
 fun TransactionEntity.toDto(accountServerId: String): TransactionRequestDto = TransactionRequestDto(
-    id = serverId,
+    id = localId,
     accountId = accountServerId,
     categoryId = categoryId,
     amount = amount.toBigDecimal(),

@@ -37,9 +37,10 @@ class TransactionRemoteDataSourceImplTest {
             dateTime = "2024-01-15T10:00:00Z"
         )
         val response = Response.success(dto)
-        coEvery { apiService.createTransaction(request) } returns response
+        coEvery { apiService.createTransaction(request, "op-key-1") } returns response
 
-        assertThat(dataSource.create(request)).isSameAs(response)
+        // Ключ идемпотентности обязан дойти до сети без изменений — на нём держится дедупликация
+        assertThat(dataSource.create(request, "op-key-1")).isSameAs(response)
     }
 
     @Test
@@ -81,16 +82,16 @@ class TransactionRemoteDataSourceImplTest {
             dateTime = "2024-01-15T10:00:00Z"
         )
         val response = Response.success(Unit)
-        coEvery { apiService.updateTransaction("server-t1", request) } returns response
+        coEvery { apiService.updateTransaction("server-t1", request, "op-key-1") } returns response
 
-        assertThat(dataSource.update("server-t1", request)).isSameAs(response)
+        assertThat(dataSource.update("server-t1", request, "op-key-1")).isSameAs(response)
     }
 
     @Test
     fun `delete delegates to api service`() = runTest {
         val response = Response.success(Unit)
-        coEvery { apiService.deleteTransaction("server-t1") } returns response
+        coEvery { apiService.deleteTransaction("server-t1", "op-key-1") } returns response
 
-        assertThat(dataSource.delete("server-t1")).isSameAs(response)
+        assertThat(dataSource.delete("server-t1", "op-key-1")).isSameAs(response)
     }
 }

@@ -52,7 +52,7 @@ class AccountSyncManagerRaceTest {
         coEvery { remoteDataSource.getAll() } returns Response.success(listOf(dto))
 
         // локально нет аккаунтов
-        coEvery { localDataSource.getByServerIds(any()) } coAnswers {
+        coEvery { localDataSource.getBySyncIds(any()) } coAnswers {
             delay(50) // симулируем гонку
             emptyList()
         }
