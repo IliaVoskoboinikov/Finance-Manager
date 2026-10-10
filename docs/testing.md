@@ -159,14 +159,17 @@ Kover-метрику основного проекта. Его тесты зап
 - **Instrumented-тестов нет.** Папки `src/androidTest` пустые, эмулятора в CI нет. БД работает
   на `fallbackToDestructiveMigration` (см. [bd.md](./bd.md)), поэтому миграционных тестов
   (`MigrationTestHelper`) тоже нет.
-- **Compose Preview Screenshot Testing не подключается.** Source set плагина
-  `com.android.compose.screenshot` включается только глобальным флагом
-  `android.experimental.enableScreenshotTest=true` в корневом `gradle.properties`: плагин читает
-  флаг в момент применения, `android.experimentalProperties` и `gradle.properties` модуля не
-  работают. С этим флагом ktlint 14.2.0 падает в `:app` с `Cannot add task
-  'runKtlintCheckOverAndroidTestSourceSet' as a task with that name already exists`, а более
-  новой версии ktlint-плагина нет. Рабочая альтернатива — Roborazzi: Robolectric, обычный
-  `test`-source set, без экспериментальных флагов AGP.
+- **Compose Preview Screenshot Testing не подключён.** Официальная настройка плагина
+  `com.android.compose.screenshot` — два шага: флаг `android.experimental.enableScreenshotTest=true`
+  в корневом `gradle.properties` и `experimentalProperties["android.experimental.enableScreenshotTest"] = true`
+  в блоке `android {}` модуля. Без глобального флага не обойтись: плагин читает его в момент
+  применения, одного `experimentalProperties` или флага в `gradle.properties` модуля мало. А с
+  глобальным флагом ktlint 14.2.0 падает в `:app` с `Cannot add task
+  'runKtlintCheckOverAndroidTestSourceSet' as a task with that name already exists`, более новой
+  версии ktlint-плагина нет. Рабочая альтернатива — Roborazzi: Robolectric, обычный
+  `test`-source set, без экспериментальных флагов AGP. Начиная с AGP 9.5.0-alpha03 Google
+  рекомендует настраивать скриншот-тесты через AGP test suites вместо отдельного плагина —
+  после обновления AGP этот путь стоит перепроверить.
 
 ## Связанные задачи
 
