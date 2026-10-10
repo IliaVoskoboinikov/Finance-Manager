@@ -1,4 +1,4 @@
-# DomainResult & Error handling
+# DomainResult и обработка ошибок
 
 В этом документе описан паттерн **`DomainResult`** и подход к обработке ошибок
 в доменном слое (**core:domain**) проекта **Finance Manager**.

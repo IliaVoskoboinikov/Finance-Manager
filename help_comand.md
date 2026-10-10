@@ -5,7 +5,7 @@
 (Gradle 9.4.1, AGP 9.2.1, Kotlin 2.4.0).
 
 > Подробности по каждой теме — в [`docs/`](docs/README.md); ссылки указаны в конце разделов.
-> Технический бэклог — в [TODO.md](TODO.md).
+> Задачи и известные проблемы — на [доске задач](https://github.com/users/IliaVoskoboinikov/projects/5).
 
 ## Содержание
 
@@ -85,7 +85,7 @@ echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 | `./gradlew :app:assembleRelease` | release-APK: R8 + shrink ресурсов + подпись ⚠️ см. ниже |
 | `./gradlew :app:bundleRelease` | AAB для Google Play |
 | `./gradlew :app:signingReport` | SHA-1 / SHA-256 отпечатки (нужны для Firebase и Яндекс OAuth) |
-| `./gradlew -q :app:printVersionName` | печатает `Const.VERSION_NAME`; ⚠️ не знает про `-PversionName` (см. [TODO → CI/CD](TODO.md)) |
+| `./gradlew -q :app:printVersionName` | печатает `Const.VERSION_NAME`; ⚠️ не знает про `-PversionName` (см. [FM-75](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/75)) |
 | `./gradlew clean` | снести `build/` |
 
 ### applicationId по типам сборки
@@ -117,7 +117,8 @@ Keystore берётся из **`app/release.jks`** (`./gradlew :app:signingRepor
 > (`-dontwarn kotlinx.parcelize.Parcelize`), его нужно перенести в `app/proguard-rules.pro`.
 > Через ту же задачу идут `:app:bundleRelease` и `:app:analyzeReleaseBundle` — они тоже упадут.
 > Причина, по которой это всплыло
-> только сейчас: CI не собирает release (см. [TODO → CI/CD](TODO.md)).
+> только сейчас: CI не собирает release. Задачи — [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73)
+> (починить R8) и [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72) (собирать release в CI).
 
 В CD версия вычисляется из имени ветки `releases/**v.X.Y.Z`
 (`VERSION_CODE = MAJOR*1000000 + MINOR*1000 + PATCH`) — см. [docs/ci-cd.md](docs/ci-cd.md).
@@ -145,7 +146,8 @@ Keystore берётся из **`app/release.jks`** (`./gradlew :app:signingRepor
 
 > Инструментальных тестов в проекте **пока нет** — папки `src/androidTest` пустые, поэтому
 > `connectedDebugAndroidTest` ничего не выполняет. Они понадобятся для миграционных тестов
-> Room (см. [TODO → Релиз](TODO.md)).
+> Room (см. [FM-107](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/107); эмулятор в CI —
+> [FM-83](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/83)).
 
 ### Покрытие (Kover)
 
@@ -194,7 +196,7 @@ Keystore берётся из **`app/release.jks`** (`./gradlew :app:signingRepor
 | Команда | Что делает |
 |---------|-----------|
 | *(любой запуск Gradle)* | `CheckConventionsPlugin` — **реальная** проверка архитектуры: core ↛ feature, api ↛ impl, impl ↛ impl, применение конвеншен-плагинов |
-| `./gradlew :app:assertModuleGraph` | ⚠️ сейчас ничего не проверяет (`UP-TO-DATE`) — правила `moduleGraphAssert { … }` не настроены, см. [TODO → CI/CD](TODO.md) |
+| `./gradlew :app:assertModuleGraph` | проверяет граф модулей по правилам `ModuleGraphConventionPlugin`: высота не больше 6 рёбер, запрещённые рёбра (`:core:domain` → data-слой, `core`/`feature`/`:sync` → `:app`, `:sync` и `core` → `feature`, `:api` → `:impl`) |
 | `./gradlew :app:generateModulesGraphStatistics` | статистика графа: число модулей, рёбер, высота, самый длинный путь |
 | `./gradlew :app:generateModulesGraphvizText -Pmodules.graph.output.gv=docs/graphs/modules_prodget/all_modules` | DOT-описание графа модулей |
 | `./gradlew projects` | дерево всех модулей проекта |
@@ -350,8 +352,8 @@ CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, 
 
 | Workflow | Триггер | Что делает |
 |----------|---------|-----------|
-| [`ci.yml`](.github/workflows/ci.yml) | любой `push` (кроме `**.md`) | джобы проверок (сборка, тесты, покрытие, линтеры, граф модулей, `aalekhCheck`) + отчёты |
-| [`nav-graph.yml`](.github/workflows/nav-graph.yml) | любой `push` (кроме `**.md`) | рендер карты навигации и галереи превью |
+| [`ci.yml`](.github/workflows/ci.yml) | любой `push` (кроме `**.md`) | джобы проверок (сборка, тесты, покрытие, линтеры, граф модулей, `aalekhCheck`, `navCheck` с картой навигации) + отчёты |
+| [`board.yml`](.github/workflows/board.yml) | `push` в `feature/FM-*`, события PR | карточка задачи на доске: In Progress / In Review, недельная сводка |
 | [`cd_tests.yml`](.github/workflows/cd_tests.yml) | `push` в `tests/**` | тестовая сборка + раздача в Firebase App Distribution |
 | [`cd_release.yml`](.github/workflows/cd_release.yml) | `push` в `releases/**`, имя обязано заканчиваться на `v.X.Y.Z` | подписанные APK + AAB, публикация в Play, отчёт в Telegram |
 
@@ -591,5 +593,5 @@ grep -n "version = " core/database/src/main/java/soft/divan/financemanager/core/
 
 - [docs/README.md](docs/README.md) — оглавление всей документации
 - [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) — правила работы с кодовой базой
-- [TODO.md](TODO.md) — технический бэклог
+- [Доска задач](https://github.com/users/IliaVoskoboinikov/projects/5) — задачи, баги, планы; процесс — [docs/task-tracking.md](docs/task-tracking.md)
 - [docs/ci-cd.md](docs/ci-cd.md) — что и как проверяет CI, какие есть секреты
