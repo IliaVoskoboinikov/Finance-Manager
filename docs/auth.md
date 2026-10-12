@@ -355,16 +355,30 @@ GCM проверяет целостность: подменённый или п�
 Гость входит повторно из профиля: `ProfileKey` → `ProfileAuthKey`. Это экран входа внутри
 стека вкладки «Настройки»; после успеха выполняется `back()`, корневой стек не трогается.
 
-## Известные ограничения
+## Ограничения
 
 - `POST api/v1/auth/logout` уходит через базовый клиент, то есть **без** заголовка
   `Authorization`. Результат запроса игнорируется, локальный выход выполняется в любом
   случае. Если серверу для отзыва сессии нужен токен, серверная сессия при выходе не
-  закрывается.
+  закрывается — [FM-101](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/101).
 - Рефреш не проверяет пустые токены в ответе: `null` превращается в `""`. Логин такую проверку
-  делает: `AuthRepositoryImpl` считает пустые токены ошибкой.
+  делает: `AuthRepositoryImpl` считает пустые токены ошибкой —
+  [FM-173](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/173).
 - Ветка стирания данных в `OnLoginSuccess` (`shouldMergeData = false`) из UI не вызывается.
-  Слияние решается отдельным `OnClearData` (см. «Слияние гостевых данных при входе»).
+  Слияние решается отдельным `OnClearData` (см. «Слияние гостевых данных при входе») —
+  [FM-102](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/102).
+
+## Связанные задачи
+
+Все открытые задачи по авторизации — [фильтр `area:auth`](https://github.com/IliaVoskoboinikov/Finance-Manager/issues?q=is%3Aissue%20is%3Aopen%20label%3Aarea%3Aauth).
+Кроме перечисленных в «Ограничениях»:
+
+| Задача | О чём |
+| :--- | :--- |
+| [FM-161](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/161) | гонка очистки данных при выходе: данные прошлого пользователя возвращаются |
+| [FM-162](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/162) | диалог слияния гостевых данных: вход до вопроса, зависание при закрытии |
+| [FM-104](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/104) | слияние гостевых данных: двойной учёт баланса |
+| [FM-202](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/202) | удаление аккаунта — требование Google Play |
 
 ## Ключевые файлы
 

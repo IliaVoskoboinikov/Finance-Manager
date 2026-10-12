@@ -23,7 +23,7 @@
 *   Current pre-release state: `BuildConfig.HOST` points to the test backend `http://yourflow.pro/` in both
     `debug` and `release` (`core/network/build.gradle.kts`), and `app/src/main/AndroidManifest.xml` sets
     `usesCleartextTraffic="true"`. Cleartext is deliberately allowed for this test backend only; switching
-    to HTTPS before a production backend is tracked in `TODO.md`. Don't add new cleartext endpoints.
+    to HTTPS before a production backend is task FM-99 on the board. Don't add new cleartext endpoints.
 
 ## Logging Restrictions
 *   Use `android.util.Log` (the project's current convention).

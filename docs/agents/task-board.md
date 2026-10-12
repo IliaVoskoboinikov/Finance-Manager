@@ -37,10 +37,16 @@ The body is in Russian and uses the same sections as the issue forms:
 
 | Type | Sections (`### …`) |
 | :--- | :--- |
-| Bug | Что происходит · Как воспроизвести · Ожидание · Где в коде · Источник |
-| Feature, tech debt, epic | Зачем · Что сделать · Готово, когда · Затронутые модули · Вне задачи · Источник |
+| Bug | Что происходит · Как воспроизвести · Ожидание · Где в коде · Что нужно от бэкенда · Источник |
+| Feature, tech debt, epic | Зачем · Что сделать · Готово, когда · Затронутые модули · Вне задачи · Что нужно от бэкенда · Источник |
 
 «Источник» says where the task came from: «найдено при работе над FM-57», «аудит C3».
+
+**Backend work never gets its own card.** If a task needs server changes, put the
+`needs-backend` label on that task and add the «Что нужно от бэкенда» section: endpoints,
+fields, response codes and server behaviour the task depends on, detailed enough to build the
+server part from that section alone. The label and the section always go together; tasks
+without server work have no such section.
 
 **Labels:** exactly one type (`bug`, `enhancement`, `tech-debt`, `documentation`); one or more
 `area:*`; flags only when they apply (`blocked`, `needs-backend`, `needs-decision`); `epic`

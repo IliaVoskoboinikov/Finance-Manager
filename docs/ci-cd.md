@@ -2,7 +2,7 @@
 
 Документ описывает, как в **Finance Manager** устроены непрерывная интеграция и доставка:
 какие workflow есть, чем они триггерятся, что именно проверяют, какие артефакты и отчёты
-производят, какие секреты для этого нужны — и что в этой инфраструктуре ещё не сделано.
+производят и какие секреты для этого нужны. Что ещё не сделано — в «Связанных задачах» в конце.
 
 Всё построено на **GitHub Actions**. Логика намеренно тонкая: workflow лишь дёргают Gradle,
 а вся «умная» часть (пороги покрытия, правила статического анализа, проверка архитектуры,
@@ -153,9 +153,7 @@ HTML через Pandoc.
 ([`CheckConventionsPlugin.kt`](../build-logic/convention/src/main/kotlin/CheckConventionsPlugin.kt)):
 он на `projectsEvaluated` обходит все модули и падает `GradleException`, если
 `core` зависит от `feature`, `feature:*:api` — от `impl`, или один `impl` — от чужого `impl`.
-Работает это на **любом** запуске Gradle, а не только в этой джобе. Джоба всё равно полезна
-(она гарантированно конфигурирует проект и рисует граф), но название вводит в заблуждение —
-см. раздел «Что нужно доделать».
+Работает это на **любом** запуске Gradle, а не только в этой джобе.
 
 **`nav-graph`.** Гейт `navCheck` (граф навигации из аннотаций совпадает с закоммиченными
 `*/nav/*.nav`, см. [nav-graph.md](./nav-graph.md#бейзлайн-nav)) и отчёт с картой экранов
@@ -408,98 +406,31 @@ CI намеренно тонкий, поэтому «где что настро�
 
 ---
 
-## Что нужно доделать
+## Ограничения
 
-Список отсортирован по важности. Актуальный чеклист дублируется в
-[TODO.md → CI/CD](../TODO.md); здесь — обоснование каждого пункта.
+- **Одиннадцать джоб — одиннадцать холодных сборок.** Общего build cache между джобами нет,
+  поэтому новые проверки по возможности встраиваются шагом в джобу, которая уже собирает
+  нужное, — так подключён `navCheck`.
+- **CI и CD пересекаются на `releases/**`.** Релизная ветка проходит полный гейт качества
+  параллельно со сборкой, но публикация его не ждёт.
+- **Скриншот-тесты Compose Preview не подключаются** — подробности в
+  [testing.md → Ограничения](./testing.md#ограничения).
 
-### 🔴 Критично
+## Связанные задачи
 
-- [ ] **Инъекция шелла через сообщение коммита.** В [`send-file-tg`](../.github/actions/send-file-tg/action.yaml)
-      вход `text` подставляется прямо в `run:` (`-F caption="${{ inputs.text }}"`), а приходит
-      туда `${{ github.event.head_commit.message }}`. Коммит с `$(...)` или `"; …` выполнит
-      произвольную команду на раннере — который в релизном пайплайне имеет доступ к keystore
-      и секретам Play. Лечится передачей значений через `env:` и использованием `"$VAR"`
-      внутри скрипта (то же касается `tg-token`, `tg-chat`, `file`).
-- [ ] **Релиз не зависит от гейта качества.** `cd_release.yml` не запускает ни тестов, ни
-      линтеров: пуш в `releases/**` может уехать в Play даже при красном CI. Нужно либо
-      вынести проверки в reusable workflow и добавить `needs:`, либо требовать зелёный CI
-      через branch protection.
-- [ ] **Нет `permissions:` ни в одном workflow.** Токен получает права по умолчанию
-      организации/репозитория. Шаги `upload-sarif` требуют `security-events: write`; всё
-      остальное обходится `contents: read`. Явный минимальный блок в каждом workflow.
-- [ ] **Release-сборка не проверяется в CI.** Для `:app` в release включён R8 + шринк
-      ресурсов, но `assembleRelease` собирается только на релизной ветке. Ошибки в
-      `proguard-rules.pro` (упавшая рефлексия Gson/Room/Hilt) обнаруживаются в момент
-      релиза. Нужен `assembleRelease` (с debug-подписью) хотя бы по расписанию или на PR
-      в master.
+Открытые задачи по CI/CD — на доске, [фильтр `area:ci`](https://github.com/IliaVoskoboinikov/Finance-Manager/issues?q=is%3Aissue%20is%3Aopen%20label%3Aarea%3Aci);
+обоснование и способ исправления — в каждой карточке. Что важно знать о текущем состоянии
+пайплайна:
 
-### 🟠 Важно
-
-- [ ] **Telegram сообщает неверную версию.** Джобы `report-telegram` берут версию из
-      `./gradlew -q printVersionName`, а эта задача печатает `Const.VERSION_NAME` (`0.0.1`)
-      и не знает про `-PversionName`. В релизе нужно брать
-      `needs.validate-version.outputs.version_name`, а саму задачу — научить читать
-      проектное свойство.
-- [ ] **Часть CD-джоб не использует `android-setup`.** В `ci.yml` это починено, но обе
-      `report-telegram` и `distribute-app-firebase` по-прежнему запускают Gradle без
-      `init-gradle` — на JDK раннера по умолчанию и без кеша Gradle. Версия JDK не
-      зафиксирована: смена образа `ubuntu-latest` может неожиданно сломать сборку.
-- [ ] **Одиннадцать джоб = одиннадцать холодных сборок.** `run-tests` и `run-coverage`
-      прогоняют тесты дважды (Kover требует своего прогона). Стоит либо объединить их, либо
-      включить общий remote/GHA build cache. Пока этого нет, новые проверки по возможности
-      встраиваются шагом в джобу, которая уже собирает нужное, — так подключён `navCheck`.
-- [ ] **`run-tests` гоняет `./gradlew test`** — это debug + release варианты, вдвое дольше
-      нужного. В `CLAUDE.md` и в документации указан `testDebugUnitTest`; надо привести к
-      одному.
-- [ ] **Порог покрытия рассинхронизирован в документации.** Фактическое значение —
-      `minBound(95)` в корневом `build.gradle.kts`; при этом KDoc рядом говорит про 98 %,
-      `docs/testing.md` — про 99 % и 98 %, `TODO.md` — про 99 %. Нужно решить целевое число
-      и починить все упоминания (единственный источник истины — `build.gradle.kts`).
-- [ ] **CI и CD пересекаются на `releases/**`.** Это осознанно: релизная ветка проходит
-      полный гейт качества параллельно со сборкой. Правильнее связать их через `needs`,
-      чтобы публикация не стартовала при красном CI — см. пункт про гейт выше.
-
-### 🟡 Улучшения
-
-- [ ] **Gradle-кеш для сборок.** Тестовые прогоны — с кешем, релизные — принципиально без.
-- [x] **AI-ревьюер на PR.** CodeRabbit — см. абзац про AI-ревью в «Общей картине».
-- [ ] **Пин actions по SHA.** Сейчас `uses:` запинены только по мажору. Renovate умеет
-      переводить их на digest — достаточно добавить `helpers:pinGitHubActionDigests`
-      в `extends` его конфига.
-- [ ] **`timeout-minutes` на джобах** — сейчас зависшая сборка висит до дефолтных 6 часов.
-- [ ] **`retention-days` для артефактов** — APK и HTML-отчёты хранятся 90 дней по умолчанию.
-- [ ] **Гейт на размер приложения.** Ruler строит отчёт, но порога/сравнения с baseline нет —
-      рост размера никто не заметит.
-- [ ] **Гейт на время сборки.** То же самое: `build-time-report` печатает таблицу, регрессия
-      не ловится.
-- [ ] **Lint без SARIF.** Загрузка в Code Scanning закомментирована в `ci.yml` (для Detekt и
-      KtLint она работает) — включить и добавить lint baseline.
-- [ ] **Instrumented-тесты на эмуляторе** (`reactivecircus/android-emulator-runner`). Понадобятся
-      обязательно, когда появятся настоящие Room-миграции и `MigrationTestHelper` — сейчас в
-      CI только JVM/Robolectric.
-- [ ] **Скриншот-тесты** — отложенный «трек 4» плана покрытия. Официальный
-      **Compose Preview Screenshot Testing** (`com.android.compose.screenshot`) сейчас
-      **не подключается**: его source set включается только глобальным флагом
-      `android.experimental.enableScreenshotTest=true` в корневом `gradle.properties`
-      (плагин читает флаг в момент применения, `android.experimentalProperties` и
-      `gradle.properties` внутри модуля не работают), а с этим флагом ktlint 14.2.0 падает
-      в `:app` с `Cannot add task 'runKtlintCheckOverAndroidTestSourceSet' as a task with
-      that name already exists`. Более новой версии ktlint-плагина нет. Рабочая
-      альтернатива — **Roborazzi** (Robolectric, обычный `test`-source set, без
-      экспериментальных флагов AGP).
-- [ ] **Release notes для Play** (`whatsNewDirectory`) и осознанный переход
-      `draft → completed` / promote между треками.
-- [ ] **`workflow_dispatch` для релиза фактически не работает** из произвольной ветки:
-      `validate-version` требует имя, оканчивающееся на `v.X.Y.Z`. Стоит добавить
-      входной параметр `version` для ручного запуска.
-- [ ] **Подозрительный `ANDROID_SDK_ROOT: /usr/lib/android-sdk`** в обоих CD-workflow: на
-      раннерах GitHub SDK лежит по другому пути (`ANDROID_HOME=/usr/local/lib/android/sdk`).
-      Переменная либо игнорируется, либо когда-нибудь сломает сборку — проверить и убрать.
-- [ ] **`YANDEX_CLIENT_ID` не заведён как CI-секрет** — CI-сборки собираются с пустым
-      client_id, вход через Яндекс в них не работает.
-- [ ] **Организационные файлы:** `CODEOWNERS`, шаблон PR, `SECURITY.md`, бейджи статуса
-      сборки в `README.md`.
+| Задача | Что сейчас не так |
+| :--- | :--- |
+| [FM-70](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/70) | `send-file-tg` подставляет сообщение коммита прямо в `run:` — инъекция шелла на раннере с доступом к keystore |
+| [FM-61](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/61) | `cd_release.yml` публикует в Play, не дожидаясь тестов и линтеров |
+| [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72), [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73) | release-сборка (R8) в CI не собирается и сейчас падает |
+| [FM-71](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/71) | в `cd_tests.yml` и `cd_release.yml` нет явного блока `permissions:` |
+| [FM-74](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/74) | `YANDEX_CLIENT_ID` не передаётся в сборки CI и CD — вход через Яндекс в них не работает |
+| [FM-75](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/75) | `printVersionName` не знает про `-PversionName`, Telegram-отчёты показывают неверную версию |
+| [FM-77](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/77) | тесты в CI идут дважды: в `run-tests` и в `run-coverage` |
 
 ## Ключевые файлы
 
@@ -522,4 +453,3 @@ CI намеренно тонкий, поэтому «где что настро�
 | [`build.gradle.kts`](../build.gradle.kts) | Kover (фильтры + порог), Detekt, KtLint. |
 | [`build-logic/convention/`](../build-logic/convention/) | Версия, подпись, R8, Ruler, build-time tracker, проверка архитектуры. |
 | [`config/detekt/detekt.yml`](../config/detekt/detekt.yml) | Правила Detekt. |
-| [`TODO.md`](../TODO.md) | Технический бэклог, раздел CI/CD. |
