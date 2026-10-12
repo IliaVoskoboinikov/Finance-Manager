@@ -44,10 +44,12 @@ Run checks for the modules you touched; fix every violation your change introduc
 ./gradlew app:assembleDebug            # build debug APK
 ```
 
-CI (`.github/workflows/ci.yml`) runs, as separate jobs, on every non-`.md` push:
-`assembleDebug`, `test`, coverage (`koverVerifyFull`), `lint`, `detekt`, `ktlintCheck`,
-`:app:assertModuleGraph`, `aalekhCheck` (architecture), `navCheck` (job `nav-graph`),
-app-size (`analyzeDebugBundle`), and build-time report.
+CI (`.github/workflows/ci.yml`) runs, as separate jobs, on every PR and push to
+`master`/`releases/**`: `assembleDebug` (+ build-time report), `test`, coverage (`koverVerifyFull`),
+`lint`, `detekt`, `ktlintCheck`, `:app:dependencyGuard`, `buildHealth` (advisory, non-blocking),
+`:app:assertModuleGraph`, `aalekhCheck` (architecture), `navCheck` (job `nav-graph`), and app-size
+(`analyzeDebugBundle`). A change touching only `**/*.md` / `docs/**`
+skips them (job `changes`, `dorny/paths-filter`); the secret scan (`security.yml`) always runs.
 A change that fails any of these will fail CI — run the matching command locally
 before reporting done. Full pipeline description (incl. the CD workflows and their
 secrets): `docs/ci-cd.md`.

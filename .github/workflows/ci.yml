@@ -29,8 +29,44 @@ env:
   API_TOKEN: ${{ secrets.API_TOKEN }}
   GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
+# Правки только документации (*.md, docs/) проверки кода не запускают. Фильтр — джоба
+# changes, а не paths-ignore воркфлоу: required-чеки ruleset master (build-app, run-tests, …)
+# при пропущенном воркфлоу не появляются, и PR висит в «Expected — Waiting». Пропущенная
+# джоба, наоборот, засчитывается как пройденная. Остальные джобы ждут changes и стартуют при
+# code != 'false': если сама changes упала, выход пустой — проверки идут, а не тихо пропускаются.
+# Secret scan (security.yml) идёт на любых правках: секрет может утечь и в Markdown.
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read  # в PR список файлов берётся из API
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      # В PR checkout не нужен (файлы из API), а push сравнивается через git с прежним коммитом ветки.
+      - name: Checkout
+        if: github.event_name == 'push'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          # push: base = та же ветка → сравнение с коммитом до push (github.event.before).
+          # В PR base не передаём: action его игнорирует и пишет warning на каждый прогон.
+          base: ${{ github.event_name == 'push' && github.ref_name || '' }}
+          # every: файл считается кодом, только если не подходит ни под одно исключение.
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '!**/*.md'
+              - '!docs/**'
+
   build-app:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -53,6 +89,8 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
 
   run-tests:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       # Полная история нужна AffectedModuleDetector: он ищет merge-base с master.
@@ -92,6 +130,8 @@ jobs:
           path: '**/build/reports/tests/**'
 
   run-coverage:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -112,6 +152,8 @@ jobs:
           path: build/reports/kover/htmlFull
 
   run-lint:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -137,6 +179,8 @@ jobs:
   #            lint/build/reports/lint-results.sarif
 
   run-detekt:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -174,6 +218,8 @@ jobs:
           fi
 
   run-ktlint:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -205,6 +251,8 @@ jobs:
           path: ktlint-report.html
 
   check-app-size:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -225,6 +273,8 @@ jobs:
   # app/dependencies/releaseRuntimeClasspath.txt. Быстрая, идёт на каждый PR.
   # Разошлось — обновить осознанно: ./gradlew :app:dependencyGuardBaseline
   check-dependency-guard:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -242,6 +292,8 @@ jobs:
   # разбирается постепенно. continue-on-error, а в required-чеках её нет:
   # PR не должен ждать девять минут ради текста, который читают раз в месяц.
   dependency-analysis:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     continue-on-error: true
     # Самая долгая джоба пайплайна: на холодном кэше это ~6700 задач.
@@ -288,6 +340,8 @@ jobs:
           path: build/reports/dependency-analysis/
 
   check-module-graph:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -324,6 +378,8 @@ jobs:
   # блок aalekh { }). Падает только на НОВЫХ нарушениях — текущие заморожены в
   # aalekh-baseline.json. Полное описание — docs/aalekh.md.
   check-architecture:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     # Право писать в PR нужно только этой джобе (sticky-комментарий aalekhDiff), поэтому оно
     # выдаётся здесь, а не всему workflow. Job-level permissions заменяют workflow-level
@@ -401,6 +457,8 @@ jobs:
   # и галереей превью. Гейт живёт здесь, а не отдельной джобой: KSP, на котором он
   # работает, этой джобе нужен всё равно, а отдельная джоба — ещё одна холодная сборка.
   nav-graph:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
