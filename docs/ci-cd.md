@@ -94,11 +94,21 @@ JDK **21** во всех джобах, ставится в [`init-gradle`](../.g
 Триггеры — `pull_request` (любая ветка) и `push` в `master` / `releases/**`. Ветки без PR
 CI не гоняют намеренно: у `push` и `pull_request` разные `github.ref`, а значит разные группы
 `concurrency`, и раньше каждый push в ветку с открытым PR запускал прогон дважды.
-`paths-ignore` на `pull_request` **нет**: пропущенный workflow не создаёт чек-ранов, и PR
-с правками только в `*.md` навсегда зависал бы в «Expected — Waiting for status to be reported».
 Прогон на устаревший коммит отменяется (`concurrency` + `cancel-in-progress`), кроме `master`.
-Одиннадцать джоб, запускаются параллельно и между собой не связаны `needs`: падение одной
-не останавливает остальные, и в сводке прогона видно сразу все проблемы. Десять из них
+
+**Правки только документации проверки кода не запускают.** Первой идёт лёгкая джоба `changes`
+([`dorny/paths-filter`](https://github.com/dorny/paths-filter)): если все изменённые файлы —
+`**/*.md` или `docs/**`, остальные джобы пропускаются (`skipped`). В PR список файлов берётся
+из API (`pull-requests: read`), при push — `git diff` с коммитом, который был в ветке до push.
+Фильтр стоит на уровне джоб, а не `paths-ignore` воркфлоу: пропущенный воркфлоу не создаёт
+чек-ранов, и PR с правками только в `*.md` навсегда зависал бы в «Expected — Waiting for status
+to be reported» по required-чекам ruleset `master`. Пропущенная джоба, наоборот, засчитывается
+как пройденная. Условие у джоб — `code != 'false'`, а не `== 'true'`: если сама `changes`
+упала, выход пустой, и проверки запускаются, а не пропускаются молча. Secret scan
+(`security.yml`) фильтра не имеет — секрет может утечь и в Markdown.
+
+Двенадцать джоб проверок ждут только `changes`, а между собой не связаны `needs`: падение одной
+не останавливает остальные, и в сводке прогона видно сразу все проблемы. Одиннадцать из них
 блокирующие, `dependency-analysis` — рекомендательная (`continue-on-error`).
 
 | Джоба | Команда / action | Что проверяет | Артефакты и отчёты |
@@ -113,6 +123,7 @@ CI не гоняют намеренно: у `push` и `pull_request` разны�
 | `run-ktlint` | [`actions/ktlint`](../.github/actions/ktlint/action.yml) | Форматирование/стиль. | `ktlint-html-report`, SARIF в Code Scanning, Markdown в Step Summary. |
 | `check-app-size` | `./gradlew :app:analyzeDebugBundle` | Размер приложения (Ruler). | `ruler-report.html`. |
 | `check-module-graph` | `./gradlew :app:assertModuleGraph` + `generateModulesGraphvizText` | Архитектурные границы модулей. | `all_modules.png` (Graphviz), DOT-граф в Step Summary. |
+| `check-architecture` | `./gradlew aalekhCheck` (+ `aalekhReport`, `aalekhDiff` в PR) | Слои, изоляция фич, циклы, ratchet метрик — см. [Aalekh](./aalekh.md). | `aalekh-report`, SARIF в Code Scanning, комментарий с diff архитектуры в PR. |
 | `nav-graph` | `./gradlew navCheck --continue` + [`actions/nav-graph`](../.github/actions/nav-graph/action.yml) | Граф навигации из аннотаций совпадает с бейзлайнами `*/nav/*.nav`; карта экранов и галерея `@Preview` собираются без ошибок. | `nav-graph-report` (PNG + интерактивный HTML + `index.html`); результат `navCheck` с диффом расхождения и таблицы экранов/переходов в Step Summary. |
 
 ### Как устроены отдельные джобы
@@ -410,7 +421,7 @@ CI намеренно тонкий, поэтому «где что настро�
 
 ## Ограничения
 
-- **Одиннадцать джоб — одиннадцать холодных сборок.** Общего build cache между джобами нет,
+- **Двенадцать джоб — двенадцать холодных сборок.** Общего build cache между джобами нет,
   поэтому новые проверки по возможности встраиваются шагом в джобу, которая уже собирает
   нужное, — так подключён `navCheck`.
 - **CI и CD пересекаются на `releases/**`.** Релизная ветка проходит полный гейт качества
