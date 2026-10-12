@@ -15,7 +15,9 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review, converted_to_draft, closed]
   schedule:
-    - cron: '0 6 * * 1'  # понедельник, 09:00 по Москве
+    # Понедельник, 09:23 по Москве. Не на нулевой минуте: в начале часа у GitHub пик нагрузки,
+    # и запуски по расписанию задерживаются или отбрасываются (так пропала сводка 2026-10-12).
+    - cron: '23 6 * * 1'
   workflow_dispatch:
     inputs:
       dry_run:

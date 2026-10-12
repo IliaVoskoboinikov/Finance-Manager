@@ -246,8 +246,10 @@ flowchart LR
 
 * **`board.yml`** — три независимые джобы: `branch-started` (push ветки `feature/FM-*`),
   `pr-sync` (события `pull_request`, только PR из этого же репозитория) и `digest`
-  (понедельник 06:00 UTC и ручной запуск; по умолчанию ручной запуск только печатает
-  сводку). Вся логика — в [`.github/scripts/board.py`](../.github/scripts/board.py).
+  (понедельник 06:23 UTC и ручной запуск; по умолчанию ручной запуск только печатает
+  сводку). Расписание не на нулевой минуте: в начале часа GitHub под пиковой нагрузкой и
+  может задержать или отбросить запуск по расписанию. Вся логика — в
+  [`.github/scripts/board.py`](../.github/scripts/board.py).
 * **`ci-failure.yml`** — реагирует на завершение `CI` и `Security` на `master`. Логика — в
   [`ci_failure.py`](../.github/scripts/ci_failure.py). Событие `workflow_run` работает только с
   файла из ветки по умолчанию, поэтому workflow включается после мержа в `master`.
