@@ -35,6 +35,21 @@ private fun TopBarPreview() {
     }
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun TopBarActionDisabledPreview() {
+    FinanceManagerTheme {
+        TopBar(
+            topBar = TopBarModel(
+                title = R.string.save,
+                navigationIcon = Icons.Filled.ArrowBack,
+                actionIcon = Icons.Filled.ArrowBack,
+                isActionEnabled = false
+            )
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
@@ -59,7 +74,10 @@ fun TopBar(
         },
         actions = {
             if (topBar.actionIcon != null) {
-                IconButton(onClick = { topBar.actionIconClick() }) {
+                IconButton(
+                    onClick = { topBar.actionIconClick() },
+                    enabled = topBar.isActionEnabled
+                ) {
                     Icon(topBar.actionIcon, contentDescription = "Add")
                 }
             }

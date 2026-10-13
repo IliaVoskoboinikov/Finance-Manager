@@ -166,7 +166,8 @@ fun AccountContent(
                     navigationIcon = Icons.Filled.Cross,
                     navigationIconClick = actions.onNavigateBack,
                     actionIcon = Icons.Filled.ArrowConfirm,
-                    actionIconClick = actions.onSave
+                    actionIconClick = actions.onSave,
+                    isActionEnabled = uiState is AccountUiState.Success
                 )
             )
         },

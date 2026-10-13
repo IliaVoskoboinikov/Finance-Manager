@@ -9,6 +9,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -257,9 +258,16 @@ class AuthViewModelTest {
 
     /* ---------- merge confirm ---------- */
 
+    /** ViewModel после входа из гостевого режима: открыт диалог слияния данных. */
+    private fun viewModelWithMergeDialog(): AuthViewModel {
+        every { getAuthStatusUseCase() } returns flowOf(AuthStatus.GUEST)
+        coEvery { authRepository.login(any(), any(), any()) } returns DomainResult.Success(Unit)
+        return viewModel().apply { onAction(AuthAction.OnAuthClick) }
+    }
+
     @Test
     fun `merge confirm keeps guest data and syncs`() = runTest {
-        val vm = viewModel()
+        val vm = viewModelWithMergeDialog()
 
         vm.onAction(AuthAction.OnMergeConfirm(shouldMerge = true))
 
@@ -270,12 +278,46 @@ class AuthViewModelTest {
     @Test
     fun `merge decline clears guest data before sync`() = runTest {
         coEvery { authRepository.clearUserData() } returns DomainResult.Success(Unit)
-        val vm = viewModel()
+        val vm = viewModelWithMergeDialog()
 
         vm.onAction(AuthAction.OnMergeConfirm(shouldMerge = false))
 
         coVerify(exactly = 1) { authRepository.clearUserData() }
         coVerify(exactly = 1) { syncCoordinator.syncAll() }
+    }
+
+    @Test
+    fun `merge dialog stays closed while initial sync runs`() = runTest {
+        val sync = CompletableDeferred<Boolean>()
+        coEvery { syncCoordinator.syncAll() } coAnswers { sync.await() }
+        val vm = viewModelWithMergeDialog()
+
+        vm.onAction(AuthAction.OnMergeConfirm(shouldMerge = true))
+
+        assertThat(success(vm).isSyncing).isTrue()
+        assertThat(success(vm).showMergeDialog).isFalse()
+        sync.complete(true)
+    }
+
+    @Test
+    fun `repeated merge answer is ignored`() = runTest {
+        coEvery { authRepository.clearUserData() } returns DomainResult.Success(Unit)
+        val vm = viewModelWithMergeDialog()
+
+        vm.onAction(AuthAction.OnMergeConfirm(shouldMerge = false))
+        vm.onAction(AuthAction.OnMergeConfirm(shouldMerge = false))
+
+        coVerify(exactly = 1) { authRepository.clearUserData() }
+        coVerify(exactly = 1) { syncCoordinator.syncAll() }
+    }
+
+    @Test
+    fun `merge answer without the dialog is ignored`() = runTest {
+        val vm = viewModel()
+
+        vm.onAction(AuthAction.OnMergeConfirm(shouldMerge = true))
+
+        coVerify(exactly = 0) { syncCoordinator.syncAll() }
     }
 
     /* ---------- logout / guest ---------- */
@@ -316,6 +358,47 @@ class AuthViewModelTest {
         assertThat(events).containsExactly(AuthEvent.NavigateToMain)
 
         job.cancel()
+    }
+
+    @Test
+    fun `repeated guest click after success signs in once`() = runTest {
+        coEvery { authRepository.loginAsGuest() } returns DomainResult.Success(Unit)
+        val vm = viewModel()
+        val events = mutableListOf<AuthEvent>()
+        val job = launch(UnconfinedTestDispatcher()) { vm.eventFlow.collect { events += it } }
+
+        vm.onAction(AuthAction.OnGuestClick)
+        vm.onAction(AuthAction.OnGuestClick)
+
+        coVerify(exactly = 1) { authRepository.loginAsGuest() }
+        assertThat(events).containsExactly(AuthEvent.NavigateToMain)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `guest click while sign in is running is ignored`() = runTest {
+        val login = CompletableDeferred<DomainResult<Unit>>()
+        coEvery { authRepository.loginAsGuest() } coAnswers { login.await() }
+        val vm = viewModel()
+
+        vm.onAction(AuthAction.OnGuestClick)
+        vm.onAction(AuthAction.OnGuestClick)
+        login.complete(DomainResult.Success(Unit))
+
+        coVerify(exactly = 1) { authRepository.loginAsGuest() }
+    }
+
+    @Test
+    fun `guest click is retried after a failure`() = runTest {
+        coEvery { authRepository.loginAsGuest() } returns
+            DomainResult.Failure(DomainError.Unknown(null))
+        val vm = viewModel()
+
+        vm.onAction(AuthAction.OnGuestClick)
+        vm.onAction(AuthAction.OnGuestClick)
+
+        coVerify(exactly = 2) { authRepository.loginAsGuest() }
     }
 
     @Test

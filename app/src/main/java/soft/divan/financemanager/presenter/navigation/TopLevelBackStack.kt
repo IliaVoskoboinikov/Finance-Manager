@@ -58,10 +58,19 @@ class TopLevelBackStack(
     }
 
     override fun goTo(key: NavKey) {
+        if (currentStack.lastOrNull() == key) return
         currentStack.add(key)
     }
 
-    override fun back() {
+    override fun back(from: NavKey) {
+        if (currentStack.lastOrNull() == from) back()
+    }
+
+    /**
+     * Системный «назад»: закрывает верхний экран текущей вкладки, а с корня вкладки
+     * возвращает на стартовую.
+     */
+    fun back() {
         when {
             currentStack.size > 1 -> currentStack.removeAt(currentStack.lastIndex)
 

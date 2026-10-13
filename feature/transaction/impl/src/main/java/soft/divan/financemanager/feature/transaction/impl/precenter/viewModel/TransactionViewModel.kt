@@ -6,6 +6,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -83,6 +85,15 @@ class TransactionViewModel @AssistedInject constructor(
     private var transactionUi: TransactionUi? = null
     private var categories: List<CategoryUi> = emptyList()
     private var accounts: List<AccountUi> = emptyList()
+
+    /** Идущая запись (сохранение или удаление): пока она не завершилась, новая не запускается. */
+    private var writeJob: Job? = null
+
+    /**
+     * Запись прошла успешно, экран закрывается. Флаг не сбрасывается: тап, пришедший после
+     * успеха, но до закрытия экрана, повторил бы операцию и ещё раз изменил баланс.
+     */
+    private var isWriteCompleted = false
 
     private val mode =
         if (transactionId == null) TransactionMode.Create else TransactionMode.Edit(transactionId)
@@ -178,9 +189,18 @@ class TransactionViewModel @AssistedInject constructor(
         }
     }
 
+    /**
+     * Запускает запись [block], если другой записи сейчас нет и экран ещё не закрывается.
+     * Вызывается с главного потока, поэтому проверка и запуск не гоняются между собой.
+     */
+    private fun launchWrite(block: suspend CoroutineScope.() -> Unit) {
+        if (isWriteCompleted || writeJob?.isActive == true) return
+        writeJob = viewModelScope.launch(block = block)
+    }
+
     fun save() {
-        viewModelScope.launch {
-            val current = transactionUi ?: return@launch
+        launchWrite {
+            val current = transactionUi ?: return@launchWrite
 
             _uiState.update { TransactionUiState.Loading }
 
@@ -195,6 +215,7 @@ class TransactionViewModel @AssistedInject constructor(
 
             result.fold(
                 onSuccess = {
+                    isWriteCompleted = true
                     hapticsManager.perform(HapticType.SUCCESS)
                     soundPlayer.play(SoundType.COIN)
                     _eventFlow.emit(TransactionEvent.TransactionSaved)
@@ -252,12 +273,13 @@ class TransactionViewModel @AssistedInject constructor(
     }
 
     fun delete() {
-        viewModelScope.launch {
-            val transaction = transactionUi ?: return@launch
-            if (mode !is TransactionMode.Edit) return@launch
+        launchWrite {
+            val transaction = transactionUi ?: return@launchWrite
+            if (mode !is TransactionMode.Edit) return@launchWrite
 
             deleteTransactionAndUpdateAccountUseCase(transaction.toDomain()).fold(
                 onSuccess = {
+                    isWriteCompleted = true
                     hapticsManager.perform(HapticType.SUCCESS)
                     _eventFlow.emit(TransactionEvent.TransactionDeleted)
                 },
