@@ -19,6 +19,9 @@
 *   **UseCases:** 100% logic coverage.
 *   **ViewModels:** Cover state transitions and event handling.
 *   **Repositories:** Cover data mapping and error handling logic.
+*   **CI gate:** aggregate line coverage of testable code ≥ 95% (`./gradlew :koverVerifyFull`, rule and
+    exclusions in the root `build.gradle.kts`). UI (`@Composable`/`@Preview`, `*ScreenKt`, Activities,
+    `*FeatureImpl`) and generated code are excluded — everything else counts, so untested logic fails CI.
 
 ## Test Scenarios
 *   **Happy Path:** Standard successful execution.
