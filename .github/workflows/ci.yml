@@ -1,11 +1,19 @@
 name: CI
 
+# releases/** здесь нет: релизную ветку проверяет cd_release.yml, вызывая этот воркфлоу
+# гейтом перед публикацией. Отдельный прогон по push дублировал бы его, а общая группа
+# concurrency отменяла бы один прогон другим — вместе с релизом.
 on:
   push:
     branches:
       - master
-      - 'releases/**'
   pull_request:
+  workflow_call:
+    inputs:
+      release-gate:
+        description: Гейт релиза — все проверки без фильтра по диффу, без рекомендательных джоб
+        type: boolean
+        default: false
 
 # Новый push в ту же ветку/PR отменяет предыдущий прогон: десяток джоб на устаревший
 # коммит никому не нужен. На master прогоны не отменяем — там важна история статусов.
@@ -35,8 +43,10 @@ env:
 # джоба, наоборот, засчитывается как пройденная. Остальные джобы ждут changes и стартуют при
 # code != 'false': если сама changes упала, выход пустой — проверки идут, а не тихо пропускаются.
 # Secret scan (security.yml) идёт на любых правках: секрет может утечь и в Markdown.
+# В гейте релиза changes не запускается: выход пустой, и проверки идут целиком.
 jobs:
   changes:
+    if: ${{ !inputs.release-gate }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -101,16 +111,16 @@ jobs:
           persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
-      # На master — полный прогон: основная ветка проверяется целиком.
+      # На master и в гейте релиза — полный прогон: ветка проверяется целиком.
       # --continue: собираем отчёт по всем модулям, а не до первого упавшего.
       - name: Run all unit tests
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/master' || inputs.release-gate
         run: ./gradlew test $gradleFlags --continue
       # На ветках и в PR — только модули, задетые диффом, и их обратные зависимости.
       # :konsist исключён из детектора (он читает исходники с диска, а не через
       # зависимости Gradle), поэтому запускается явно.
       - name: Run affected unit tests
-        if: github.ref != 'refs/heads/master'
+        if: github.ref != 'refs/heads/master' && !inputs.release-gate
         run: ./gradlew runAffectedUnitTests :konsist:test $gradleFlags --continue
       # Раскладывает JUnit XML в аннотации прямо на строках упавших тестов + сводку в Summary.
       - name: Publish test report
@@ -291,9 +301,10 @@ jobs:
   # все severity выставлены в "warn" в корневом build.gradle.kts, и отчёт
   # разбирается постепенно. continue-on-error, а в required-чеках её нет:
   # PR не должен ждать девять минут ради текста, который читают раз в месяц.
+  # По той же причине её нет в гейте релиза: публикация ждала бы её целиком.
   dependency-analysis:
     needs: changes
-    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' && !inputs.release-gate }}
     runs-on: ubuntu-latest
     continue-on-error: true
     # Самая долгая джоба пайплайна: на холодном кэше это ~6700 задач.
