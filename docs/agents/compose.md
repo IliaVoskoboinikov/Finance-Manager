@@ -12,6 +12,8 @@
 ## Previews
 *   Every UI component and screen MUST have a `@Preview` composable.
 *   Provide previews for Dark Mode and different font scales if relevant.
+*   Previews are `private`: detekt compose-rules (`Compose:` in `config/detekt/detekt.yml`, `maxIssues: 0`)
+    flag public ones (`PreviewPublic`), and `UnusedPrivateMember` ignores `@Preview`.
 
 ## Best Practices
 *   **LaunchedEffect:** Use only for side effects triggered by state changes.

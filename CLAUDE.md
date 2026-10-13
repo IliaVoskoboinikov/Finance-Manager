@@ -14,16 +14,20 @@ DB migration rules below).
 
 ## Tech stack
 
-- **Kotlin `2.4.0`, Java 11**, AGP `9.2.1`, `compileSdk 36`, `minSdk 26`.
+- **Kotlin, Java 11**, AGP, `compileSdk 36`, `minSdk 26` (`build-logic/convention/.../Const.kt`).
+  Library versions live only in `gradle/libs.versions.toml` and Renovate bumps them — read them
+  there, never copy version numbers into docs (they go stale).
 - **UI:** Jetpack Compose + Material 3 (custom components in `core:uikit`).
-- **Navigation:** Navigation 3 (`androidx.navigation3` `1.1.5`) — `NavKey` + `NavDisplay`,
-  ключи сериализуются kotlinx.serialization.
+- **Navigation:** Navigation 3 (`androidx.navigation3`) — `NavKey` + `NavDisplay`, keys are
+  serialized with kotlinx.serialization.
 - **Architecture:** Clean Architecture + MVVM + Unidirectional Data Flow (UDF), offline-first.
-- **DI:** Dagger Hilt `2.59.2`. **Async:** Coroutines + Flow.
-- **Storage:** Room `2.8.4` (`FinanceManagerDatabase`, SSOT) + DataStore.
+- **DI:** Dagger Hilt. **Async:** Coroutines + Flow.
+- **Storage:** Room (`FinanceManagerDatabase`, SSOT) + DataStore.
 - **Network:** Retrofit + OkHttp + Gson; custom interceptors (Auth, Retry, NetworkConnection, Logging).
-- **Background:** WorkManager (`:sync`). **Security:** `core:security` `CryptoManager` (AES/GCM + KeyStore).
-- **Quality:** Detekt, ktlint, Android Lint + custom lint rules (`:lint`).
+- **Background:** WorkManager (`:sync`; shared `DelegatingWorker` infra in `core:workmanager`).
+  **Security:** `core:security` `CryptoManager` (AES/GCM + KeyStore).
+- **Quality:** Detekt (+ compose-rules), ktlint, Android Lint + custom lint rules (`:lint`),
+  Konsist architecture tests (`:konsist`), Kover coverage gate, Aalekh, dependency-guard.
 - Namespace root: `soft.divan.financemanager`.
 
 ## Build, test & verify commands
@@ -35,24 +39,29 @@ Run checks for the modules you touched; fix every violation your change introduc
 ./gradlew testDebugUnitTest             # all unit tests (Debug)
 ./gradlew :core:domain:testDebugUnitTest --tests "*GetTransactionsByPeriodUseCase*"  # single test class
 ./gradlew ktlintCheck                   # style   (./gradlew ktlintFormat to autofix)
-./gradlew detekt                        # static analysis (./gradlew detektBaseline to snapshot)
+./gradlew detekt                        # static analysis, maxIssues: 0, no baseline — fix, don't snapshot
 ./gradlew lint                          # Android lint + custom :lint checkers
+./gradlew :konsist:test                 # architecture rules read from sources (see constraints below)
+./gradlew :koverVerifyFull              # coverage gate: ≥ 95% lines of testable code
 ./gradlew :app:assertModuleGraph        # validate module dependency graph
 ./gradlew aalekhCheck                   # enforce architecture: layers, feature isolation, reachability, cycles (docs/aalekh.md)
 ./gradlew navCheck                      # navigation graph matches the committed .nav baselines
 ./gradlew navDump                       # refresh those baselines after an intentional nav change
+./gradlew :app:dependencyGuard          # release classpath matches app/dependencies/releaseRuntimeClasspath.txt
+./gradlew :app:dependencyGuardBaseline  # re-record it after an intentional dependency change
 ./gradlew app:assembleDebug            # build debug APK
 ```
 
 CI (`.github/workflows/ci.yml`) runs, as separate jobs, on every PR and push to
-`master`/`releases/**`: `assembleDebug` (+ build-time report), `test`, coverage (`koverVerifyFull`),
-`lint`, `detekt`, `ktlintCheck`, `:app:dependencyGuard`, `buildHealth` (advisory, non-blocking),
-`:app:assertModuleGraph`, `aalekhCheck` (architecture), `navCheck` (job `nav-graph`), and app-size
-(`analyzeDebugBundle`). A change touching only `**/*.md` / `docs/**`
-skips them (job `changes`, `dorny/paths-filter`); the secret scan (`security.yml`) always runs.
-A change that fails any of these will fail CI — run the matching command locally
-before reporting done. Full pipeline description (incl. the CD workflows and their
-secrets): `docs/ci-cd.md`.
+`master`/`releases/**`: `assembleDebug` (+ build-time report); unit tests (full `test` on master,
+affected modules + `:konsist:test` on branches); coverage gate (`koverVerifyFull`); `lint`;
+`detekt`; `ktlintCheck`; `:app:dependencyGuard`; `:app:assertModuleGraph`; `aalekhCheck`
+(architecture); `navCheck` (job `nav-graph`); app size (`analyzeDebugBundle`).
+`dependency-analysis` (`buildHealth`) is advisory and never blocks. A change touching only
+`**/*.md` / `docs/**` skips them (job `changes`, `dorny/paths-filter`); the secret scan
+(`security.yml`) always runs. A change that fails any blocking job will fail CI — run the
+matching command locally before reporting done. Full pipeline description (incl. the CD
+workflows, their secrets and the build-time report): `docs/ci-cd.md`.
 
 ## Big-picture architecture
 
@@ -93,7 +102,8 @@ and `@NavPreview` next to its `@Preview`. New screens/transitions MUST be annota
 The domain layer never throws across boundaries. Repositories/UseCases return
 `DomainResult<T>` (`Success(data)` / `Failure(DomainError)`), often wrapped as
 `Flow<DomainResult<T>>` for reactive streams. `DomainError` is a sealed hierarchy
-(`NoData`, `Unauthorized`, `OperationNotAllowed`, `NetworkUnavailable`, `Unknown(cause)`).
+(`NoData`, `Unauthorized`, `OperationNotAllowed`, `NetworkUnavailable`, `GuestModeBlocked`,
+`Unknown(cause)`).
 Consume with `fold` / `onSuccess` / `onFailure` / `getOrNull`; ViewModels map the result to `UiState`.
 
 ### Offline-first & sync
@@ -120,6 +130,20 @@ category → account → transaction sync order + last-write-wins are handled in
   Never lift a raw secret/PIN into the presentation layer — expose only `verify(...)`.
 - **Coroutines:** inject `CoroutineDispatcher`; never hardcode `Dispatchers.IO`/`Default` or
   use `GlobalScope`. Collect flows in UI with `collectAsStateWithLifecycle()`.
+- **Dependencies:** any change to the release classpath (new library, version bump, changed
+  transitive) fails `:app:dependencyGuard` until `./gradlew :app:dependencyGuardBaseline` re-records
+  `app/dependencies/releaseRuntimeClasspath.txt` — review that diff, it ships with the change.
+- **Coverage gate:** aggregate line coverage of testable code must stay ≥ 95% (`koverVerifyFull`,
+  rule and exclusions in the root `build.gradle.kts`). UI (`@Composable`, `*ScreenKt`, Activities,
+  `*FeatureImpl`) and generated code are excluded — so new non-UI logic ships with its tests.
+- **Konsist** (`:konsist`) reads sources and fails on misplaced code: use cases and repository
+  interfaces in a `domain` package (implementations outside it), Room entities only in
+  `core:database`, DTOs in a `dto` package, ViewModels annotated `@HiltViewModel`, no legacy dates.
+- **Building in a git worktree:** the gitignored `local.properties` and `app/google-services.json`
+  are absent. Compile/test/lint tasks need `ANDROID_HOME=<sdk path>` before `./gradlew`
+  (ktlint/detekt run without it). `:app` tasks need the google-services plugin set to
+  `missingGoogleServicesStrategy = WARN` via an `--init-script` kept outside the repo — never copy
+  the real `google-services.json`. Release/R8 builds locally: `-x :app:uploadCrashlyticsMappingFileRelease`.
 - **Editing:** never mutate source with shell `sed`/`awk`/`echo >` — use the Edit/Write tools.
 
 ## Detailed guidelines (mandatory reading per area)
@@ -138,8 +162,18 @@ category → account → transaction sync order + last-write-wins are handled in
 @./docs/agents/release-process.md
 @./docs/agents/task-board.md
 
-Deeper design docs live in `docs/` (`architecture.md`, `modularization.md`, `modules.md`,
-`navigation3.md`, `auth.md`, `synchronization.md`, `domain-result.md`, `bd.md`).
+Deeper design docs live in `docs/`; their index, one line per doc, is `docs/README.md` — check it
+before writing a new doc or guessing how a subsystem works.
+
+## Interaction protocol
+
+- The user is an experienced Android engineer. Reply in Russian. Skip basics and pleasantries —
+  unless asked to explain something «с нуля»; then explain fully, in chat, not as a new doc.
+- Verdict first, then reasoning. Give one recommendation, not a survey of options you won't pursue.
+- Be direct: flag logical gaps, anti-patterns and missed edge cases — in the user's proposals
+  too, not only in your own code. Disagree with a reason instead of complying silently or hedging.
+- Before presenting a non-trivial design or change, self-review it by the three vectors in
+  `docs/agents/release-process.md` («Self-review»).
 
 ## Clarify before executing
 
@@ -184,8 +218,15 @@ otherwise pick the sensible default and note it.
   (Russian, `#`/`##` sections, mermaid diagrams, code snippets, a "ключевые файлы" table). Keep it
   design-level (the "why" and how pieces fit), not a line-by-line restatement of the code. Skip it
   for small, local, or self-evident changes — KDoc/README is enough there.
+- **Keep these instructions current — without asking.** When a task produces a durable decision
+  (a new pattern or convention, a constraint discovered the hard way, a tooling gotcha), add it in
+  the same change: area rules to the matching `docs/agents/*.md`, cross-cutting ones here. Fix or
+  delete a rule that turned out wrong. Don't record task status, one-off facts or what the code
+  already states. Never relax process or safety rules (git, the board, attribution, secrets) on
+  your own — that takes the user's explicit request. Mention every such edit in the report.
 - Prefer the smallest change that satisfies the requirement; mirror existing style and patterns.
 - Don't rename public APIs or restructure packages without an explicit request.
-- When done, give a short report: what changed, architecture/module-graph impact, tests added, risks,
-  and the task card (`FM-N <title>`, its status, proposed branch `feature/FM-N-…`, commit message
-  ending with `(FM-N)`, follow-up cards to create).
+- When done, give a short report: what changed, architecture/module-graph impact, tests added,
+  self-review (faults / edge cases / improvements), instruction updates, and the task card
+  (`FM-N <title>`, its status, proposed branch `feature/FM-N-…`, commit message ending with
+  `(FM-N)`, follow-up cards to create).
