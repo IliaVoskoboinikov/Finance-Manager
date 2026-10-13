@@ -53,7 +53,8 @@ Run checks for the modules you touched; fix every violation your change introduc
 ```
 
 CI (`.github/workflows/ci.yml`) runs, as separate jobs, on every PR and push to
-`master`/`releases/**`: `assembleDebug` (+ build-time report); unit tests (full `test` on master,
+`master`, and as the release gate inside `cd_release.yml` (push to `releases/**`; publishing
+waits for it): `assembleDebug` (+ build-time report); unit tests (full `test` on master,
 affected modules + `:konsist:test` on branches); coverage gate (`koverVerifyFull`); `lint`;
 `detekt`; `ktlintCheck`; `:app:dependencyGuard`; `:app:assertModuleGraph`; `aalekhCheck`
 (architecture); `navCheck` (job `nav-graph`); app size (`analyzeDebugBundle`).

@@ -14,12 +14,14 @@
 ```mermaid
 flowchart TD
     pr["pull_request<br/>(любая ветка)"] --> ci["ci.yml — CI<br/>11 параллельных джоб"]
-    pushM["push в master / releases/**"] --> ci
+    pushM["push в master"] --> ci
     pr --> sec["security.yml<br/>gitleaks + dependency-review"]
     pushM --> sec
     pushM --> dep["dependency-submission.yml<br/>граф зависимостей → GitHub"]
     pushT["push в tests/**"] --> cdt["cd_tests.yml — App test"]
     pushR["push в releases/**"] --> cdr["cd_release.yml — App release"]
+    pushR --> sec
+    cdr -->|"гейт качества<br/>(workflow_call)"| ci
     wd["workflow_dispatch"] -.-> cdt
     wd -.-> cdr
 
@@ -91,10 +93,18 @@ JDK **21** во всех джобах, ставится в [`init-gradle`](../.g
 
 ## CI (`ci.yml`)
 
-Триггеры — `pull_request` (любая ветка) и `push` в `master` / `releases/**`. Ветки без PR
-CI не гоняют намеренно: у `push` и `pull_request` разные `github.ref`, а значит разные группы
-`concurrency`, и раньше каждый push в ветку с открытым PR запускал прогон дважды.
+Триггеры — `pull_request` (любая ветка), `push` в `master` и `workflow_call`: релизный
+`cd_release.yml` вызывает CI гейтом перед публикацией (см. [CD: релиз](#cd-релиз-cd_releaseyml)).
+Ветки без PR CI не гоняют намеренно: у `push` и `pull_request` разные `github.ref`, а значит
+разные группы `concurrency`, и раньше каждый push в ветку с открытым PR запускал прогон дважды.
+По той же причине нет и `push` в `releases/**`: его прогон дублировал бы гейт релиза и делил бы
+с ним группу `concurrency` — один прогон отменял бы другой вместе с публикацией.
 Прогон на устаревший коммит отменяется (`concurrency` + `cancel-in-progress`), кроме `master`.
+
+**Гейт релиза** — вход `release-gate: true` у `workflow_call`. В этом режиме джоба `changes` не
+запускается (фильтра по диффу нет, проверки идут всегда), `run-tests` гоняет полный `test`, как на
+`master`, а рекомендательная `dependency-analysis` пропускается — иначе публикация ждала бы её
+до получаса ради текста, который ничего не блокирует.
 
 **Правки только документации проверки кода не запускают.** Первой идёт лёгкая джоба `changes`
 ([`dorny/paths-filter`](https://github.com/dorny/paths-filter)): если все изменённые файлы —
@@ -232,7 +242,7 @@ flowchart LR
 
 ## Security (`security.yml`)
 
-Две джобы, триггеры те же, что у `ci.yml` (`pull_request` + `push` в `master` / `releases/**`):
+Две джобы, триггеры — `pull_request` + `push` в `master` / `releases/**`:
 
 * **`secret-scan`** — [gitleaks](https://github.com/gitleaks/gitleaks-action) по всей истории
   (`fetch-depth: 0`, иначе секрет, удалённый последним коммитом, не найдётся). Прямо
@@ -293,11 +303,25 @@ flowchart LR
 flowchart LR
     v["validate-version<br/>парсит имя ветки"] --> apk["build-apk<br/>assembleRelease"]
     v --> aab["build-aab<br/>bundleRelease"]
+    v --> gate["quality-gate<br/>ci.yml, release-gate: true"]
     apk --> tg["report-telegram<br/>APK в чат (тред «release»)"]
     aab --> play["publish-play<br/>Google Play, track=internal, status=draft"]
     apk --> gh["github-release<br/>черновик релиза: тег v.X.Y.Z,<br/>APK + AAB, авто-changelog"]
     aab --> gh
+    gate --> tg
+    gate --> play
+    gate --> gh
 ```
+
+**Публикация только после зелёного гейта.** Джоба `quality-gate` вызывает `ci.yml` как reusable
+workflow с `release-gate: true` — те же проверки, что в CI, полным прогоном. Сборки APK и AAB
+идут параллельно с ним, чтобы не удлинять релиз, а всё, что уходит наружу (`report-telegram`,
+`publish-play`, `github-release`), стоит в `needs:` на гейт: упал хоть один блокирующий чек —
+публикации пропускаются. Гейт ждёт `validate-version`, чтобы не гонять проверки на ветке с
+неверным именем. Права токена вызывающая джоба выдаёт явно: права вложенных джоб не могут
+превышать её собственные, а `ci.yml` нужны `security-events: write` (SARIF) и `checks: write`
+(отчёт о тестах). Секреты (`API_TOKEN`, `GOOGLE_SERVICES_JSON`) передаются через
+`secrets: inherit`.
 
 Джоба `github-release` создаёт именно **черновик**: тег и release notes GitHub собирает сам
 (`generate_release_notes: true` — из PR и коммитов с прошлого тега), а публикует релиз
@@ -424,8 +448,8 @@ CI намеренно тонкий, поэтому «где что настро�
 - **Двенадцать джоб — двенадцать холодных сборок.** Общего build cache между джобами нет,
   поэтому новые проверки по возможности встраиваются шагом в джобу, которая уже собирает
   нужное, — так подключён `navCheck`.
-- **CI и CD пересекаются на `releases/**`.** Релизная ветка проходит полный гейт качества
-  параллельно со сборкой, но публикация его не ждёт.
+- **Гейт релиза — только `ci.yml`.** Secret scan (`security.yml`) на `releases/**` идёт отдельным
+  воркфлоу и публикацию не блокирует.
 - **Скриншот-тесты Compose Preview не подключаются** — подробности в
   [testing.md → Ограничения](./testing.md#ограничения).
 
@@ -438,7 +462,6 @@ CI намеренно тонкий, поэтому «где что настро�
 | Задача | Что сейчас не так |
 | :--- | :--- |
 | [FM-70](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/70) | `send-file-tg` подставляет сообщение коммита прямо в `run:` — инъекция шелла на раннере с доступом к keystore |
-| [FM-61](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/61) | `cd_release.yml` публикует в Play, не дожидаясь тестов и линтеров |
 | [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72), [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73) | release-сборка (R8) в CI не собирается и сейчас падает |
 | [FM-71](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/71) | в `cd_tests.yml` и `cd_release.yml` нет явного блока `permissions:` |
 | [FM-74](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/74) | `YANDEX_CLIENT_ID` не передаётся в сборки CI и CD — вход через Яндекс в них не работает |
@@ -449,7 +472,7 @@ CI намеренно тонкий, поэтому «где что настро�
 
 | Файл | Роль |
 |---|---|
-| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества на каждый push. |
+| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества на PR и push в `master`; reusable-гейт релиза. |
 | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Тестовая раздача (Telegram + Firebase). |
 | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз и публикация в Play. |
 | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | gitleaks + dependency-review. |
