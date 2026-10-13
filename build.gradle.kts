@@ -470,6 +470,9 @@ tasks.withType<Detekt>().configureEach {
     exclude("**/build/**")
     exclude("**/.gradle/**")
     exclude("**/generated/**")
+    // Локальные git worktree агента (gitignored): в CI их нет, а локально detekt нашёл бы
+    // в них сотни чужих нарушений.
+    exclude("**/.claude/**")
 
     reports {
         xml.required.set(true)

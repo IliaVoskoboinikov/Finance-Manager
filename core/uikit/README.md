@@ -15,6 +15,8 @@
 - Видимостью диалогов владеет вызывающий: `DeleteDialog` принимает `onDismissRequest`,
   а не `MutableState<Boolean>`.
 - `@Preview` — `private`.
+- Кнопка действия `TopBar` гасится через `TopBarModel.isActionEnabled`, пока действие
+  выполняется. Это только обратная связь: от повторной записи защищает ViewModel.
 
 ## Module dependency graph
 

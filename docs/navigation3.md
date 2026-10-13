@@ -246,8 +246,8 @@ interface FeatureApi {
 }
 
 interface Navigator {
-    fun goTo(key: NavKey)   // открыть экран
-    fun back()              // вернуться назад
+    fun goTo(key: NavKey)        // открыть экран; ключ уже на вершине — ничего не делает
+    fun back(from: NavKey)       // закрыть экран from; он уже не на вершине — ничего не делает
 }
 
 fun EntryProviderScope<NavKey>.register(featureApi: FeatureApi, navigator: Navigator, modifier: Modifier = Modifier)
@@ -256,6 +256,21 @@ fun EntryProviderScope<NavKey>.register(featureApi: FeatureApi, navigator: Navig
 Почему `Navigator`, а не сам `NavBackStack`: у приложения **пять** стеков (по одному на
 вкладку), и «добавить экран» означает «добавить в стек текущей вкладки». Фича об этом знать
 не должна — она получает интерфейс, а реализует его хост (`TopLevelBackStack`).
+
+**Обе операции идемпотентны** — это защита от двойного тапа. Анимации переходов в
+`MainNavDisplay` выключены, поэтому экран сменяется за один кадр, и второй тап того же жеста
+попадает уже в новый экран:
+
+- двойной тап по строке списка вызвал бы `goTo` дважды и положил бы в стек два одинаковых
+  ключа. Navigation 3 требует уникальный `contentKey`: у таких записей были бы общие
+  `ViewModelStore` и сохранённое состояние, а «назад» пришлось бы жать дважды. Поэтому `goTo`
+  пропускает ключ, который уже на вершине;
+- «назад» адресный: экран закрывает **себя** (`back(from = свойKey)`), а не «то, что сверху».
+  Второй тап по ✕ или `back` по событию `Saved` после уже закрытого экрана иначе закрыл бы
+  экран под ним. Безадресный `back()` остался только у хоста — для системного «назад».
+
+Защита от повторной **записи** (двойной ✓) — не навигационная, она живёт во ViewModel: см.
+«Повторные нажатия» в `docs/agents/architecture.md`.
 
 Типичная фича целиком:
 
@@ -273,7 +288,7 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
             HistoryScreen(
                 modifier = modifier,
                 isIncome = isIncome,
-                onNavigateBack = navigator::back,
+                onNavigateBack = { navigator.back(from = historyKey) },
                 onNavigateToTransaction = { id ->
                     navigator.goTo(TransactionKey(isIncome = isIncome, transactionId = id))
                 },
@@ -316,7 +331,7 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
 - `AuthKey` — вход как точка входа в приложение (корневой стек, без нижней навигации);
   после успеха хост заменяет стек на `MainKey`;
 - `ProfileAuthKey` — повторный вход из профиля (внутри вкладки «Настройки», нижняя навигация
-  на месте); после успеха просто `back()`.
+  на месте); после успеха просто `back(from = ProfileAuthKey)`.
 
 Раньше это различие выражалось двумя строковыми маршрутами (`auth-screen` и
 `settings/profile-screen/auth-screen`), теперь — двумя типами.
@@ -425,7 +440,7 @@ val displayStack: List<NavKey>
 `popUpTo(startDestination) { saveState = true }`:
 
 ```kotlin
-override fun back() {
+fun back() {   // системный «назад»; фичи зовут back(from), который проверяет вершину и вызывает его
     when {
         currentStack.size > 1 -> currentStack.removeAt(currentStack.lastIndex)  // назад внутри вкладки
         currentTabIndex.intValue != START_TAB_INDEX ->
@@ -537,7 +552,10 @@ data class AccountKey(val accountId: String? = null) : NavKey
 
 ```kotlin
 scope.entry<AccountKey> { accountKey ->
-    AccountScreenScreen(accountId = accountKey.accountId, onNavigateBack = navigator::back)
+    AccountScreenScreen(
+        accountId = accountKey.accountId,
+        onNavigateBack = { navigator.back(from = accountKey) }
+    )
 }
 ```
 

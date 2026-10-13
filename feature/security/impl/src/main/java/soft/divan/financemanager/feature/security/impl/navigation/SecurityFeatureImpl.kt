@@ -18,17 +18,17 @@ class SecurityFeatureImpl @Inject constructor() : SecurityFeatureApi {
         navigator: Navigator,
         modifier: Modifier
     ) {
-        scope.entry<SecurityKey> {
+        scope.entry<SecurityKey> { key ->
             SecurityScreen(
                 modifier = modifier,
-                onNavigateBack = navigator::back,
+                onNavigateBack = { navigator.back(from = key) },
                 onNavigateToCreatePin = { navigator.goTo(CreatePinKey) }
             )
         }
 
-        scope.entry<CreatePinKey> {
+        scope.entry<CreatePinKey> { key ->
             CreatePinScreen(
-                onNavigateBack = navigator::back
+                onNavigateBack = { navigator.back(from = key) }
             )
         }
     }

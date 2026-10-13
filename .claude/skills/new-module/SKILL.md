@@ -85,7 +85,8 @@ Note: type-safe accessors camel-case dashes — `my-goals` → `projects.feature
 `registerEntries(scope, navigator, modifier) { scope.entry<<Name>Key> { ... } }`
 (see `feature/account/impl/.../navigation/AccountFeatureImpl.kt`).
 Регистрируй только свои ключи: переход к соседней фиче — `navigator.goTo(OtherKey)`,
-возврат — `navigator::back`. Один и тот же ключ нельзя зарегистрировать дважды.
+возврат — `navigator.back(from = key)` из `scope.entry<<Name>Key> { key -> … }`. Один и тот же
+ключ нельзя зарегистрировать дважды.
 
 **`<Name>BinderModule.kt`**
 ```kotlin

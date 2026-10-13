@@ -16,10 +16,10 @@ class SoundsFeatureImpl @Inject constructor() : SoundsFeatureApi {
         navigator: Navigator,
         modifier: Modifier
     ) {
-        scope.entry<SoundsKey> {
+        scope.entry<SoundsKey> { key ->
             SoundsScreen(
                 modifier = modifier,
-                onNavigateBack = navigator::back
+                onNavigateBack = { navigator.back(from = key) }
             )
         }
     }

@@ -14,6 +14,9 @@ commands are in [`.github/scripts/board.py`](../../.github/scripts/board.py).
     GitHub cuts a longer subject when it becomes a PR title:
     `fix(navigation): починить возврат с экрана счёта (FM-42)`.
 *   PR body: `Closes #42` (the automation adds it if it is missing).
+*   Never rename the head branch of an open PR to fit the scheme: GitHub treats it as deleting
+    the head and closes the PR (`head_ref_deleted`), and it cannot be reopened under the new
+    name. Link such a PR with `Closes #N` in its body, or open a new PR from the renamed branch.
 *   Git stays with the user: propose the branch name and the commit message, don't create them.
 
 ## When to propose a card

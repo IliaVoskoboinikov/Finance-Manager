@@ -182,7 +182,14 @@ fun TransactionContent(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { TopBarTransaction(isIncome, actions.onNavigateBack, actions.onSave) },
+        topBar = {
+            TopBarTransaction(
+                isIncome = isIncome,
+                isSaveEnabled = uiState is TransactionUiState.Success,
+                onNavigateBack = actions.onNavigateBack,
+                onSave = actions.onSave
+            )
+        },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
@@ -203,6 +210,7 @@ fun TransactionContent(
 @Composable
 private fun TopBarTransaction(
     isIncome: Boolean,
+    isSaveEnabled: Boolean,
     onNavigateBack: () -> Unit,
     onSave: () -> Unit
 ) {
@@ -212,7 +220,8 @@ private fun TopBarTransaction(
             navigationIcon = Icons.Filled.Cross,
             navigationIconClick = onNavigateBack,
             actionIcon = Icons.Filled.ArrowConfirm,
-            actionIconClick = onSave
+            actionIconClick = onSave,
+            isActionEnabled = isSaveEnabled
         )
     )
 }

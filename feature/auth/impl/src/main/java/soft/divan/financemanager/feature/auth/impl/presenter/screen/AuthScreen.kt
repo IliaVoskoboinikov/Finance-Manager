@@ -39,8 +39,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,7 +88,11 @@ fun AuthScreen(
     val context = LocalContext.current
     val currentOnAuthSuccess by rememberUpdatedState(onAuthSuccess)
 
+    // Экран Яндекса появляется не мгновенно: второй тап до его появления открыл бы его ещё раз.
+    // Флаг переживает смерть процесса, результат Яндекса после неё всё равно придёт и сбросит его.
+    var isYandexLaunched by rememberSaveable { mutableStateOf(false) }
     val yandexLauncher = rememberLauncherForActivityResult(viewModel.yandexAuthContract) { result ->
+        isYandexLaunched = false
         viewModel.onYandexResult(result)
     }
 
@@ -118,7 +125,12 @@ fun AuthScreen(
             onLogoutClick = { viewModel.onAction(AuthAction.OnLogoutClick) },
             onLogoutConfirm = { viewModel.onAction(AuthAction.OnLogoutConfirm(it)) },
             onGuestClick = { viewModel.onAction(AuthAction.OnGuestClick) },
-            onYandexClick = { yandexLauncher.launch(YandexAuthLoginOptions()) },
+            onYandexClick = {
+                if (!isYandexLaunched) {
+                    isYandexLaunched = true
+                    yandexLauncher.launch(YandexAuthLoginOptions())
+                }
+            },
             onDismissDialogs = { viewModel.onAction(AuthAction.DismissDialogs) }
         ),
         snackbarHostState = snackbarHostState

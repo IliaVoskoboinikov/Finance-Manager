@@ -8,6 +8,7 @@ import com.yandex.authsdk.YandexAuthLoginOptions
 import com.yandex.authsdk.YandexAuthResult
 import com.yandex.authsdk.YandexAuthSdk
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +47,12 @@ class AuthViewModel @Inject constructor(
     val eventFlow = _eventFlow.asSharedFlow()
 
     val authStatus = getAuthStatusUseCase()
+
+    /** Идущий вход гостем. */
+    private var guestJob: Job? = null
+
+    /** Вход гостем выполнен, экран уходит на главный: повторный вход не нужен. */
+    private var isGuestSignedIn = false
 
     /**
      * Контракт Yandex ID SDK для запуска экрана входа через `rememberLauncherForActivityResult`.
@@ -186,12 +193,16 @@ class AuthViewModel @Inject constructor(
 
     private fun onMergeConfirm(shouldMerge: Boolean) {
         val content = _uiState.value as? AuthUiState.Success ?: return
-        _uiState.value = content.copy(showMergeDialog = false)
+        // Ответ принимается только пока диалог открыт: второй тап по его кнопке иначе ещё раз
+        // очистил бы данные и запустил второй синк.
+        if (!content.showMergeDialog) return
+        val dialogClosed = content.copy(showMergeDialog = false)
+        _uiState.value = dialogClosed
         viewModelScope.launch {
             if (!shouldMerge) {
                 authRepository.clearUserData()
             }
-            performInitialSync(content)
+            performInitialSync(dialogClosed)
         }
     }
 
@@ -207,9 +218,15 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun signInAsGuest() {
-        viewModelScope.launch {
+        // Повторный тап, пока вход идёт или экран уже уходит на главный, не отправляет второе
+        // событие входа и второй переход.
+        if (guestJob?.isActive == true || isGuestSignedIn) return
+        guestJob = viewModelScope.launch {
             authRepository.loginAsGuest().fold(
-                onSuccess = { _eventFlow.emit(AuthEvent.NavigateToMain) },
+                onSuccess = {
+                    isGuestSignedIn = true
+                    _eventFlow.emit(AuthEvent.NavigateToMain)
+                },
                 onFailure = { /* ignore */ }
             )
         }
