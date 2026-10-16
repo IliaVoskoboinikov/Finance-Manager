@@ -11,7 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,13 +32,13 @@ private const val PIN_INPUT_CONFIRMATION_DELAY_MS = 200L
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun PreviewPinEntryCommonScreen() {
+private fun PreviewPinEntryCommonScreen() {
     FinanceManagerTheme {
         PinEntryCommonScreen(
             titleId = R.string.input_password,
             errorMessage = "Неверный PIN. Осталось попыток: 3",
             showBiometricButton = true,
-            onPinEntered = {}
+            onPinEnter = {}
         )
     }
 }
@@ -53,27 +55,29 @@ fun PreviewPinEntryCommonScreen() {
 @Composable
 fun PinEntryCommonScreen(
     titleId: Int,
+    onPinEnter: (String) -> Unit,
+    modifier: Modifier = Modifier,
     pinSize: Int = DEFAULT_PIN_SIZE,
     errorMessage: String = "",
     showBiometricButton: Boolean = false,
     enabled: Boolean = true,
-    onPinEntered: (String) -> Unit,
     onBackspaceClick: () -> Unit = {},
     onFingerprintClick: () -> Unit = {},
     footer: @Composable ColumnScope.() -> Unit = {}
 ) {
     val inputPin = remember { mutableStateListOf<Int>() }
+    val currentOnPinEnter by rememberUpdatedState(onPinEnter)
 
     // Проверка длины и отправка результата
     LaunchedEffect(inputPin.size) {
         if (inputPin.size == pinSize) {
             delay(PIN_INPUT_CONFIRMATION_DELAY_MS) // чтобы пользователь успел увидеть ввод
-            onPinEntered(inputPin.joinToString(""))
+            currentOnPinEnter(inputPin.joinToString(""))
             inputPin.clear()
         }
     }
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally,

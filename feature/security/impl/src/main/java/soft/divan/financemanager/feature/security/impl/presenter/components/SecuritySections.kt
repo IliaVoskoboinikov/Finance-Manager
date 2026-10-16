@@ -27,7 +27,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewProtectionLevelSection() {
+private fun PreviewProtectionLevelSection() {
     FinanceManagerTheme {
         ProtectionLevelSection(selected = DataProtectionLevel.DEVICE, enabled = true, onSelect = {})
     }
@@ -35,7 +35,7 @@ fun PreviewProtectionLevelSection() {
 
 @Preview(showBackground = true, fontScale = 1.5f)
 @Composable
-fun PreviewPinSection() {
+private fun PreviewPinSection() {
     FinanceManagerTheme(darkTheme = true) {
         Column {
             PinSection(
@@ -55,12 +55,12 @@ fun PreviewPinSection() {
 
 /** Заголовок раздела настроек. */
 @Composable
-fun SectionHeader(title: Int) {
+fun SectionHeader(title: Int, modifier: Modifier = Modifier) {
     Text(
         text = stringResource(title),
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
+        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
     )
 }
 
@@ -69,9 +69,10 @@ fun SectionHeader(title: Int) {
 fun ProtectionLevelSection(
     selected: DataProtectionLevel,
     enabled: Boolean,
-    onSelect: (DataProtectionLevel) -> Unit
+    onSelect: (DataProtectionLevel) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = Modifier.selectableGroup()) {
+    Column(modifier = modifier.selectableGroup()) {
         DataProtectionLevel.entries.forEach { level ->
             Row(
                 modifier = Modifier
@@ -117,9 +118,10 @@ data class PinSectionActions(
 fun PinSection(
     hasPin: Boolean,
     dataProtectedByPin: Boolean,
-    actions: PinSectionActions
+    actions: PinSectionActions,
+    modifier: Modifier = Modifier
 ) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+    Column(modifier = modifier.padding(horizontal = 16.dp)) {
         if (!hasPin) {
             OutlinedButton(onClick = actions.onCreate, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.create_pin))
@@ -152,10 +154,11 @@ fun SettingSwitch(
     title: Int,
     description: Int,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
             .padding(horizontal = 16.dp, vertical = 12.dp),

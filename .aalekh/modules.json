@@ -1,0 +1,104 @@
+{
+  "modules": [
+    {
+      "path": ":core:domain",
+      "purpose": "Чистый Kotlin: сущности, UseCase и интерфейсы репозиториев. Ни от чего внутри проекта не зависит — источник правды для бизнес-правил, который можно вынести в KMP.",
+      "owner": "core-platform",
+      "layer": "domain",
+      "status": "stable",
+      "links": {
+        "Architecture": "https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/architecture.md",
+        "DomainResult": "https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/domain-result.md"
+      }
+    },
+    {
+      "path": ":core:data",
+      "purpose": "Реализация репозиториев и маппинг DTO/Entity ↔ Domain. Room — единственный источник правды, сеть только для синхронизации (offline-first).",
+      "owner": "core-platform",
+      "layer": "data",
+      "status": "stable"
+    },
+    {
+      "path": ":core:database",
+      "purpose": "Room-хранилище (FinanceManagerDatabase, SSOT). Связи логические, без @ForeignKey/@Index; soft-delete через syncStatus.",
+      "owner": "core-platform",
+      "layer": "data",
+      "status": "stable",
+      "links": {
+        "БД": "https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/bd.md"
+      }
+    },
+    {
+      "path": ":core:network",
+      "purpose": "Retrofit + OkHttp + Gson и кастомные интерцепторы (Auth, Retry, NetworkConnection, Logging). DTO не покидают слой данных.",
+      "owner": "core-platform",
+      "layer": "data",
+      "status": "stable"
+    },
+    {
+      "path": ":sync",
+      "purpose": "Фоновая синхронизация через WorkManager. Порядок category → account → transaction, last-write-wins, разрешение конфликтов на стороне данных.",
+      "owner": "core-platform",
+      "layer": "data",
+      "status": "stable",
+      "links": {
+        "Synchronization": "https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/synchronization.md"
+      }
+    },
+    {
+      "path": ":core:security",
+      "purpose": "CryptoManager (AES/GCM + Android KeyStore). Наружу отдаёт только verify(...), сырой секрет/PIN в презентацию не поднимается.",
+      "owner": "core-platform",
+      "layer": "foundation",
+      "status": "stable"
+    },
+    {
+      "path": ":core:auth",
+      "purpose": "Хранение JWT: токен шифруется CryptoManager и кладётся в DataStore. Управление состоянием сессии.",
+      "owner": "core-platform",
+      "layer": "foundation",
+      "status": "stable",
+      "links": {
+        "Auth": "https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/auth.md"
+      }
+    },
+    {
+      "path": ":core:feature-api",
+      "purpose": "Контракт навигации: FeatureApi + Navigator + NavKey-абстракции. Самый влиятельный модуль графа — от него зависит ~50% проекта. Развязывает фичи между собой.",
+      "owner": "core-platform",
+      "layer": "foundation",
+      "status": "stable",
+      "links": {
+        "Navigation 3": "https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/navigation3.md"
+      }
+    },
+    {
+      "path": ":core:uikit",
+      "purpose": "Дизайн-система на Compose + Material 3. Общие компоненты; от неё зависит ~26% проекта.",
+      "owner": "core-platform",
+      "layer": "ui",
+      "status": "stable"
+    },
+    {
+      "path": ":app",
+      "purpose": "Хост: точка входа, DI-сборка (Hilt Set<FeatureApi>), корневая навигация (RootNavDisplay) и стеки вкладок. Зависит напрямую от 42 модулей.",
+      "owner": "app",
+      "layer": "app",
+      "status": "stable"
+    },
+    {
+      "path": ":konsist",
+      "purpose": "Тестовый модуль архитектурных правил уровня классов (Konsist), без продуктового кода. Читает исходники всех модулей с диска, поэтому в граф зависимостей Gradle не входит.",
+      "owner": "quality",
+      "layer": "quality",
+      "status": "stable"
+    },
+    {
+      "path": ":lint",
+      "purpose": "Кастомные Android Lint-правила проекта (например OldDate — запрет java.util.Date/Calendar). Подключается через lintChecks, поэтому графом модулей не виден.",
+      "owner": "quality",
+      "layer": "quality",
+      "status": "stable"
+    }
+  ]
+}

@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -29,6 +30,7 @@ import com.github.skydoves.navgraph.annotations.NavDestination
 import com.github.skydoves.navgraph.annotations.NavEdge
 import com.github.skydoves.navgraph.annotations.NavPreview
 import soft.divan.financemanager.core.domain.model.DataProtectionLevel
+import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.feature.security.api.CreatePinKey
 import soft.divan.financemanager.feature.security.api.SecurityKey
 import soft.divan.financemanager.feature.security.impl.R
@@ -60,7 +62,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = SecurityKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun PreviewSecurityScreen() {
+private fun PreviewSecurityScreen() {
     FinanceManagerTheme {
         SecurityContent(
             uiState = SecurityUiState.Success(
@@ -81,7 +83,7 @@ fun PreviewSecurityScreen() {
 
 @Preview(name = "PIN level — dark", showBackground = true, backgroundColor = 0xFF000000)
 @Composable
-fun PreviewSecurityScreenPinLevel() {
+private fun PreviewSecurityScreenPinLevel() {
     FinanceManagerTheme(darkTheme = true) {
         SecurityContent(
             uiState = SecurityUiState.Success(
@@ -124,9 +126,9 @@ data class SecurityScreenActions(
 @NavEdge(to = CreatePinKey::class, label = "установить PIN")
 @Composable
 fun SecurityScreen(
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
     onNavigateToCreatePin: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: SecurityViewModel = hiltViewModel(),
     pinViewModel: PinSettingsViewModel = hiltViewModel(),
     biometricViewModel: BiometricSettingsViewModel = hiltViewModel()
@@ -138,7 +140,16 @@ fun SecurityScreen(
 
     val success = uiState as? SecurityUiState.Success
 
-    BiometricEffects(viewModel, biometricViewModel)
+    BiometricEffects(
+        securityEvents = viewModel.events,
+        biometricEvents = biometricViewModel.events,
+        actions = BiometricEffectActions(
+            onAvailabilityChange = viewModel::onBiometricAvailability,
+            onEnroll = biometricViewModel::enroll,
+            onPromptSuccess = biometricViewModel::onPromptSucceeded,
+            onPromptFailure = biometricViewModel::onPromptFailed
+        )
+    )
     MessageEffect(snackbarHostState, success?.message, viewModel::onMessageShown)
     MessageEffect(snackbarHostState, pinFlow.message, pinViewModel::onMessageShown)
     MessageEffect(snackbarHostState, biometricFlow.message, biometricViewModel::onMessageShown)
@@ -163,17 +174,36 @@ fun SecurityScreen(
     )
 
     // Диалоги и ввод PIN поверх экрана: одновременно открыт не больше одного
-    success?.let { LevelOverlays(it, viewModel) }
+    success?.let {
+        LevelOverlays(
+            success = it,
+            onConfirmLevel = viewModel::onLevelConfirmed,
+            onAcceptBiometric = viewModel::onBiometricOfferAccepted,
+            onPinEnter = viewModel::onPinEntered,
+            onDismiss = viewModel::onDismissed
+        )
+    }
     FlowPinPad(pinFlow, pinViewModel::onPinEntered, pinViewModel::onDismissed)
     FlowPinPad(biometricFlow, biometricViewModel::onPinEntered, biometricViewModel::onDismissed)
 }
 
+/** Реакции эффектов биометрии: доступность на устройстве, включение и итог системного запроса. */
+private class BiometricEffectActions(
+    val onAvailabilityChange: (Boolean) -> Unit,
+    val onEnroll: (String) -> Unit,
+    val onPromptSuccess: () -> Unit,
+    val onPromptFailure: () -> Unit
+)
+
 /** Системный запрос биометрии и её включение после включения уровня PIN. */
 @Composable
 private fun BiometricEffects(
-    viewModel: SecurityViewModel,
-    biometricViewModel: BiometricSettingsViewModel
+    securityEvents: Flow<SecurityEvent>,
+    biometricEvents: Flow<SecurityEvent>,
+    actions: BiometricEffectActions
 ) {
+    // Эффекты не перезапускаются при новой лямбде: берут актуальные действия на момент события
+    val current by rememberUpdatedState(actions)
     val context = LocalContext.current
     val authenticator =
         remember(context) { context.findFragmentActivity()?.let(::BiometricAuthenticator) }
@@ -184,22 +214,22 @@ private fun BiometricEffects(
     )
 
     LaunchedEffect(authenticator) {
-        viewModel.onBiometricAvailability(authenticator?.canUseStrong() == true)
+        current.onAvailabilityChange(authenticator?.canUseStrong() == true)
     }
-    LaunchedEffect(viewModel) {
-        viewModel.events.collect { event ->
-            if (event is SecurityEvent.EnrollBiometric) biometricViewModel.enroll(event.pin)
+    LaunchedEffect(securityEvents) {
+        securityEvents.collect { event ->
+            if (event is SecurityEvent.EnrollBiometric) current.onEnroll(event.pin)
         }
     }
-    LaunchedEffect(biometricViewModel) {
-        biometricViewModel.events.collect { event ->
+    LaunchedEffect(biometricEvents) {
+        biometricEvents.collect { event ->
             if (event is SecurityEvent.ShowBiometricPrompt) {
                 authenticator?.authenticate(
                     texts = texts,
                     cipher = event.cipher,
-                    onSuccess = { biometricViewModel.onPromptSucceeded() },
-                    onFailure = { biometricViewModel.onPromptFailed() }
-                ) ?: biometricViewModel.onPromptFailed()
+                    onSuccess = { current.onPromptSuccess() },
+                    onFailure = { current.onPromptFailure() }
+                ) ?: current.onPromptFailure()
             }
         }
     }
@@ -210,43 +240,46 @@ private fun BiometricEffects(
 private fun MessageEffect(
     snackbarHostState: SnackbarHostState,
     message: SecurityMessage?,
-    onShown: () -> Unit
+    onShow: () -> Unit
 ) {
     val text = message?.let { stringResource(it.textRes) }
+    val currentOnShow by rememberUpdatedState(onShow)
     LaunchedEffect(message) {
         if (text != null) {
             snackbarHostState.showSnackbar(text)
-            onShown()
+            currentOnShow()
         }
     }
 }
 
 /** Предупреждения и ввод PIN при смене уровня защиты. */
 @Composable
-private fun LevelOverlays(success: SecurityUiState.Success, viewModel: SecurityViewModel) {
+private fun LevelOverlays(
+    success: SecurityUiState.Success,
+    onConfirmLevel: (DataProtectionLevel) -> Unit,
+    onAcceptBiometric: () -> Unit,
+    onPinEnter: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
     success.dialog?.let { dialog ->
         SecurityDialogHost(
             dialog = dialog,
             isGuest = success.settings.isGuest,
-            onConfirmLevel = viewModel::onLevelConfirmed,
-            onAcceptBiometric = viewModel::onBiometricOfferAccepted,
-            onDismiss = viewModel::onDismissed
+            onConfirmLevel = onConfirmLevel,
+            onAcceptBiometric = onAcceptBiometric,
+            onDismiss = onDismiss
         )
     }
     success.pinPrompt?.let { prompt ->
-        PinPadDialog(
-            prompt = prompt,
-            onPinEntered = viewModel::onPinEntered,
-            onDismiss = viewModel::onDismissed
-        )
+        PinPadDialog(prompt = prompt, onPinEnter = onPinEnter, onDismiss = onDismiss)
     }
 }
 
 /** Ввод PIN для вспомогательной операции (смена PIN, включение отпечатка). */
 @Composable
-private fun FlowPinPad(flow: SecurityFlowState, onPinEntered: (String) -> Unit, onDismiss: () -> Unit) {
+private fun FlowPinPad(flow: SecurityFlowState, onPinEnter: (String) -> Unit, onDismiss: () -> Unit) {
     flow.pinPrompt?.let { prompt ->
-        PinPadDialog(prompt = prompt, onPinEntered = onPinEntered, onDismiss = onDismiss)
+        PinPadDialog(prompt = prompt, onPinEnter = onPinEnter, onDismiss = onDismiss)
     }
 }
 
@@ -264,10 +297,11 @@ fun SecurityContent(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = { TopBarSecurity(actions.onNavigateBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is SecurityUiState.Error -> ErrorContent(onClick = {})
                 is SecurityUiState.Loading -> LoadingProgressBar()

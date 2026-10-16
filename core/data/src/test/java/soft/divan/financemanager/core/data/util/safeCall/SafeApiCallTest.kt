@@ -12,6 +12,7 @@ import soft.divan.financemanager.core.auth.data.interceptor.UnauthorizedNetworkB
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
+import soft.divan.financemanager.core.network.interceptor.NoInternetException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -109,6 +110,21 @@ class SafeApiCallTest {
         val result = call<String> { throw SocketTimeoutException("timeout") }
 
         assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NetworkUnavailable))
+    }
+
+    @Test
+    fun `NoInternetException maps to NetworkUnavailable`() = runTest {
+        val result = call<String> { throw NoInternetException() }
+
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NetworkUnavailable))
+    }
+
+    @Test
+    fun `NoInternetException is not sent to error logger`() = runTest {
+        call<String> { throw NoInternetException() }
+
+        verify(exactly = 0) { errorLogger.recordError(any<Throwable>()) }
+        verify(exactly = 0) { errorLogger.recordError(any<String>()) }
     }
 
     @Test

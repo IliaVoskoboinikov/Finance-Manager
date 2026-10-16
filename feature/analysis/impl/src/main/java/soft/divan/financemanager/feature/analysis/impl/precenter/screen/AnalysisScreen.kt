@@ -18,7 +18,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +63,7 @@ import java.time.LocalDate
 @NavPreview(route = AnalysisKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun AnalysisScreenPreview() {
+private fun AnalysisScreenPreview() {
     val today = remember { LocalDate.now() }
     FinanceManagerTheme {
         AnalysisContent(
@@ -86,8 +85,8 @@ fun AnalysisScreenPreview() {
 @Composable
 fun AnalysisScreen(
     isIncome: Boolean,
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: AnalysisViewModel =
         hiltViewModel<AnalysisViewModel, AnalysisViewModel.Factory> { factory ->
             factory.create(isIncome = isIncome)
@@ -115,19 +114,19 @@ fun AnalysisScreen(
 
 @Composable
 private fun AnalysisContent(
-    modifier: Modifier = Modifier,
     uiState: AnalysisUiState,
     startDate: LocalDate,
     endDate: LocalDate,
     actions: AnalysisActions,
-    snackbarHostState: SnackbarHostState
-
+    snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = { AnalysisTopBar(onNavigateBack = actions.onNavigateBack) },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
-        Column(modifier = modifier.padding(paddingValues)) {
+        Column(modifier = Modifier.padding(paddingValues)) {
             PeriodSelector(
                 startDate = startDate,
                 endDate = endDate,
@@ -161,17 +160,17 @@ private fun PeriodSelector(
     onUpdateStartDate: (LocalDate) -> Unit,
     onUpdateEndDate: (LocalDate) -> Unit
 ) {
-    val isShowStartPicker = remember { mutableStateOf(false) }
-    val isShowEndPicker = remember { mutableStateOf(false) }
+    var isShowStartPicker by remember { mutableStateOf(false) }
+    var isShowEndPicker by remember { mutableStateOf(false) }
 
-    DatePicker(isShowStartPicker, startDate, onUpdateStartDate)
-    DatePicker(isShowEndPicker, endDate, onUpdateEndDate)
+    DatePicker(isShowStartPicker, { isShowStartPicker = false }, startDate, onUpdateStartDate)
+    DatePicker(isShowEndPicker, { isShowEndPicker = false }, endDate, onUpdateEndDate)
 
     Column {
         DateItem(
             label = stringResource(R.string.period_start),
             value = UiDateFormatter.formatDate(startDate),
-            onClick = { isShowStartPicker.value = true }
+            onClick = { isShowStartPicker = true }
         )
 
         FMDriver()
@@ -179,7 +178,7 @@ private fun PeriodSelector(
         DateItem(
             label = stringResource(R.string.period_end),
             value = UiDateFormatter.formatDate(endDate),
-            onClick = { isShowEndPicker.value = true }
+            onClick = { isShowEndPicker = true }
         )
 
         FMDriver()
@@ -188,18 +187,16 @@ private fun PeriodSelector(
 
 @Composable
 private fun DatePicker(
-    state: MutableState<Boolean>,
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
     currentDate: LocalDate,
-    onDateSelected: (LocalDate) -> Unit
+    onDateSelect: (LocalDate) -> Unit
 ) {
-    if (state.value) {
+    if (isVisible) {
         FMDatePickerDialog(
             initialDate = currentDate,
-            onDateSelected = {
-                state.value = false
-                onDateSelected(it)
-            },
-            onDismissRequest = { state.value = false }
+            onDateSelect = onDateSelect,
+            onDismissRequest = onDismiss
         )
     }
 }

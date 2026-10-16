@@ -14,6 +14,7 @@ env:
   API_TOKEN: ${{ secrets.API_TOKEN }}
   GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
+# checkout везде с persist-credentials: false — в git отсюда никто не пушит.
 jobs:
   build-app:
     name: Build app
@@ -21,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Build
@@ -49,6 +52,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Download apk
         uses: actions/download-artifact@v8
         with:
@@ -80,6 +85,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Download apk
         uses: actions/download-artifact@v8
         with:

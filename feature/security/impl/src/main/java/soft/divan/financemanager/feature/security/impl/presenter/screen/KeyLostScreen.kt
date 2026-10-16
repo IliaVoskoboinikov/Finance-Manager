@@ -37,7 +37,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewKeyLostScreen() {
+private fun PreviewKeyLostScreen() {
     FinanceManagerTheme {
         KeyLostContent(uiState = KeyLostUiState(), onRetry = {}, onWipe = {})
     }
@@ -45,7 +45,7 @@ fun PreviewKeyLostScreen() {
 
 @Preview(name = "Key lost — dark, busy", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun PreviewKeyLostScreenBusy() {
+private fun PreviewKeyLostScreenBusy() {
     FinanceManagerTheme(darkTheme = true) {
         KeyLostContent(uiState = KeyLostUiState(inProgress = true), onRetry = {}, onWipe = {})
     }
@@ -53,7 +53,7 @@ fun PreviewKeyLostScreenBusy() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewKeyLostWipeDialog() {
+private fun PreviewKeyLostWipeDialog() {
     FinanceManagerTheme {
         KeyLostWipeDialog(isGuest = false, onConfirm = {}, onDismiss = {})
     }
@@ -84,10 +84,11 @@ fun KeyLostScreen(viewModel: KeyLostViewModel = hiltViewModel()) {
 fun KeyLostContent(
     uiState: KeyLostUiState,
     onRetry: () -> Unit,
-    onWipe: () -> Unit
+    onWipe: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp),

@@ -2,8 +2,8 @@
 
 ## Module Structure
 *   **Feature Split:** Split features into `:api` and `:impl`.
-    *   `:api`: Contains navigation routes, interfaces, and minimal public models.
-    *   `:impl`: Contains UI, ViewModels, and Hilt modules.
+    *   `:api`: Contains navigation keys (`@Serializable` `NavKey`), the `<Name>FeatureApi` interface, and minimal public models.
+    *   `:impl`: Contains UI, ViewModels, and Hilt modules (plus feature-local `domain`/`data` packages where needed).
 *   **Core Modules:** `core:*` modules must never depend on `feature:*` or `app`.
 
 ## Dependency Flow
@@ -14,9 +14,15 @@
 
 ## Build Logic & Conventions
 *   **Convention Plugins:** Every module must use `soft.divan.*` convention plugins from `build-logic`.
-    *   `soft.divan.android.library` for core/feature modules.
+    *   `soft.divan.core` for Android `core:*` modules (and `:sync`).
+    *   `soft.divan.jvm.library` for pure Kotlin/JVM modules (`core:domain`, `:konsist`).
     *   `soft.divan.feature.api` for API modules.
-    *   `soft.divan.feature.impl` for Implementation modules.
+    *   `soft.divan.feature.impl` for Implementation modules (already applies Compose and `soft.divan.hilt`).
+    *   `soft.divan.android.app` for `:app` only.
+    *   `soft.divan.hilt` is added next to `soft.divan.core` when the module uses Hilt.
+    *   The rest (`soft.divan.android.base`, `.firebase`, `.module.graph`, `.check.conventions`, `.ruler`,
+        `.dependency.guard`, `.build.time.tracker`) are applied internally by the plugins above — not by modules directly.
+    *   Exception: `:lint` (custom lint checks) uses plain `java-library` + Kotlin JVM + `com.android.lint`.
 *   **Module README:** Every module MUST contain a `README.md` describing its purpose and dependencies.
 
 ## Creating New Modules

@@ -1,0 +1,70 @@
+name: CI failure
+
+# Красный master → issue с лейблами bug, ci-failure, area:ci и приоритетом P1; повторное
+# падение дописывает комментарий, а зелёный прогон того же workflow закрывает issue.
+# Логика — в .github/scripts/ci_failure.py. Событие workflow_run работает только с файла из
+# ветки по умолчанию, а для ручного запуска GitHub находит новый workflow тоже только после
+# мержа, поэтому живая проверка возможна лишь после мержа в master.
+#
+# Секрет PROJECT_TOKEN нужен, чтобы положить issue на доску с приоритетом
+# (см. docs/task-tracking.md).
+
+on:
+  workflow_run:
+    workflows: [CI, Security]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Id прогона на master; проверка «прогон самый свежий» при ручном запуске отключена
+        type: string
+        required: true
+      dry_run:
+        description: Только напечатать действия, ничего не создавать
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  actions: read   # список джоб прогона
+  issues: write   # завести, дополнить и закрыть issue
+
+jobs:
+  report:
+    name: Report master status
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Очередь — своя у каждого workflow: у CI и Security разные issue, и общая группа давала бы
+    # им вытеснять друг друга. GitHub держит в группе один ожидающий запуск и при появлении
+    # нового отменяет прежний ожидающий. Внутри одного workflow это и нужно: решает только
+    # самый свежий прогон (ci_failure.py это проверяет), а два отчёта по одному issue
+    # параллельно не идут, поэтому дублей нет.
+    concurrency:
+      group: ci-failure-${{ github.event.workflow_run.name || 'manual' }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Report
+        env:
+          BOARD_TOKEN: ${{ secrets.PROJECT_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          flags=()
+          if [ "$DRY_RUN" = "true" ]; then
+            flags+=(--dry-run)
+          fi
+          # Ручной запуск проверяет логику на выбранном прогоне, даже если он не самый свежий.
+          if [ "$MANUAL" = "true" ]; then
+            flags+=(--force)
+          fi
+          python3 .github/scripts/ci_failure.py --run-id "$RUN_ID" "${flags[@]}"

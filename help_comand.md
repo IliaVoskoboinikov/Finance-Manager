@@ -5,7 +5,7 @@
 (Gradle 9.4.1, AGP 9.2.1, Kotlin 2.4.0).
 
 > Подробности по каждой теме — в [`docs/`](docs/README.md); ссылки указаны в конце разделов.
-> Технический бэклог — в [TODO.md](TODO.md).
+> Задачи и известные проблемы — на [доске задач](https://github.com/users/IliaVoskoboinikov/projects/5).
 
 ## Содержание
 
@@ -85,7 +85,7 @@ echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 | `./gradlew :app:assembleRelease` | release-APK: R8 + shrink ресурсов + подпись ⚠️ см. ниже |
 | `./gradlew :app:bundleRelease` | AAB для Google Play |
 | `./gradlew :app:signingReport` | SHA-1 / SHA-256 отпечатки (нужны для Firebase и Яндекс OAuth) |
-| `./gradlew -q :app:printVersionName` | печатает `Const.VERSION_NAME`; ⚠️ не знает про `-PversionName` (см. [TODO → CI/CD](TODO.md)) |
+| `./gradlew -q :app:printVersionName` | печатает `Const.VERSION_NAME`; ⚠️ не знает про `-PversionName` (см. [FM-75](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/75)) |
 | `./gradlew clean` | снести `build/` |
 
 ### applicationId по типам сборки
@@ -117,7 +117,8 @@ Keystore берётся из **`app/release.jks`** (`./gradlew :app:signingRepor
 > (`-dontwarn kotlinx.parcelize.Parcelize`), его нужно перенести в `app/proguard-rules.pro`.
 > Через ту же задачу идут `:app:bundleRelease` и `:app:analyzeReleaseBundle` — они тоже упадут.
 > Причина, по которой это всплыло
-> только сейчас: CI не собирает release (см. [TODO → CI/CD](TODO.md)).
+> только сейчас: CI не собирает release. Задачи — [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73)
+> (починить R8) и [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72) (собирать release в CI).
 
 В CD версия вычисляется из имени ветки `releases/**v.X.Y.Z`
 (`VERSION_CODE = MAJOR*1000000 + MINOR*1000 + PATCH`) — см. [docs/ci-cd.md](docs/ci-cd.md).
@@ -145,7 +146,8 @@ Keystore берётся из **`app/release.jks`** (`./gradlew :app:signingRepor
 
 > Инструментальных тестов в проекте **пока нет** — папки `src/androidTest` пустые, поэтому
 > `connectedDebugAndroidTest` ничего не выполняет. Они понадобятся для миграционных тестов
-> Room (см. [TODO → Релиз](TODO.md)).
+> Room (см. [FM-107](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/107); эмулятор в CI —
+> [FM-83](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/83)).
 
 ### Покрытие (Kover)
 
@@ -194,7 +196,7 @@ Keystore берётся из **`app/release.jks`** (`./gradlew :app:signingRepor
 | Команда | Что делает |
 |---------|-----------|
 | *(любой запуск Gradle)* | `CheckConventionsPlugin` — **реальная** проверка архитектуры: core ↛ feature, api ↛ impl, impl ↛ impl, применение конвеншен-плагинов |
-| `./gradlew :app:assertModuleGraph` | ⚠️ сейчас ничего не проверяет (`UP-TO-DATE`) — правила `moduleGraphAssert { … }` не настроены, см. [TODO → CI/CD](TODO.md) |
+| `./gradlew :app:assertModuleGraph` | проверяет граф модулей по правилам `ModuleGraphConventionPlugin`: высота не больше 6 рёбер, запрещённые рёбра (`:core:domain` → data-слой, `core`/`feature`/`:sync` → `:app`, `:sync` и `core` → `feature`, `:api` → `:impl`) |
 | `./gradlew :app:generateModulesGraphStatistics` | статистика графа: число модулей, рёбер, высота, самый длинный путь |
 | `./gradlew :app:generateModulesGraphvizText -Pmodules.graph.output.gv=docs/graphs/modules_prodget/all_modules` | DOT-описание графа модулей |
 | `./gradlew projects` | дерево всех модулей проекта |
@@ -224,6 +226,53 @@ cat app/build/intermediates/analyze_dependencies_report/debug/analyzeDebugDepend
 
 ---
 
+## Архитектура: Aalekh
+
+Плагин **Aalekh** реально проверяет архитектуру графа модулей (слои, изоляция фич,
+reachability, циклы, метрики) — то, что `assertModuleGraph` сейчас не делает. Применяется в
+[`settings.gradle.kts`](settings.gradle.kts), настраивается блоком `aalekh { }` в корневом
+[`build.gradle.kts`](build.gradle.kts). Все задачи — в группе `aalekh`.
+
+| Команда | Что делает |
+|---------|-----------|
+| `./gradlew aalekhReport` | интерактивный HTML-отчёт → `build/reports/aalekh/index.html` (+ `aalekh-metrics.csv`) |
+| `./gradlew aalekhCheck` | ⚠️ проверка правил; падает на ERROR-нарушениях. Висит на `check`, блокирует CI |
+| `./gradlew aalekhExtract` | граф модулей в JSON → `build/tmp/aalekh/graph.json` |
+| `./gradlew aalekhBaseline` | заморозить текущие нарушения → `aalekh-baseline.json` (коммитим) |
+| `./gradlew aalekhSnapshot` | слепок архитектуры → `aalekh-snapshot.json` (коммитим; нужен для `aalekhDiff`) |
+| `./gradlew aalekhDiff` | что изменилось в архитектуре vs снапшот → `aalekh-diff.md` (коммент в PR) |
+| `./gradlew aalekhMermaid` | диаграмма графа → `aalekh-graph.mmd` / `.md` / `.dot` |
+| `./gradlew aalekhDocs` | Markdown-документация архитектуры → `build/reports/aalekh/docs/` |
+| `./gradlew aalekhMainSequence` | abstractness/instability/distance per module → `aalekh-main-sequence.md` / `.json` |
+| `./gradlew aalekhTemporal` | change-coupling и hotspots из git-истории → `aalekh-temporal.md` / `.json` |
+| `./gradlew aalekhAffected` | модули, задетые диффом, и их blast radius → `aalekh-affected.md` / `.json` |
+| `./gradlew aalekhMetrics` | значения кастомных `MetricProvider` → `aalekh-custom-metrics.md` / `.json` |
+
+Отчёт открывается вручную (в CI-конфиге автооткрытие браузера выключено):
+
+```bash
+open build/reports/aalekh/index.html
+```
+
+Типовой цикл при осознанном изменении графа (новый модуль/ребро): внести правку →
+`./gradlew aalekhCheck` (если правило поймало новое нарушение — починить или, если оно
+принято, пересобрать baseline) → при изменении структуры обновить снапшот и закоммиченный отчёт:
+
+```bash
+./gradlew aalekhBaseline aalekhSnapshot       # обновить заморозку и снапшот
+./gradlew aalekhReport aalekhMermaid          # перегенерировать отчёт и диаграмму
+cp build/reports/aalekh/index.html    docs/graphs/aalekh/index.html
+cp build/reports/aalekh/aalekh-graph.md docs/graphs/aalekh/graph.md
+# закоммитить: aalekh-baseline.json, aalekh-snapshot.json, docs/graphs/aalekh/**
+```
+
+Закоммиченная копия отчёта — [`docs/graphs/aalekh/index.html`](docs/graphs/aalekh/index.html),
+диаграмма графа — [`docs/graphs/aalekh/graph.md`](docs/graphs/aalekh/graph.md).
+
+📖 [docs/aalekh.md](docs/aalekh.md)
+
+---
+
 ## Карта навигации (nav-graph)
 
 Граф экранов собирается из аннотаций `@NavDestination` / `@NavEdge` / `@NavPreview`
@@ -231,7 +280,7 @@ cat app/build/intermediates/analyze_dependencies_report/debug/analyzeDebugDepend
 
 | Команда | Что делает |
 |---------|-----------|
-| `./gradlew navCheck` | ⚠️ обязательна после правки навигации: падает, если граф разошёлся с `*/nav/*.nav` |
+| `./gradlew navCheck` | ⚠️ обязательна после правки навигации: падает, если граф разошёлся с `*/nav/*.nav` (в CI — джоба `nav-graph`) |
 | `./gradlew navDump` | перезаписать `.nav`-бейзлайны (коммитим вместе с изменением графа) |
 | `./gradlew :app:aggregateNavGraph` | склеить графы всех модулей → `app/build/navgraph-aggregated/nav-graph.json` |
 | `./gradlew :app:exportNavGraphHtml` | интерактивный HTML-граф → `app/build/navgraph/` |
@@ -271,13 +320,14 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:exportNavGraphToDocs
 ## Полный прогон «как в CI»
 
 CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, `detekt`, `ktlintCheck`,
-`:app:assertModuleGraph`, размер приложения, время сборки и `nav-graph`.
+`:app:assertModuleGraph`, `aalekhCheck`, размер приложения, время сборки и `nav-graph`
+(`navCheck` + карта навигации).
 
 Локальный эквивалент перед пушем (проверено — проходит целиком):
 
 ```bash
 ./gradlew assembleDebug testDebugUnitTest :core:domain:test :lint:test \
-          :koverVerifyFull lint detekt ktlintCheck navCheck :app:assertModuleGraph
+          :koverVerifyFull lint detekt ktlintCheck navCheck :app:assertModuleGraph aalekhCheck
 ```
 
 Быстрая проверка одного затронутого модуля:
@@ -302,8 +352,8 @@ CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, 
 
 | Workflow | Триггер | Что делает |
 |----------|---------|-----------|
-| [`ci.yml`](.github/workflows/ci.yml) | любой `push` (кроме `**.md`) | 8 джоб проверок + отчёты |
-| [`nav-graph.yml`](.github/workflows/nav-graph.yml) | любой `push` (кроме `**.md`) | рендер карты навигации и галереи превью |
+| [`ci.yml`](.github/workflows/ci.yml) | любой `push` (кроме `**.md`) | джобы проверок (сборка, тесты, покрытие, линтеры, граф модулей, `aalekhCheck`, `navCheck` с картой навигации) + отчёты |
+| [`board.yml`](.github/workflows/board.yml) | `push` в `feature/FM-*`, события PR | карточка задачи на доске: In Progress / In Review, недельная сводка |
 | [`cd_tests.yml`](.github/workflows/cd_tests.yml) | `push` в `tests/**` | тестовая сборка + раздача в Firebase App Distribution |
 | [`cd_release.yml`](.github/workflows/cd_release.yml) | `push` в `releases/**`, имя обязано заканчиваться на `v.X.Y.Z` | подписанные APK + AAB, публикация в Play, отчёт в Telegram |
 
@@ -534,6 +584,7 @@ grep -n "version = " core/database/src/main/java/soft/divan/financemanager/core/
 | Проблемы сборки (Gradle) | `build/reports/problems/problems-report.html` |
 | Правила, которых не хватило R8 | `app/build/outputs/mapping/release/missing_rules.txt` |
 | Карта навигации | `app/build/navgraph/`, `app/build/navgallery/`, закоммиченная копия — `docs/graphs/nav_graph/` |
+| Архитектура (Aalekh) | `build/reports/aalekh/index.html` (+ `aalekh-results.sarif`, `aalekh-metrics.csv`), закоммиченная копия — `docs/graphs/aalekh/` |
 | APK / AAB | `app/build/outputs/apk/`, `app/build/outputs/bundle/` |
 
 ---
@@ -542,5 +593,5 @@ grep -n "version = " core/database/src/main/java/soft/divan/financemanager/core/
 
 - [docs/README.md](docs/README.md) — оглавление всей документации
 - [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) — правила работы с кодовой базой
-- [TODO.md](TODO.md) — технический бэклог
+- [Доска задач](https://github.com/users/IliaVoskoboinikov/projects/5) — задачи, баги, планы; процесс — [docs/task-tracking.md](docs/task-tracking.md)
 - [docs/ci-cd.md](docs/ci-cd.md) — что и как проверяет CI, какие есть секреты

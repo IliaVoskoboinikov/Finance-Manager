@@ -30,7 +30,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,12 +65,12 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = DesignAppKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun TransactionScreenPreview() {
+private fun TransactionScreenPreview() {
     FinanceManagerTheme {
         DesignAppContent(
             uiState = mockDesignUiStateSuccess,
             setAccentColor = {},
-            onThemeSelected = {},
+            onThemeSelect = {},
             setCustomColor = { },
             onRetry = {}
         )
@@ -90,7 +89,7 @@ fun DesignAppScreen(
         modifier = modifier,
         uiState = uiState,
         setAccentColor = viewModel::setAccentColor,
-        onThemeSelected = viewModel::onThemeSelected,
+        onThemeSelect = viewModel::onThemeSelected,
         setCustomColor = viewModel::setCustomColor,
         onRetry = viewModel::retry
     )
@@ -98,28 +97,27 @@ fun DesignAppScreen(
 
 @Composable
 fun DesignAppContent(
-    modifier: Modifier = Modifier,
     uiState: DesignUiState,
     setAccentColor: (AccentColor) -> Unit,
-    onThemeSelected: (ThemeMode) -> Unit,
+    onThemeSelect: (ThemeMode) -> Unit,
     setCustomColor: (Color) -> Unit,
-    onRetry: () -> Unit
-
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = { TopBar(topBar = TopBarModel(title = R.string.design)) }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is DesignUiState.Error -> ErrorContent(onClick = { onRetry() })
 
                 is DesignUiState.Loading -> LoadingProgressBar()
 
                 is DesignUiState.Success -> DesignAppForm(
-                    modifier = modifier,
                     uiState = uiState,
                     setAccentColor = setAccentColor,
-                    onThemeSelected = onThemeSelected,
+                    onThemeSelect = onThemeSelect,
                     setCustomColor = setCustomColor
                 )
             }
@@ -129,15 +127,15 @@ fun DesignAppContent(
 
 @Composable
 fun DesignAppForm(
-    modifier: Modifier = Modifier,
     uiState: DesignUiState.Success,
     setAccentColor: (AccentColor) -> Unit,
-    onThemeSelected: (ThemeMode) -> Unit,
-    setCustomColor: (Color) -> Unit
+    onThemeSelect: (ThemeMode) -> Unit,
+    setCustomColor: (Color) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val isShowColorPicker = remember { mutableStateOf(false) }
+    var isShowColorPicker by remember { mutableStateOf(false) }
 
-    ShowColorPicker(isShowColorPicker, setCustomColor)
+    ShowColorPicker(isShowColorPicker, { isShowColorPicker = false }, setCustomColor)
 
     Column(
         modifier = modifier
@@ -148,29 +146,30 @@ fun DesignAppForm(
     ) {
         ThemeSection(
             selectedTheme = uiState.themeMode,
-            onThemeSelected = onThemeSelected
+            onThemeSelect = onThemeSelect
         )
 
         AccentColorSection(
             currentColor = uiState.accentColor,
-            onColorSelected = setAccentColor,
-            onCustomClicked = { isShowColorPicker.value = true }
+            onColorSelect = setAccentColor,
+            onCustomClick = { isShowColorPicker = true }
         )
     }
 }
 
 @Composable
 private fun ShowColorPicker(
-    showColorPicker: MutableState<Boolean>,
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
     setCustomColor: (Color) -> Unit
 ) {
-    if (showColorPicker.value) {
+    if (isVisible) {
         CustomColorPickerDialog(
             initialColor = Color.Yellow,
-            onDismissRequest = { showColorPicker.value = false },
-            onColorSelected = { selectedColor ->
+            onDismissRequest = onDismiss,
+            onColorSelect = { selectedColor ->
                 setCustomColor(selectedColor)
-                showColorPicker.value = false
+                onDismiss()
             }
         )
     }
@@ -179,9 +178,10 @@ private fun ShowColorPicker(
 @Composable
 fun ThemeSection(
     selectedTheme: ThemeMode,
-    onThemeSelected: (ThemeMode) -> Unit
+    onThemeSelect: (ThemeMode) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = stringResource(R.string.choice_theme),
             style = MaterialTheme.typography.headlineMedium,
@@ -191,17 +191,17 @@ fun ThemeSection(
         ThemeSwitchItem(
             title = stringResource(R.string.light),
             selected = selectedTheme == ThemeMode.LIGHT,
-            onClick = { onThemeSelected(ThemeMode.LIGHT) }
+            onClick = { onThemeSelect(ThemeMode.LIGHT) }
         )
         ThemeSwitchItem(
             title = stringResource(R.string.dark),
             selected = selectedTheme == ThemeMode.DARK,
-            onClick = { onThemeSelected(ThemeMode.DARK) }
+            onClick = { onThemeSelect(ThemeMode.DARK) }
         )
         ThemeSwitchItem(
             title = stringResource(R.string.system),
             selected = selectedTheme == ThemeMode.SYSTEM,
-            onClick = { onThemeSelected(ThemeMode.SYSTEM) }
+            onClick = { onThemeSelect(ThemeMode.SYSTEM) }
         )
     }
 }
@@ -209,8 +209,9 @@ fun ThemeSection(
 @Composable
 fun AccentColorSection(
     currentColor: AccentColor,
-    onColorSelected: (AccentColor) -> Unit,
-    onCustomClicked: () -> Unit
+    onColorSelect: (AccentColor) -> Unit,
+    onCustomClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = remember {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -220,7 +221,7 @@ fun AccentColorSection(
         }
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = stringResource(R.string.color_palette),
             style = MaterialTheme.typography.headlineSmall,
@@ -231,13 +232,13 @@ fun AccentColorSection(
             if (color == AccentColor.CUSTOM) {
                 CustomColorOptionItem(
                     selected = currentColor == AccentColor.CUSTOM,
-                    onClick = onCustomClicked
+                    onClick = onCustomClick
                 )
             } else {
                 ColorOptionItem(
                     accent = color,
                     selected = currentColor == color,
-                    onClick = { onColorSelected(color) }
+                    onClick = { onColorSelect(color) }
                 )
             }
         }
@@ -247,10 +248,11 @@ fun AccentColorSection(
 @Composable
 fun CustomColorOptionItem(
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .height(56.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
@@ -295,12 +297,13 @@ fun CustomColorOptionItem(
 fun ColorOptionItem(
     accent: AccentColor,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val previewColor = getColorForAccent(accent)
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .height(56.dp)
             .fillMaxWidth()
             .clickable { onClick() },
@@ -332,9 +335,14 @@ fun ColorOptionItem(
 }
 
 @Composable
-fun ThemeSwitchItem(title: String, selected: Boolean, onClick: () -> Unit) {
+fun ThemeSwitchItem(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(vertical = 12.dp),
@@ -377,9 +385,9 @@ fun getDynamicColorPreview(): Color {
 
 @Composable
 fun CustomColorPickerDialog(
-    initialColor: Color = Color.White,
     onDismissRequest: () -> Unit,
-    onColorSelected: (Color) -> Unit
+    onColorSelect: (Color) -> Unit,
+    initialColor: Color = Color.White
 ) {
     var selectedColor by remember { mutableStateOf(initialColor) }
     val controller = rememberColorPickerController()
@@ -412,7 +420,7 @@ fun CustomColorPickerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onColorSelected(selectedColor) }) {
+            TextButton(onClick = { onColorSelect(selectedColor) }) {
                 Text(
                     stringResource(R.string.choose),
                     style = MaterialTheme.typography.bodyLarge.copy(

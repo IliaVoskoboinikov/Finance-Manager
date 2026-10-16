@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 /**
  * Прошёл ли пользователь замок приложения (PIN или отпечаток) в этом процессе.
@@ -13,7 +15,8 @@ import androidx.lifecycle.ViewModel
  * восстанавливает и в новом процессе — с ним замок пропускался бы после того, как приложение
  * выгрузили из памяти, пока оно было в фоне.
  */
-class AppLockViewModel : ViewModel() {
+@HiltViewModel
+class AppLockViewModel @Inject constructor() : ViewModel() {
 
     /** Замок пройден; `false` — при заданном PIN нужно показать замок. */
     var unlocked: Boolean by mutableStateOf(false)

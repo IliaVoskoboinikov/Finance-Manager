@@ -28,10 +28,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -75,7 +76,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = AccountKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun AccountScreenPreview() {
+private fun AccountScreenPreview() {
     FinanceManagerTheme {
         AccountContent(
             uiState = mockAccountUiStateSuccess,
@@ -95,7 +96,7 @@ fun AccountScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewCurrencySheet() {
+private fun PreviewCurrencySheet() {
     FinanceManagerTheme {
         CurrencySheetContent({}, {})
     }
@@ -105,8 +106,8 @@ fun PreviewCurrencySheet() {
 @Composable
 fun AccountScreenScreen(
     accountId: String?,
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: AccountViewModel =
         hiltViewModel<AccountViewModel, AccountViewModel.Factory> { factory ->
             factory.create(accountId = accountId)
@@ -115,18 +116,19 @@ fun AccountScreenScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val resources = LocalResources.current
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
 
     LaunchedEffect(Unit) {
         viewModel.eventFlow.collect { event ->
             when (event) {
-                is AccountEvent.Saved -> onNavigateBack()
+                is AccountEvent.Saved -> currentOnNavigateBack()
 
                 is AccountEvent.ShowError -> snackbarHostState.showSnackbar(
                     message = resources.getString(event.messageRes),
                     withDismissAction = true
                 )
 
-                AccountEvent.Deleted -> onNavigateBack()
+                AccountEvent.Deleted -> currentOnNavigateBack()
             }
         }
     }
@@ -149,13 +151,14 @@ fun AccountScreenScreen(
 
 @Composable
 fun AccountContent(
-    modifier: Modifier = Modifier,
     uiState: AccountUiState,
     accountId: String?,
     actions: AccountActions,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(
                 topBar = TopBarModel(
@@ -169,7 +172,7 @@ fun AccountContent(
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is AccountUiState.Error -> ErrorContent(onClick = actions.onSave)
 
@@ -188,15 +191,16 @@ fun AccountContent(
 @Composable
 fun CreateAccountForm(
     uiState: AccountUiState.Success,
-    actions: AccountActions
+    actions: AccountActions,
+    modifier: Modifier = Modifier
 ) {
     val currencySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val isCurrencySheetOpen = remember { mutableStateOf(false) }
+    var isCurrencySheetOpen by remember { mutableStateOf(false) }
 
-    val isShowDeleteDialog = remember { mutableStateOf(false) }
+    var isShowDeleteDialog by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
@@ -205,8 +209,9 @@ fun CreateAccountForm(
         Balance(uiState.account.balance, actions.onUpdateBalance)
         FMDriver()
         Currency(
-            isSheetOpen = isCurrencySheetOpen,
             currency = CurrencySymbol.fromId(uiState.account.currencyId),
+            isSheetOpen = isCurrencySheetOpen,
+            onSheetOpenChange = { isCurrencySheetOpen = it },
             sheetState = currencySheetState,
             updateCurrency = actions.onUpdateCurrency
         )
@@ -215,18 +220,18 @@ fun CreateAccountForm(
         if (uiState.mode is AccountMode.Create) {
             SaveButton(actions.onSave)
         } else {
-            DeleteButton(onClick = { isShowDeleteDialog.value = true })
+            DeleteButton(onClick = { isShowDeleteDialog = true })
         }
     }
 
-    if (isShowDeleteDialog.value) {
+    if (isShowDeleteDialog) {
         DeleteAccountDialog(
             hasTransactions = uiState.hasTransactions,
             onConfirm = {
-                isShowDeleteDialog.value = false
+                isShowDeleteDialog = false
                 actions.onDelete()
             },
-            onDismiss = { isShowDeleteDialog.value = false }
+            onDismiss = { isShowDeleteDialog = false }
         )
     }
 }
@@ -234,7 +239,7 @@ fun CreateAccountForm(
 @Composable
 private fun Balance(
     balance: String,
-    onBalanceChanged: (String) -> Unit
+    onBalanceChange: (String) -> Unit
 ) {
     ListItem(
         modifier = Modifier
@@ -244,7 +249,7 @@ private fun Balance(
         content = {
             BalanceTextField(
                 value = balance,
-                onValueChange = onBalanceChanged
+                onValueChange = onBalanceChange
             )
         }
     )
@@ -326,17 +331,18 @@ private fun Name(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun Currency(
-    isSheetOpen: MutableState<Boolean>,
     currency: String,
+    isSheetOpen: Boolean,
+    onSheetOpenChange: (Boolean) -> Unit,
     sheetState: SheetState,
     updateCurrency: (String) -> Unit
 ) {
-    ChoiceCurrency(isSheetOpen, sheetState, updateCurrency)
+    ChoiceCurrency(isSheetOpen, { onSheetOpenChange(false) }, sheetState, updateCurrency)
 
     ListItem(
         modifier = Modifier
             .height(56.dp)
-            .clickable { isSheetOpen.value = true },
+            .clickable { onSheetOpenChange(true) },
         content = { ContentTextListItem(stringResource(R.string.currency)) },
         trail = {
             ContentTextListItem(currency)
@@ -354,19 +360,20 @@ private fun Currency(
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun ChoiceCurrency(
-    isSheetOpen: MutableState<Boolean>,
+    isSheetOpen: Boolean,
+    onDismiss: () -> Unit,
     sheetState: SheetState,
     updateCurrency: (String) -> Unit
 ) {
-    if (isSheetOpen.value) {
+    if (isSheetOpen) {
         ModalBottomSheet(
-            onDismissRequest = { isSheetOpen.value = false },
+            onDismissRequest = onDismiss,
             sheetState = sheetState,
             containerColor = colorScheme.surfaceContainerHigh,
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
         ) {
             CurrencySheetContent(
-                onCancel = { isSheetOpen.value = false },
+                onCancel = onDismiss,
                 updateCurrency = updateCurrency
             )
         }
@@ -378,10 +385,11 @@ fun CurrencyItem(
     icon: ImageVector,
     title: Int,
     symbol: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     ListItem(
-        modifier = Modifier.clickable { onClick() },
+        modifier = modifier.clickable { onClick() },
         lead = {
             Icon(
                 imageVector = icon,
@@ -396,7 +404,8 @@ fun CurrencyItem(
 @Composable
 fun CurrencySheetContent(
     onCancel: () -> Unit,
-    updateCurrency: (String) -> Unit
+    updateCurrency: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val currencies = listOf(
         Triple(Icons.Filled.MdiRuble, R.string.rub, CurrencySymbol.RUB),
@@ -404,7 +413,7 @@ fun CurrencySheetContent(
         Triple(Icons.Filled.MdiEuro, R.string.eur, CurrencySymbol.EUR)
     )
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
         currencies.forEach { (icon, name, symbol) ->
             CurrencyItem(icon = icon, title = name, symbol.symbol, onClick = {
                 updateCurrency(symbol.id)

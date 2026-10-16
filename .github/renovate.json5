@@ -9,6 +9,8 @@
   // Дашборд-issue со списком всех доступных обновлений, в т.ч. отложенных.
   dependencyDashboard: true,
   dependencyDashboardTitle: "🤖 Dependency Dashboard",
+  // Без лейбла auto-add доски задач (фильтр -label:dependencies) затянул бы дашборд на доску.
+  dependencyDashboardLabels: ["dependencies"],
   prConcurrentLimit: 5,
   prHourlyLimit: 2,
   // Свежие релизы регулярно ломают сборку — даём им отлежаться.
@@ -60,6 +62,12 @@
       ],
       matchUpdateTypes: ["patch"],
       automerge: true,
+    },
+    {
+      // compose-rules с 0.5.0 собраны под detekt 2.x и с detekt 1.23.x не загружаются.
+      // Пока detekt на 1.x, держим линейку 0.4 — снять вместе с переходом на detekt 2.
+      matchPackageNames: ["io.nlopez.compose.rules{/,}**"],
+      allowedVersions: "<0.5.0",
     },
     {
       groupName: "GitHub Actions",

@@ -37,12 +37,12 @@ import soft.divan.financemanager.sync.worker.MIN_SYNC_INTERVAL_HOURS
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Suppress("MagicNumber")
 @Composable
-fun SynchronizationScreenPreview() {
+private fun SynchronizationScreenPreview() {
     FinanceManagerTheme {
         SynchronizationContent(
             uiState = SynchronizationUiState.Success("12.12.25 14:00", 4),
             onNavigateBack = {},
-            onIntervalChanged = {}
+            onIntervalChange = {}
         )
     }
 }
@@ -50,8 +50,8 @@ fun SynchronizationScreenPreview() {
 @NavDestination(route = SynchronizationKey::class)
 @Composable
 fun SynchronizationScreen(
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: SynchronizationViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -60,18 +60,19 @@ fun SynchronizationScreen(
         modifier = modifier,
         uiState = uiState,
         onNavigateBack = onNavigateBack,
-        onIntervalChanged = viewModel::onIntervalChanged
+        onIntervalChange = viewModel::onIntervalChanged
     )
 }
 
 @Composable
 private fun SynchronizationContent(
-    modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit,
     uiState: SynchronizationUiState,
-    onIntervalChanged: (Int) -> Unit
+    onNavigateBack: () -> Unit,
+    onIntervalChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(
                 topBar = TopBarModel(
@@ -82,7 +83,7 @@ private fun SynchronizationContent(
             )
         }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is SynchronizationUiState.Error -> ErrorContent(onClick = { })
 
@@ -93,7 +94,7 @@ private fun SynchronizationContent(
                     lastSync = uiState.lastSyncTime ?: stringResource(
                         id = R.string.data_not_synced
                     ),
-                    onIntervalChanged = onIntervalChanged
+                    onIntervalChange = onIntervalChange
 
                 )
             }
@@ -103,10 +104,10 @@ private fun SynchronizationContent(
 
 @Composable
 private fun SynchronizationUiStateSuccess(
-    modifier: Modifier = Modifier,
     interval: Int,
     lastSync: String,
-    onIntervalChanged: (Int) -> Unit
+    onIntervalChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -125,7 +126,7 @@ private fun SynchronizationUiStateSuccess(
         Slider(
             modifier = Modifier.padding(horizontal = 16.dp),
             value = interval.toFloat(),
-            onValueChange = { onIntervalChanged(it.toInt()) },
+            onValueChange = { onIntervalChange(it.toInt()) },
             valueRange = MIN_SYNC_INTERVAL_HOURS.toFloat()..MAX_SYNC_INTERVAL_HOURS.toFloat(),
             // steps — число промежуточных засечек между концами диапазона; для целых часов
             // нужно (кол-во значений − 2) = (MAX − MIN + 1) − 2, чтобы слайдер вставал ровно

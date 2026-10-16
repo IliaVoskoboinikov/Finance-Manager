@@ -16,7 +16,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
  */
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun PreviewPinLockScreen() {
+private fun PreviewPinLockScreen() {
     FinanceManagerTheme {
         PinLockContent(
             uiState = PinLockUiState(biometricEnabled = true),
@@ -29,7 +29,7 @@ fun PreviewPinLockScreen() {
 
 @Preview(name = "Wrong PIN — dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun PreviewPinLockScreenWrongPin() {
+private fun PreviewPinLockScreenWrongPin() {
     FinanceManagerTheme(darkTheme = true) {
         PinLockContent(
             uiState = PinLockUiState(
@@ -46,7 +46,7 @@ fun PreviewPinLockScreenWrongPin() {
 
 @Preview(name = "Locked out — large font", showBackground = true, fontScale = 1.5f)
 @Composable
-fun PreviewPinLockScreenLockedOut() {
+private fun PreviewPinLockScreenLockedOut() {
     FinanceManagerTheme {
         PinLockContent(
             uiState = PinLockUiState(
@@ -63,7 +63,7 @@ fun PreviewPinLockScreenLockedOut() {
 
 @Preview(name = "Last attempt — dark", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun PreviewPinLockScreenLastAttempt() {
+private fun PreviewPinLockScreenLastAttempt() {
     FinanceManagerTheme(darkTheme = true) {
         PinLockContent(
             uiState = PinLockUiState(
@@ -79,7 +79,7 @@ fun PreviewPinLockScreenLastAttempt() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewForgotPinDialogGuest() {
+private fun PreviewForgotPinDialogGuest() {
     FinanceManagerTheme {
         ForgotPinDialog(isGuest = true, onConfirm = {}, onDismiss = {})
     }

@@ -6,6 +6,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.flow.Flow
+import androidx.compose.ui.Modifier
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,13 +44,13 @@ private const val SECONDS_IN_MINUTE = 60
 /**
  * Экран замка: и замок интерфейса, и разблокировка данных уровня PIN.
  *
- * Показывается хостом поверх всего приложения, вне навигации. [onUnlocked] вызывается, когда
+ * Показывается хостом поверх всего приложения, вне навигации. [onUnlock] вызывается, когда
  * можно входить, — и после стирания данных («забыл PIN», исчерпанные попытки): тогда хост
  * покажет экран входа.
  */
 @Composable
 fun PinLockScreen(
-    onUnlocked: () -> Unit,
+    onUnlock: () -> Unit,
     viewModel: PinLockViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -62,7 +65,13 @@ fun PinLockScreen(
     var autoPrompted by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.onShown() }
-    PinLockEvents(viewModel, authenticator, onUnlocked)
+    PinLockEvents(
+        events = viewModel.events,
+        authenticator = authenticator,
+        onUnlock = onUnlock,
+        onBiometricSuccess = viewModel::onBiometricSucceeded,
+        onBiometricFailure = viewModel::onBiometricFailed
+    )
 
     // Как и раньше, биометрия предлагается сразу при показе замка — один раз
     LaunchedEffect(showBiometric) {
@@ -76,7 +85,7 @@ fun PinLockScreen(
         uiState = uiState,
         lockoutSecondsLeft = rememberLockoutSecondsLeft(
             lockedUntil = uiState.status.lockedUntil,
-            onExpired = viewModel::onLockoutExpired
+            onExpire = viewModel::onLockoutExpired
         ),
         showBiometricButton = showBiometric,
         actions = PinLockActions(
@@ -98,10 +107,15 @@ fun PinLockScreen(
 /** Одноразовые события замка: вход, стирание, системный запрос биометрии. */
 @Composable
 private fun PinLockEvents(
-    viewModel: PinLockViewModel,
+    events: Flow<PinLockEvent>,
     authenticator: BiometricAuthenticator?,
-    onUnlocked: () -> Unit
+    onUnlock: () -> Unit,
+    onBiometricSuccess: () -> Unit,
+    onBiometricFailure: () -> Unit
 ) {
+    val currentOnUnlock by rememberUpdatedState(onUnlock)
+    val currentOnBiometricSuccess by rememberUpdatedState(onBiometricSuccess)
+    val currentOnBiometricFailure by rememberUpdatedState(onBiometricFailure)
     val context = LocalContext.current
     val wipedMessage = stringResource(R.string.data_wiped)
     val biometricTexts = BiometricTexts(
@@ -109,22 +123,22 @@ private fun PinLockEvents(
         subtitle = stringResource(R.string.use_biometry),
         negativeButton = stringResource(R.string.use_pin_instead)
     )
-    LaunchedEffect(viewModel) {
-        viewModel.events.collect { event ->
+    LaunchedEffect(events) {
+        events.collect { event ->
             when (event) {
-                PinLockEvent.Unlocked -> onUnlocked()
+                PinLockEvent.Unlocked -> currentOnUnlock()
 
                 PinLockEvent.Wiped -> {
                     Toast.makeText(context, wipedMessage, Toast.LENGTH_LONG).show()
-                    onUnlocked()
+                    currentOnUnlock()
                 }
 
                 is PinLockEvent.ShowBiometricPrompt -> authenticator?.authenticate(
                     texts = biometricTexts,
                     cipher = event.cipher,
-                    onSuccess = { viewModel.onBiometricSucceeded() },
-                    onFailure = { viewModel.onBiometricFailed() }
-                ) ?: viewModel.onBiometricFailed()
+                    onSuccess = { currentOnBiometricSuccess() },
+                    onFailure = { currentOnBiometricFailure() }
+                ) ?: currentOnBiometricFailure()
             }
         }
     }
@@ -152,14 +166,16 @@ fun PinLockContent(
     uiState: PinLockUiState,
     lockoutSecondsLeft: Long,
     showBiometricButton: Boolean,
-    actions: PinLockActions
+    actions: PinLockActions,
+    modifier: Modifier = Modifier
 ) {
     PinEntryCommonScreen(
         titleId = R.string.input_password,
+        modifier = modifier,
         errorMessage = pinLockMessage(uiState, lockoutSecondsLeft),
         showBiometricButton = showBiometricButton,
         enabled = !uiState.inProgress && lockoutSecondsLeft <= 0,
-        onPinEntered = actions.onPinEntered,
+        onPinEnter = actions.onPinEntered,
         onFingerprintClick = actions.onBiometricClick,
         footer = {
             TextButton(onClick = actions.onForgotPinClick, enabled = !uiState.inProgress) {
@@ -192,12 +208,13 @@ private fun pinLockMessage(uiState: PinLockUiState, lockoutSecondsLeft: Long): S
 
 /** Секунды до конца паузы; тикает раз в секунду и сообщает об окончании. */
 @Composable
-private fun rememberLockoutSecondsLeft(lockedUntil: Instant?, onExpired: () -> Unit): Long {
+private fun rememberLockoutSecondsLeft(lockedUntil: Instant?, onExpire: () -> Unit): Long {
+    val currentOnExpire by rememberUpdatedState(onExpire)
     val secondsLeft by produceState(initialValue = secondsUntil(lockedUntil), lockedUntil) {
         while (lockedUntil != null) {
             value = secondsUntil(lockedUntil)
             if (value <= 0) {
-                onExpired()
+                currentOnExpire()
                 break
             }
             delay(SECOND_MS)

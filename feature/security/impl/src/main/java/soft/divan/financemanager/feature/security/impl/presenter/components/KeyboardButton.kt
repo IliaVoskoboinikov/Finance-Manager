@@ -26,10 +26,11 @@ private const val DISABLED_ALPHA = 0.38f
 fun NumberButton(
     number: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .wrapContentSize()
             .padding(
                 vertical = Dimens.verticalKeyboardButtonPadding,
@@ -58,10 +59,11 @@ fun IconButton(
     icon: ImageVector,
     contentDescription: String?,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .wrapContentSize()
             .padding(
                 vertical = Dimens.verticalKeyboardButtonPadding,

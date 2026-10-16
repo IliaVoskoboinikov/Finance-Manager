@@ -203,7 +203,7 @@ private fun DialogContentWrapper(
 
 @Preview(showBackground = true)
 @Composable
-fun MergeDialogPreview() {
+private fun MergeDialogPreview() {
     FinanceManagerTheme {
         Box(
             modifier = Modifier
@@ -244,7 +244,7 @@ fun MergeDialogPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun LogoutDialogPreview() {
+private fun LogoutDialogPreview() {
     FinanceManagerTheme {
         Box(
             modifier = Modifier

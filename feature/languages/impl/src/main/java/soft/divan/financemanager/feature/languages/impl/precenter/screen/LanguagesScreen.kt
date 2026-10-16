@@ -39,12 +39,12 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = LanguagesKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun LanguagesScreenPreview() {
+private fun LanguagesScreenPreview() {
     FinanceManagerTheme {
         LanguagesContent(
             uiState = LanguageUiState.Success(LanguageUi.ENGLISH),
             onNavigateBack = {},
-            onLanguageSelected = {}
+            onLanguageSelect = {}
         )
     }
 }
@@ -52,8 +52,8 @@ fun LanguagesScreenPreview() {
 @NavDestination(route = LanguagesKey::class)
 @Composable
 fun LanguagesScreen(
-    modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier,
     viewModel: LanguagesViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -62,18 +62,19 @@ fun LanguagesScreen(
         modifier = modifier,
         uiState = uiState,
         onNavigateBack = onNavigateBack,
-        onLanguageSelected = viewModel::onLanguageSelected
+        onLanguageSelect = viewModel::onLanguageSelected
     )
 }
 
 @Composable
 fun LanguagesContent(
-    modifier: Modifier = Modifier,
-    onNavigateBack: () -> Unit,
     uiState: LanguageUiState,
-    onLanguageSelected: (LanguageUi) -> Unit
+    onNavigateBack: () -> Unit,
+    onLanguageSelect: (LanguageUi) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopBar(
                 topBar = TopBarModel(
@@ -84,7 +85,7 @@ fun LanguagesContent(
             )
         }
     ) { paddingValues ->
-        Box(modifier = modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.padding(paddingValues)) {
             when (uiState) {
                 is LanguageUiState.Error -> ErrorContent(onClick = { })
 
@@ -92,7 +93,7 @@ fun LanguagesContent(
 
                 is LanguageUiState.Success -> LanguageSection(
                     selected = uiState.language,
-                    onSelect = onLanguageSelected
+                    onSelect = onLanguageSelect
                 )
             }
         }
@@ -101,9 +102,9 @@ fun LanguagesContent(
 
 @Composable
 fun LanguageSection(
-    modifier: Modifier = Modifier,
     selected: LanguageUi,
-    onSelect: (LanguageUi) -> Unit
+    onSelect: (LanguageUi) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
@@ -132,10 +133,11 @@ fun LanguageSection(
 fun LanguageItem(
     @StringRes titleRes: Int,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp),

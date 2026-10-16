@@ -50,7 +50,7 @@ class ModuleGraphConventionPlugin : Plugin<Project> {
             // Границы, которые проверяет и CheckConventionsPlugin. Здесь они записаны
             // декларативно и попадают в отчёт задачи, а не только в текст исключения.
             ":core:.* -X> :feature:.*",
-            ":feature:.*:api -X> :feature:.*:impl",
+            ":feature:.*:api -X> :feature:.*:impl"
         )
     }
 }

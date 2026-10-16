@@ -1,6 +1,23 @@
+buildscript {
+    dependencies {
+        // `kotlin-dsl` тянет KGP той версии Kotlin, что встроена в Gradle (9.7.1 → 2.4.0,
+        // 9.8.0 → 2.4.10), а в KGP < 2.4.20 есть GHSA-r937-wjx7-w2jp (десериализация
+        // в build cache). Поднимаем до версии проекта; убрать, когда встроенный Kotlin
+        // в Gradle станет не ниже libs.versions.kotlin. См. docs/dependency-vulnerabilities.md.
+        constraints {
+            add("classpath", libs.kotlin.gradle.plugin) { because("GHSA-r937-wjx7-w2jp") }
+        }
+    }
+}
+
 plugins {
     `kotlin-dsl`
     alias(libs.plugins.ktlint)
+}
+
+// Без явной версии плагин берёт свой дефолтный ktlint (1.5.0) — не тот, что в корне.
+ktlint {
+    version.set(libs.versions.ktlintCli)
 }
 
 repositories {
@@ -31,6 +48,13 @@ dependencies {
     testImplementation(libs.assertj.core)
     testImplementation(libs.mockk)
     testImplementation(gradleTestKit())
+
+    // logback из ktlint-cli — как и в корне (security constraints, см. libs.versions.toml).
+    constraints {
+        libs.bundles.security.constraints.ktlint.get().forEach {
+            add("ktlint", it) { because("Dependabot: исправленная версия зависимости ktlint") }
+        }
+    }
 }
 
 gradlePlugin {

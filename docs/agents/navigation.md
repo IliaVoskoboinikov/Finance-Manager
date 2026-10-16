@@ -43,4 +43,5 @@
     `XScreen()` (та тянет `hiltViewModel()` и падает в headless-рендере). Разбор нюансов
     (Lottie, YCharts, `android.hardware.*`) — [`docs/nav-graph.md`](../nav-graph.md).
 *   После изменения графа — `./gradlew navDump` и коммит обновлённых `*/nav/*.nav`;
-    `./gradlew navCheck` проверяет, что разметка не разошлась с кодом.
+    `./gradlew navCheck` проверяет, что разметка не разошлась с кодом (в CI — джоба `nav-graph`,
+    расхождение валит прогон).

@@ -107,7 +107,6 @@ internal fun MainScreenContent(
         }
 
         BottomNavigationBar(
-            modifier = Modifier,
             backStack = backStack,
             screens = bottomScreens,
             hapticToggleMenu = hapticToggleMenu
@@ -119,7 +118,7 @@ internal fun MainScreenContent(
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun MainScreenPreview() {
+private fun MainScreenPreview() {
     val screens = ScreenBottom.items()
     FinanceManagerTheme {
         MainScreenContent(

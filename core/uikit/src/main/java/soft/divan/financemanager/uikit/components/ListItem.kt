@@ -23,7 +23,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun ListItemPreview() {
+private fun ListItemPreview() {
     FinanceManagerTheme {
         ListItem(
             content = { Text("Дата") },
@@ -44,10 +44,10 @@ fun ListItemPreview() {
 fun ListItem(
     modifier: Modifier = Modifier,
     lead: (@Composable () -> Unit)? = null,
-    content: @Composable () -> Unit,
     trail: (@Composable () -> Unit)? = null,
     containerColor: Color = MaterialTheme.colorScheme.background,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp)
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+    content: @Composable () -> Unit
 ) {
     Surface(
         modifier = modifier,

@@ -587,6 +587,20 @@ navigator.goTo(AccountKey())                   // создание
 
 ---
 
+## Версии и ограничения
+
+- `androidx.navigation3:navigation3-runtime` / `navigation3-ui` — **1.1.5**.
+- `androidx.lifecycle:lifecycle-viewmodel-navigation3` — **2.10.0**. Версия 2.11.0 требует
+  `compileSdk 37` (а он же уходит в `targetSdk` проекта), поэтому зафиксирована 2.10.x —
+  обновление: [FM-132](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/132).
+- `androidx.hilt:hilt-navigation3` не существует — Hilt подключается обычным
+  `hilt-navigation-compose`.
+- Deep links не поддерживаются (как и раньше): в Navigation 3 их нужно разбирать
+  самостоятельно — `Intent` → список ключей → back stack —
+  [FM-93](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/93).
+- Адаптивные раскладки (`Scene`/`SceneStrategy`) не используются: везде однопанельный режим —
+  [FM-131](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/131).
+
 ## Ключевые файлы
 
 | Файл | Роль |
@@ -602,14 +616,3 @@ navigator.goTo(AccountKey())                   // создание
 | `app/presenter/navigation/TopLevelBackStack.kt` | отдельный back stack на вкладку |
 | `app/presenter/navigation/ScreenBottom.kt` | вкладки нижней навигации |
 | `app/presenter/navigation/MainKey.kt` | ключ оболочки приложения |
-
-## Версии и ограничения
-
-- `androidx.navigation3:navigation3-runtime` / `navigation3-ui` — **1.1.5**.
-- `androidx.lifecycle:lifecycle-viewmodel-navigation3` — **2.10.0**. Версия 2.11.0 требует
-  `compileSdk 37` (а он же уходит в `targetSdk` проекта), поэтому зафиксирована 2.10.x.
-- `androidx.hilt:hilt-navigation3` не существует — Hilt подключается обычным
-  `hilt-navigation-compose`.
-- Deep links не поддерживаются (как и раньше): в Navigation 3 их нужно разбирать
-  самостоятельно — `Intent` → список ключей → back stack.
-- Адаптивные раскладки (`Scene`/`SceneStrategy`) не используются: везде однопанельный режим.

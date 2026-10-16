@@ -222,7 +222,7 @@ class MainActivity : AppCompatActivity() {
         when {
             dataState == LocalDataState.KeyLost -> KeyLostScreen()
 
-            dataState is LocalDataState.Locked -> PinLockScreen(onUnlocked = onUnlocked)
+            dataState is LocalDataState.Locked -> PinLockScreen(onUnlock = onUnlocked)
 
             dataState == LocalDataState.Initializing || pinSet == null -> Box(
                 modifier = Modifier
@@ -230,7 +230,7 @@ class MainActivity : AppCompatActivity() {
                     .background(MaterialTheme.colorScheme.background)
             )
 
-            pinSet && !appLock.unlocked -> PinLockScreen(onUnlocked = onUnlocked)
+            pinSet && !appLock.unlocked -> PinLockScreen(onUnlock = onUnlocked)
 
             else -> RootNavDisplay(
                 splashFeatureApi = splashFeatureApi,

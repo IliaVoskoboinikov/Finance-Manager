@@ -22,7 +22,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewKeyboard() {
+private fun PreviewKeyboard() {
     FinanceManagerTheme {
         Keyboard(
             showBiometricButton = true,
@@ -35,7 +35,7 @@ fun PreviewKeyboard() {
 
 @Preview(showBackground = true, name = "Keyboard — disabled")
 @Composable
-fun PreviewKeyboardDisabled() {
+private fun PreviewKeyboardDisabled() {
     FinanceManagerTheme {
         Keyboard(enabled = false, onNumberClick = {}, onBackspaceClick = {})
     }
@@ -49,11 +49,11 @@ fun PreviewKeyboardDisabled() {
  */
 @Composable
 fun Keyboard(
+    onNumberClick: (String) -> Unit,
+    onBackspaceClick: () -> Unit,
     modifier: Modifier = Modifier,
     showBiometricButton: Boolean = false,
     enabled: Boolean = true,
-    onNumberClick: (String) -> Unit,
-    onBackspaceClick: () -> Unit,
     onFingerprintClick: () -> Unit = {}
 ) {
     Column(

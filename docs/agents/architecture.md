@@ -8,8 +8,10 @@
 
 ## Layer Responsibilities
 *   **Presentation (`feature:*:impl`):** Compose screens and ViewModels. ViewModels map Domain models to UiState.
+    A feature's `:impl` may also hold feature-local `domain` (use cases, repository interfaces) and `data`
+    (repository implementations, e.g. over DataStore) packages; the same layer rules apply inside it.
 *   **Domain (`core:domain`):** Pure Kotlin. Contains Entities, UseCases, and Repository interfaces. No dependencies on Android or Data layers.
-*   **Data (`core:data`, `core:database`, `core:network`):** Implements Repository interfaces. Handles DTO-to-Domain mapping.
+*   **Data (`core:data`, `core:database`, `core:network`):** Implements Repository interfaces. Handles DTO→Entity→Domain mapping.
 
 ## Feature Boundaries
 *   Features must be isolated. Communication between features happens through `:api` modules.

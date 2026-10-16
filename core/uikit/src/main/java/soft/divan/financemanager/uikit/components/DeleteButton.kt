@@ -21,14 +21,14 @@ import androidx.compose.ui.unit.dp
 import soft.divan.financemanager.core.uikit.R
 
 @Composable
-fun DeleteButton(onClick: () -> Unit) {
+fun DeleteButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.error,
             contentColor = MaterialTheme.colorScheme.onError
         ),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .height(56.dp),

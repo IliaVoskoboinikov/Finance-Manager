@@ -16,20 +16,63 @@ concurrency:
 # Явные права токена: раньше воркфлоу полагался на настройку репозитория по умолчанию.
 permissions:
   contents: read
-  security-events: write  # upload-sarif (detekt, ktlint)
+  security-events: write  # upload-sarif (detekt, ktlint, aalekh)
   checks: write           # action-junit-report создаёт check-run с аннотациями
+
+# Во всех джобах checkout идёт с persist-credentials: false. Ни одна джоба не пушит в git,
+# а история (AffectedModuleDetector, aalekhDiff) читается локально без авторизации. Без флага
+# токен остаётся в .git/config, где его может прочитать код PR (Gradle-скрипты), — а
+# сохранять его незачем.
 
 env:
   gradleFlags: --parallel --stacktrace --no-configuration-cache --no-daemon
   API_TOKEN: ${{ secrets.API_TOKEN }}
   GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
 
+# Правки только документации (*.md, docs/) проверки кода не запускают. Фильтр — джоба
+# changes, а не paths-ignore воркфлоу: required-чеки ruleset master (build-app, run-tests, …)
+# при пропущенном воркфлоу не появляются, и PR висит в «Expected — Waiting». Пропущенная
+# джоба, наоборот, засчитывается как пройденная. Остальные джобы ждут changes и стартуют при
+# code != 'false': если сама changes упала, выход пустой — проверки идут, а не тихо пропускаются.
+# Secret scan (security.yml) идёт на любых правках: секрет может утечь и в Markdown.
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read  # в PR список файлов берётся из API
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      # В PR checkout не нужен (файлы из API), а push сравнивается через git с прежним коммитом ветки.
+      - name: Checkout
+        if: github.event_name == 'push'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          # push: base = та же ветка → сравнение с коммитом до push (github.event.before).
+          # В PR base не передаём: action его игнорирует и пишет warning на каждый прогон.
+          base: ${{ github.event_name == 'push' && github.ref_name || '' }}
+          # every: файл считается кодом, только если не подходит ни под одно исключение.
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '!**/*.md'
+              - '!docs/**'
+
   build-app:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Build project
@@ -46,6 +89,8 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
 
   run-tests:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       # Полная история нужна AffectedModuleDetector: он ищет merge-base с master.
@@ -53,6 +98,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       # На master — полный прогон: основная ветка проверяется целиком.
@@ -84,10 +130,14 @@ jobs:
           path: '**/build/reports/tests/**'
 
   run-coverage:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Coverage report & gate
@@ -102,10 +152,14 @@ jobs:
           path: build/reports/kover/htmlFull
 
   run-lint:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Run Android Lint
@@ -125,10 +179,14 @@ jobs:
   #            lint/build/reports/lint-results.sarif
 
   run-detekt:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Run Detekt
@@ -160,10 +218,14 @@ jobs:
           fi
 
   run-ktlint:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Run KtLint composite action
@@ -189,10 +251,14 @@ jobs:
           path: ktlint-report.html
 
   check-app-size:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Analyze size
@@ -207,10 +273,14 @@ jobs:
   # app/dependencies/releaseRuntimeClasspath.txt. Быстрая, идёт на каждый PR.
   # Разошлось — обновить осознанно: ./gradlew :app:dependencyGuardBaseline
   check-dependency-guard:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Dependency guard
@@ -222,6 +292,8 @@ jobs:
   # разбирается постепенно. continue-on-error, а в required-чеках её нет:
   # PR не должен ждать девять минут ради текста, который читают раз в месяц.
   dependency-analysis:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     continue-on-error: true
     # Самая долгая джоба пайплайна: на холодном кэше это ~6700 задач.
@@ -230,6 +302,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       # Задачи анализа исполняются через IsolatedClassloaderWorker: каждый work item
@@ -266,10 +340,14 @@ jobs:
           path: build/reports/dependency-analysis/
 
   check-module-graph:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
       - name: Check Graph
@@ -294,14 +372,126 @@ jobs:
           name: all_modules.png
           path: all_modules.png
 
+  # Блокирующая проверка архитектуры графа модулей (Aalekh): слои, изоляция фич,
+  # reachability, запрет циклов и ratchet структурных метрик. В отличие от
+  # check-module-graph (jraska), правила здесь реально настроены (build.gradle.kts →
+  # блок aalekh { }). Падает только на НОВЫХ нарушениях — текущие заморожены в
+  # aalekh-baseline.json. Полное описание — docs/aalekh.md.
+  check-architecture:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
+    runs-on: ubuntu-latest
+    # Право писать в PR нужно только этой джобе (sticky-комментарий aalekhDiff), поэтому оно
+    # выдаётся здесь, а не всему workflow. Job-level permissions заменяют workflow-level
+    # целиком — отсюда повтор contents/security-events.
+    permissions:
+      contents: read
+      security-events: write  # upload-sarif
+      pull-requests: write    # комментарий об изменениях архитектуры в PR
+    steps:
+      # fetch-depth: 0 — aalekhDiff сравнивает граф ветки с закоммиченным aalekh-snapshot.json,
+      # а комментарий в PR требует доступа к истории для корректного diff.
+      # persist-credentials: false — код PR (Gradle-скрипты) выполняется в этой же джобе до
+      # шага с комментарием; токен с правом записи не должен оставаться в .git/config.
+      # Пушить джоба ничего не должна, а git-история читается локально без авторизации.
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
+      - name: Architecture check (Aalekh)
+        run: ./gradlew aalekhCheck $gradleFlags
+      # Нарушения — инлайн-аннотациями прямо в диффе PR (SARIF).
+      - name: Upload SARIF to GitHub Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: build/reports/aalekh/aalekh-results.sarif
+          category: aalekh
+      # Интерактивный HTML-отчёт + метрики (CSV) как артефакт сборки.
+      - name: Generate interactive report
+        if: always()
+        run: ./gradlew aalekhReport $gradleFlags
+      - name: Upload Aalekh report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: aalekh-report
+          path: build/reports/aalekh/
+      # Что PR сделал с архитектурой (добавленные/удалённые рёбра, модули, циклы) — одним
+      # «липким» комментарием, который обновляется на каждый push, а не плодит новые.
+      - name: Architecture diff
+        if: github.event_name == 'pull_request'
+        run: ./gradlew aalekhDiff $gradleFlags
+      - name: Tag diff for a sticky comment
+        if: github.event_name == 'pull_request'
+        run: |
+          DIFF=build/reports/aalekh/aalekh-diff.md
+          if [ -f "$DIFF" ]; then
+            printf '<!-- aalekh-diff -->\n\n' | cat - "$DIFF" > "$DIFF.tmp" && mv "$DIFF.tmp" "$DIFF"
+          fi
+      # Комментарий — информационный и не должен ронять блокирующую проверку. В PR из форков
+      # и от Dependabot токен read-only, запись комментария там упадёт — отсюда continue-on-error.
+      - name: Find existing architecture comment
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: peter-evans/find-comment@v3
+        id: aalekh-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- aalekh-diff -->'
+      - name: Comment architecture diff on PR
+        if: ${{ github.event_name == 'pull_request' && hashFiles('build/reports/aalekh/aalekh-diff.md') != '' }}
+        continue-on-error: true
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.aalekh-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: build/reports/aalekh/aalekh-diff.md
+          edit-mode: replace
+
+  # Гейт navCheck (граф из аннотаций == закоммиченные */nav/*.nav) + отчёт с картой
+  # и галереей превью. Гейт живёт здесь, а не отдельной джобой: KSP, на котором он
+  # работает, этой джобе нужен всё равно, а отдельная джоба — ещё одна холодная сборка.
   nav-graph:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
+      # Отдельный шаг и отдельный вызов Gradle, до рендера: Layoutlib бывает flaky,
+      # и в общем вызове с экспортом его падение скрыло бы результат navCheck.
+      # --continue — чтобы увидеть расхождения всех модулей, а не только первого.
+      - name: Check nav graph baselines
+        id: nav-check
+        run: |
+          set -o pipefail
+          if ./gradlew navCheck $gradleFlags --continue 2>&1 | tee nav-check.log; then
+            echo '## ✅ Граф навигации совпадает с бейзлайнами `*/nav/*.nav`' >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo '## ❌ Граф навигации разошёлся с бейзлайнами `*/nav/*.nav`'
+              echo 'Если изменение осознанное — `./gradlew navDump` и закоммитить обновлённые `.nav`.'
+              echo '```diff'
+              # Только блоки «What went wrong»: с --stacktrace дифф повторяется в стеке.
+              sed -n '/^\* What went wrong:/,/^\* Try:/p' nav-check.log \
+                | grep -E '^> navgraph:|^ +[-+] ' \
+                | sed -E -e "s|$GITHUB_WORKSPACE/||g" -e 's/^ +//' || true
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+      # Отчёт нужен и при разошедшемся бейзлайне: по карте видно, что поменялось.
       - name: Nav graph report
+        if: success() || steps.nav-check.outcome == 'failure'
         uses: ./.github/actions/nav-graph
         with:
           gradle-flags: ${{ env.gradleFlags }}

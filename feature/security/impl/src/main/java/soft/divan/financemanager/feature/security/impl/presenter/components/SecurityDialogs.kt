@@ -14,7 +14,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewConfirmPinLevelDialogGuest() {
+private fun PreviewConfirmPinLevelDialogGuest() {
     FinanceManagerTheme {
         SecurityDialogHost(
             dialog = SecurityDialog.ConfirmLevel(DataProtectionLevel.PIN),
@@ -28,7 +28,7 @@ fun PreviewConfirmPinLevelDialogGuest() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewConfirmNoneLevelDialog() {
+private fun PreviewConfirmNoneLevelDialog() {
     FinanceManagerTheme(darkTheme = true) {
         SecurityDialogHost(
             dialog = SecurityDialog.ConfirmLevel(DataProtectionLevel.NONE),
@@ -42,7 +42,7 @@ fun PreviewConfirmNoneLevelDialog() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewUnsentChangesDialog() {
+private fun PreviewUnsentChangesDialog() {
     FinanceManagerTheme {
         SecurityDialogHost(
             dialog = SecurityDialog.UnsentChanges,
@@ -56,7 +56,7 @@ fun PreviewUnsentChangesDialog() {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewOfferBiometricDialog() {
+private fun PreviewOfferBiometricDialog() {
     FinanceManagerTheme {
         SecurityDialogHost(
             dialog = SecurityDialog.OfferBiometric,

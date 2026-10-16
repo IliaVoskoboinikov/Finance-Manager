@@ -29,19 +29,19 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewPinPadContent() {
+private fun PreviewPinPadContent() {
     FinanceManagerTheme {
-        PinPadContent(prompt = PinPrompt(PinPurpose.DeletePin), onPinEntered = {}, onDismiss = {})
+        PinPadContent(prompt = PinPrompt(PinPurpose.DeletePin), onPinEnter = {}, onDismiss = {})
     }
 }
 
 @Preview(showBackground = true, fontScale = 1.5f)
 @Composable
-fun PreviewPinPadContentCreate() {
+private fun PreviewPinPadContentCreate() {
     FinanceManagerTheme(darkTheme = true) {
         PinPadContent(
             prompt = PinPrompt(PinPurpose.EnablePinLevel, create = true),
-            onPinEntered = {},
+            onPinEnter = {},
             onDismiss = {}
         )
     }
@@ -56,14 +56,14 @@ fun PreviewPinPadContentCreate() {
 @Composable
 fun PinPadDialog(
     prompt: PinPrompt,
-    onPinEntered: (String) -> Unit,
+    onPinEnter: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        PinPadContent(prompt = prompt, onPinEntered = onPinEntered, onDismiss = onDismiss)
+        PinPadContent(prompt = prompt, onPinEnter = onPinEnter, onDismiss = onDismiss)
     }
 }
 
@@ -74,29 +74,30 @@ fun PinPadDialog(
 @Composable
 fun PinPadContent(
     prompt: PinPrompt,
-    onPinEntered: (String) -> Unit,
-    onDismiss: () -> Unit
+    onPinEnter: (String) -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var firstEntry by rememberSaveable(prompt) { mutableStateOf<String?>(null) }
     var mismatch by rememberSaveable(prompt) { mutableStateOf(false) }
     val repeating = prompt.create && firstEntry != null
 
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Box {
             PinEntryCommonScreen(
                 titleId = if (repeating) R.string.repeat_pin else prompt.titleRes,
                 errorMessage = if (mismatch) stringResource(R.string.pin_codes_do_not_match) else "",
-                onPinEntered = { pin ->
+                onPinEnter = { pin ->
                     val first = firstEntry
                     when {
-                        !prompt.create -> onPinEntered(pin)
+                        !prompt.create -> onPinEnter(pin)
 
                         first == null -> {
                             firstEntry = pin
                             mismatch = false
                         }
 
-                        first == pin -> onPinEntered(pin)
+                        first == pin -> onPinEnter(pin)
 
                         else -> {
                             firstEntry = null
