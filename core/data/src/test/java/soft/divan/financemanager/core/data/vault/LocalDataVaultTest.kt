@@ -266,7 +266,7 @@ class LocalDataVaultTest {
             // Во время паузы PIN не проверяется и попытка не тратится
             val refused = unlocker.unlockWithPin(PIN.toCharArray()) as VaultPinResult.Done
             assertThat(refused.result).isInstanceOf(PinUnlockResult.LockedOut::class.java)
-            harness.clock.now += lockout
+            harness.pass(lockout)
         }
 
         assertThat(unlocker.unlockWithPin(WRONG.toCharArray())).isEqualTo(VaultPinResult.Exhausted)
@@ -344,6 +344,35 @@ class LocalDataVaultTest {
 
         val result = unlocker.unlockWithPin(PIN.toCharArray()) as VaultPinResult.Done
         assertThat(result.result).isInstanceOf(PinUnlockResult.LockedOut::class.java)
+    }
+
+    @Test
+    fun `lockout survives moving the clock forward`() = vaultTest {
+        lockedAtPinLevel()
+        repeat(PinAttemptPolicy.FREE_FAILURES + 1) { unlocker.unlockWithPin(WRONG.toCharArray()) }
+
+        // Часы системы ушли на сутки вперёд, а реального времени прошло ноль
+        harness.clock.now += Duration.ofDays(1)
+
+        val result = unlocker.unlockWithPin(PIN.toCharArray()) as VaultPinResult.Done
+        assertThat(result.result).isInstanceOf(PinUnlockResult.LockedOut::class.java)
+        assertThat(harness.store.readAttempts().failures).isEqualTo(PinAttemptPolicy.FREE_FAILURES + 1)
+    }
+
+    @Test
+    fun `lockout survives a process restart and ends with real time`() = vaultTest {
+        lockedAtPinLevel()
+        repeat(PinAttemptPolicy.FREE_FAILURES + 1) { unlocker.unlockWithPin(WRONG.toCharArray()) }
+
+        harness.holder.close()
+        harness.restart()
+        harness.vault.initialize()
+        val stillLocked = harness.unlocker.unlockWithPin(PIN.toCharArray()) as VaultPinResult.Done
+        assertThat(stillLocked.result).isInstanceOf(PinUnlockResult.LockedOut::class.java)
+
+        harness.pass(PinAttemptPolicy.LOCKOUTS.first())
+        val unlocked = harness.unlocker.unlockWithPin(PIN.toCharArray()) as VaultPinResult.Done
+        assertThat(unlocked.result).isEqualTo(PinUnlockResult.Success)
     }
 
     @Test

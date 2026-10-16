@@ -1,5 +1,6 @@
 package soft.divan.financemanager.core.data.vault
 
+import android.os.SystemClock
 import android.content.Context
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.test.core.app.ApplicationProvider
@@ -164,7 +165,11 @@ class EncryptedVaultEndToEndTest {
         holder = RoomDatabaseHolder(SqlCipherDatabaseFactory(context), files, io)
         val core = VaultCore(holder, store, keys, envelope, io)
         vault = LocalDataVault(core, envelope, files)
-        unlocker = PinUnlocker(core, envelope, PinAttemptPolicy(Clock.systemUTC()))
+        unlocker = PinUnlocker(
+            core,
+            envelope,
+            PinAttemptPolicy(Clock.systemUTC(), SystemClock::elapsedRealtime)
+        )
         switcher = ProtectionLevelSwitcher(core, envelope)
     }
 

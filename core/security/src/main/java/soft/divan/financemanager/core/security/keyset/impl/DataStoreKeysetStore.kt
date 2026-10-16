@@ -78,16 +78,17 @@ class DataStoreKeysetStore @Inject constructor(
         val prefs = dataStore.data.first()
         return PinAttempts(
             failures = prefs[PIN_FAILURES] ?: 0,
-            lockedUntilMillis = prefs[PIN_LOCKED_UNTIL] ?: 0,
-            lastFailureAtMillis = prefs[PIN_LAST_FAILURE_AT] ?: 0
+            lockoutMillis = prefs[PIN_LOCKOUT_MILLIS] ?: 0,
+            lockoutStartedAtElapsed = prefs[PIN_LOCKOUT_STARTED_AT] ?: 0
         )
     }
 
     override suspend fun writeAttempts(attempts: PinAttempts) {
         dataStore.edit { prefs ->
             prefs[PIN_FAILURES] = attempts.failures
-            prefs[PIN_LOCKED_UNTIL] = attempts.lockedUntilMillis
-            prefs[PIN_LAST_FAILURE_AT] = attempts.lastFailureAtMillis
+            prefs[PIN_LOCKOUT_MILLIS] = attempts.lockoutMillis
+            prefs[PIN_LOCKOUT_STARTED_AT] = attempts.lockoutStartedAtElapsed
+            LEGACY_ATTEMPT_KEYS.forEach { prefs.remove(it) }
         }
     }
 
@@ -118,8 +119,17 @@ class DataStoreKeysetStore @Inject constructor(
         val BIO_BLOB = stringPreferencesKey("bio_blob")
 
         val PIN_FAILURES = intPreferencesKey("pin_failures")
-        val PIN_LOCKED_UNTIL = longPreferencesKey("pin_locked_until")
-        val PIN_LAST_FAILURE_AT = longPreferencesKey("pin_last_failure_at")
+        val PIN_LOCKOUT_MILLIS = longPreferencesKey("pin_lockout_millis")
+        val PIN_LOCKOUT_STARTED_AT = longPreferencesKey("pin_lockout_started_elapsed")
+
+        /**
+         * Пауза по часам системы — из сборок до монотонного отсчёта. Не читается: перевод часов
+         * вперёд снимал бы её; удаляется при следующей записи учёта.
+         */
+        val LEGACY_ATTEMPT_KEYS = listOf(
+            longPreferencesKey("pin_locked_until"),
+            longPreferencesKey("pin_last_failure_at")
+        )
 
         /** Ключи набора — без учёта попыток: их жизненный цикл отдельный. */
         val KEYSET_KEYS = listOf(

@@ -34,6 +34,9 @@
 *   PIN attempts on the lock screen are counted **before** verification (`PinAttemptPolicy`);
     the 10th failure wipes the data and signs out. Sign-out/wipe must run outside `VaultCore`'s
     lock (sign-out itself calls the wipe).
+*   PIN lockouts are measured on `MonotonicClock` (`elapsedRealtime`), never on the wall clock —
+    the user can move the wall clock forward to skip a pause. The wall `Clock` only turns the
+    remaining time into an `Instant` for the UI.
 *   Biometrics unlock the DEK only via `BiometricPrompt.CryptoObject` with `BIOMETRIC_STRONG`;
     an invalidated biometric key removes the biometric copy (PIN remains), it never wipes data.
 

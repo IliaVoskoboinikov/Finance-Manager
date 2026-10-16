@@ -53,13 +53,15 @@ class Keyset(
 /**
  * Учёт неверных PIN на уровне [KeyLevel.PIN].
  *
+ * Пауза хранится не моментом по часам системы, а длительностью и точкой отсчёта на
+ * [MonotonicClock]: часы системы переводятся, монотонные — нет.
+ *
  * @property failures Сколько неверных попыток подряд.
- * @property lockedUntilMillis До какого момента ввод запрещён (0 — не запрещён).
- * @property lastFailureAtMillis Когда была последняя ошибка — нужен, чтобы перевод часов назад
- *   не снимал паузу.
+ * @property lockoutMillis Длительность паузы после последней ошибки (0 — паузы нет).
+ * @property lockoutStartedAtElapsed Показание [MonotonicClock] в момент последней ошибки.
  */
 data class PinAttempts(
     val failures: Int = 0,
-    val lockedUntilMillis: Long = 0,
-    val lastFailureAtMillis: Long = 0
+    val lockoutMillis: Long = 0,
+    val lockoutStartedAtElapsed: Long = 0
 )

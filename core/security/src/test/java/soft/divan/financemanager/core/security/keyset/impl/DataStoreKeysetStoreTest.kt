@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -100,11 +101,29 @@ class DataStoreKeysetStoreTest {
 
     @Test
     fun `attempts live apart from the keyset`() = runTest {
-        store.writeAttempts(PinAttempts(failures = 5, lockedUntilMillis = 100, lastFailureAtMillis = 50))
+        store.writeAttempts(PinAttempts(failures = 5, lockoutMillis = 100, lockoutStartedAtElapsed = 50))
 
         store.write(pinKeyset())
 
         assertThat(store.readAttempts()).isEqualTo(PinAttempts(5, 100, 50))
+    }
+
+    @Test
+    fun `wall-clock lockout of older builds is ignored and dropped on the next write`() = runTest {
+        val legacyUntil = longPreferencesKey("pin_locked_until")
+        val legacyLastFailure = longPreferencesKey("pin_last_failure_at")
+        dataStore.edit {
+            it[legacyUntil] = Long.MAX_VALUE
+            it[legacyLastFailure] = 1
+        }
+
+        assertThat(store.readAttempts()).isEqualTo(PinAttempts())
+
+        store.writeAttempts(PinAttempts(failures = 1))
+
+        val prefs = dataStore.data.first()
+        assertThat(prefs[legacyUntil]).isNull()
+        assertThat(prefs[legacyLastFailure]).isNull()
     }
 
     @Test

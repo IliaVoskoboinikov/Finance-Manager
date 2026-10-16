@@ -27,6 +27,7 @@ import soft.divan.financemanager.core.security.keyset.PinAttemptPolicy
 import soft.divan.financemanager.core.security.keyset.impl.DataStoreKeysetStore
 import java.io.File
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -46,6 +47,9 @@ class VaultHarness(
 
     val keys = FakeKeystoreKeys()
     val clock = MutableClock(Instant.parse("2026-09-01T12:00:00Z"))
+
+    /** Монотонные часы (время с загрузки) — их не переводит смена часов системы. */
+    var elapsed: Duration = Duration.ofHours(UPTIME_HOURS)
     val files = DatabaseFiles(context)
     val envelope = DekEnvelope(keys, PinKeyDerivation(), pinIterations = PIN_ITERATIONS)
 
@@ -84,6 +88,12 @@ class VaultHarness(
         assemble()
     }
 
+    /** Проходит реальное время: идут и часы системы, и монотонные. */
+    fun pass(duration: Duration) {
+        clock.now += duration
+        elapsed += duration
+    }
+
     /** Закрывает базу и освобождает DataStore. */
     suspend fun release() {
         holder.close()
@@ -110,7 +120,7 @@ class VaultHarness(
         holder = RoomDatabaseHolder(factory, files, dispatcher)
         core = VaultCore(holder, store, keys, envelope, dispatcher)
         vault = LocalDataVault(core, envelope, files)
-        unlocker = PinUnlocker(core, envelope, PinAttemptPolicy(clock))
+        unlocker = PinUnlocker(core, envelope, PinAttemptPolicy(clock) { elapsed.toMillis() })
         switcher = ProtectionLevelSwitcher(core, envelope)
         biometrics = BiometricVault(core, envelope, BiometricEnvelope(keys))
     }
@@ -118,6 +128,9 @@ class VaultHarness(
     companion object {
         /** Итераций PBKDF2 мало: проверяется логика, а не стойкость. */
         const val PIN_ITERATIONS = 1_000
+
+        /** Устройство работает сутки — монотонные часы далеко от нуля. */
+        private const val UPTIME_HOURS = 24L
     }
 }
 

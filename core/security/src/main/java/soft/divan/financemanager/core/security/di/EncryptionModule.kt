@@ -1,6 +1,7 @@
 package soft.divan.financemanager.core.security.di
 
 import android.content.Context
+import android.os.SystemClock
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
@@ -13,6 +14,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import soft.divan.financemanager.core.security.keyset.KeysetStore
+import soft.divan.financemanager.core.security.keyset.MonotonicClock
 import soft.divan.financemanager.core.security.keyset.impl.DataStoreKeysetStore
 import soft.divan.financemanager.core.security.keystore.KeystoreKeys
 import soft.divan.financemanager.core.security.keystore.impl.AndroidKeystoreKeys
@@ -36,6 +38,10 @@ interface EncryptionModule {
 
         /** Относительный путь внутри `noBackupFilesDir`; расширение требует Preferences DataStore. */
         const val KEYSET_FILE = "security/keyset.preferences_pb"
+
+        /** Монотонные часы для пауз за неверный PIN — см. `PinAttemptPolicy`. */
+        @Provides
+        fun provideMonotonicClock(): MonotonicClock = MonotonicClock(SystemClock::elapsedRealtime)
 
         /**
          * Набор ключей лежит в `noBackupFilesDir`: система не включает этот каталог ни в облачный

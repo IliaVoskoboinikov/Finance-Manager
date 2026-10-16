@@ -31,6 +31,17 @@ class EncryptionModuleTest {
     }
 
     @Test
+    fun `monotonic clock counts time since boot and never goes back`() {
+        val clock = EncryptionModule.provideMonotonicClock()
+
+        val first = clock.elapsedMillis()
+        val second = clock.elapsedMillis()
+
+        assertThat(first).isNotNegative()
+        assertThat(second).isGreaterThanOrEqualTo(first)
+    }
+
+    @Test
     fun `corrupted keyset file reads as empty instead of failing forever`() = runTest {
         val file = File(context.noBackupFilesDir, EncryptionModule.KEYSET_FILE)
         file.parentFile!!.mkdirs()

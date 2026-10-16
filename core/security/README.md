@@ -17,7 +17,7 @@
   - `KeysetStore` (`DataStoreKeysetStore`) — атомарное хранение набора ключей и учёта неверных PIN
     в `noBackupFilesDir/security/keyset.preferences_pb`;
   - `PinKeyDerivation` (PBKDF2-HMAC-SHA256), `PinAttemptPolicy` (паузы и стирание за неверный
-    PIN), `AesGcm`.
+    PIN; паузы — по `MonotonicClock`, перевод часов их не снимает), `AesGcm`.
 
 Модуль знает о ключах, но не о базе: открывает базу `:core:database`, связывает одно с другим
 `:core:data`. Дизайн — [docs/encryption.md](../../docs/encryption.md).
