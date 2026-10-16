@@ -7,13 +7,16 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import soft.divan.financemanager.core.data.testing.OpenDatabaseHolder
+import soft.divan.financemanager.core.data.testing.mockDatabase
 import soft.divan.financemanager.core.database.dao.CategoryDao
 import soft.divan.financemanager.core.database.entity.CategoryEntity
 
 class CategoryLocalDataSourceImplTest {
 
     private val dao = mockk<CategoryDao>(relaxUnitFun = true)
-    private val dataSource = CategoryLocalDataSourceImpl(dao)
+    private val dataSource =
+        CategoryLocalDataSourceImpl(OpenDatabaseHolder(mockDatabase(categoryDao = dao)))
 
     private val entity = CategoryEntity(
         id = "1",

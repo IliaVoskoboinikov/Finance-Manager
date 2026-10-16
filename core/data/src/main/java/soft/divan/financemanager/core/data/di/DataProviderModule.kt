@@ -15,7 +15,7 @@ import soft.divan.financemanager.core.data.api.CategoryApiService
 import soft.divan.financemanager.core.data.api.TransactionApiService
 import soft.divan.financemanager.core.data.source.CurrencyLocalDataSource
 import soft.divan.financemanager.core.data.source.impl.CurrencyLocalDataSourceImpl
-import soft.divan.financemanager.core.database.dao.CurrencyDao
+import soft.divan.financemanager.core.database.holder.DatabaseHolder
 import javax.inject.Singleton
 
 @Module
@@ -34,9 +34,9 @@ object DataProviderModule {
     @Singleton
     fun provideCurrencyLocalDataSource(
         @CurrencyDataStore dataStore: DataStore<Preferences>,
-        currencyDao: CurrencyDao
+        holder: DatabaseHolder
     ): CurrencyLocalDataSource =
-        CurrencyLocalDataSourceImpl(dataStore, currencyDao)
+        CurrencyLocalDataSourceImpl(dataStore, holder)
 
     @Provides
     @Singleton

@@ -11,7 +11,7 @@ import retrofit2.Response
 import soft.divan.financemanager.core.data.dto.CategoryDto
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
-import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.sync.Synchronizer
 import soft.divan.financemanager.core.database.entity.CategoryEntity
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 

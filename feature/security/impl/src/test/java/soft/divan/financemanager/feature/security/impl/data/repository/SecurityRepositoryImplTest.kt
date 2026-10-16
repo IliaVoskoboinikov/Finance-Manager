@@ -5,6 +5,9 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
@@ -74,6 +77,13 @@ class SecurityRepositoryImplTest {
         repository.deletePin()
 
         verify { dataSource.deletePin() }
+    }
+
+    @Test
+    fun `observePinSet delegates to the data source`() = runTest {
+        every { dataSource.observePinSet() } returns flowOf(true)
+
+        assertThat(repository.observePinSet().first()).isTrue()
     }
 
     private companion object {

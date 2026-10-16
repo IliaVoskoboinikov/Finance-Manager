@@ -3,15 +3,13 @@ package soft.divan.financemanager.core.data.sync.impl
 import kotlinx.coroutines.flow.first
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
 import soft.divan.financemanager.core.data.mapper.TimeMapper
-import soft.divan.financemanager.core.data.mapper.toDto
 import soft.divan.financemanager.core.data.mapper.toEntity
-import soft.divan.financemanager.core.data.mapper.toUpdateDto
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
+import soft.divan.financemanager.core.data.sync.Synchronizer
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
-import soft.divan.financemanager.core.data.sync.util.Synchronizer
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
@@ -28,15 +26,14 @@ import javax.inject.Inject
 /**
  * Реализация [TransactionSyncManager].
  *
- * Отвечает за двустороннюю синхронизацию транзакций:
- *
- * 1. Pull — загрузка транзакций с сервера по каждому аккаунту
- * 2. Push — отправка локальных изменений (create/update/delete)
+ * Отвечает за одно направление — **pull**, загрузку транзакций с сервера по каждому аккаунту.
+ * Обратное направление обеспечивает очередь исходящих операций (см. `docs/outbox.md`).
  *
  * Архитектурные принципы:
  * - Offline-first: локальная БД — источник истины
  * - Синхронизация выполняется на уровне аккаунта
- * - Разрешение конфликтов по updatedAt (last-write-wins)
+ * - Разрешение конфликтов по updatedAt (last-write-wins), но строку с неотправленной операцией
+ *   серверная версия не перезаписывает — см. [canBeOverwritten]
  * - Все операции изолированы через safeApiCall / safeDbCall
  */
 class TransactionSyncManagerImpl @Inject constructor(
@@ -50,17 +47,13 @@ class TransactionSyncManagerImpl @Inject constructor(
     /**
      * Точка входа полной синхронизации.
      *
-     * Порядок:
-     * 1. pullServerData() — обновление локальных данных
-     * 2. pushLocalChanges() — отправка pending-операций
+     * Тянет актуальные данные с сервера. Отправку локальных изменений выполняет очередь
+     * исходящих операций, а не этот менеджер.
      *
-     * Возвращает true, если синхронизация завершилась без исключений.
+     * Возвращает true, если шаг завершился без исключений.
      */
     override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
-        return runCatching {
-            pullServerData()
-            pushLocalChanges()
-        }.isSuccess
+        return runCatching { pullServerData() }.isSuccess
     }
 
     /**
@@ -82,107 +75,6 @@ class TransactionSyncManagerImpl @Inject constructor(
                 ),
                 endDate = ApiDateMapper.toApiDate(Instant.now())
             )
-        }
-    }
-
-    /**
-     * Отправляет новую локальную транзакцию на сервер.
-     *
-     * Требует наличия accountServerId.
-     *
-     * После успешного ответа:
-     * - обновляет локальную запись
-     * - устанавливает serverId
-     * - помечает как SYNCED
-     */
-    override suspend fun syncCreate(transactionEntity: TransactionEntity) {
-        transactionEntity.accountServerId?.let { accountServerId ->
-            safeApiCall(errorLogger) {
-                remoteDataSource.create(transactionEntity.toDto(accountServerId))
-            }.onSuccess { transactionDto ->
-                updateLocalFromRemote(
-                    transactionDto.toEntity(
-                        localId = transactionEntity.localId,
-                        accountLocalId = transactionEntity.accountLocalId,
-                        currencyId = transactionEntity.currencyId,
-                        type = TransactionType.valueOf(transactionEntity.type),
-                        syncStatus = SyncStatus.SYNCED
-                    )
-                )
-            }
-        }
-    }
-
-    /**
-     * Отправляет обновление транзакции на сервер.
-     *
-     * Требует:
-     * - serverId транзакции
-     * - serverId аккаунта
-     *
-     * После успешного ответа синхронизирует локальную запись.
-     */
-    override suspend fun syncUpdate(transactionEntity: TransactionEntity) {
-        transactionEntity.serverId?.let { serverId ->
-            transactionEntity.accountServerId?.let { accountServerId ->
-                safeApiCall(errorLogger) {
-                    remoteDataSource.update(
-                        id = serverId,
-                        transaction = transactionEntity.toUpdateDto(accountServerId)
-                    )
-                }.onSuccess {
-                    updateLocalFromRemote(
-                        transactionEntity.copy(syncStatus = SyncStatus.SYNCED)
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * Удаляет транзакцию.
-     *
-     * Если serverId == null:
-     * - запись никогда не была синхронизирована → удаляем локально
-     *
-     * Если serverId != null:
-     * - удаляем на сервере
-     * - затем удаляем локально
-     */
-    override suspend fun syncDelete(transactionEntity: TransactionEntity) {
-        if (transactionEntity.serverId == null) {
-            deleteLocalTransaction(transactionEntity.localId)
-        } else {
-            safeApiCall(errorLogger) {
-                remoteDataSource.delete(transactionEntity.serverId!!)
-            }.onSuccess {
-                deleteLocalTransaction(transactionEntity.localId)
-            }
-        }
-    }
-
-    /**
-     * Обрабатывает все локальные транзакции со статусом pending.
-     *
-     * Стратегия:
-     * - PENDING_CREATE  → syncCreate
-     * - PENDING_UPDATE  → syncUpdate
-     * - PENDING_DELETE  → syncDelete
-     *
-     * Используется в background-синхронизации.
-     */
-    private suspend fun pushLocalChanges() {
-        safeDbCall(errorLogger) {
-            localDataSource.getPendingSync()
-        }.onSuccess { transactionEntities ->
-            transactionEntities.forEach { transactionEntity ->
-                when (transactionEntity.syncStatus) {
-                    SyncStatus.PENDING_CREATE -> syncCreate(transactionEntity)
-                    SyncStatus.PENDING_UPDATE -> syncUpdate(transactionEntity)
-                    SyncStatus.PENDING_DELETE -> syncDelete(transactionEntity)
-                    SyncStatus.SYNCED -> Unit
-                }
-            }
         }
     }
 
@@ -220,10 +112,13 @@ class TransactionSyncManagerImpl @Inject constructor(
             val serverIds = transactionDtos.map { it.id }
 
             val localTransactions = safeDbCall(errorLogger) {
-                localDataSource.getByServerIds(serverIds)
+                localDataSource.getBySyncIds(serverIds)
             }.getOrNull().orEmpty()
 
-            val localMap = localTransactions.associateBy { it.serverId }
+            // Ключ — serverId, а для созданных здесь и ещё не подтверждённых записей (create ушёл
+            // с `id = localId`, но ACK не дошёл) — их localId: сервер знает их именно под ним.
+            // Без этого pull принял бы собственную транзакцию за новую и вставил дубликат.
+            val localMap = localTransactions.associateBy { it.serverId ?: it.localId }
 
             transactionDtos.forEach { transactionDto ->
                 val localTransaction = localMap[transactionDto.id]
@@ -243,13 +138,30 @@ class TransactionSyncManagerImpl @Inject constructor(
                 if (localTransaction == null) {
                     //  Локальной транзакции нет → создаём
                     safeDbCall(errorLogger) { localDataSource.insert(entity) }
-                } else if (TimeMapper.isAfter(transactionDto.updatedAt, localTransaction.updatedAt)) {
+                } else if (localTransaction.canBeOverwritten(transactionDto.updatedAt)) {
                     // Если есть, то разрешаем конфликт: побеждает та, что менялась позже
                     updateLocalFromRemote(entity)
                 }
             }
         }
     }
+
+    /**
+     * Можно ли принять серверную версию поверх локальной.
+     *
+     * Два условия. Первое — обычный last-write-wins по времени изменения.
+     *
+     * Второе: строка не должна ждать отправки. Пока `syncStatus` не `SYNCED`, у записи есть
+     * незавершённая операция в очереди, и серверная версия заведомо не знает о ней. Перезапись
+     * в этот момент откатила бы правку на глазах у пользователя, а `PENDING_DELETE` и вовсе
+     * вернула бы удалённую транзакцию в списки. Данные при этом не терялись бы — очередь хранит
+     * снимок и всё равно доотправит его, — но состояние на экране успело бы соврать.
+     *
+     * Дождаться отправки безопасно: после неё запись станет `SYNCED`, и ближайший pull разрешит
+     * конфликт уже честно.
+     */
+    private fun TransactionEntity.canBeOverwritten(serverUpdatedAt: String): Boolean =
+        syncStatus == SyncStatus.SYNCED && TimeMapper.isAfter(serverUpdatedAt, updatedAt)
 
     /**
      * Унифицированное обновление локальной транзакции
@@ -260,19 +172,6 @@ class TransactionSyncManagerImpl @Inject constructor(
     private suspend fun updateLocalFromRemote(transactionEntity: TransactionEntity) {
         safeDbCall(errorLogger) {
             localDataSource.update(transactionEntity)
-        }
-    }
-
-    /**
-     * Физическое удаление транзакции из локальной БД.
-     *
-     * Вызывается:
-     * - после успешного server-delete
-     * - либо если запись не была синхронизирована
-     */
-    private suspend fun deleteLocalTransaction(localId: String) {
-        safeDbCall(errorLogger) {
-            localDataSource.delete(localId)
         }
     }
 }

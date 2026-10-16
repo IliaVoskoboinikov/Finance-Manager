@@ -2,7 +2,42 @@
 
 ## Responsibility
 
-Слой управления данными приложения.
+Слой управления данными приложения: реализации репозиториев (`core:domain`), локальные и
+удалённые data sources, маппинг Entity/DTO ↔ Domain, sync-менеджеры (pull с сервера,
+last-write-wins), очередь исходящих операций и транзакционный механизм.
+
+## Направления синхронизации
+
+Два направления разделены: **с сервера** — sync-менеджеры (`sync/`), **на сервер** — очередь
+исходящих операций (`outbox/`). Репозитории не ходят в сеть при записи: они кладут операцию в
+очередь той же транзакцией, что и сами данные, а `OutboxProcessor` отправляет её с повторами и
+dead-letter. Дизайн — [docs/outbox.md](../../docs/outbox.md), гарантии от дублей —
+[docs/idempotency.md](../../docs/idempotency.md).
+
+## Transactions & post-commit sync
+
+Составные локальные операции выполняются атомарно через `TransactionRunner`
+(`RoomTransactionRunner` + `rollbackOnError()`). Сетевые пуши, инициированные внутри
+транзакции, откладываются до успешного commit и отбрасываются при rollback —
+см. [docs/post-commit-sync.md](../../docs/post-commit-sync.md). В suspend-методах
+репозиториев для запуска фонового синка после записи используйте
+`AppCoroutineContext.launchSync`, а не `launch`.
+
+## Ключи базы и доступ к данным
+
+Пакет `vault/` связывает ключи (`:core:security`) с базой (`:core:database`):
+
+- `LocalDataVault` — первый запуск (новый DEK, уровень L1), открытие базы, запирание уровня PIN,
+  крипто-стирание; `PinUnlocker` — разблокировка по PIN с учётом попыток; `BiometricVault` —
+  биометрическая копия ключа; `ProtectionLevelSwitcher` — смена уровня и PIN;
+- `VaultCore` — общая очередь операций с ключами, состояние `LocalDataState` и протокол смены
+  набора ключей (проверить → записать атомарно → удалить старые ключи Keystore);
+- `CryptoShredCleanupManager` — выход из аккаунта стирает ключ и файл базы, а не строки;
+- репозитории `LocalDataAccessRepositoryImpl` (стирание с выходом из аккаунта, восстановление) и
+  `DataProtectionRepositoryImpl` (досылка outbox перед уровнем PIN).
+
+Источники данных и `RoomTransactionRunner` берут базу через `DatabaseHolder` на каждый вызов;
+холдер предоставляет `LocalDataModule`. Дизайн — [docs/encryption.md](../../docs/encryption.md).
 
 ## Module dependency graph
 
@@ -22,5 +57,6 @@ graph TB
     :core:data --> :core:domain
     :core:data --> :core:network
     :core:data --> :core:auth
+    :core:data --> :core:security
     classDef android-library fill: #9BF6FF, stroke: #000, stroke-width: 2px, color: #000;
 ```

@@ -12,17 +12,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import soft.divan.financemanager.feature.security.impl.presenter.util.Dimens
 
+/** Прозрачность клавиш, пока ввод запрещён (пауза после ошибок, идёт проверка). */
+private const val DISABLED_ALPHA = 0.38f
+
 @Composable
 fun NumberButton(
     number: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Box(
         modifier = modifier
@@ -36,7 +41,8 @@ fun NumberButton(
             modifier = Modifier
                 .size(Dimens.keyBoardButtonSize)
                 .clip(CircleShape)
-                .clickable { onClick() },
+                .clickable(enabled = enabled) { onClick() }
+                .alpha(if (enabled) 1f else DISABLED_ALPHA),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -51,8 +57,10 @@ fun NumberButton(
 @Composable
 fun IconButton(
     icon: ImageVector,
+    contentDescription: String?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Box(
         modifier = modifier
@@ -66,13 +74,14 @@ fun IconButton(
             modifier = Modifier
                 .size(Dimens.keyBoardButtonSize)
                 .clip(CircleShape)
-                .clickable { onClick() },
+                .clickable(enabled = enabled) { onClick() }
+                .alpha(if (enabled) 1f else DISABLED_ALPHA),
             contentAlignment = Alignment.Center
         ) {
             Image(
                 colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
                 imageVector = icon,
-                contentDescription = null
+                contentDescription = contentDescription
             )
         }
     }

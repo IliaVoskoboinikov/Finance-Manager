@@ -12,7 +12,10 @@ interface TransactionLocalDataSource {
     ): Flow<List<TransactionEntity>>
     suspend fun getByLocalId(localId: String): TransactionEntity?
     suspend fun getByServerId(id: String): TransactionEntity?
-    suspend fun getByServerIds(serverIds: List<String>): List<TransactionEntity>
+
+    /** Локальные записи, соответствующие серверным [ids] — включая ещё не подтверждённые. */
+    suspend fun getBySyncIds(ids: List<String>): List<TransactionEntity>
+
     suspend fun getByAccountId(accountId: String): List<TransactionEntity>
     suspend fun getPendingSync(): List<TransactionEntity>
     suspend fun update(transaction: TransactionEntity)
