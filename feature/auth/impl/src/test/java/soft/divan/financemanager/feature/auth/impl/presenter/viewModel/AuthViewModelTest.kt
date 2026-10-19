@@ -414,6 +414,21 @@ class AuthViewModelTest {
     }
 
     @Test
+    fun `sign in and yandex result are ignored while guest sign in is running`() = runTest {
+        val login = CompletableDeferred<DomainResult<Unit>>()
+        coEvery { authRepository.loginAsGuest() } coAnswers { login.await() }
+        val vm = viewModel()
+
+        vm.onAction(AuthAction.OnGuestClick)
+        vm.onAction(AuthAction.OnAuthClick)
+        vm.onYandexResult(YandexAuthResult.Success(YandexAuthToken("ya-token", expiresIn = 100L)))
+        login.complete(DomainResult.Success(Unit))
+
+        coVerify(exactly = 0) { authRepository.login(any(), any(), any()) }
+        coVerify(exactly = 0) { authRepository.loginWithYandex(any(), any()) }
+    }
+
+    @Test
     fun `guest click is retried after a failure`() = runTest {
         coEvery { authRepository.loginAsGuest() } returns
             DomainResult.Failure(DomainError.Unknown(null))

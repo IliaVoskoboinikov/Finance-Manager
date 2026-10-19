@@ -97,9 +97,12 @@ class AuthViewModel @Inject constructor(
     /**
      * Форма, готовая принять новый вход. Во время первичного синка её кнопки остаются под
      * оверлеем и нажимаются: второй вход посреди синка сменил бы сессию, которую тот синкает.
+     * То же во время входа гостем: исход двух входов подряд зависел бы от порядка событий.
      */
     private val idleContent: AuthUiState.Success?
-        get() = (_uiState.value as? AuthUiState.Success)?.takeUnless { it.isSyncing }
+        get() = (_uiState.value as? AuthUiState.Success)?.takeUnless {
+            it.isSyncing || guestJob?.isActive == true
+        }
 
     private fun performAuth() {
         val content = idleContent ?: return
@@ -227,7 +230,7 @@ class AuthViewModel @Inject constructor(
         // Повторный тап, пока вход идёт, игнорируется. После успеха повтор разрешён намеренно:
         // вход гостем и переход на главный идемпотентны, а событие перехода может потеряться
         // (SharedFlow без подписчика при пересоздании экрана) — тогда повторный тап спасает.
-        if (idleContent == null || guestJob?.isActive == true) return
+        if (idleContent == null) return
         guestJob = viewModelScope.launch {
             authRepository.loginAsGuest().fold(
                 onSuccess = { _eventFlow.emit(AuthEvent.NavigateToMain) },
