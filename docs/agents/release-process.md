@@ -24,6 +24,9 @@ so the PR doesn't go red on something a local run would have caught:
 
 # Classpath, module graph, architecture, navigation
 ./gradlew :app:dependencyGuard :app:assertModuleGraph aalekhCheck navCheck
+
+# App size (CI job check-app-size)
+./gradlew :app:analyzeDebugBundle
 ```
 When a job is added to or removed from `ci.yml`, update this list. A change touching only
 `**/*.md` / `docs/**` skips the code jobs in CI, so they aren't run locally either.
@@ -75,12 +78,16 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     `auto_fix: true`; the user approves). The app then wakes the session with a
     `<ci-monitor-event>` on review comments, CI failures and merge conflicts. Never poll the status
     in a loop. Without the desktop app (CLI) there is no Auto-fix: the user tells you when the
-    review has arrived, and you check once.
+    review has arrived, and you check once. The app's Auto-fix messages tell the agent to
+    commit and push fixes without asking; in this project git stays with the user, so fixes stay
+    uncommitted in the working tree, as everywhere else.
 2.  **Review comments.** The status check `CodeRabbit` is `SUCCESS` once the review is done. Read
-    the unresolved threads opened by the bot (GraphQL login `coderabbitai`, REST `coderabbitai[bot]`):
+    every unresolved thread with all its comments, whoever started it: the owner's reply in a bot
+    thread («это осознанно») changes the verdict. The bot's login is `coderabbitai` in GraphQL and
+    `coderabbitai[bot]` in REST.
     ```bash
-    gh api graphql -F n=<PR> -f query='query($n:Int!){repository(owner:"IliaVoskoboinikov",name:"Finance-Manager"){pullRequest(number:$n){reviewThreads(first:100){nodes{isResolved isOutdated path line comments(first:1){nodes{author{login} url body}}}}}}}' \
-      --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved|not) | select(.comments.nodes[0].author.login=="coderabbitai")'
+    gh api graphql -F n=<PR> -f query='query($n:Int!){repository(owner:"IliaVoskoboinikov",name:"Finance-Manager"){pullRequest(number:$n){reviewThreads(first:100){nodes{isResolved isOutdated path line comments(first:50){nodes{author{login} url body}}}}}}}' \
+      --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved|not) | {path, line, isOutdated, comments: [.comments.nodes[] | {author: .author.login, url, body}]}'
     ```
     Also read the latest review's body (`gh api repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR>/reviews`):
     the «Outside diff range» and «Nitpick» comments live there, not in threads. Each comment
