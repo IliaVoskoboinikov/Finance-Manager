@@ -20,7 +20,7 @@ class AnalysisFeatureImpl @Inject constructor() : AnalysisFeatureApi {
             AnalysisScreen(
                 modifier = modifier,
                 isIncome = analysisKey.isIncome,
-                onNavigateBack = navigator::back
+                onNavigateBack = { navigator.back(from = analysisKey) }
             )
         }
     }

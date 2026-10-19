@@ -87,7 +87,8 @@ Screens are addressed by `@Serializable` `NavKey`s declared in each feature's `:
 `<Name>FeatureApi : FeatureApi` and implements
 `registerEntries(scope: EntryProviderScope<NavKey>, navigator: Navigator, modifier)` in its
 `:impl`, registering **only its own** keys — a key may be registered exactly once. Navigation
-to another feature is `navigator.goTo(ItsKey)`; `back()` pops. `app` assembles the graph from a
+to another feature is `navigator.goTo(ItsKey)`; `navigator.back(from = ownKey)` closes the screen.
+Both are idempotent (guard against double taps). `app` assembles the graph from a
 Hilt `Set<FeatureApi>` multibinding (`di/FeatureNavigationModule.kt`) and owns two back stacks:
 the root one (`RootNavDisplay`: splash → auth → main) and one per bottom-nav tab
 (`TopLevelBackStack`). ViewModels that need nav arguments use Hilt assisted factories —

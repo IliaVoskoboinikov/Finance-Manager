@@ -16,10 +16,10 @@ class SynchronizationFeatureImpl @Inject constructor() : SynchronizationFeatureA
         navigator: Navigator,
         modifier: Modifier
     ) {
-        scope.entry<SynchronizationKey> {
+        scope.entry<SynchronizationKey> { key ->
             SynchronizationScreen(
                 modifier = modifier,
-                onNavigateBack = navigator::back
+                onNavigateBack = { navigator.back(from = key) }
             )
         }
     }

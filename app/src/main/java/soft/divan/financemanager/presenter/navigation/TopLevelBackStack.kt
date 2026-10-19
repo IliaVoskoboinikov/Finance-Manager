@@ -58,10 +58,27 @@ class TopLevelBackStack(
     }
 
     override fun goTo(key: NavKey) {
-        currentStack.add(key)
+        val existingIndex = currentStack.indexOf(key)
+        if (existingIndex < 0) {
+            currentStack.add(key)
+            return
+        }
+        // Ключ уже в стеке: возвращаемся к его записи, а не кладём вторую — у двух записей
+        // с одинаковым contentKey Navigation 3 смешал бы ViewModelStore и сохранённое состояние.
+        while (currentStack.lastIndex > existingIndex) {
+            currentStack.removeAt(currentStack.lastIndex)
+        }
     }
 
-    override fun back() {
+    override fun back(from: NavKey) {
+        if (currentStack.lastOrNull() == from) back()
+    }
+
+    /**
+     * Системный «назад»: закрывает верхний экран текущей вкладки, а с корня вкладки
+     * возвращает на стартовую.
+     */
+    fun back() {
         when {
             currentStack.size > 1 -> currentStack.removeAt(currentStack.lastIndex)
 

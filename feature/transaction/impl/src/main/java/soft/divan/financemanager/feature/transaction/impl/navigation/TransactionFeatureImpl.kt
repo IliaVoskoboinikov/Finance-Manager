@@ -21,7 +21,7 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
                 modifier = modifier,
                 isIncome = transactionKey.isIncome,
                 transactionId = transactionKey.transactionId,
-                onNavigateBack = navigator::back
+                onNavigateBack = { navigator.back(from = transactionKey) }
             )
         }
     }
