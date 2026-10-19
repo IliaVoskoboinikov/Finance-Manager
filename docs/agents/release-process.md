@@ -14,8 +14,8 @@ so the PR doesn't go red on something a local run would have caught:
 ./gradlew testDebugUnitTest
 ./gradlew :core:domain:test :konsist:test :lint:test
 
-# Coverage gate
-./gradlew :koverVerifyFull
+# Coverage reports and gate (CI job run-coverage)
+./gradlew :koverHtmlReportFull :koverXmlReportFull :koverVerifyFull
 
 # Run static analysis
 ./gradlew ktlintCheck
