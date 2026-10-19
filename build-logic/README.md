@@ -313,3 +313,15 @@ plugins {
     alias(libs.plugins.soft.divan.feature.impl)
 }
 ```
+
+---
+
+## Сборка самого build-logic
+
+- **ktlint** для кода build-logic использует ту же версию CLI, что и основной проект
+  (`libs.versions.ktlintCli`). Без явной версии плагин брал свой дефолт (1.5.0).
+- **Security constraints.** `kotlin-dsl` тянет KGP той версии Kotlin, что встроена в Gradle,
+  поэтому buildscript поднимает её до `libs.versions.kotlin` (GHSA-r937-wjx7-w2jp). Побочный
+  эффект — предупреждение `Unsupported Kotlin plugin version` при конфигурации build-logic.
+  logback из ktlint-cli поднимается bundle'ом `security-constraints-ktlint`.
+  Реестр и условия удаления — [`docs/dependency-vulnerabilities.md`](../docs/dependency-vulnerabilities.md).

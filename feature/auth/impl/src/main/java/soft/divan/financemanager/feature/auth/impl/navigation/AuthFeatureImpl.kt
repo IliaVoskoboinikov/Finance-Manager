@@ -29,9 +29,9 @@ class AuthFeatureImpl @Inject constructor() : AuthFeatureApi {
             )
         }
 
-        scope.entry<ProfileAuthKey> {
+        scope.entry<ProfileAuthKey> { key ->
             AuthScreen(
-                onAuthSuccess = navigator::back
+                onAuthSuccess = { navigator.back(from = key) }
             )
         }
     }

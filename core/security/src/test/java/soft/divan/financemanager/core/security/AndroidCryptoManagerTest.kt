@@ -1,10 +1,8 @@
 package soft.divan.financemanager.core.security
 
-import android.security.keystore.KeyGenParameterSpec
 import android.util.Base64
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkConstructor
 import io.mockk.unmockkAll
 import io.mockk.verify
 import org.junit.After
@@ -14,6 +12,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.ConscryptMode
 import soft.divan.financemanager.core.security.impl.AndroidCryptoManager
 import java.security.GeneralSecurityException
 import java.security.KeyStore
@@ -24,6 +23,10 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import javax.inject.Provider
 
+// Cipher/KeyStore/KeyGenerator здесь моки, Conscrypt не нужен. С ним Robolectric 4.17
+// ставит Conscrypt первым провайдером на всю JVM, и на Oracle JDK последующие JVM-тесты
+// в том же форке (SecurityModuleTest) падают на инициализации JCE.
+@ConscryptMode(ConscryptMode.Mode.OFF)
 @RunWith(RobolectricTestRunner::class)
 class AndroidCryptoManagerTest {
 
@@ -43,26 +46,8 @@ class AndroidCryptoManagerTest {
         mockCipher = mockk(relaxed = true)
         mockSecretKey = mockk(relaxed = true)
 
-        // Mocking the Builder to avoid "Method not mocked" errors in Robolectric
-        mockkConstructor(KeyGenParameterSpec.Builder::class)
-        every {
-            anyConstructed<KeyGenParameterSpec.Builder>().setBlockModes(any())
-        } returns mockk(relaxed = true)
-        every {
-            anyConstructed<KeyGenParameterSpec.Builder>().setEncryptionPaddings(any())
-        } returns mockk(relaxed = true)
-        every {
-            anyConstructed<KeyGenParameterSpec.Builder>().setUserAuthenticationRequired(any())
-        } returns mockk(relaxed = true)
-        every {
-            anyConstructed<KeyGenParameterSpec.Builder>().setRandomizedEncryptionRequired(any())
-        } returns mockk(relaxed = true)
-        every {
-            anyConstructed<KeyGenParameterSpec.Builder>().setKeySize(
-                any()
-            )
-        } returns mockk(relaxed = true)
-        every { anyConstructed<KeyGenParameterSpec.Builder>().build() } returns mockk(relaxed = true)
+        // KeyGenParameterSpec.Builder не мокаем: под Robolectric это настоящий код android-all,
+        // а mockkConstructor на нём с Robolectric 4.17 падает на ретрансформации класса.
 
         val keyGeneratorProvider = Provider { mockKeyGenerator }
         val cipherProvider = Provider { mockCipher }

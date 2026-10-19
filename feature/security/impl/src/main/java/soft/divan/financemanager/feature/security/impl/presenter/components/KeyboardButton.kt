@@ -21,10 +21,11 @@ import soft.divan.financemanager.feature.security.impl.presenter.util.Dimens
 @Composable
 fun NumberButton(
     number: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .wrapContentSize()
             .padding(
                 vertical = Dimens.verticalKeyboardButtonPadding,
@@ -50,10 +51,11 @@ fun NumberButton(
 @Composable
 fun IconButton(
     icon: ImageVector,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .wrapContentSize()
             .padding(
                 vertical = Dimens.verticalKeyboardButtonPadding,

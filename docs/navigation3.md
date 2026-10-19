@@ -246,8 +246,8 @@ interface FeatureApi {
 }
 
 interface Navigator {
-    fun goTo(key: NavKey)   // открыть экран
-    fun back()              // вернуться назад
+    fun goTo(key: NavKey)        // открыть экран; ключ уже в стеке — вернуться к нему
+    fun back(from: NavKey)       // закрыть экран from; он уже не на вершине — ничего не делает
 }
 
 fun EntryProviderScope<NavKey>.register(featureApi: FeatureApi, navigator: Navigator, modifier: Modifier = Modifier)
@@ -256,6 +256,22 @@ fun EntryProviderScope<NavKey>.register(featureApi: FeatureApi, navigator: Navig
 Почему `Navigator`, а не сам `NavBackStack`: у приложения **пять** стеков (по одному на
 вкладку), и «добавить экран» означает «добавить в стек текущей вкладки». Фича об этом знать
 не должна — она получает интерфейс, а реализует его хост (`TopLevelBackStack`).
+
+**Обе операции идемпотентны** — это защита от двойного тапа. Анимации переходов в
+`MainNavDisplay` выключены, поэтому экран сменяется за один кадр, и второй тап того же жеста
+попадает уже в новый экран:
+
+- двойной тап по строке списка вызвал бы `goTo` дважды и положил бы в стек два одинаковых
+  ключа. Navigation 3 требует уникальный `contentKey`: у таких записей были бы общие
+  `ViewModelStore` и сохранённое состояние, а «назад» пришлось бы жать дважды. Поэтому ключ,
+  который уже есть в стеке, `goTo` не дублирует, а возвращает к нему, закрывая экраны выше
+  (на вершине — ничего не делает). Это же исключает дубль при переходе по кругу A → B → A;
+- «назад» адресный: экран закрывает **себя** (`back(from = свойKey)`), а не «то, что сверху».
+  Второй тап по ✕ или `back` по событию `Saved` после уже закрытого экрана иначе закрыл бы
+  экран под ним. Безадресный `back()` остался только у хоста — для системного «назад».
+
+Защита от повторной **записи** (двойной ✓) — не навигационная, она живёт во ViewModel: см.
+«Repeated Taps» в `docs/agents/architecture.md`.
 
 Типичная фича целиком:
 
@@ -273,7 +289,7 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
             HistoryScreen(
                 modifier = modifier,
                 isIncome = isIncome,
-                onNavigateBack = navigator::back,
+                onNavigateBack = { navigator.back(from = historyKey) },
                 onNavigateToTransaction = { id ->
                     navigator.goTo(TransactionKey(isIncome = isIncome, transactionId = id))
                 },
@@ -316,7 +332,7 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
 - `AuthKey` — вход как точка входа в приложение (корневой стек, без нижней навигации);
   после успеха хост заменяет стек на `MainKey`;
 - `ProfileAuthKey` — повторный вход из профиля (внутри вкладки «Настройки», нижняя навигация
-  на месте); после успеха просто `back()`.
+  на месте); после успеха просто `back(from = ProfileAuthKey)`.
 
 Раньше это различие выражалось двумя строковыми маршрутами (`auth-screen` и
 `settings/profile-screen/auth-screen`), теперь — двумя типами.
@@ -425,7 +441,7 @@ val displayStack: List<NavKey>
 `popUpTo(startDestination) { saveState = true }`:
 
 ```kotlin
-override fun back() {
+fun back() {   // системный «назад»; фичи зовут back(from), который проверяет вершину и вызывает его
     when {
         currentStack.size > 1 -> currentStack.removeAt(currentStack.lastIndex)  // назад внутри вкладки
         currentTabIndex.intValue != START_TAB_INDEX ->
@@ -537,7 +553,10 @@ data class AccountKey(val accountId: String? = null) : NavKey
 
 ```kotlin
 scope.entry<AccountKey> { accountKey ->
-    AccountScreenScreen(accountId = accountKey.accountId, onNavigateBack = navigator::back)
+    AccountScreenScreen(
+        accountId = accountKey.accountId,
+        onNavigateBack = { navigator.back(from = accountKey) }
+    )
 }
 ```
 
@@ -587,6 +606,20 @@ navigator.goTo(AccountKey())                   // создание
 
 ---
 
+## Версии и ограничения
+
+- `androidx.navigation3:navigation3-runtime` / `navigation3-ui` — **1.1.5**.
+- `androidx.lifecycle:lifecycle-viewmodel-navigation3` — **2.10.0**. Версия 2.11.0 требует
+  `compileSdk 37` (а он же уходит в `targetSdk` проекта), поэтому зафиксирована 2.10.x —
+  обновление: [FM-132](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/132).
+- `androidx.hilt:hilt-navigation3` не существует — Hilt подключается обычным
+  `hilt-navigation-compose`.
+- Deep links не поддерживаются (как и раньше): в Navigation 3 их нужно разбирать
+  самостоятельно — `Intent` → список ключей → back stack —
+  [FM-93](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/93).
+- Адаптивные раскладки (`Scene`/`SceneStrategy`) не используются: везде однопанельный режим —
+  [FM-131](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/131).
+
 ## Ключевые файлы
 
 | Файл | Роль |
@@ -602,14 +635,3 @@ navigator.goTo(AccountKey())                   // создание
 | `app/presenter/navigation/TopLevelBackStack.kt` | отдельный back stack на вкладку |
 | `app/presenter/navigation/ScreenBottom.kt` | вкладки нижней навигации |
 | `app/presenter/navigation/MainKey.kt` | ключ оболочки приложения |
-
-## Версии и ограничения
-
-- `androidx.navigation3:navigation3-runtime` / `navigation3-ui` — **1.1.5**.
-- `androidx.lifecycle:lifecycle-viewmodel-navigation3` — **2.10.0**. Версия 2.11.0 требует
-  `compileSdk 37` (а он же уходит в `targetSdk` проекта), поэтому зафиксирована 2.10.x.
-- `androidx.hilt:hilt-navigation3` не существует — Hilt подключается обычным
-  `hilt-navigation-compose`.
-- Deep links не поддерживаются (как и раньше): в Navigation 3 их нужно разбирать
-  самостоятельно — `Intent` → список ключей → back stack.
-- Адаптивные раскладки (`Scene`/`SceneStrategy`) не используются: везде однопанельный режим.

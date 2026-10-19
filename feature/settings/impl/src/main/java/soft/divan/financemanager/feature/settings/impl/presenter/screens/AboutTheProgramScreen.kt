@@ -21,7 +21,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = AboutTheProgramKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun AboutTheProgramScreenPreview() {
+private fun AboutTheProgramScreenPreview() {
     FinanceManagerTheme {
         AboutTheProgramScreen()
     }
@@ -33,10 +33,11 @@ fun AboutTheProgramScreen(
     modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = { TopBar(topBar = TopBarModel(title = R.string.settings)) }
     ) { paddingValues ->
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {

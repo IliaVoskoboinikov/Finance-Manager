@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.airbnb.lottie.compose.LottieAnimation
@@ -21,7 +22,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = SplashKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun AboutTheProgramScreenPreview() {
+private fun AboutTheProgramScreenPreview() {
     FinanceManagerTheme {
         SplashContent()
     }
@@ -35,16 +36,18 @@ private const val SPLASH_DELAY_MS = 1_000L
 fun SplashScreen(
     onFinish: () -> Unit
 ) {
+    val currentOnFinish by rememberUpdatedState(onFinish)
+
     LaunchedEffect(true) {
         delay(SPLASH_DELAY_MS)
-        onFinish()
+        currentOnFinish()
     }
 
     SplashContent()
 }
 
 @Composable
-fun SplashContent() {
+fun SplashContent(modifier: Modifier = Modifier) {
     val composition by rememberLottieComposition(
         LottieCompositionSpec.RawRes(R.raw.splash_animation)
     )
@@ -57,6 +60,6 @@ fun SplashContent() {
     LottieAnimation(
         composition = composition,
         progress = { progress },
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     )
 }

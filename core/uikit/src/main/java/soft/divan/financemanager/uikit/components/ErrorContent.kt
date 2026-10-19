@@ -23,7 +23,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun TransactionScreenPreview() {
+private fun TransactionScreenPreview() {
     FinanceManagerTheme {
         ErrorContent(
             messageResId = R.string.error_occurred,
@@ -35,10 +35,10 @@ fun TransactionScreenPreview() {
 
 @Composable
 fun ErrorContent(
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     messageResId: Int = R.string.error_occurred,
-    textBtnResId: Int = R.string.try_again,
-    onClick: () -> Unit
+    textBtnResId: Int = R.string.try_again
 ) {
     Column(
         modifier = modifier

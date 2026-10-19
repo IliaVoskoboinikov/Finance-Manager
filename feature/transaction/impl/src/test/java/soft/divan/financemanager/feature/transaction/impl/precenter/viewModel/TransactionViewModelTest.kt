@@ -5,6 +5,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -343,6 +344,95 @@ class TransactionViewModelTest {
 
         job.cancel()
         eventsJob.cancel()
+    }
+
+    /* ---------- повторные нажатия ---------- */
+
+    @Test
+    fun `repeated save while saving creates the transaction once`() = runTest {
+        val saving = CompletableDeferred<DomainResult<Unit>>()
+        coEvery { createUseCase(any()) } coAnswers { saving.await() }
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        vm.save()
+        vm.save()
+        saving.complete(DomainResult.Success(Unit))
+
+        coVerify(exactly = 1) { createUseCase(any()) }
+
+        job.cancel()
+    }
+
+    @Test
+    fun `save after a successful save is ignored until the screen closes`() = runTest {
+        coEvery { createUseCase(any()) } returns DomainResult.Success(Unit)
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+        val events = mutableListOf<TransactionEvent>()
+        val eventsJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.eventFlow.collect { events += it }
+        }
+
+        vm.save()
+        vm.save()
+
+        coVerify(exactly = 1) { createUseCase(any()) }
+        assertThat(events).containsExactly(TransactionEvent.TransactionSaved)
+
+        job.cancel()
+        eventsJob.cancel()
+    }
+
+    @Test
+    fun `save is allowed again after a failure`() = runTest {
+        coEvery { createUseCase(any()) } returnsMany listOf(
+            DomainResult.Failure(DomainError.Unknown(null)),
+            DomainResult.Success(Unit)
+        )
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        vm.save()
+        vm.save()
+
+        coVerify(exactly = 2) { createUseCase(any()) }
+
+        job.cancel()
+    }
+
+    @Test
+    fun `delete while saving is ignored`() = runTest {
+        val saving = CompletableDeferred<DomainResult<Unit>>()
+        coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(domainTransaction)
+        coEvery { updateUseCase(any()) } coAnswers { saving.await() }
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.save()
+        vm.delete()
+        saving.complete(DomainResult.Success(Unit))
+
+        coVerify(exactly = 0) { deleteUseCase(any()) }
+
+        job.cancel()
+    }
+
+    @Test
+    fun `repeated delete after success deletes once`() = runTest {
+        coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(domainTransaction)
+        coEvery { deleteUseCase(any()) } returns DomainResult.Success(Unit)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.delete()
+        vm.delete()
+        vm.save()
+
+        coVerify(exactly = 1) { deleteUseCase(any()) }
+        coVerify(exactly = 0) { updateUseCase(any()) }
+
+        job.cancel()
     }
 
     @Test

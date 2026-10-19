@@ -21,7 +21,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun TopBarPreview() {
+private fun TopBarPreview() {
     FinanceManagerTheme {
         TopBar(
             topBar = TopBarModel(
@@ -35,6 +35,21 @@ fun TopBarPreview() {
     }
 }
 
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+private fun TopBarActionDisabledPreview() {
+    FinanceManagerTheme {
+        TopBar(
+            topBar = TopBarModel(
+                title = R.string.save,
+                navigationIcon = Icons.Filled.ArrowBack,
+                actionIcon = Icons.Filled.ArrowBack,
+                isActionEnabled = false
+            )
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
@@ -42,6 +57,7 @@ fun TopBar(
     modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
+        modifier = modifier,
         colors = TopAppBarDefaults.topAppBarColors()
             .copy(containerColor = MaterialTheme.colorScheme.primary),
         title = {
@@ -53,13 +69,15 @@ fun TopBar(
                     lineHeight = MaterialTheme.typography.titleLarge.lineHeight,
                     letterSpacing = MaterialTheme.typography.titleLarge.letterSpacing,
                     color = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = modifier
+                )
             )
         },
         actions = {
             if (topBar.actionIcon != null) {
-                IconButton(onClick = { topBar.actionIconClick() }) {
+                IconButton(
+                    onClick = { topBar.actionIconClick() },
+                    enabled = topBar.isActionEnabled
+                ) {
                     Icon(topBar.actionIcon, contentDescription = "Add")
                 }
             }

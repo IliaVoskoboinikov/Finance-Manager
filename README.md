@@ -1,10 +1,14 @@
 # Finance Manager 🚧 [Work in progress] 🚧
 
+[![CI](https://github.com/IliaVoskoboinikov/Finance-Manager/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/IliaVoskoboinikov/Finance-Manager/actions/workflows/ci.yml)
+[![Security](https://github.com/IliaVoskoboinikov/Finance-Manager/actions/workflows/security.yml/badge.svg?branch=master)](https://github.com/IliaVoskoboinikov/Finance-Manager/actions/workflows/security.yml)
+[![Доска задач](https://img.shields.io/badge/board-GitHub%20Projects-blue)](https://github.com/users/IliaVoskoboinikov/projects/5)
+
 Android‑приложение для учёта личных финансов: доходы, расходы, счета, категории,
 история операций, синхронизация и базовая аналитика. Проект задуман как pet‑project,
 который показывает продуманную архитектуру, работу с данными и современные Android‑подходы.
 
-### Documentation
+## Documentation
 
 Полная документация находится в папке `docs/`:
 
@@ -12,7 +16,7 @@ Android‑приложение для учёта личных финансов: 
 
 ---
 
-### Screenshots
+## Screenshots
 
 | Expenses                        | My Accounts                     | Analytics                        | Category                        | Settings                        |
 |---------------------------------|---------------------------------|----------------------------------|---------------------------------|---------------------------------|
@@ -20,7 +24,7 @@ Android‑приложение для учёта личных финансов: 
 
 ---
 
-### Features
+## Features
 
 - **Учёт транзакций**
     - Добавление доходов и расходов
@@ -50,7 +54,7 @@ Android‑приложение для учёта личных финансов: 
 
 ---
 
-### Tech Stack
+## Tech Stack
 
 - **Язык**: Kotlin
 - **UI**: Jetpack Compose (Material 3, кастомные компоненты в `core:uikit`)
@@ -72,16 +76,16 @@ Android‑приложение для учёта личных финансов: 
     - Android Lint + модуль `:lint` с кастомными чекерами
     - ktlint
 
-### Roadmap (планы развития)
+## Задачи и планы
 
-Продуктовые планы — ниже; полный технический бэклог — в [TODO.md](./TODO.md).
+Задачи, баги и идеи ведутся на [доске задач](https://github.com/users/IliaVoskoboinikov/projects/5).
+Путь к первому релизу — [milestone «v1.0 — Google Play»](https://github.com/IliaVoskoboinikov/Finance-Manager/milestone/1),
+порядок работ записан в его описании. Как устроен процесс — [docs/task-tracking.md](./docs/task-tracking.md).
 
-- [ ] Перейти на новый backend (https://github.com/chernykh-dev/finance-manager-backend)
-- [x] Сделать регистрацию пользователей с JWT токеном
-- [ ] Экспорт данных (CSV / Excel / JSON)
-- [ ] Более детальная аналитика (диаграммы, breakdown по периодам/категориям)
-- [ ] Сделать экран онбординга и обучения пользователя
-- [ ] Добавить аналитику
-- [ ] Добавить тесты
-- [ ] Релиз в Play Market
+Продуктовые планы после релиза: [экспорт](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/114)
+и [импорт](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/115) данных,
+[подробная аналитика](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/116),
+[онбординг](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/117),
+[бюджеты по категориям](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/118),
+[мультивалютность](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/62).
 

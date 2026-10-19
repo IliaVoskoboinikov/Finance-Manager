@@ -48,6 +48,69 @@ class TopLevelBackStackTest {
     }
 
     @Test
+    fun `goTo ignores the key that is already on top`() {
+        val backStack = backStack()
+
+        backStack.goTo(DetailKey("1"))
+        backStack.goTo(DetailKey("1"))
+
+        assertThat(backStack.displayStack).containsExactly(ExpensesTab, DetailKey("1"))
+    }
+
+    @Test
+    fun `goTo returns to a key already in the stack instead of pushing a duplicate`() {
+        val backStack = backStack()
+
+        backStack.goTo(DetailKey("1"))
+        backStack.goTo(DetailKey("2"))
+        backStack.goTo(DetailKey("1"))
+
+        assertThat(backStack.displayStack).containsExactly(ExpensesTab, DetailKey("1"))
+    }
+
+    @Test
+    fun `goTo to the tab root returns to the root`() {
+        val backStack = backStack()
+        backStack.goTo(DetailKey("1"))
+
+        backStack.goTo(ExpensesTab)
+
+        assertThat(backStack.displayStack).containsExactly(ExpensesTab)
+    }
+
+    @Test
+    fun `back from the top screen pops it`() {
+        val backStack = backStack()
+        backStack.goTo(DetailKey("1"))
+
+        backStack.back(from = DetailKey("1"))
+
+        assertThat(backStack.displayStack).containsExactly(ExpensesTab)
+    }
+
+    @Test
+    fun `repeated back from an already closed screen keeps the screen below`() {
+        val backStack = backStack()
+        backStack.goTo(DetailKey("list"))
+        backStack.goTo(DetailKey("form"))
+
+        backStack.back(from = DetailKey("form"))
+        backStack.back(from = DetailKey("form"))
+
+        assertThat(backStack.displayStack).containsExactly(ExpensesTab, DetailKey("list"))
+    }
+
+    @Test
+    fun `back from another tab root returns to the start tab when it is on top`() {
+        val backStack = backStack()
+        backStack.switchTab(SettingsTab)
+
+        backStack.back(from = SettingsTab)
+
+        assertThat(backStack.currentTabKey).isEqualTo(ExpensesTab)
+    }
+
+    @Test
     fun `back pops the last screen of the current tab`() {
         val backStack = backStack()
         backStack.goTo(DetailKey("1"))

@@ -43,7 +43,7 @@ import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 @NavPreview(route = SettingsKey::class, primary = true)
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
-fun SettingsScreenPreview() {
+private fun SettingsScreenPreview() {
     FinanceManagerTheme {
         SettingsScreen(
             actions = SettingsActions(
@@ -71,18 +71,19 @@ fun SettingsScreenPreview() {
 @NavEdge(to = ProfileKey::class, label = "профиль")
 @Composable
 fun SettingsScreen(
-    modifier: Modifier = Modifier,
-    actions: SettingsActions
+    actions: SettingsActions,
+    modifier: Modifier = Modifier
 ) {
     val settingsItems = remember(actions) {
         provideSettings(actions)
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = { TopBar(topBar = TopBarModel(title = R.string.settings)) }
     ) { paddingValues ->
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {

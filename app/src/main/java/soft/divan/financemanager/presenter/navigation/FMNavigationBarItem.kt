@@ -16,13 +16,15 @@ import soft.divan.financemanager.presenter.navigation.TopLevelBackStack
 fun RowScope.FmNavigationBarItem(
     backStack: TopLevelBackStack,
     screenBottom: ScreenBottom,
-    hapticToggleMenu: () -> Unit
+    hapticToggleMenu: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     // Вкладка подсвечена по корневому ключу её стека, а не по текущему экрану: вложенные
     // экраны вкладки (история, операция, настройки) держат подсветку своей вкладки.
     val selected = backStack.currentTabKey == screenBottom.key
 
     NavigationBarItem(
+        modifier = modifier,
         selected = selected,
         onClick = {
             hapticToggleMenu()
