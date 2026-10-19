@@ -203,6 +203,10 @@ otherwise pick the sensible default and note it.
   operations. Leave changes in the working tree. Once the code is done, only **write a short
   proposed commit message** (conventional-commit style, matching the existing Russian history,
   e.g. `fix(network): …`) for the user to copy — do not run `git commit`.
+- **After the PR is opened, the task goes on:** before the report, run every blocking CI job
+  locally; once the user opens the PR, turn on Auto-fix and triage CodeRabbit's comments each
+  time it wakes the session — fix the valid ones, reject the rest with a reason, never comply
+  silently. Loop and limits: `docs/agents/release-process.md` («After the PR is opened»).
 - **No Claude/Anthropic attribution** in commits or generated text (no `Co-Authored-By`,
   no "Generated with Claude Code").
 - **Task board:** work is tracked on the GitHub Projects board, a task's key is `FM-<issue>`.
