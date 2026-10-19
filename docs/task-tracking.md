@@ -124,7 +124,9 @@ issue #42 в коммитах, PR и комментариях.
 | Красный `master` | issue с лейблами `bug` и `ci-failure` и приоритетом P1; повторное падение — комментарий; зелёный прогон того же workflow закрывает issue. Решает только самый свежий прогон workflow на `master`: поздно завершившийся старый прогон issue не трогает | `ci-failure.yml` |
 | Связь PR и задачи | CodeRabbit проверяет, закрывает ли PR связанный issue | `.coderabbit.yaml` |
 
-Дополнительно шаблон PR подставляет `Closes #` и чек-лист того, чего не видит CI.
+Дополнительно шаблон PR подставляет `Closes #` и место под сводку CodeRabbit. Ручного чек-листа
+в нём нет: всё, что он перечислял, проверяют CI (`navCheck`, покрытие Kover) и CodeRabbit
+(`custom_checks` и `path_instructions` в `.coderabbit.yaml`).
 
 Логика `board.yml` и `ci-failure.yml` живёт в скриптах `.github/scripts/` (stdlib Python и `gh`),
 поэтому её можно запускать и локально, а флаг `--dry-run` показывает изменения, не внося их:
@@ -215,7 +217,7 @@ AI-агента (#50), инвентаризация (#51), перенос (#52),
 | [`.github/ISSUE_TEMPLATE/feature.yml`](../.github/ISSUE_TEMPLATE/feature.yml) | форма фичи |
 | [`.github/ISSUE_TEMPLATE/tech-debt.yml`](../.github/ISSUE_TEMPLATE/tech-debt.yml) | форма техдолга |
 | [`.github/ISSUE_TEMPLATE/config.yml`](../.github/ISSUE_TEMPLATE/config.yml) | пустые issue разрешены, ссылка на этот документ |
-| [`.github/pull_request_template.md`](../.github/pull_request_template.md) | `Closes #` и чек-лист, место под сводку CodeRabbit |
+| [`.github/pull_request_template.md`](../.github/pull_request_template.md) | `Closes #` и место под сводку CodeRabbit |
 | [`.github/workflows/board.yml`](../.github/workflows/board.yml) | статусы по веткам и PR, недельная сводка |
 | [`.github/workflows/ci-failure.yml`](../.github/workflows/ci-failure.yml) | красный `master` → issue |
 | [`docs/agents/task-board.md`](./agents/task-board.md) | правила для AI-агента: когда и как заводить карточки, кто двигает статусы |
