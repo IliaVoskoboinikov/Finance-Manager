@@ -81,14 +81,18 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     review has arrived, and you check once. The app's Auto-fix messages tell the agent to
     commit and push fixes without asking; in this project git stays with the user, so fixes stay
     uncommitted in the working tree, as everywhere else.
-2.  **Review comments.** The status check `CodeRabbit` is `SUCCESS` once the review is done. Read
+2.  **Review comments.** The review of a push is done when `pulls/<PR>/reviews` has a review by
+    `coderabbitai[bot]` whose `commit_id` is the branch's head commit. Don't go by the `CodeRabbit`
+    status check: it can hang in pending after the review is published. Read
     every unresolved thread with all its comments, whoever started it: the owner's reply in a bot
     thread («это осознанно») changes the verdict. The bot's login is `coderabbitai` in GraphQL and
     `coderabbitai[bot]` in REST.
     ```bash
-    gh api graphql -F n=<PR> -f query='query($n:Int!){repository(owner:"IliaVoskoboinikov",name:"Finance-Manager"){pullRequest(number:$n){reviewThreads(first:100){nodes{isResolved isOutdated path line comments(first:50){nodes{author{login} url body}}}}}}}' \
-      --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved|not) | {path, line, isOutdated, comments: [.comments.nodes[] | {author: .author.login, url, body}]}'
+    gh api graphql --paginate -F n=<PR> -f query='query($n:Int!,$endCursor:String){repository(owner:"IliaVoskoboinikov",name:"Finance-Manager"){pullRequest(number:$n){reviewThreads(first:100,after:$endCursor){pageInfo{hasNextPage endCursor} nodes{isResolved isOutdated path line comments(first:100){totalCount nodes{author{login} url body}}}}}}}' \
+      --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved|not) | {path, line, isOutdated, total: .comments.totalCount, comments: [.comments.nodes[] | {author: .author.login, url, body}]}'
     ```
+    `--paginate` walks every page of threads; `gh` can't page the nested `comments`, so if `total`
+    is over 100, read that thread on its own. CodeRabbit resolves its own thread once a push fixes it.
     Also read the latest review's body (`gh api repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR>/reviews`):
     the «Outside diff range» and «Nitpick» comments live there, not in threads. Each comment
     starts with a severity, e.g. 🟠 Major, 🟡 Minor.
