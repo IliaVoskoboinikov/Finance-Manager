@@ -8,7 +8,14 @@
 - `presenter/navigation/RootNavGraph.kt` и `BottomNavGraph.kt` — корневой навигационный
   граф: внедряет `FeatureApi` всех фич через Hilt и вызывает их `registerGraph(...)`,
   так что фичи не ссылаются на экраны друг друга напрямую.
-- `di/AppModule` и `db/DataBaseProviderModule` — app-уровневая DI-конфигурация.
+- `di/` — app-уровневая DI-конфигурация (`AppModule`, сборка графа фич).
+- Доступ к локальным данным: `App` читает ключи базы до всего остального
+  (`InitializeLocalDataUseCase`), `MainActivity` строит главный экран только при открытых данных
+  (замок уровня PIN, экран потери ключа), ставит `FLAG_SECURE` до первого кадра;
+  `lifecycle/LocalDataAutoLock` закрывает базу уровня PIN через 5 минут в фоне. См.
+  [docs/encryption.md](../docs/encryption.md).
+- Бэкапы: `res/xml/data_extraction_rules.xml` и `backup_rules.xml` исключают все данные из
+  облачного бэкапа и переноса между устройствами.
 - Конфигурация сборки: подпись, manifest-плейсхолдеры Yandex OAuth
   (`YANDEX_CLIENT_ID` из `local.properties` / CI-секрета, см. `:feature:auth:impl`).
 

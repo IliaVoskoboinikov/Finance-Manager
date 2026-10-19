@@ -75,14 +75,36 @@ class AccountDaoTest : RoomDaoTest() {
     }
 
     @Test
-    fun `getByServerIds returns only requested accounts`() = runTest {
+    fun `getBySyncIds returns only requested accounts`() = runTest {
         dao.insert(entity(localId = "a1", serverId = "s1"))
         dao.insert(entity(localId = "a2", serverId = "s2"))
         dao.insert(entity(localId = "a3", serverId = "s3"))
 
-        val found = dao.getByServerIds(listOf("s1", "s3", "ghost"))
+        val found = dao.getBySyncIds(listOf("s1", "s3", "ghost"))
 
         assertThat(found.map { it.localId }).containsExactlyInAnyOrder("a1", "a3")
+    }
+
+    @Test
+    fun `getBySyncIds matches locally created account awaiting ack by client id`() = runTest {
+        // create ушёл с id = localId, ACK не дошёл → serverId ещё null, но сервер знает запись
+        dao.insert(entity(localId = "a1", serverId = null, syncStatus = SyncStatus.PENDING_CREATE))
+        dao.insert(entity(localId = "a2", serverId = null, syncStatus = SyncStatus.PENDING_CREATE))
+
+        val found = dao.getBySyncIds(listOf("a1", "ghost"))
+
+        assertThat(found.map { it.localId }).containsExactly("a1")
+    }
+
+    @Test
+    fun `getBySyncIds does not match confirmed account by its local id`() = runTest {
+        // Защита от ложного совпадения: запись уже подтверждена (serverId проставлен),
+        // поэтому её localId в сопоставлении участвовать не должен
+        dao.insert(entity(localId = "a1", serverId = "s1", syncStatus = SyncStatus.SYNCED))
+
+        val found = dao.getBySyncIds(listOf("a1"))
+
+        assertThat(found).isEmpty()
     }
 
     @Test

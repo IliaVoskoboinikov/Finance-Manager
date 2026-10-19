@@ -31,4 +31,8 @@
 ## Verification
 *   Always run `./gradlew testDebugUnitTest` before completion. Pure JVM modules (`:core:domain`,
     `:konsist`, `:lint`) have no `testDebugUnitTest` — run their `test` task (CI runs `./gradlew test`).
+*   CI runs on **Temurin 21**. Oracle JDK verifies JCE provider jars, so `Cipher` tests in
+    `core:security` / `core:data` fail locally with `ExceptionInInitializerError` at
+    `JarVerifier` while CI is green. Reproduce CI with
+    `./gradlew -Dorg.gradle.java.home=<Temurin 21 home> …` (Gradle keeps one in `~/.gradle/jdks/`).
 *   Never mark a task complete if tests fail.

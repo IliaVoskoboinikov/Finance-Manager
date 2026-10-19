@@ -4,7 +4,7 @@ import soft.divan.financemanager.core.data.mapper.toEntity
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
 import soft.divan.financemanager.core.data.sync.CategorySyncManager
-import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.sync.Synchronizer
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.domain.result.onSuccess

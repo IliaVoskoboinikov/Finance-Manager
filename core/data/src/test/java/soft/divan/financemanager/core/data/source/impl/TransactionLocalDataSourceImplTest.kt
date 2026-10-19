@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import soft.divan.financemanager.core.data.testing.OpenDatabaseHolder
+import soft.divan.financemanager.core.data.testing.mockDatabase
 import soft.divan.financemanager.core.database.dao.TransactionDao
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
@@ -15,7 +17,8 @@ import soft.divan.financemanager.core.database.model.SyncStatus
 class TransactionLocalDataSourceImplTest {
 
     private val dao = mockk<TransactionDao>(relaxUnitFun = true)
-    private val dataSource = TransactionLocalDataSourceImpl(dao)
+    private val dataSource =
+        TransactionLocalDataSourceImpl(OpenDatabaseHolder(mockDatabase(transactionDao = dao)))
 
     private val entity = TransactionEntity(
         localId = "local-t1",
@@ -68,10 +71,10 @@ class TransactionLocalDataSourceImplTest {
     }
 
     @Test
-    fun `getByServerIds delegates to dao`() = runTest {
-        coEvery { dao.getByServerIds(listOf("server-t1")) } returns listOf(entity)
+    fun `getBySyncIds delegates to dao`() = runTest {
+        coEvery { dao.getBySyncIds(listOf("server-t1")) } returns listOf(entity)
 
-        assertThat(dataSource.getByServerIds(listOf("server-t1"))).containsExactly(entity)
+        assertThat(dataSource.getBySyncIds(listOf("server-t1"))).containsExactly(entity)
     }
 
     @Test

@@ -1,5 +1,6 @@
 package soft.divan.financemanager.feature.security.impl.data.repository
 
+import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.feature.security.impl.data.crypto.PinHasher
 import soft.divan.financemanager.feature.security.impl.data.sourse.SecurityLocalDataSource
 import soft.divan.financemanager.feature.security.impl.domain.repository.SecurityRepository
@@ -21,6 +22,8 @@ class SecurityRepositoryImpl @Inject constructor(
     override fun isPinSet(): Boolean {
         return securityLocalDataSource.isPinSet()
     }
+
+    override fun observePinSet(): Flow<Boolean> = securityLocalDataSource.observePinSet()
 
     override fun deletePin() {
         securityLocalDataSource.deletePin()

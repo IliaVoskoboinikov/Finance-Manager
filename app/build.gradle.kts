@@ -38,12 +38,6 @@ android {
         manifestPlaceholders["YANDEX_CLIENT_ID"] = yandexClientId
         manifestPlaceholders["YANDEX_OAUTH_HOST"] = "oauth.yandex.ru"
     }
-    testOptions {
-        unitTests {
-            // Robolectric-тестам БД нужен доступ к assets (prepackaged category_db.db)
-            isIncludeAndroidResources = true
-        }
-    }
 }
 
 dependencies {
@@ -113,9 +107,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
     testImplementation(libs.bundles.unit.test)
-    testImplementation(libs.robolectric)
-    testImplementation(libs.androidx.test.core)
-    testImplementation(libs.androidx.room.runtime)
 }
 
 tasks.register("printVersionName") {

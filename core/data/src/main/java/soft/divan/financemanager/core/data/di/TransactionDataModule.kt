@@ -4,9 +4,9 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import soft.divan.financemanager.core.data.RoomTransactionRunner
-import soft.divan.financemanager.core.data.TransactionRunner
 import soft.divan.financemanager.core.data.repository.TransactionRepositoryImpl
+import soft.divan.financemanager.core.data.transaction.TransactionRunner
+import soft.divan.financemanager.core.data.transaction.impl.RoomTransactionRunner
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.source.impl.TransactionLocalDataSourceImpl
