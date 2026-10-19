@@ -51,9 +51,6 @@ class AuthViewModel @Inject constructor(
     /** Идущий вход гостем. */
     private var guestJob: Job? = null
 
-    /** Вход гостем выполнен, экран уходит на главный: повторный вход не нужен. */
-    private var isGuestSignedIn = false
-
     /**
      * Контракт Yandex ID SDK для запуска экрана входа через `rememberLauncherForActivityResult`.
      * Результат передаётся обратно в [onYandexResult].
@@ -97,8 +94,15 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Форма, готовая принять новый вход. Во время первичного синка её кнопки остаются под
+     * оверлеем и нажимаются: второй вход посреди синка сменил бы сессию, которую тот синкает.
+     */
+    private val idleContent: AuthUiState.Success?
+        get() = (_uiState.value as? AuthUiState.Success)?.takeUnless { it.isSyncing }
+
     private fun performAuth() {
-        val content = _uiState.value as? AuthUiState.Success ?: return
+        val content = idleContent ?: return
         val name = content.authUi.name
         val pass = content.authUi.pass
         val isLogin = content.authUi.isLoginMode
@@ -120,7 +124,7 @@ class AuthViewModel @Inject constructor(
     fun onYandexResult(result: YandexAuthResult) {
         when (result) {
             is YandexAuthResult.Success -> {
-                val content = _uiState.value as? AuthUiState.Success ?: return
+                val content = idleContent ?: return
                 runAuth(content) {
                     authRepository.loginWithYandex(result.token.value, shouldMergeData = true)
                 }
@@ -196,7 +200,9 @@ class AuthViewModel @Inject constructor(
         // Ответ принимается только пока диалог открыт: второй тап по его кнопке иначе ещё раз
         // очистил бы данные и запустил второй синк.
         if (!content.showMergeDialog) return
-        val dialogClosed = content.copy(showMergeDialog = false)
+        // Синк считается начатым сразу, а не после очистки данных: иначе в этом окне форма
+        // принимает новый вход.
+        val dialogClosed = content.copy(showMergeDialog = false, isSyncing = true)
         _uiState.value = dialogClosed
         viewModelScope.launch {
             if (!shouldMerge) {
@@ -218,15 +224,13 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun signInAsGuest() {
-        // Повторный тап, пока вход идёт или экран уже уходит на главный, не отправляет второе
-        // событие входа и второй переход.
-        if (guestJob?.isActive == true || isGuestSignedIn) return
+        // Повторный тап, пока вход идёт, игнорируется. После успеха повтор разрешён намеренно:
+        // вход гостем и переход на главный идемпотентны, а событие перехода может потеряться
+        // (SharedFlow без подписчика при пересоздании экрана) — тогда повторный тап спасает.
+        if (idleContent == null || guestJob?.isActive == true) return
         guestJob = viewModelScope.launch {
             authRepository.loginAsGuest().fold(
-                onSuccess = {
-                    isGuestSignedIn = true
-                    _eventFlow.emit(AuthEvent.NavigateToMain)
-                },
+                onSuccess = { _eventFlow.emit(AuthEvent.NavigateToMain) },
                 onFailure = { /* ignore */ }
             )
         }

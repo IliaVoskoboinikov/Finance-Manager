@@ -361,19 +361,43 @@ class AuthViewModelTest {
     }
 
     @Test
-    fun `repeated guest click after success signs in once`() = runTest {
+    fun `guest click after success is allowed again in case navigation was lost`() = runTest {
         coEvery { authRepository.loginAsGuest() } returns DomainResult.Success(Unit)
         val vm = viewModel()
-        val events = mutableListOf<AuthEvent>()
-        val job = launch(UnconfinedTestDispatcher()) { vm.eventFlow.collect { events += it } }
 
         vm.onAction(AuthAction.OnGuestClick)
         vm.onAction(AuthAction.OnGuestClick)
 
-        coVerify(exactly = 1) { authRepository.loginAsGuest() }
-        assertThat(events).containsExactly(AuthEvent.NavigateToMain)
+        coVerify(exactly = 2) { authRepository.loginAsGuest() }
+    }
 
-        job.cancel()
+    @Test
+    fun `sign in actions are ignored during initial sync`() = runTest {
+        val sync = CompletableDeferred<Boolean>()
+        coEvery { syncCoordinator.syncAll() } coAnswers { sync.await() }
+        val vm = viewModelWithMergeDialog()
+        vm.onAction(AuthAction.OnMergeConfirm(shouldMerge = true))
+
+        vm.onAction(AuthAction.OnGuestClick)
+        vm.onAction(AuthAction.OnAuthClick)
+        vm.onYandexResult(YandexAuthResult.Success(YandexAuthToken("ya-token", expiresIn = 100L)))
+
+        coVerify(exactly = 0) { authRepository.loginAsGuest() }
+        coVerify(exactly = 1) { authRepository.login(any(), any(), any()) }
+        coVerify(exactly = 0) { authRepository.loginWithYandex(any(), any()) }
+        sync.complete(true)
+    }
+
+    @Test
+    fun `merge decline marks sync as started before clearing data`() = runTest {
+        val clearing = CompletableDeferred<DomainResult<Unit>>()
+        coEvery { authRepository.clearUserData() } coAnswers { clearing.await() }
+        val vm = viewModelWithMergeDialog()
+
+        vm.onAction(AuthAction.OnMergeConfirm(shouldMerge = false))
+
+        assertThat(success(vm).isSyncing).isTrue()
+        clearing.complete(DomainResult.Success(Unit))
     }
 
     @Test

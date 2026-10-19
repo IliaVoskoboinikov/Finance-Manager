@@ -58,15 +58,24 @@ class TopLevelBackStackTest {
     }
 
     @Test
-    fun `goTo pushes an equal key when it is not on top`() {
+    fun `goTo returns to a key already in the stack instead of pushing a duplicate`() {
         val backStack = backStack()
 
         backStack.goTo(DetailKey("1"))
         backStack.goTo(DetailKey("2"))
         backStack.goTo(DetailKey("1"))
 
-        assertThat(backStack.displayStack)
-            .containsExactly(ExpensesTab, DetailKey("1"), DetailKey("2"), DetailKey("1"))
+        assertThat(backStack.displayStack).containsExactly(ExpensesTab, DetailKey("1"))
+    }
+
+    @Test
+    fun `goTo to the tab root returns to the root`() {
+        val backStack = backStack()
+        backStack.goTo(DetailKey("1"))
+
+        backStack.goTo(ExpensesTab)
+
+        assertThat(backStack.displayStack).containsExactly(ExpensesTab)
     }
 
     @Test

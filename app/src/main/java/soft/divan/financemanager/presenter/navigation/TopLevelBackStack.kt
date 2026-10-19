@@ -58,8 +58,16 @@ class TopLevelBackStack(
     }
 
     override fun goTo(key: NavKey) {
-        if (currentStack.lastOrNull() == key) return
-        currentStack.add(key)
+        val existingIndex = currentStack.indexOf(key)
+        if (existingIndex < 0) {
+            currentStack.add(key)
+            return
+        }
+        // Ключ уже в стеке: возвращаемся к его записи, а не кладём вторую — у двух записей
+        // с одинаковым contentKey Navigation 3 смешал бы ViewModelStore и сохранённое состояние.
+        while (currentStack.lastIndex > existingIndex) {
+            currentStack.removeAt(currentStack.lastIndex)
+        }
     }
 
     override fun back(from: NavKey) {
