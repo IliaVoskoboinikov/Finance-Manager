@@ -369,7 +369,7 @@ VERSION_CODE = X * 1_000_000 + Y * 1_000 + Z
 | [`build-time-report`](../.github/actions/build-time-report/action.yaml) | CSV от `build-time-tracker` → Markdown-таблица в Step Summary (`csv2md.sh`). |
 | [`draw-graph`](../.github/actions/draw-graph/action.yaml) | DOT → PNG через Graphviz. |
 | [`nav-graph`](../.github/actions/nav-graph/action.yml) | Рендер карты навигации и галереи `@Preview` (PNG + HTML), лендинг `index.html`, таблицы экранов и переходов в Step Summary. Гейт `navCheck` — не здесь, а отдельным шагом джобы. |
-| [`send-file-tg`](../.github/actions/send-file-tg/action.yaml) | Отправка файла и подписи в Telegram (`sendDocument`, поддержка тредов). |
+| [`send-file-tg`](../.github/actions/send-file-tg/action.yaml) | Отправка файла и подписи в Telegram (`sendDocument`, поддержка тредов). Значения передаются через `env:`, текстовые поля — через `--form-string`, подпись уходит без разметки. |
 | [`send-message-tg`](../.github/actions/send-message-tg/action.yml) | Отправка текста в Telegram (`sendMessage`, поддержка тредов). Значения передаются через `env:`, текст уходит без разметки. |
 
 ## Секреты
@@ -461,7 +461,6 @@ CI намеренно тонкий, поэтому «где что настро�
 
 | Задача | Что сейчас не так |
 | :--- | :--- |
-| [FM-70](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/70) | `send-file-tg` подставляет сообщение коммита прямо в `run:` — инъекция шелла на раннере с доступом к keystore |
 | [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72), [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73) | release-сборка (R8) в CI не собирается и сейчас падает |
 | [FM-71](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/71) | в `cd_tests.yml` и `cd_release.yml` нет явного блока `permissions:` |
 | [FM-74](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/74) | `YANDEX_CLIENT_ID` не передаётся в сборки CI и CD — вход через Яндекс в них не работает |
