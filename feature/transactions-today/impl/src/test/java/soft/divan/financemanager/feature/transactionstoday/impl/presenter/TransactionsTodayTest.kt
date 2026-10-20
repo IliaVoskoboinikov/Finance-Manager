@@ -81,6 +81,13 @@ class TransactionsTodayTest {
         assertThat(ui.comment).isEqualTo("lunch")
     }
 
+    @Test
+    fun `Transaction toUi maps null comment to empty string`() {
+        val ui = transaction("t1").copy(comment = null).toUi(category)
+
+        assertThat(ui.comment).isEmpty()
+    }
+
     /* ---------- view model ---------- */
 
     private val getTransactionsByPeriodUseCase = mockk<GetTransactionsByPeriodUseCase>()
