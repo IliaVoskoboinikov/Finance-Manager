@@ -122,6 +122,7 @@ class OutboxPayloadContractTest {
         sender = TransactionOutboxSender(
             remoteDataSource = TransactionRemoteDataSourceImpl(apiService),
             localDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
+            outboxLocalDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
             gson = Gson()
         )
 

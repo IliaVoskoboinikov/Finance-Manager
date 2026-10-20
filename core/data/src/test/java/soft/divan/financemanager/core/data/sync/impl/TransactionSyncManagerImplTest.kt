@@ -22,6 +22,7 @@ import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.math.BigDecimal
+import java.net.SocketTimeoutException
 import java.util.UUID
 
 class TransactionSyncManagerImplTest {
@@ -173,8 +174,9 @@ class TransactionSyncManagerImplTest {
     fun `pull does nothing when account is missing locally`() = runTest {
         coEvery { accountLocalDataSource.getByLocalId("missing") } returns null
 
-        syncManager.pullFromRemoteForAccount("missing", "2024-01-01", "2024-01-31")
+        val result = syncManager.pullFromRemoteForAccount("missing", "2024-01-01", "2024-01-31")
 
+        assertThat(result).isFalse()
         coVerify(exactly = 0) { remoteDataSource.getByAccountAndPeriod(any(), any(), any()) }
     }
 
@@ -183,12 +185,62 @@ class TransactionSyncManagerImplTest {
         coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns
             accountEntity(serverId = null)
 
-        syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
+        val result = syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
 
+        // Не сбой: тянуть нечего, создание счёта ещё в очереди
+        assertThat(result).isTrue()
         coVerify(exactly = 0) { remoteDataSource.getByAccountAndPeriod(any(), any(), any()) }
     }
 
+    @Test
+    fun `pull stops when local transactions cannot be read`() = runTest {
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", any(), any())
+        } returns Response.success(listOf(transactionDto()))
+        coEvery { localDataSource.getBySyncIds(any()) } throws
+            IllegalStateException("too many SQL variables")
+
+        val result = syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
+
+        // Иначе каждая серверная транзакция выглядела бы новой и вставлялась бы дубликатом
+        assertThat(result).isFalse()
+        coVerify(exactly = 0) { localDataSource.insert(any()) }
+    }
+
+    @Test
+    fun `pull reports failure when the server call fails`() = runTest {
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", any(), any())
+        } throws SocketTimeoutException("offline")
+
+        val result = syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
+
+        assertThat(result).isFalse()
+    }
+
     /* ---------- pullServerData ---------- */
+
+    @Test
+    fun `pullServerData pulls every account even after one of them fails`() = runTest {
+        val second = accountEntity().copy(localId = "local-a2", serverId = "server-a2")
+        coEvery { accountLocalDataSource.getAll() } returns flowOf(listOf(accountEntity(), second))
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery { accountLocalDataSource.getByLocalId("local-a2") } returns second
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", any(), any())
+        } throws SocketTimeoutException("offline")
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a2", any(), any())
+        } returns Response.success(emptyList())
+        coEvery { localDataSource.getBySyncIds(emptyList()) } returns emptyList()
+
+        val result = syncManager.pullServerData()
+
+        assertThat(result).isFalse()
+        coVerify(exactly = 1) { remoteDataSource.getByAccountAndPeriod("server-a2", any(), any()) }
+    }
 
     @Test
     fun `pullServerData pulls transactions for every local account`() = runTest {

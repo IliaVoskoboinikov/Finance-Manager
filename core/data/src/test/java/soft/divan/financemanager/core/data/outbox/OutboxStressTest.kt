@@ -4,7 +4,6 @@ import androidx.room.Room
 import com.google.gson.Gson
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -32,7 +31,6 @@ import soft.divan.financemanager.core.data.source.impl.TransactionLocalDataSourc
 import soft.divan.financemanager.core.data.source.impl.TransactionRemoteDataSourceImpl
 import soft.divan.financemanager.core.data.transaction.impl.RoomTransactionRunner
 import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
-import soft.divan.financemanager.core.database.dao.OutboxDao
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.model.OutboxEntityType
@@ -194,6 +192,7 @@ class OutboxStressTest {
                 sender = TransactionOutboxSender(
                     remoteDataSource = TransactionRemoteDataSourceImpl(apiService),
                     localDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
+                    outboxLocalDataSource = outboxLocalDataSource,
                     gson = Gson()
                 ),
                 retryPolicy = OutboxRetryPolicy(),
@@ -229,29 +228,35 @@ class OutboxStressTest {
         )
     }
 
+    /** Последняя поставленная операция каждой сущности — по ней проверяется итог доставки. */
+    private val lastOperation = mutableMapOf<String, OutboxOperation>()
+
     private suspend fun enqueue(
         localId: String,
         accountLocalId: String,
         operation: OutboxOperation
-    ) = enqueuer.enqueue(
-        entityType = OutboxEntityType.TRANSACTION,
-        entityLocalId = localId,
-        dependencyKey = accountLocalId,
-        operation = operation,
-        targetServerId = if (operation == OutboxOperation.CREATE) null else localId,
-        body = if (operation == OutboxOperation.DELETE) {
-            null
-        } else {
-            TransactionRequestDto(
-                id = localId,
-                accountId = accountLocalId,
-                categoryId = "cat-1",
-                amount = BigDecimal("42.42"),
-                dateTime = "2024-01-15T10:00:00Z",
-                comment = "lunch"
-            )
-        }
-    )
+    ): Long {
+        lastOperation[localId] = operation
+        return enqueuer.enqueue(
+            entityType = OutboxEntityType.TRANSACTION,
+            entityLocalId = localId,
+            dependencyKey = accountLocalId,
+            operation = operation,
+            targetServerId = if (operation == OutboxOperation.CREATE) null else localId,
+            body = if (operation == OutboxOperation.DELETE) {
+                null
+            } else {
+                TransactionRequestDto(
+                    id = localId,
+                    accountId = accountLocalId,
+                    categoryId = "cat-1",
+                    amount = BigDecimal("42.42"),
+                    dateTime = "2024-01-15T10:00:00Z",
+                    comment = "lunch"
+                )
+            }
+        )
+    }
 
     /** Заполняет очередь: у каждого счёта своя цепочка create → update… → delete. */
     private suspend fun fillQueue(random: Random) {
@@ -307,22 +312,38 @@ class OutboxStressTest {
         assertThat(createdAt).isNotEmpty()
     }
 
+    /** Сущности, у которых в очереди остались записи: ждущие, в работе или в dead-letter. */
+    private fun queuedEntityIds(): Set<String> =
+        db.query("SELECT DISTINCT entityLocalId FROM outbox", emptyArray()).use { cursor ->
+            buildSet { while (cursor.moveToNext()) add(cursor.getString(0)) }
+        }
+
     @Test
     fun `no operation is silently lost`() = runTest {
         fillQueue(Random(2))
-        val enqueued = totalQueued()
-
         drainUntilQuiet()
 
-        // Каждая запись либо отправлена (и удалена уборкой), либо осела в dead-letter, либо
-        // ждёт в очереди. Пропасть молча она не может — это главная гарантия очереди.
-        val sentSuccessfully = enqueued - totalQueued()
-        val failed = db.outboxDao().observeFailedCountValue()
-        val stillWaiting = totalQueued() - failed
+        // Сущность без записей в очереди обязана нести итог своей последней операции — и на
+        // сервере, и локально. Подсчёт строк очереди этого не доказывает: пропавшая запись
+        // выглядела бы в нём ровно как отправленная. Остальные сущности видны в очереди или
+        // в dead-letter — молча они не пропали.
+        val stillQueued = queuedEntityIds()
+        val delivered = lastOperation.filterKeys { it !in stillQueued }
 
-        assertThat(enqueued).isGreaterThan(0)
-        assertThat(sentSuccessfully + failed + stillWaiting).isEqualTo(enqueued)
-        assertThat(stillWaiting).isGreaterThanOrEqualTo(0)
+        assertThat(delivered).isNotEmpty()
+        delivered.forEach { (localId, operation) ->
+            val local = db.transactionDao().getByLocalId(localId)
+            if (operation == OutboxOperation.DELETE) {
+                assertThat(interceptor.serverState).`as`("%s удалена на сервере", localId)
+                    .doesNotContain(localId)
+                assertThat(local).`as`("%s удалена локально", localId).isNull()
+            } else {
+                assertThat(interceptor.serverState).`as`("%s есть на сервере", localId)
+                    .contains(localId)
+                assertThat(local?.syncStatus).`as`("%s подтверждена локально", localId)
+                    .isEqualTo(SyncStatus.SYNCED)
+            }
+        }
     }
 
     @Test
@@ -428,9 +449,6 @@ class OutboxStressTest {
         }
     }
 }
-
-/** Разовое чтение счётчика dead-letter — во Flow тут нет нужды. */
-private suspend fun OutboxDao.observeFailedCountValue(): Int = observeFailedCount().first()
 
 private fun transactionJson(id: String) = """
     {"id":"$id","createdAt":"2024-01-01T00:00:00Z","updatedAt":"2024-02-01T00:00:00Z",

@@ -9,13 +9,14 @@ import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.data.sync.Synchronizer
+import soft.divan.financemanager.core.data.sync.isPullSkipped
 import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
+import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.getOrNull
-import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import javax.inject.Inject
 
@@ -61,11 +62,10 @@ class AccountSyncManagerImpl @Inject constructor(
      * Тянет актуальные данные с сервера. Отправку локальных изменений выполняет очередь
      * исходящих операций, а не этот менеджер.
      *
-     * Возвращает true, если шаг завершился без исключений.
+     * Возвращает результат pull'а: `safeApiCall` исключений не бросает, поэтому судить об
+     * успехе можно только по нему, а не по отсутствию исключения.
      */
-    override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
-        return runCatching { pullServerData() }.isSuccess
-    }
+    override suspend fun syncWith(synchronizer: Synchronizer): Boolean = pullServerData()
 
     /**
      * Загружает актуальные данные с сервера и обновляет локальную БД.
@@ -75,19 +75,25 @@ class AccountSyncManagerImpl @Inject constructor(
      * 2. Повторная проверка внутри Mutex
      *
      * Это предотвращает параллельный pull и дублирование записей.
+     *
+     * Если pull уже идёт, возвращает `true`: данные тянет параллельный вызов, а повторять его
+     * ради этого незачем.
      */
-    override suspend fun pullServerData() {
+    override suspend fun pullServerData(): Boolean {
         // First check (без блокировки)
-        if (isPulling) return
+        if (isPulling) return true
 
-        pullMutex.withLock {
+        return pullMutex.withLock {
             // Second check (уже под блокировкой)
-            if (isPulling) return
-            isPulling = true
-            try {
-                performPull()
-            } finally {
-                isPulling = false
+            if (isPulling) {
+                true
+            } else {
+                isPulling = true
+                try {
+                    performPull()
+                } finally {
+                    isPulling = false
+                }
             }
         }
     }
@@ -104,43 +110,54 @@ class AccountSyncManagerImpl @Inject constructor(
      *
      * Стратегия разрешения конфликтов: last-write-wins.
      */
-    private suspend fun performPull() {
+    private suspend fun performPull(): Boolean =
         safeApiCall(errorLogger) {
             remoteDataSource.getAll()
-        }.onSuccess { accountDtos ->
-            val serverIds = accountDtos.map { it.id }
+        }.fold(
+            onSuccess = { accountDtos -> mergeServerAccounts(accountDtos) },
+            onFailure = { error -> error.isPullSkipped() }
+        )
 
-            val localAccounts = safeDbCall(errorLogger) {
-                localDataSource.getBySyncIds(serverIds)
-            }.getOrNull().orEmpty()
+    /**
+     * Сливает серверные счета с локальными; `false` — локальные не удалось прочитать.
+     *
+     * Без прочитанных локальных счетов слияние прерывается: иначе каждый серверный счёт
+     * выглядел бы новым и вставлялся бы дубликатом с новым `localId`.
+     */
+    private suspend fun mergeServerAccounts(accountDtos: List<AccountDto>): Boolean {
+        val serverIds = accountDtos.map { it.id }
 
-            // Ключ — serverId, а для созданных здесь и ещё не подтверждённых записей (create ушёл
-            // с `id = localId`, но ACK не дошёл) — их localId: сервер знает их именно под ним.
-            // Без этого pull принял бы собственный счёт за новый и вставил дубликат.
-            val localMap = localAccounts.associateBy { it.serverId ?: it.localId }
+        val localAccounts = safeDbCall(errorLogger) {
+            localDataSource.getBySyncIds(serverIds)
+        }.getOrNull() ?: return false
 
-            accountDtos.forEach { accountDto ->
-                val localAccount = localMap[accountDto.id]
+        // Ключ — serverId, а для созданных здесь и ещё не подтверждённых записей (create ушёл
+        // с `id = localId`, но ACK не дошёл) — их localId: сервер знает их именно под ним.
+        // Без этого pull принял бы собственный счёт за новый и вставил дубликат.
+        val localMap = localAccounts.associateBy { it.serverId ?: it.localId }
 
-                if (localAccount == null) {
-                    // Локального аккаунта нет → создаём
-                    safeDbCall(errorLogger) {
-                        localDataSource.create(
-                            accountDto.toEntity(
-                                localId = generateUUID(),
-                                syncStatus = SyncStatus.SYNCED
-                            )
+        accountDtos.forEach { accountDto ->
+            val localAccount = localMap[accountDto.id]
+
+            if (localAccount == null) {
+                // Локального аккаунта нет → создаём
+                safeDbCall(errorLogger) {
+                    localDataSource.create(
+                        accountDto.toEntity(
+                            localId = generateUUID(),
+                            syncStatus = SyncStatus.SYNCED
                         )
-                    }
-                } else if (localAccount.canBeOverwritten(accountDto.updatedAt)) {
-                    // Конфликт → побеждает тот, кто обновлялся позже
-                    updateLocalFromRemote(
-                        accountDto = accountDto,
-                        localId = localAccount.localId
                     )
                 }
+            } else if (localAccount.canBeOverwritten(accountDto.updatedAt)) {
+                // Конфликт → побеждает тот, кто обновлялся позже
+                updateLocalFromRemote(
+                    accountDto = accountDto,
+                    localId = localAccount.localId
+                )
             }
         }
+        return true
     }
 
     /**

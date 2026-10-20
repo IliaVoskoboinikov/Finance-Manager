@@ -5,6 +5,7 @@ import soft.divan.financemanager.core.data.transaction.TransactionRunner
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.time.Clock
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 /**
@@ -25,8 +26,28 @@ internal class OutboxEntryHandler @Inject constructor(
     private val transactionRunner: TransactionRunner
 ) {
 
-    /** Отправляет запись (она уже захвачена процессором) и применяет исход. */
+    /**
+     * Отправляет запись (она уже захвачена процессором) и применяет исход.
+     *
+     * Сбой обработки (снимок не разобрался после смены DTO, не записалась доменная строка) —
+     * не повод ронять весь прогон. Иначе запись осталась бы в `IN_PROGRESS` без потраченной
+     * попытки, после аренды снова пришла бы первой и снова оборвала бы прогон: «отравленная»
+     * запись держала бы очередь вечно и не попала бы в dead-letter. Поэтому сбой считается
+     * временным: попытка тратится, и после исчерпания запись уходит в dead-letter.
+     */
     suspend fun handle(entry: OutboxEntryEntity): OutboxEntryOutcome =
+        runCatching { send(entry) }.getOrElse { throwable ->
+            // Отмена — не сбой обработки: превращать её в повтор нельзя
+            if (throwable is CancellationException) throw throwable
+            // В отчёт — только тип исключения: в его тексте может оказаться кусок снимка с суммами
+            errorLogger.recordError(
+                "Outbox: сбой обработки ${entry.operation} ${entry.entityType} " +
+                    "${entry.entityLocalId} — ${throwable.javaClass.simpleName}"
+            )
+            retryOrGiveUp(entry, "сбой обработки: ${throwable.javaClass.simpleName}")
+        }
+
+    private suspend fun send(entry: OutboxEntryEntity): OutboxEntryOutcome =
         when (val result = sender.send(entry)) {
             is OutboxSendResult.Success -> {
                 // Обратный путь атомарен так же, как и прямой: доменная строка подтверждается и
@@ -92,14 +113,15 @@ internal class OutboxEntryHandler @Inject constructor(
     }
 
     /**
-     * Уводит запись в dead-letter вместе с зависящими от неё: ретраи прекращены, проблема видна
-     * для разбора.
+     * Уводит запись в dead-letter: ретраи прекращены, проблема видна для разбора.
      *
-     * Каскад обязателен — операция, чей предшественник не выполнился, обречена: правка по
-     * несуществующему ресурсу вернёт `404`, транзакция без своего счёта — `400`. Без каскада
-     * каждая честно потратила бы все попытки и оказалась бы в dead-letter позже и с невнятной
-     * причиной. Ручной повтор возвращает их вместе с предшественником, поэтому исправить
-     * ситуацию по-прежнему можно одним действием.
+     * Провалившееся **создание** уводит с собой и зависящие операции: ресурса на сервере нет, и
+     * они обречены — правка по нему вернёт `404`, транзакция без своего счёта — `400`. Без
+     * каскада каждая честно потратила бы все попытки и оказалась бы в dead-letter позже и с
+     * невнятной причиной. Ручной повтор возвращает их вместе с предшественником.
+     *
+     * Отвергнутые правка или удаление каскада не запускают: ресурс на сервере есть, зависящие
+     * операции выполнимы, а отменять их значило бы терять их из-за чужой ошибки.
      */
     private suspend fun giveUp(entry: OutboxEntryEntity, reason: String) {
         // В сообщение идёт только идентификатор — в содержимом операции лежат суммы

@@ -11,6 +11,7 @@ import soft.divan.financemanager.core.data.outbox.OutboxSender
 import soft.divan.financemanager.core.data.outbox.outboxCall
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
+import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.model.OutboxOperation
 import soft.divan.financemanager.core.database.model.SyncStatus
@@ -27,6 +28,7 @@ import javax.inject.Inject
 class AccountOutboxSender @Inject constructor(
     private val remoteDataSource: AccountRemoteDataSource,
     private val localDataSource: AccountLocalDataSource,
+    private val outboxLocalDataSource: OutboxLocalDataSource,
     private val gson: Gson
 ) : OutboxSender {
 
@@ -95,8 +97,8 @@ class AccountOutboxSender @Inject constructor(
     }
 
     /**
-     * Описывает пометку локальной строки синхронизированной; саму запись выполнит
-     * `OutboxProcessor` в одной транзакции с закрытием записи очереди (см. [OutboxLocalEffect]).
+     * Описывает подтверждение локальной строки; саму запись выполнит `OutboxEntryHandler` в одной
+     * транзакции с закрытием записи очереди (см. [OutboxLocalEffect]).
      */
     private fun confirm(entry: OutboxEntryEntity, dto: AccountDto?): OutboxSendResult =
         OutboxSendResult.Success(
@@ -105,9 +107,12 @@ class AccountOutboxSender @Inject constructor(
                 if (local != null) {
                     localDataSource.update(
                         local.copy(
-                            serverId = dto?.id ?: local.serverId,
+                            serverId = entry.confirmedServerId(dto?.id, local.serverId),
                             updatedAt = dto?.updatedAt ?: local.updatedAt,
-                            syncStatus = SyncStatus.SYNCED
+                            syncStatus = outboxLocalDataSource.syncStatusAfter(
+                                entry,
+                                local.syncStatus
+                            )
                         )
                     )
                 }

@@ -133,6 +133,7 @@ class OutboxIdempotencyKeyEndToEndTest {
                 sender = TransactionOutboxSender(
                     remoteDataSource = TransactionRemoteDataSourceImpl(apiService),
                     localDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
+                    outboxLocalDataSource = outboxLocalDataSource,
                     gson = Gson()
                 ),
                 retryPolicy = OutboxRetryPolicy(),

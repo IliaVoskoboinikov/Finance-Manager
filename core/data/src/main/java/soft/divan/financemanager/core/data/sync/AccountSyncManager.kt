@@ -8,5 +8,6 @@ package soft.divan.financemanager.core.data.sync
  * (см. [docs/outbox.md](../../../../../../../../../../docs/outbox.md)).
  */
 interface AccountSyncManager : Syncable {
-    suspend fun pullServerData()
+    /** Тянет счета с сервера; `false` — pull не удался и его стоит повторить. */
+    suspend fun pullServerData(): Boolean
 }

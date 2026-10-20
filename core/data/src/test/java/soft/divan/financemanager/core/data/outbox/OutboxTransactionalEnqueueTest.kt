@@ -1,7 +1,9 @@
 package soft.divan.financemanager.core.data.outbox
 
+import android.database.sqlite.SQLiteFullException
 import androidx.room.Room
 import com.google.gson.Gson
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +16,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import soft.divan.financemanager.core.data.repository.AccountRepositoryImpl
+import soft.divan.financemanager.core.data.source.impl.AccountLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.OutboxLocalDataSourceImpl
+import soft.divan.financemanager.core.data.source.impl.TransactionLocalDataSourceImpl
 import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
 import soft.divan.financemanager.core.data.transaction.impl.RoomTransactionRunner
 import soft.divan.financemanager.core.data.transaction.rollbackOnError
@@ -25,7 +30,10 @@ import soft.divan.financemanager.core.database.model.OutboxEntityType
 import soft.divan.financemanager.core.database.model.OutboxOperation
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.error.DomainError
+import soft.divan.financemanager.core.domain.model.Account
 import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.loggingerror.ErrorLogger
+import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -154,6 +162,58 @@ class OutboxTransactionalEnqueueTest {
         assertThat(db.accountDao().getByLocalId("local-a1")).isNull()
         assertThat(queued()).isEmpty()
     }
+
+    /** Репозиторий на живом Room, у которого постановка в очередь падает. */
+    private fun repositoryWithFailingEnqueue() = AccountRepositoryImpl(
+        remoteDataSource = mockk(),
+        localDataSource = AccountLocalDataSourceImpl(db.accountDao()),
+        transactionLocalDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
+        syncManager = mockk(relaxed = true),
+        transactionRunner = runner,
+        outboxEnqueuer = mockk {
+            coEvery { enqueue(any(), any(), any(), any(), any(), any()) } throws
+                SQLiteFullException("database or disk is full")
+        },
+        outboxLocalDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
+        appCoroutineContext = NoopAppCoroutineContext(),
+        errorLogger = mockk<ErrorLogger>(relaxed = true)
+    )
+
+    private fun domainAccount() = Account(
+        id = "local-a1",
+        name = "Cash",
+        balance = BigDecimal("100.50"),
+        currencyId = "rub-id",
+        createdAt = now,
+        updatedAt = now
+    )
+
+    @Test
+    fun `repository rolls the domain row back when enqueueing fails`() = runTest {
+        // safeDbCall гасит исключение, а транзакцию откатывает только исключение: без
+        // rollbackOnError строка закоммитилась бы без операции в очереди и не уехала бы никогда
+        val result = repositoryWithFailingEnqueue().create(domainAccount())
+
+        assertThat(result).isInstanceOf(DomainResult.Failure::class.java)
+        assertThat(db.accountDao().getByLocalId("local-a1")).isNull()
+    }
+
+    @Test
+    fun `a failing enqueue inside a use case transaction rolls the whole operation back`() =
+        runTest {
+            val repository = repositoryWithFailingEnqueue()
+
+            // Как в use case'е: внешняя транзакция, в ней ещё одна запись и вызов репозитория
+            val result = runner.runInTransaction<DomainResult<Unit>> {
+                db.accountDao().insert(account("local-other"))
+                repository.create(domainAccount()).rollbackOnError()
+                DomainResult.Success(Unit)
+            }
+
+            assertThat(result).isInstanceOf(DomainResult.Failure::class.java)
+            assertThat(db.accountDao().getByLocalId("local-other")).isNull()
+            assertThat(db.accountDao().getByLocalId("local-a1")).isNull()
+        }
 
     @Test
     fun `queue processing is deferred until after the commit`() = runTest {

@@ -6,6 +6,7 @@ import soft.divan.financemanager.core.database.dao.OutboxDao
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import javax.inject.Inject
 
+@Suppress("TooManyFunctions") // Повторяет контракт OutboxLocalDataSource один к одному
 class OutboxLocalDataSourceImpl @Inject constructor(
     private val outboxDao: OutboxDao
 ) : OutboxLocalDataSource {
@@ -49,6 +50,12 @@ class OutboxLocalDataSourceImpl @Inject constructor(
         lastError = lastError,
         updatedAt = updatedAt
     )
+
+    override suspend fun hasOpenOperations(entityLocalId: String, exceptSequenceNo: Long): Boolean =
+        outboxDao.hasOpenOperations(entityLocalId, exceptSequenceNo)
+
+    override suspend fun hasOpenOperationsAffecting(localId: String): Boolean =
+        outboxDao.hasOpenOperationsAffecting(localId)
 
     override fun observeFailedCount(): Flow<Int> = outboxDao.observeFailedCount()
 

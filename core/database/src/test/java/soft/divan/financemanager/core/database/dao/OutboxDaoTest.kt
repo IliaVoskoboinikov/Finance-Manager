@@ -377,6 +377,48 @@ class OutboxDaoTest : RoomDaoTest() {
     }
 
     @Test
+    fun `a rejected update leaves its dependents and later operations in the queue`() = runTest {
+        // Отвергнутое переименование: счёт на сервере есть, его транзакции и удаление выполнимы
+        val rename = dao.insert(
+            entry("A1", entityType = OutboxEntityType.ACCOUNT, operation = OutboxOperation.UPDATE)
+        )
+        dao.insert(entry("T1", dependencyKey = "A1"))
+        dao.insert(
+            entry("A1", entityType = OutboxEntityType.ACCOUNT, operation = OutboxOperation.DELETE)
+        )
+
+        val affected = dao.markFailed(
+            sequenceNo = rename,
+            entityLocalId = "A1",
+            attemptCount = 1,
+            lastError = "HTTP 409",
+            updatedAt = now
+        )
+
+        // Отменена только сама правка; транзакция уезжает, удаление счёта ждёт её
+        assertThat(affected).isEqualTo(1)
+        assertThat(
+            dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId }
+        ).containsExactly("T1")
+    }
+
+    @Test
+    fun `a rejected delete does not cancel anything else`() = runTest {
+        val delete = dao.insert(entry("T1", operation = OutboxOperation.DELETE))
+        dao.insert(entry("T2", dependencyKey = "T1"))
+
+        val affected = dao.markFailed(
+            sequenceNo = delete,
+            entityLocalId = "T1",
+            attemptCount = 1,
+            lastError = "HTTP 400",
+            updatedAt = now
+        )
+
+        assertThat(affected).isEqualTo(1)
+    }
+
+    @Test
     fun `a manual retry brings the whole cancelled chain back`() = runTest {
         val head = dao.insert(entry("A1", entityType = OutboxEntityType.ACCOUNT))
         dao.insert(entry("T1", dependencyKey = "A1", attemptCount = 2))
@@ -397,6 +439,50 @@ class OutboxDaoTest : RoomDaoTest() {
         assertThat(
             dao.getReadyToSend(now = now + 1, staleBefore = 0, limit = 10).map { it.entityLocalId }
         ).containsExactly("A1")
+    }
+
+    /* ---------- открытые операции ---------- */
+
+    @Test
+    fun `hasOpenOperations sees a later operation of the same row`() = runTest {
+        val create = dao.insert(entry("T1", status = OutboxStatus.IN_PROGRESS))
+        dao.insert(entry("T1", operation = OutboxOperation.DELETE))
+
+        assertThat(dao.hasOpenOperations("T1", exceptSequenceNo = create)).isTrue()
+    }
+
+    @Test
+    fun `hasOpenOperations ignores the excepted entry and closed ones`() = runTest {
+        val create = dao.insert(entry("T1", status = OutboxStatus.IN_PROGRESS))
+        val done = dao.insert(entry("T1", operation = OutboxOperation.UPDATE))
+        dao.markCompleted(sequenceNo = done, updatedAt = now)
+        dao.insert(
+            entry("T1", operation = OutboxOperation.UPDATE, status = OutboxStatus.FAILED)
+        )
+        // Операция другой строки и операция, зависящая от этой, — не «свои»
+        dao.insert(entry("T2", dependencyKey = "T1"))
+
+        assertThat(dao.hasOpenOperations("T1", exceptSequenceNo = create)).isFalse()
+    }
+
+    @Test
+    fun `hasOpenOperationsAffecting sees operations of the row and of its dependents`() =
+        runTest {
+            dao.insert(entry("T1", dependencyKey = "A1"))
+
+            // Неотправленная транзакция меняет баланс счёта, хотя сам счёт в очереди не стоит
+            assertThat(dao.hasOpenOperationsAffecting("A1")).isTrue()
+            assertThat(dao.hasOpenOperationsAffecting("T1")).isTrue()
+            assertThat(dao.hasOpenOperationsAffecting("A2")).isFalse()
+        }
+
+    @Test
+    fun `hasOpenOperationsAffecting ignores closed operations`() = runTest {
+        val done = dao.insert(entry("T1", dependencyKey = "A1"))
+        dao.markCompleted(sequenceNo = done, updatedAt = now)
+        dao.insert(entry("T2", dependencyKey = "A1", status = OutboxStatus.FAILED))
+
+        assertThat(dao.hasOpenOperationsAffecting("A1")).isFalse()
     }
 
     /* ---------- переходы статусов ---------- */

@@ -3,6 +3,7 @@ package soft.divan.financemanager.core.data.repository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import soft.divan.financemanager.core.data.transaction.TransactionRunner
+import soft.divan.financemanager.core.data.transaction.rollbackOnError
 import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.TimeMapper
 import soft.divan.financemanager.core.data.mapper.toDomain
@@ -13,6 +14,7 @@ import soft.divan.financemanager.core.data.mapper.toUpdateDto
 import soft.divan.financemanager.core.data.outbox.OutboxEnqueuer
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
+import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
@@ -28,6 +30,7 @@ import soft.divan.financemanager.core.domain.model.AccountStatus
 import soft.divan.financemanager.core.domain.repository.AccountRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.math.BigDecimal
@@ -41,6 +44,7 @@ class AccountRepositoryImpl @Inject constructor(
     private val syncManager: AccountSyncManager,
     private val transactionRunner: TransactionRunner,
     private val outboxEnqueuer: OutboxEnqueuer,
+    private val outboxLocalDataSource: OutboxLocalDataSource,
     private val appCoroutineContext: AppCoroutineContext,
     private val errorLogger: ErrorLogger
 ) : AccountRepository {
@@ -60,8 +64,10 @@ class AccountRepositoryImpl @Inject constructor(
                     operation = OutboxOperation.CREATE,
                     body = accountEntity.toDto()
                 )
-                Unit
-            }
+            }.rollbackOnError()
+            // Без rollbackOnError транзакция закоммитила бы строку без операции в очереди:
+            // safeDbCall гасит исключение, а откатывает её только исключение
+            DomainResult.Success(Unit)
         }
     }
 
@@ -83,9 +89,7 @@ class AccountRepositoryImpl @Inject constructor(
     /**
      * 1. Получаем аккаунт из локальной БД (источник истины)
      * 2. Возвращаем его сразу (offline-first)
-     * 3. В фоне:
-     *    - если есть serverId → обновляем с сервера
-     *    - если нет → пытаемся создать на сервере
+     * 3. В фоне, если у счёта есть serverId, обновляем его с сервера (см. [refreshFromServer])
      */
     override suspend fun getById(id: String): DomainResult<Account> {
         val localResult = getLocalOrFail(id)
@@ -97,23 +101,51 @@ class AccountRepositoryImpl @Inject constructor(
         val serverId = accountEntity.serverId
         if (serverId != null) {
             appCoroutineContext.launchSync {
-                safeApiCall(errorLogger) {
-                    remoteDataSource.getById(serverId)
-                }.onSuccess { accountDto ->
-                    safeDbCall(errorLogger) {
-                        localDataSource.update(
-                            accountDto.toEntity(
-                                localId = accountEntity.localId,
-                                syncStatus = SyncStatus.SYNCED
-                            )
-                        )
-                    }
-                }
+                refreshFromServer(localId = accountEntity.localId, serverId = serverId)
             }
         }
 
         return DomainResult.Success(accountEntity.toDomain())
     }
+
+    /**
+     * Заменяет локальный счёт серверной версией, если её можно принять ([canTakeServerVersion]).
+     *
+     * Проверка делается дважды. До запроса — потому что `getById` зовут и use case'ы записи
+     * транзакции: обновление стартует после их commit, когда транзакция ещё в очереди, и ответ
+     * сервера заведомо не знает о ней. После ответа, в одной транзакции с записью, — потому что
+     * за время запроса пользователь мог изменить счёт.
+     */
+    private suspend fun refreshFromServer(localId: String, serverId: String) {
+        val canRefresh = safeDbCall(errorLogger) { canTakeServerVersion(localId) }.getOrNull()
+        if (canRefresh != true) return
+
+        safeApiCall(errorLogger) {
+            remoteDataSource.getById(serverId)
+        }.onSuccess { accountDto ->
+            safeDbCall(errorLogger) {
+                transactionRunner.runInTransaction {
+                    if (canTakeServerVersion(localId)) {
+                        localDataSource.update(
+                            accountDto.toEntity(localId = localId, syncStatus = SyncStatus.SYNCED)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Можно ли заменить локальный счёт серверной версией: строка синхронизирована и в очереди нет
+     * операций ни над ней, ни над её транзакциями.
+     *
+     * Второе условие — ради баланса. Запись транзакции меняет баланс счёта только локально
+     * ([updateBalanceLocal]), счёт при этом остаётся `SYNCED`; пока транзакция не уехала, серверный
+     * баланс без неё затёр бы правильный локальный.
+     */
+    private suspend fun canTakeServerVersion(localId: String): Boolean =
+        localDataSource.getByLocalId(localId)?.syncStatus == SyncStatus.SYNCED &&
+            !outboxLocalDataSource.hasOpenOperationsAffecting(localId)
 
     /** Вытаскиваем из бд аккаунт(так как только в БД храним serverId) обновляем локальный аккаунт и
      * запускаем синхронизацию если аккаунт не синхронизирован с сервером то создаем на сервере и
@@ -147,8 +179,8 @@ class AccountRepositoryImpl @Inject constructor(
                     targetServerId = updatedEntity.syncId(),
                     body = updatedEntity.toUpdateDto()
                 )
-                Unit
-            }
+            }.rollbackOnError()
+            DomainResult.Success(Unit)
         }
     }
 
@@ -219,8 +251,8 @@ class AccountRepositoryImpl @Inject constructor(
                     operation = OutboxOperation.DELETE,
                     targetServerId = markedEntity.syncId()
                 )
-                Unit
-            }
+            }.rollbackOnError()
+            DomainResult.Success(Unit)
         }
     }
 

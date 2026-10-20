@@ -13,6 +13,7 @@ import retrofit2.Response
 import soft.divan.financemanager.core.auth.data.interceptor.GuestModeNetworkBlockedException
 import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.outbox.OutboxSendResult
+import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
@@ -34,9 +35,15 @@ class TransactionOutboxSenderTest {
     private val remoteDataSource = mockk<TransactionRemoteDataSource>()
     private val localDataSource = mockk<TransactionLocalDataSource>(relaxUnitFun = true)
 
+    /** По умолчанию подтверждаемая операция — последняя по строке. */
+    private val outboxLocalDataSource = mockk<OutboxLocalDataSource> {
+        coEvery { hasOpenOperations(any(), any()) } returns false
+    }
+
     private val sender = TransactionOutboxSender(
         remoteDataSource = remoteDataSource,
         localDataSource = localDataSource,
+        outboxLocalDataSource = outboxLocalDataSource,
         gson = Gson()
     )
 
@@ -94,7 +101,7 @@ class TransactionOutboxSenderTest {
     /**
      * Утверждает успех и применяет отложенную локальную запись.
      *
-     * Отправитель в базу не пишет, а описывает нужную запись; применяет её `OutboxProcessor`
+     * Отправитель в базу не пишет, а описывает нужную запись; применяет её `OutboxEntryHandler`
      * в одной транзакции с закрытием записи очереди. Здесь его роль играет тест — поэтому
      * проверки локальных изменений идут уже после этого вызова.
      */
@@ -119,6 +126,37 @@ class TransactionOutboxSenderTest {
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
         assertThat(updated.captured.updatedAt).isEqualTo("2024-02-01T00:00:00Z")
     }
+
+    @Test
+    fun `create confirmed without a body still gets its server id`() = runTest {
+        coEvery { remoteDataSource.create(any(), any()) } returns Response.success(null)
+        coEvery { localDataSource.getByLocalId("local-t1") } returns localEntity()
+        val updated = slot<TransactionEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        assertSuccess(sender.send(entry()))
+
+        // Сервер создаёт запись под клиентским id — без него следующие правки ушли бы в dead-letter
+        assertThat(updated.captured.serverId).isEqualTo("local-t1")
+        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
+    }
+
+    @Test
+    fun `confirming a create keeps the row pending while its deletion waits in the queue`() =
+        runTest {
+            coEvery { remoteDataSource.create(any(), any()) } returns Response.success(dto())
+            coEvery { localDataSource.getByLocalId("local-t1") } returns
+                localEntity().copy(syncStatus = SyncStatus.PENDING_DELETE)
+            coEvery { outboxLocalDataSource.hasOpenOperations("local-t1", 1L) } returns true
+            val updated = slot<TransactionEntity>()
+            coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+            assertSuccess(sender.send(entry()))
+
+            // serverId проставлен, но удалённая транзакция не возвращается в списки
+            assertThat(updated.captured.serverId).isEqualTo("local-t1")
+            assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_DELETE)
+        }
 
     @Test
     fun `create sends the snapshot payload as the request body`() = runTest {
@@ -274,6 +312,25 @@ class TransactionOutboxSenderTest {
 
         assertSuccess(result)
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
+        // Правка не создаёт ресурс — клиентский id в serverId ей подставлять нельзя
+        assertThat(updated.captured.serverId).isNull()
+    }
+
+    @Test
+    fun `confirming an update keeps the row pending while the next edit waits`() = runTest {
+        coEvery { remoteDataSource.update("server-t1", any(), any()) } returns Response.success(Unit)
+        coEvery { localDataSource.getByLocalId("local-t1") } returns
+            localEntity().copy(serverId = "server-t1", syncStatus = SyncStatus.PENDING_UPDATE)
+        coEvery { outboxLocalDataSource.hasOpenOperations("local-t1", 1L) } returns true
+        val updated = slot<TransactionEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        assertSuccess(
+            sender.send(entry(operation = OutboxOperation.UPDATE, targetServerId = "server-t1"))
+        )
+
+        // SYNCED открыл бы строку для pull'а, и тот откатил бы вторую, ещё не отправленную правку
+        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_UPDATE)
     }
 
     @Test

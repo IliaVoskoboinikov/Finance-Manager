@@ -14,6 +14,7 @@ import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.outbox.OutboxSendResult
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
+import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.model.OutboxEntityType
@@ -29,9 +30,15 @@ class AccountOutboxSenderTest {
     private val remoteDataSource = mockk<AccountRemoteDataSource>()
     private val localDataSource = mockk<AccountLocalDataSource>(relaxUnitFun = true)
 
+    /** По умолчанию подтверждаемая операция — последняя по строке. */
+    private val outboxLocalDataSource = mockk<OutboxLocalDataSource> {
+        coEvery { hasOpenOperations(any(), any()) } returns false
+    }
+
     private val sender = AccountOutboxSender(
         remoteDataSource = remoteDataSource,
         localDataSource = localDataSource,
+        outboxLocalDataSource = outboxLocalDataSource,
         gson = Gson()
     )
 
@@ -91,6 +98,34 @@ class AccountOutboxSenderTest {
         assertSuccess(result)
         assertThat(updated.captured.serverId).isEqualTo("local-a1")
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
+    }
+
+    @Test
+    fun `create confirmed without a body still gets its server id`() = runTest {
+        coEvery { remoteDataSource.create(any(), any()) } returns Response.success(null)
+        coEvery { localDataSource.getByLocalId("local-a1") } returns localEntity()
+        val updated = slot<AccountEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        assertSuccess(sender.send(entry()))
+
+        // Без serverId перестали бы подтягиваться транзакции счёта
+        assertThat(updated.captured.serverId).isEqualTo("local-a1")
+    }
+
+    @Test
+    fun `confirming a create keeps the account pending while its deletion waits`() = runTest {
+        coEvery { remoteDataSource.create(any(), any()) } returns Response.success(dto())
+        coEvery { localDataSource.getByLocalId("local-a1") } returns
+            localEntity().copy(syncStatus = SyncStatus.PENDING_DELETE)
+        coEvery { outboxLocalDataSource.hasOpenOperations("local-a1", 1L) } returns true
+        val updated = slot<AccountEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        assertSuccess(sender.send(entry()))
+
+        // Удалённый счёт не возвращается в списки, пока удаление не подтверждено
+        assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.PENDING_DELETE)
     }
 
     @Test
@@ -172,7 +207,7 @@ class AccountOutboxSenderTest {
     /**
      * Утверждает успех и применяет отложенную локальную запись.
      *
-     * Отправитель в базу не пишет, а описывает нужную запись; применяет её `OutboxProcessor`
+     * Отправитель в базу не пишет, а описывает нужную запись; применяет её `OutboxEntryHandler`
      * в одной транзакции с закрытием записи очереди. Здесь его роль играет тест — поэтому
      * проверки локальных изменений идут уже после этого вызова.
      */

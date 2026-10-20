@@ -65,6 +65,23 @@ class AccountLocalDataSourceImplTest {
     }
 
     @Test
+    fun `getBySyncIds splits a long id list to stay under the sqlite variable limit`() = runTest {
+        val ids = (1..1_000).map { "server-$it" }
+        val chunkSizes = mutableListOf<Int>()
+        coEvery { dao.getBySyncIds(any()) } answers {
+            val chunk = firstArg<List<String>>()
+            chunkSizes += chunk.size
+            chunk.map { entity.copy(serverId = it) }
+        }
+
+        val result = dataSource.getBySyncIds(ids)
+
+        // Запрос тратит две переменные на id: на API 26–30 лимит SQLite — 999 переменных
+        assertThat(chunkSizes).allSatisfy { assertThat(it * 2).isLessThan(999) }
+        assertThat(result.map { it.serverId }).containsExactlyElementsOf(ids)
+    }
+
+    @Test
     fun `getPendingSync delegates to dao`() = runTest {
         coEvery { dao.getPendingSync() } returns listOf(entity)
 

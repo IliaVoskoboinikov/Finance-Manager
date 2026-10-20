@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
+import soft.divan.financemanager.core.auth.data.interceptor.GuestModeNetworkBlockedException
 import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
@@ -16,6 +17,7 @@ import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.math.BigDecimal
+import java.net.SocketTimeoutException
 import java.util.UUID
 
 /**
@@ -183,6 +185,7 @@ class AccountSyncManagerImplTest {
     fun `syncWith only pulls server data`() = runTest {
         // Отправку локальных изменений выполняет очередь исходящих операций, а не менеджер
         coEvery { remoteDataSource.getAll() } returns Response.success(emptyList())
+        coEvery { localDataSource.getBySyncIds(emptyList()) } returns emptyList()
 
         val result = syncManager.syncWith(synchronizer)
 
@@ -194,9 +197,30 @@ class AccountSyncManagerImplTest {
     }
 
     @Test
-    fun `syncWith reports failure when pull throws`() = runTest {
-        coEvery { remoteDataSource.getAll() } throws RuntimeException("boom")
+    fun `syncWith reports failure when the server call fails`() = runTest {
+        // safeApiCall исключение не пробрасывает — сбой виден только по результату pull'а
+        coEvery { remoteDataSource.getAll() } throws SocketTimeoutException("offline")
+
+        assertThat(syncManager.syncWith(synchronizer)).isFalse()
+    }
+
+    @Test
+    fun `syncWith does not treat a guest as a failure`() = runTest {
+        // Повтор работы гостя не превратит в пользователя — гонять воркер незачем
+        coEvery { remoteDataSource.getAll() } throws GuestModeNetworkBlockedException()
 
         assertThat(syncManager.syncWith(synchronizer)).isTrue()
+    }
+
+    @Test
+    fun `pull stops when local accounts cannot be read`() = runTest {
+        coEvery { remoteDataSource.getAll() } returns Response.success(listOf(dto()))
+        coEvery { localDataSource.getBySyncIds(any()) } throws IllegalStateException("db")
+
+        val result = syncManager.pullServerData()
+
+        // Иначе каждый серверный счёт выглядел бы новым и вставлялся бы дубликатом
+        assertThat(result).isFalse()
+        coVerify(exactly = 0) { localDataSource.create(any()) }
     }
 }

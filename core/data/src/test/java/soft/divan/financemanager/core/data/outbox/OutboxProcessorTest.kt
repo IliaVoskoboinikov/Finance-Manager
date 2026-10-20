@@ -239,10 +239,22 @@ class OutboxProcessorTest {
 
         val drained = processor.process()
 
-        // Это состояние клиента, а не сервера: независимые операции упрутся в ту же стену
-        assertThat(drained).isFalse()
+        // Это состояние клиента, а не сервера: независимые операции упрутся в ту же стену.
+        // Повтор работы его не изменит, поэтому временным сбоем прогон не считается
+        assertThat(drained).isTrue()
         coVerify(exactly = 1) { entryHandler.handle(any()) }
         coVerify(exactly = 0) { localDataSource.markInProgress(2L, any(), any()) }
+    }
+
+    @Test
+    fun `a blocked network after a transient failure still asks for a retry`() = runTest {
+        givenReady(
+            entry(sequenceNo = 1, entityLocalId = "T1", dependencyKey = "A1"),
+            entry(sequenceNo = 2, entityLocalId = "T2", dependencyKey = "A2")
+        )
+        givenOutcome(OutboxEntryOutcome.STALLED, OutboxEntryOutcome.RUN_STALLED)
+
+        assertThat(processor.process()).isFalse()
     }
 
     @Test

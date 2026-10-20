@@ -7,6 +7,7 @@ import soft.divan.financemanager.core.data.sync.CategorySyncManager
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
 import soft.divan.financemanager.core.data.sync.Synchronizer
 import soft.divan.financemanager.sync.domain.usecase.SetLastSyncTimeUseCase
+import java.util.concurrent.CancellationException
 import javax.inject.Inject
 
 class SyncCoordinatorImpl @Inject constructor(
@@ -42,10 +43,8 @@ class SyncCoordinatorImpl @Inject constructor(
 
         val pulled = categoriesPulled && accountsPulled && transactionsPulled
 
-        val pushed = runStep("OutboxSync") {
-            outboxProcessor.process()
-            true
-        }
+        // false — в очереди остались записи, не уехавшие по временной причине: нужен повтор
+        val pushed = runStep("OutboxSync") { outboxProcessor.process() }
 
         val success = pulled && pushed
         if (success) {
@@ -60,7 +59,11 @@ class SyncCoordinatorImpl @Inject constructor(
         crossinline block: suspend () -> Boolean
     ): Boolean {
         Log.d("SyncCoordinator", "Start $name")
-        val result = runCatching { block() }.getOrDefault(false)
+        val result = runCatching { block() }.getOrElse { throwable ->
+            // Остановка работы — не сбой шага: проглотив отмену, цикл продолжился бы после неё
+            if (throwable is CancellationException) throw throwable
+            false
+        }
         Log.d("SyncCoordinator", "Finish $name: $result")
         return result
     }
