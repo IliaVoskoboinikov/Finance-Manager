@@ -28,6 +28,7 @@ import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.repository.AuthRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
+import soft.divan.financemanager.feature.auth.impl.R
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthAction
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthEvent
 import soft.divan.financemanager.feature.auth.impl.presenter.model.AuthUiState
@@ -185,7 +186,8 @@ class AuthViewModelTest {
 
         vm.onAction(AuthAction.OnAuthClick)
 
-        assertThat(events.filterIsInstance<AuthEvent.ShowToast>()).hasSize(1)
+        assertThat(events.filterIsInstance<AuthEvent.ShowToast>())
+            .containsExactly(AuthEvent.ShowToast(R.string.auth_sync_failed))
         assertThat(events).contains(AuthEvent.NavigateToMain)
 
         job.cancel()
