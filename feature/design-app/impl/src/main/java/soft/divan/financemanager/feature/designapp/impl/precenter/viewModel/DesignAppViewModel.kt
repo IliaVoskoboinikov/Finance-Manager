@@ -83,7 +83,8 @@ class DesignAppViewModel @Inject constructor(
         hapticsManager.perform(HapticType.CLICK)
         viewModelScope.launch {
             setCustomAccentColorUseCase(color)
-            setAccentColor(AccentColor.CUSTOM)
+            // use case напрямую, а не setAccentColor(): тот повторно включил бы хаптик
+            setAccentColorUseCase(AccentColor.CUSTOM)
         }
     }
 }
