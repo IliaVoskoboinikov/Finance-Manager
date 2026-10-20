@@ -6,6 +6,10 @@
     `local.properties` for local development. Keystore credentials (`KEYSTORE_PASSWORD` / `KEY_ALIAS` /
     `KEY_PASSWORD`) are read from environment variables only.
 *   Use CI/CD secrets for release builds. `release.jks` and `google-services.json` are gitignored.
+*   GitHub Actions: never put `${{ … }}` into a `run:` script — pass the value through `env:` and use
+    `"$VAR"`. Text that reaches the runner (commit messages, branch and task names) would otherwise run
+    as shell. In `curl` multipart, send text fields with `--form-string`: `-F` reads a value that
+    starts with `@` or `<` as a file. Reference: `.github/actions/send-file-tg`.
 
 ## Data Protection
 *   Encrypt sensitive values with the project's own **`CryptoManager`** (`core:security`) —
