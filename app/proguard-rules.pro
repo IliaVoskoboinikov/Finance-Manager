@@ -29,3 +29,9 @@
 # рефлексией по имени класса (Class.forName в NavKeySerializer). Без keep R8 может
 # выбросить класс ключа целиком, и восстановление стека после смерти процесса упадёт.
 -keep class * implements androidx.navigation3.runtime.NavKey { *; }
+
+# --- Yandex ID SDK ---
+# com.yandex.authsdk помечает Parcelable-классы @kotlinx.parcelize.Parcelize, но не
+# приносит parcelize-runtime, и R8 падает на Missing class. Аннотация нужна только
+# компилятору (в рантайме невидима), поэтому хватает dontwarn — runtime не тянем.
+-dontwarn kotlinx.parcelize.Parcelize

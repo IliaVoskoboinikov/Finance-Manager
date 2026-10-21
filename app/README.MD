@@ -11,6 +11,8 @@
 - `di/AppModule` и `db/DataBaseProviderModule` — app-уровневая DI-конфигурация.
 - Конфигурация сборки: подпись, manifest-плейсхолдеры Yandex OAuth
   (`YANDEX_CLIENT_ID` из `local.properties` / CI-секрета, см. `:feature:auth:impl`).
+- `proguard-rules.pro` — keep-правила R8 для release: Gson DTO, ключи Navigation 3 и
+  `-dontwarn` для классов, которых нет в зависимостях (`kotlinx.parcelize` у Yandex ID SDK).
 
 `:app` зависит от всех `:core:*`, всех `:feature:*:api`/`:feature:*:impl` и `:sync`.
 Граф модулей проверяется задачей `./gradlew :app:assertModuleGraph`.
