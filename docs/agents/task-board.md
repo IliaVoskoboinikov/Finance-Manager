@@ -14,6 +14,11 @@ commands are in [`.github/scripts/board.py`](../../.github/scripts/board.py).
     GitHub cuts a longer subject when it becomes a PR title:
     `fix(navigation): починить возврат с экрана счёта (FM-42)`.
 *   PR body: `Closes #42` (the automation adds it if it is missing).
+*   A PR that does not finish its card (a "Готово, когда" item waits for another task) says
+    `Part of #42` instead, so the merge leaves the card open. `board.py pr-sync` re-adds
+    `Closes #42` to an open PR on `opened` / `reopened` / `ready_for_review` /
+    `converted_to_draft`, so after the swap don't toggle the PR's draft state; the owner closes
+    the card once the last item is done.
 *   Never rename the head branch of an open PR to fit the scheme: GitHub treats it as deleting
     the head and closes the PR (`head_ref_deleted`), and it cannot be reopened under the new
     name. Link such a PR with `Closes #N` in its body, or open a new PR from the renamed branch.

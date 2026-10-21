@@ -249,8 +249,9 @@ subprojects {
  * внутри одного слоя разрешены всегда. Модуль попадает в ПЕРВЫЙ подходящий по шаблону слой.
  *
  * CI-джоба `check-architecture` в .github/workflows/ci.yml запускает `aalekhCheck` как
- * блокирующую проверку; текущие (унаследованные) нарушения заморожены в `aalekh-baseline.json`,
- * поэтому падение возможно только на НОВЫХ. Полное описание — docs/aalekh.md.
+ * блокирующую проверку; текущие (унаследованные) нарушения заморожены в
+ * `config/aalekh/aalekh-baseline.json`, поэтому падение возможно только на НОВЫХ.
+ * Полное описание — docs/aalekh.md.
  */
 aalekh {
     // В CI браузер открывать нельзя; локально путь к отчёту печатается в лог — открывается вручную.
@@ -266,9 +267,10 @@ aalekh {
     exportMetrics.set(true)
 
     // Слепок нарушений (freeze). Падаем только на новых. Обновлять: ./gradlew aalekhBaseline.
-    baselineFile.set("aalekh-baseline.json")
+    // Оба слепка лежат в config/aalekh/, рядом с конфигом detekt, а не в корне репозитория.
+    baselineFile.set("config/aalekh/aalekh-baseline.json")
     // Слепок архитектуры для aalekhDiff (комментарий в PR). Обновлять: ./gradlew aalekhSnapshot.
-    snapshotFile.set("aalekh-snapshot.json")
+    snapshotFile.set("config/aalekh/aalekh-snapshot.json")
     // aalekhDiff по умолчанию только отчитывается; ронять его на новом цикле/регрессии метрики
     // не нужно — за это отвечает блокирующий aalekhCheck (см. qualityGates ниже).
     failOnArchitectureRegression.set(false)

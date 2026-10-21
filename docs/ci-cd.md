@@ -22,6 +22,8 @@ flowchart TD
     pushR["push в releases/**"] --> cdr["cd_release.yml — App release"]
     pushR --> sec
     cdr -->|"гейт качества<br/>(workflow_call)"| ci
+    ci -->|"workflow_run<br/>(зелёный push в master)"| pages["pages.yml — Pages"]
+    pages --> art6["Сайт: карта навигации,<br/>галерея превью, отчёт Aalekh"]
     wd["workflow_dispatch"] -.-> cdt
     wd -.-> cdr
 
@@ -43,6 +45,7 @@ Workflow разделены по назначению:
 | **CI failure** | [`.github/workflows/ci-failure.yml`](../.github/workflows/ci-failure.yml) | Красный `master` → issue с лейблом `ci-failure`; зелёный прогон закрывает его. |
 | **App test** | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Доставка тестовой (debug) сборки тестировщикам. |
 | **App release** | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз: APK + AAB, публикация в Google Play, черновик GitHub Release. |
+| **Pages** | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Публикует отчёты зелёного CI на master (карта навигации, галерея превью, Aalekh) на GitHub Pages. |
 
 Обновление зависимостей автоматизировано **Renovate** ([`.github/renovate.json5`](../.github/renovate.json5)):
 он читает `gradle/libs.versions.toml`, `gradle-wrapper.properties` и версии actions,
@@ -326,7 +329,13 @@ workflow с `release-gate: true` — те же проверки, что в CI, �
 Джоба `github-release` создаёт именно **черновик**: тег и release notes GitHub собирает сам
 (`generate_release_notes: true` — из PR и коммитов с прошлого тега), а публикует релиз
 человек кнопкой Publish. Симметрично `status: draft` в Play — ни одна из двух публикаций
-не происходит автоматически.
+не происходит автоматически. Версии `0.x` (до v1.0) помечаются **pre-release**
+(`validate-version` отдаёт `prerelease`): это превью, и `releases/latest` их не показывает,
+поэтому README ведёт на страницу `releases`, а бейдж релиза — с `include_prereleases`.
+
+**Firebase обязателен только здесь.** Сборки `build-apk` и `build-aab` вызывают `android-setup`
+с `google-services-required: 'true'`: без секрета `GOOGLE_SERVICES_JSON` прогон падает, а не
+выпускает релиз без Crashlytics. В остальных workflow секрет необязателен (см. «Composite actions»).
 
 **Версия берётся из имени ветки.** Джоба `validate-version` требует, чтобы ветка
 заканчивалась на `v.X.Y.Z` (например `releases/v.1.2.3`), иначе прогон падает. Из неё
@@ -354,15 +363,34 @@ VERSION_CODE = X * 1_000_000 + Y * 1_000 + Z
 `draft` — то есть релиз создаётся, но не раскатывается; финальную публикацию делает человек
 в Play Console.
 
+## Pages (`pages.yml`)
+
+Сайт проекта — <https://iliavoskoboinikov.github.io/Finance-Manager/>: лендинг
+([`.github/pages/index.html`](../.github/pages/index.html)), карта навигации с галереей превью
+(`nav-graph/`) и интерактивный отчёт Aalekh (`architecture/`).
+
+Воркфлоу ничего не собирает: по `workflow_run` после зелёного CI на `master` он скачивает
+артефакты `nav-graph-report` и `aalekh-report` этого прогона и выкладывает их через
+`actions/deploy-pages`. Отдельный воркфлоу, а не джоба в `ci.yml`, — чтобы сбой деплоя не красил
+CI. Ручной запуск (`workflow_dispatch`) берёт последний зелёный push в `master` с обоими
+артефактами.
+
+- Берутся только прогоны события `push` из этого репозитория: фильтр `branches` смотрит на одно
+  имя ветки, и PR из форка с веткой `master` под него тоже подходит, а его артефакты собраны чужим
+  кодом.
+- Правка только документации пропускает джобы отчётов — артефактов нет, сайт остаётся прежним.
+- Нужна настройка репозитория: Settings → Pages → Source: **GitHub Actions**. До неё деплой
+  падает, на CI это не влияет.
+
 ## Composite actions
 
 Переиспользуемые кирпичи в `.github/actions/`:
 
 | Action | Что делает |
 |---|---|
-| [`android-setup`](../.github/actions/android-setup/action.yml) | Зонтичный: checkout → `init-gradle` → `create-google-services`. Одна строка в джобе вместо трёх. |
+| [`android-setup`](../.github/actions/android-setup/action.yml) | Зонтичный: checkout → `init-gradle` → `create-google-services`. Одна строка в джобе вместо трёх. Вход `google-services-required` пробрасывается в `create-google-services`. |
 | [`init-gradle`](../.github/actions/init-gradle/action.yaml) | JDK 21 (Temurin) + `gradle/actions/setup-gradle` + `chmod +x gradlew`. |
-| [`create-google-services`](../.github/actions/create-google-services/action.yml) | Декодирует секрет `GOOGLE_SERVICES_JSON` (base64) в `app/google-services.json`; падает, если секрет пуст. |
+| [`create-google-services`](../.github/actions/create-google-services/action.yml) | Декодирует секрет `GOOGLE_SERVICES_JSON` (base64) в `app/google-services.json`. Без секрета (PR из форка) по умолчанию пропускается с предупреждением — сборка идёт без Firebase (`missingGoogleServicesStrategy = WARN`); с `required: 'true'` (релиз) падает. |
 | [`coverage`](../.github/actions/coverage/action.yml) | Kover: отчёты → сводка в Step Summary → гейт `koverVerifyFull`. |
 | [`ktlint`](../.github/actions/ktlint/action.yml) | `ktlintCheck`, склейка SARIF по модулям, подробный Markdown-отчёт. |
 | [`report-renderer`](../.github/actions/report-renderer/action.yml) | Markdown → styled HTML через Pandoc (со светлой и тёмной темой). |
@@ -380,7 +408,7 @@ protection rules сейчас нет.
 | Секрет | Где используется | Зачем |
 |---|---|---|
 | `API_TOKEN` | все workflow (env) | Токен бэкенда, читается сборкой `:core:network` (локально — из `local.properties`). |
-| `GOOGLE_SERVICES_JSON` | все workflow (env) | base64 `google-services.json` для Firebase/Crashlytics. |
+| `GOOGLE_SERVICES_JSON` | все workflow (env) | base64 `google-services.json` для Firebase/Crashlytics. Обязателен только в `cd_release`; без него остальные сборки идут без Firebase. |
 | `JKS_KS` | `cd_release` | base64 release-keystore. |
 | `JKS_KS_PASS`, `JKS_ALIAS`, `JKS_KEY_PASS` | `cd_release` | Пароль стора, алиас и пароль ключа. |
 | `PLAY_SERVICE_ACCOUNT_JSON`, `PLAY_PACKAGE_NAME` | `cd_release` | Сервисный аккаунт и applicationId для Play Publishing API. |
@@ -474,6 +502,7 @@ CI намеренно тонкий, поэтому «где что настро�
 | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества на PR и push в `master`; reusable-гейт релиза. |
 | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Тестовая раздача (Telegram + Firebase). |
 | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз и публикация в Play. |
+| [`.github/workflows/pages.yml`](../.github/workflows/pages.yml), [`.github/pages/`](../.github/pages/) | Сайт на GitHub Pages из отчётов CI. |
 | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | gitleaks + dependency-review. |
 | [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Граф зависимостей для Dependabot alerts. |
 | [`.github/workflows/board.yml`](../.github/workflows/board.yml) | Статусы карточек по веткам и PR, недельная сводка. |
