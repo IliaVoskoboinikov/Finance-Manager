@@ -374,6 +374,10 @@ CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, 
 ```bash
 # запустить релизный пайплайн версии 1.2.3
 git push origin HEAD:releases/v.1.2.3
+
+# ветка указывает на уже запушенный коммит (например, на master) — push релиз не запустит
+# (paths-ignore без нового диффа), запускаем вручную на этой ветке
+gh workflow run cd_release.yml --ref releases/v.1.2.3
 ```
 
 ---

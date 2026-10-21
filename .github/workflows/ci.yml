@@ -22,6 +22,8 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
 
 # Явные права токена: раньше воркфлоу полагался на настройку репозитория по умолчанию.
+# Новое право у любой джобы этого файла надо выдать и джобе quality-gate в cd_release.yml:
+# там ci.yml вызывается как reusable workflow, и без этого релиз падает до старта.
 permissions:
   contents: read
   security-events: write  # upload-sarif (detekt, ktlint, aalekh)
