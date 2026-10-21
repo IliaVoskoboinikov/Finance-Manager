@@ -387,7 +387,7 @@ jobs:
   # reachability, запрет циклов и ratchet структурных метрик. В отличие от
   # check-module-graph (jraska), правила здесь реально настроены (build.gradle.kts →
   # блок aalekh { }). Падает только на НОВЫХ нарушениях — текущие заморожены в
-  # aalekh-baseline.json. Полное описание — docs/aalekh.md.
+  # config/aalekh/aalekh-baseline.json. Полное описание — docs/aalekh.md.
   check-architecture:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
@@ -400,7 +400,7 @@ jobs:
       security-events: write  # upload-sarif
       pull-requests: write    # комментарий об изменениях архитектуры в PR
     steps:
-      # fetch-depth: 0 — aalekhDiff сравнивает граф ветки с закоммиченным aalekh-snapshot.json,
+      # fetch-depth: 0 — aalekhDiff сравнивает граф ветки с закоммиченным config/aalekh/aalekh-snapshot.json,
       # а комментарий в PR требует доступа к истории для корректного diff.
       # persist-credentials: false — код PR (Gradle-скрипты) выполняется в этой же джобе до
       # шага с комментарием; токен с правом записи не должен оставаться в .git/config.

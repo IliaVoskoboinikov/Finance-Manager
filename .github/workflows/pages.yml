@@ -1,0 +1,98 @@
+name: Pages
+
+# Сайт проекта на GitHub Pages: карта навигации с галереей превью (nav-graph) и отчёт
+# архитектуры Aalekh. Ничего не собирает заново — берёт артефакты зелёного прогона CI на master.
+# Отдельный воркфлоу по workflow_run, а не джоба в ci.yml: сбой деплоя Pages (например, Pages
+# ещё не включены в настройках) не красит CI. Описание — docs/ci-cd.md.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Деплои идут по очереди; прерывать начатый незачем — следующий всё равно его заменит.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Фильтр branches смотрит только на имя ветки: PR из форка с веткой master тоже под него
+    # подходит. Артефакты такого прогона собраны чужим кодом — берём только push в этот репозиторий.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read    # артефакты прогона CI
+      pages: write
+      id-token: write  # deploy-pages подтверждает источник через OIDC
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Прогон CI: тот, что запустил воркфлоу, или (ручной запуск) последний зелёный push в master.
+      # Правка только документации пропускает джобы отчётов — артефактов нет, сайт остаётся прежним.
+      - name: Resolve CI run
+        id: run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          if [ -z "$RUN_ID" ]; then
+            RUN_ID=$(gh run list --repo "$REPO" --workflow ci.yml --branch master --event push \
+              --status success --limit 20 --json databaseId --jq '.[].databaseId' | while read -r id; do
+                names=$(gh api "repos/$REPO/actions/runs/$id/artifacts" --jq '.artifacts[].name')
+                if grep -qx nav-graph-report <<< "$names" && grep -qx aalekh-report <<< "$names"; then
+                  echo "$id"; break
+                fi
+              done)
+          fi
+          names=$(gh api "repos/$REPO/actions/runs/${RUN_ID:-0}/artifacts" --jq '.artifacts[].name' || true)
+          if grep -qx nav-graph-report <<< "$names" && grep -qx aalekh-report <<< "$names"; then
+            echo "id=$RUN_ID" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::No report artifacts in CI run ${RUN_ID:-none} — the site stays as is"
+          fi
+      - name: Checkout landing page
+        if: steps.run.outputs.id
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/pages
+      - name: Download nav-graph report
+        if: steps.run.outputs.id
+        uses: actions/download-artifact@v8
+        with:
+          name: nav-graph-report
+          path: site/nav-graph
+          run-id: ${{ steps.run.outputs.id }}
+          github-token: ${{ github.token }}
+      - name: Download Aalekh report
+        if: steps.run.outputs.id
+        uses: actions/download-artifact@v8
+        with:
+          name: aalekh-report
+          path: site/architecture
+          run-id: ${{ steps.run.outputs.id }}
+          github-token: ${{ github.token }}
+      - name: Assemble site
+        if: steps.run.outputs.id
+        run: cp .github/pages/index.html site/index.html
+      - name: Upload Pages artifact
+        if: steps.run.outputs.id
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        if: steps.run.outputs.id
+        id: deployment
+        uses: actions/deploy-pages@v4

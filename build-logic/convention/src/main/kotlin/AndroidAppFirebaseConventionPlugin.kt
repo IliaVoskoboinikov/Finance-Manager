@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
+import com.google.gms.googleservices.GoogleServicesPlugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -14,6 +15,14 @@ class AndroidAppFirebaseConventionPlugin : Plugin<Project> {
         with(project) {
             applyPlugin("gms")
             applyPlugin("firebase-crashlytics")
+
+            // google-services.json в git нет (gitignore), он приходит из секрета CI. Без WARN
+            // свежий клон и PR из форка не собираются вовсе; без файла приложение работает
+            // без Firebase (Crashlytics, FCM), см. CrashlyticsLogger и PushSubscriptionManagerImpl.
+            // Релиз без файла не выйдет: в cd_release.yml секрет обязателен.
+            extensions.configure<GoogleServicesPlugin.GoogleServicesPluginConfig> {
+                missingGoogleServicesStrategy = GoogleServicesPlugin.MissingGoogleServicesStrategy.WARN
+            }
 
             dependencies {
                 val bom = libs.findLibrary("firebase-bom").get()

@@ -187,6 +187,7 @@ ruler-plugin = { group = "com.spotify.ruler", name = "ruler-gradle-plugin", vers
 module-graph-plugin = { module = "com.jraska.module.graph.assertion:plugin", version.ref = "graphPlugin" }
 dependency-guard-plugin = { module = "com.dropbox.dependency-guard:dependency-guard", version.ref = "dependencyGuard" }
 navgraph-gradle-plugin = { group = "com.github.skydoves", name = "compose-nav-graph-gradle", version.ref = "navgraph" }
+gms-gradle-plugin = { group = "com.google.gms", name = "google-services", version.ref = "gmsPlugin" }
 
 #Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
