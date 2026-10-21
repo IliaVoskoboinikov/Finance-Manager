@@ -302,6 +302,13 @@ flowchart LR
 
 Триггер — `push` в `releases/**` либо `workflow_dispatch`.
 
+У push-триггера есть `paths-ignore: '**.md'`, и после push новой ветки, которая указывает на
+уже существующий коммит (например, `git push origin origin/master:refs/heads/releases/v.X.Y.Z`),
+прогона может не быть: так было с `releases/v.0.2.0`. Перед ручным запуском проверь, что
+прогона действительно нет (`gh run list --workflow cd_release.yml --branch releases/v.X.Y.Z`),
+иначе релиз соберётся дважды. Если нет — запусти на этой ветке:
+`gh workflow run cd_release.yml --ref releases/v.X.Y.Z` (версия берётся из имени ветки и так).
+
 ```mermaid
 flowchart LR
     v["validate-version<br/>парсит имя ветки"] --> apk["build-apk<br/>assembleRelease"]
@@ -322,8 +329,11 @@ workflow с `release-gate: true` — те же проверки, что в CI, �
 `publish-play`, `github-release`), стоит в `needs:` на гейт: упал хоть один блокирующий чек —
 публикации пропускаются. Гейт ждёт `validate-version`, чтобы не гонять проверки на ветке с
 неверным именем. Права токена вызывающая джоба выдаёт явно: права вложенных джоб не могут
-превышать её собственные, а `ci.yml` нужны `security-events: write` (SARIF) и `checks: write`
-(отчёт о тестах). Секреты (`API_TOKEN`, `GOOGLE_SERVICES_JSON`) передаются через
+превышать её собственные, а `ci.yml` нужны `security-events: write` (SARIF), `checks: write`
+(отчёт о тестах) и `pull-requests: write` (комментарий Aalekh в `check-architecture`; его
+шаги идут только на `pull_request`, в релизе право не используется). Если права не покрывают
+хоть одну джобу `ci.yml`, GitHub отклоняет весь `cd_release.yml` до старта (`startup_failure`,
+без логов): новое право у джобы в `ci.yml` надо добавить и в `quality-gate`. Секреты (`API_TOKEN`, `GOOGLE_SERVICES_JSON`) передаются через
 `secrets: inherit`.
 
 Джоба `github-release` создаёт именно **черновик**: тег и release notes GitHub собирает сам

@@ -62,10 +62,13 @@ jobs:
   quality-gate:
     name: Quality gate
     needs: validate-version
-    # Права вложенных джоб не могут превышать права вызывающей.
+    # Права вложенных джоб не могут превышать права вызывающей: иначе GitHub отклоняет весь
+    # воркфлоу до старта (startup_failure). Поэтому здесь — максимум того, что объявляют джобы
+    # ci.yml. pull-requests: write нужен check-architecture (комментарий Aalekh), но его шаги
+    # идут только на событии pull_request — в релизе право не используется.
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: write
       security-events: write
       checks: write
     uses: ./.github/workflows/ci.yml
