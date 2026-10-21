@@ -22,6 +22,7 @@ jobs:
     outputs:
       version_name: ${{ steps.extract.outputs.version_name }}
       version_code: ${{ steps.extract.outputs.version_code }}
+      prerelease: ${{ steps.extract.outputs.prerelease }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -42,6 +43,12 @@ jobs:
 
             echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
             echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
+            # До v1.0 (major = 0) релиз на GitHub помечается pre-release: превью, не стабильная версия.
+            if [ "$MAJOR" -eq 0 ]; then
+              echo "prerelease=true" >> $GITHUB_OUTPUT
+            else
+              echo "prerelease=false" >> $GITHUB_OUTPUT
+            fi
 
             echo "Detected version: $VERSION_NAME ($VERSION_CODE)"
           else
@@ -77,6 +84,8 @@ jobs:
           persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
+        with:
+          google-services-required: 'true'
       - name: Decode Keystore
         run: echo "${{ secrets.JKS_KS }}" | base64 -d > app/release.jks
       - name: Build Release Bundle
@@ -150,6 +159,8 @@ jobs:
           persist-credentials: false
       - name: Setup environment
         uses: ./.github/actions/android-setup
+        with:
+          google-services-required: 'true'
       - name: Decode Keystore
         run: echo "${{ secrets.JKS_KS }}" | base64 -d > app/release.jks
       - name: Build Release Bundle
@@ -189,7 +200,8 @@ jobs:
   # Черновик GitHub Release с тегом v.X.Y.Z, APK и автоматически собранными
   # release notes (GitHub строит их из PR и коммитов с прошлого тега).
   # Создаётся именно ЧЕРНОВИК: публикует его человек кнопкой Publish release,
-  # как и релиз в Play (там тоже status: draft).
+  # как и релиз в Play (там тоже status: draft). Версии 0.x — pre-release: README ведёт
+  # на страницу релизов, а releases/latest pre-release не показывает.
   github-release:
     name: Draft GitHub release
     runs-on: ubuntu-latest
@@ -212,6 +224,7 @@ jobs:
           name: v.${{ needs.validate-version.outputs.version_name }}
           target_commitish: ${{ github.sha }}
           draft: true
+          prerelease: ${{ needs.validate-version.outputs.prerelease == 'true' }}
           generate_release_notes: true
           files: |
             app-release.apk

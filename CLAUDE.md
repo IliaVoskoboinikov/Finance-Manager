@@ -143,9 +143,17 @@ category → account → transaction sync order + last-write-wins are handled in
   `core:database`, DTOs in a `dto` package, ViewModels annotated `@HiltViewModel`, no legacy dates.
 - **Building in a git worktree:** the gitignored `local.properties` and `app/google-services.json`
   are absent. Compile/test/lint tasks need `ANDROID_HOME=<sdk path>` before `./gradlew`
-  (ktlint/detekt run without it). `:app` tasks need the google-services plugin set to
-  `missingGoogleServicesStrategy = WARN` via an `--init-script` kept outside the repo — never copy
-  the real `google-services.json`. Release/R8 builds locally: `-x :app:uploadCrashlyticsMappingFileRelease`.
+  (ktlint/detekt run without it). Without `google-services.json` the build only warns
+  (`missingGoogleServicesStrategy = WARN` in `AndroidAppFirebaseConventionPlugin`) and the app runs
+  without Firebase — never copy the real `google-services.json`. Firebase SDK calls must therefore
+  check `FirebaseApp.getApps(context)` first (see `CrashlyticsLogger`, `PushSubscriptionManagerImpl`):
+  `getInstance()` throws when Firebase isn't initialized. Release/R8 builds locally:
+  `-x :app:uploadCrashlyticsMappingFileRelease`.
+- **Root files and language:** `README.md` and the community files (`CONTRIBUTING.md`,
+  `CODE_OF_CONDUCT.md`, `SECURITY.md`) are in English; `README.ru.md` is the full Russian mirror of
+  `README.md` — change both in the same commit. Everything else (`docs/`, module READMEs, KDoc,
+  commits, issues) stays Russian. Don't add loose files to the repository root: tool state goes to
+  `config/<tool>/` (e.g. `config/aalekh/`), docs to `docs/`.
 - **Editing:** never mutate source with shell `sed`/`awk`/`echo >` — use the Edit/Write tools.
 
 ## Detailed guidelines (mandatory reading per area)

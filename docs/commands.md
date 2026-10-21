@@ -1,10 +1,11 @@
 # 🛠 Полезные команды
 
 Шпаргалка по проекту **Finance Manager**: сборка, проверки, отчёты, графы и отладка на
-устройстве. Все команды запускаются **из корня репозитория** и проверены на этом проекте
-(Gradle 9.4.1, AGP 9.2.1, Kotlin 2.4.0).
+устройстве. Все команды запускаются **из корня репозитория** и проверены на этом проекте.
+Версии инструментов — в [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) и
+[`gradle-wrapper.properties`](../gradle/wrapper/gradle-wrapper.properties).
 
-> Подробности по каждой теме — в [`docs/`](docs/README.md); ссылки указаны в конце разделов.
+> Подробности по каждой теме — в [`docs/`](README.md); ссылки указаны в конце разделов.
 > Задачи и известные проблемы — на [доске задач](https://github.com/users/IliaVoskoboinikov/projects/5).
 
 ## Содержание
@@ -45,9 +46,12 @@
 
 ### `app/google-services.json`
 
-**Обязателен** — без него падает плагин `com.google.gms.google-services`. В git не хранится
-(`.gitignore`), в CI создаётся из секрета `GOOGLE_SERVICES_JSON` (base64) экшеном
-[`create-google-services`](.github/actions/create-google-services/action.yml):
+**Необязателен.** Без него плагин `com.google.gms.google-services` пишет предупреждение
+(`missingGoogleServicesStrategy = WARN` в `AndroidAppFirebaseConventionPlugin`), а приложение
+работает без Firebase: нет Crashlytics и пушей. В git не хранится (`.gitignore`), в CI
+создаётся из секрета `GOOGLE_SERVICES_JSON` (base64) экшеном
+[`create-google-services`](../.github/actions/create-google-services/action.yml); без секрета
+шаг пропускается, а в релизной сборке (`cd_release.yml`) падает:
 
 ```bash
 echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
@@ -58,8 +62,8 @@ echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 | Где | JDK |
 |-----|-----|
 | Локально | **21** — Gradle-демон уже на нём (`./gradlew --version` → `Launcher JVM: 21`) |
-| CI | **17** ([`init-gradle`](.github/actions/init-gradle/action.yaml)), кроме джобы `nav-graph` |
-| Рендер превью `navgraph` (Layoutlib 16.2.1) | **только 21** — на 17 падает `UnsupportedClassVersionError` и все превью выходят «no preview» |
+| CI | **21** (Temurin, [`init-gradle`](../.github/actions/init-gradle/action.yaml)) — во всех Gradle-джобах |
+| Рендер превью `navgraph` (Layoutlib) | **только 21** — на 17 падает `UnsupportedClassVersionError` и все превью выходят «no preview» |
 
 ```bash
 ./gradlew --version        # какая JVM реально используется Gradle
@@ -130,7 +134,7 @@ ID SDK), и проверяют сценарий на release-сборке. CI re
 падения всплывают только при релизе — [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72).
 
 В CD версия вычисляется из имени ветки `releases/**v.X.Y.Z`
-(`VERSION_CODE = MAJOR*1000000 + MINOR*1000 + PATCH`) — см. [docs/ci-cd.md](docs/ci-cd.md).
+(`VERSION_CODE = MAJOR*1000000 + MINOR*1000 + PATCH`) — см. [docs/ci-cd.md](ci-cd.md).
 
 ---
 
@@ -173,9 +177,9 @@ ID SDK), и проверяют сценарий на release-сборке. CI re
 | `./gradlew :koverVerifyFull` | гейт: падает, если ниже порога `minBound` |
 
 Порог и список исключений (сгенерированный код, `@Composable`, `*Activity`, `*FeatureImpl`)
-живут в корневом [`build.gradle.kts`](build.gradle.kts) — единственный источник истины.
+живут в корневом [`build.gradle.kts`](../build.gradle.kts) — единственный источник истины.
 
-📖 [docs/testing.md](docs/testing.md)
+📖 [docs/testing.md](testing.md)
 
 ---
 
@@ -193,10 +197,10 @@ ID SDK), и проверяют сценарий на release-сборке. CI re
 | `./gradlew lintFix` | применить безопасные автофиксы |
 | `./gradlew updateLintBaseline` | обновить baseline Android Lint |
 
-Конфиги: [`config/detekt/detekt.yml`](config/detekt/detekt.yml), ktlint настраивается в
+Конфиги: [`config/detekt/detekt.yml`](../config/detekt/detekt.yml), ktlint настраивается в
 блоке `subprojects { … }` корневого `build.gradle.kts`.
 
-📖 [docs/agents/coding-style.md](docs/agents/coding-style.md)
+📖 [docs/agents/coding-style.md](agents/coding-style.md)
 
 ---
 
@@ -231,7 +235,7 @@ dot -Tpng docs/graphs/modules_prodget/all_modules -o docs/graphs/modules_prodget
 cat app/build/intermediates/analyze_dependencies_report/debug/analyzeDebugDependencies/analyzeDependencies/dependenciesReport.json
 ```
 
-📖 [docs/modularization.md](docs/modularization.md), [docs/modules.md](docs/modules.md)
+📖 [docs/modularization.md](modularization.md), [docs/modules.md](modules.md)
 
 ---
 
@@ -239,16 +243,16 @@ cat app/build/intermediates/analyze_dependencies_report/debug/analyzeDebugDepend
 
 Плагин **Aalekh** реально проверяет архитектуру графа модулей (слои, изоляция фич,
 reachability, циклы, метрики) — то, что `assertModuleGraph` сейчас не делает. Применяется в
-[`settings.gradle.kts`](settings.gradle.kts), настраивается блоком `aalekh { }` в корневом
-[`build.gradle.kts`](build.gradle.kts). Все задачи — в группе `aalekh`.
+[`settings.gradle.kts`](../settings.gradle.kts), настраивается блоком `aalekh { }` в корневом
+[`build.gradle.kts`](../build.gradle.kts). Все задачи — в группе `aalekh`.
 
 | Команда | Что делает |
 |---------|-----------|
 | `./gradlew aalekhReport` | интерактивный HTML-отчёт → `build/reports/aalekh/index.html` (+ `aalekh-metrics.csv`) |
 | `./gradlew aalekhCheck` | ⚠️ проверка правил; падает на ERROR-нарушениях. Висит на `check`, блокирует CI |
 | `./gradlew aalekhExtract` | граф модулей в JSON → `build/tmp/aalekh/graph.json` |
-| `./gradlew aalekhBaseline` | заморозить текущие нарушения → `aalekh-baseline.json` (коммитим) |
-| `./gradlew aalekhSnapshot` | слепок архитектуры → `aalekh-snapshot.json` (коммитим; нужен для `aalekhDiff`) |
+| `./gradlew aalekhBaseline` | заморозить текущие нарушения → `config/aalekh/aalekh-baseline.json` (коммитим) |
+| `./gradlew aalekhSnapshot` | слепок архитектуры → `config/aalekh/aalekh-snapshot.json` (коммитим; нужен для `aalekhDiff`) |
 | `./gradlew aalekhDiff` | что изменилось в архитектуре vs снапшот → `aalekh-diff.md` (коммент в PR) |
 | `./gradlew aalekhMermaid` | диаграмма графа → `aalekh-graph.mmd` / `.md` / `.dot` |
 | `./gradlew aalekhDocs` | Markdown-документация архитектуры → `build/reports/aalekh/docs/` |
@@ -272,13 +276,13 @@ open build/reports/aalekh/index.html
 ./gradlew aalekhReport aalekhMermaid          # перегенерировать отчёт и диаграмму
 cp build/reports/aalekh/index.html    docs/graphs/aalekh/index.html
 cp build/reports/aalekh/aalekh-graph.md docs/graphs/aalekh/graph.md
-# закоммитить: aalekh-baseline.json, aalekh-snapshot.json, docs/graphs/aalekh/**
+# закоммитить: config/aalekh/*.json, docs/graphs/aalekh/**
 ```
 
-Закоммиченная копия отчёта — [`docs/graphs/aalekh/index.html`](docs/graphs/aalekh/index.html),
-диаграмма графа — [`docs/graphs/aalekh/graph.md`](docs/graphs/aalekh/graph.md).
+Закоммиченная копия отчёта — [`docs/graphs/aalekh/index.html`](graphs/aalekh/index.html),
+диаграмма графа — [`docs/graphs/aalekh/graph.md`](graphs/aalekh/graph.md).
 
-📖 [docs/aalekh.md](docs/aalekh.md)
+📖 [docs/aalekh.md](aalekh.md)
 
 ---
 
@@ -307,7 +311,7 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:exportNavGraphToDocs
 Типовой цикл после добавления экрана: разметить аннотациями → `./gradlew navDump` →
 закоммитить `.nav` → при желании `:app:exportNavGraphToDocs`.
 
-📖 [docs/nav-graph.md](docs/nav-graph.md), [docs/navigation3.md](docs/navigation3.md)
+📖 [docs/nav-graph.md](nav-graph.md), [docs/navigation3.md](navigation3.md)
 
 ---
 
@@ -351,7 +355,7 @@ CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, 
 ./gradlew <task> --parallel --stacktrace --no-configuration-cache --no-daemon
 ```
 
-📖 [docs/ci-cd.md](docs/ci-cd.md)
+📖 [docs/ci-cd.md](ci-cd.md)
 
 ---
 
@@ -361,10 +365,11 @@ CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, 
 
 | Workflow | Триггер | Что делает |
 |----------|---------|-----------|
-| [`ci.yml`](.github/workflows/ci.yml) | любой `push` (кроме `**.md`) | джобы проверок (сборка, тесты, покрытие, линтеры, граф модулей, `aalekhCheck`, `navCheck` с картой навигации) + отчёты |
-| [`board.yml`](.github/workflows/board.yml) | `push` в `feature/FM-*`, события PR | карточка задачи на доске: In Progress / In Review, недельная сводка |
-| [`cd_tests.yml`](.github/workflows/cd_tests.yml) | `push` в `tests/**` | тестовая сборка + раздача в Firebase App Distribution |
-| [`cd_release.yml`](.github/workflows/cd_release.yml) | `push` в `releases/**`, имя обязано заканчиваться на `v.X.Y.Z` | подписанные APK + AAB, публикация в Play, отчёт в Telegram |
+| [`ci.yml`](../.github/workflows/ci.yml) | `push` в `master`, `pull_request`, `workflow_call` из `cd_release.yml`; правка только `**/*.md` / `docs/**` пропускает джобы кода | джобы проверок (сборка, тесты, покрытие, линтеры, граф модулей, `aalekhCheck`, `navCheck` с картой навигации) + отчёты |
+| [`board.yml`](../.github/workflows/board.yml) | `push` в `feature/FM-*`, события PR | карточка задачи на доске: In Progress / In Review, недельная сводка |
+| [`cd_tests.yml`](../.github/workflows/cd_tests.yml) | `push` в `tests/**` | тестовая сборка + раздача в Firebase App Distribution |
+| [`cd_release.yml`](../.github/workflows/cd_release.yml) | `push` в `releases/**`, имя обязано заканчиваться на `v.X.Y.Z` | подписанные APK + AAB, публикация в Play, отчёт в Telegram, черновик GitHub Release (`0.x` — pre-release). ⚠️ Сейчас **заблокирован**: `assembleRelease` и `bundleRelease` падают на R8 (см. «Релизная сборка локально» выше), поэтому APK/AAB не собираются и публикации не запускаются — [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73) |
+| [`pages.yml`](../.github/workflows/pages.yml) | зелёный CI на `push` в `master` (`workflow_run`) | отчёты навигации и Aalekh → GitHub Pages |
 
 ```bash
 # запустить релизный пайплайн версии 1.2.3
@@ -394,8 +399,8 @@ git push origin HEAD:releases/v.1.2.3
 | `./gradlew buildEnvironment` | JDK демона и зависимости buildscript (версии плагинов) |
 | `./gradlew :app:kotlinDslAccessorsReport` | доступные type-safe аксессоры Kotlin DSL |
 
-Версии всех библиотек и плагинов — в [`gradle/libs.versions.toml`](gradle/libs.versions.toml),
-конвеншен-плагины `soft.divan.*` — в [`build-logic/`](build-logic/).
+Версии всех библиотек и плагинов — в [`gradle/libs.versions.toml`](../gradle/libs.versions.toml),
+конвеншен-плагины `soft.divan.*` — в [`build-logic/`](../build-logic/).
 
 ---
 
@@ -545,7 +550,7 @@ adb shell screenrecord /sdcard/demo.mp4                          # запись 
 adb pull /sdcard/demo.mp4
 ```
 
-📖 [docs/synchronization.md](docs/synchronization.md), [docs/notifications.md](docs/notifications.md)
+📖 [docs/synchronization.md](synchronization.md), [docs/notifications.md](notifications.md)
 
 ---
 
@@ -572,7 +577,7 @@ sqlite3 app/src/main/assets/database/category_db.db "PRAGMA user_version;"   # �
 grep -n "version = " core/database/src/main/java/soft/divan/financemanager/core/database/db/FinanceManagerDatabase.kt
 ```
 
-📖 [docs/bd.md](docs/bd.md)
+📖 [docs/bd.md](bd.md)
 
 ---
 
@@ -600,7 +605,7 @@ grep -n "version = " core/database/src/main/java/soft/divan/financemanager/core/
 
 ## Куда смотреть дальше
 
-- [docs/README.md](docs/README.md) — оглавление всей документации
-- [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) — правила работы с кодовой базой
-- [Доска задач](https://github.com/users/IliaVoskoboinikov/projects/5) — задачи, баги, планы; процесс — [docs/task-tracking.md](docs/task-tracking.md)
-- [docs/ci-cd.md](docs/ci-cd.md) — что и как проверяет CI, какие есть секреты
+- [docs/README.md](README.md) — оглавление всей документации
+- [CLAUDE.md](../CLAUDE.md) / [AGENTS.md](../AGENTS.md) — правила работы с кодовой базой
+- [Доска задач](https://github.com/users/IliaVoskoboinikov/projects/5) — задачи, баги, планы; процесс — [docs/task-tracking.md](task-tracking.md)
+- [docs/ci-cd.md](ci-cd.md) — что и как проверяет CI, какие есть секреты

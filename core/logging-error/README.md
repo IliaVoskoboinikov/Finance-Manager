@@ -4,6 +4,7 @@
 
 Логирование нефатальных ошибок: интерфейс `ErrorLogger` и его реализация
 `CrashlyticsLogger` (Firebase Crashlytics, подключается через `CrashlyticsModule`).
+Если `FirebaseApp` не поднят (сборка без `google-services.json`), ошибки пишутся только в logcat.
 
 В сообщения нельзя передавать PII, credentials и токены (см. `docs/agents/security.md`).
 
