@@ -302,11 +302,12 @@ flowchart LR
 
 Триггер — `push` в `releases/**` либо `workflow_dispatch`.
 
-У push-триггера есть `paths-ignore: '**.md'`, и новая ветка, которая указывает на уже
-существующий коммит (например, `git push origin origin/master:refs/heads/releases/v.X.Y.Z`),
-релиз **не запускает**: нового диффа нет, и GitHub воркфлоу пропускает. Тогда релиз
-запускается вручную на этой ветке:
-`gh workflow run cd_release.yml --ref releases/v.X.Y.Z` — версия берётся из имени ветки и так.
+У push-триггера есть `paths-ignore: '**.md'`, и после push новой ветки, которая указывает на
+уже существующий коммит (например, `git push origin origin/master:refs/heads/releases/v.X.Y.Z`),
+прогона может не быть: так было с `releases/v.0.2.0`. Перед ручным запуском проверь, что
+прогона действительно нет (`gh run list --workflow cd_release.yml --branch releases/v.X.Y.Z`),
+иначе релиз соберётся дважды. Если нет — запусти на этой ветке:
+`gh workflow run cd_release.yml --ref releases/v.X.Y.Z` (версия берётся из имени ветки и так).
 
 ```mermaid
 flowchart LR
