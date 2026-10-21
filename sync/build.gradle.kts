@@ -3,6 +3,15 @@ plugins {
     alias(libs.plugins.soft.divan.hilt)
 }
 
+android {
+    testOptions {
+        unitTests {
+            // Robolectric-тесту уведомления синка нужны строковые ресурсы канала и заголовка
+            isIncludeAndroidResources = true
+        }
+    }
+}
+
 dependencies {
     implementation(projects.core.data)
     implementation(projects.core.common)
