@@ -62,8 +62,8 @@ echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 | Где | JDK |
 |-----|-----|
 | Локально | **21** — Gradle-демон уже на нём (`./gradlew --version` → `Launcher JVM: 21`) |
-| CI | **17** ([`init-gradle`](../.github/actions/init-gradle/action.yaml)), кроме джобы `nav-graph` |
-| Рендер превью `navgraph` (Layoutlib 16.2.1) | **только 21** — на 17 падает `UnsupportedClassVersionError` и все превью выходят «no preview» |
+| CI | **21** (Temurin, [`init-gradle`](../.github/actions/init-gradle/action.yaml)) — во всех Gradle-джобах |
+| Рендер превью `navgraph` (Layoutlib) | **только 21** — на 17 падает `UnsupportedClassVersionError` и все превью выходят «no preview» |
 
 ```bash
 ./gradlew --version        # какая JVM реально используется Gradle
@@ -356,10 +356,11 @@ CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, 
 
 | Workflow | Триггер | Что делает |
 |----------|---------|-----------|
-| [`ci.yml`](../.github/workflows/ci.yml) | любой `push` (кроме `**.md`) | джобы проверок (сборка, тесты, покрытие, линтеры, граф модулей, `aalekhCheck`, `navCheck` с картой навигации) + отчёты |
+| [`ci.yml`](../.github/workflows/ci.yml) | `push` в `master`, `pull_request`, `workflow_call` из `cd_release.yml`; правка только `**/*.md` / `docs/**` пропускает джобы кода | джобы проверок (сборка, тесты, покрытие, линтеры, граф модулей, `aalekhCheck`, `navCheck` с картой навигации) + отчёты |
 | [`board.yml`](../.github/workflows/board.yml) | `push` в `feature/FM-*`, события PR | карточка задачи на доске: In Progress / In Review, недельная сводка |
 | [`cd_tests.yml`](../.github/workflows/cd_tests.yml) | `push` в `tests/**` | тестовая сборка + раздача в Firebase App Distribution |
-| [`cd_release.yml`](../.github/workflows/cd_release.yml) | `push` в `releases/**`, имя обязано заканчиваться на `v.X.Y.Z` | подписанные APK + AAB, публикация в Play, отчёт в Telegram |
+| [`cd_release.yml`](../.github/workflows/cd_release.yml) | `push` в `releases/**`, имя обязано заканчиваться на `v.X.Y.Z` | подписанные APK + AAB, публикация в Play, отчёт в Telegram, черновик GitHub Release (`0.x` — pre-release) |
+| [`pages.yml`](../.github/workflows/pages.yml) | зелёный CI на `push` в `master` (`workflow_run`) | отчёты навигации и Aalekh → GitHub Pages |
 
 ```bash
 # запустить релизный пайплайн версии 1.2.3

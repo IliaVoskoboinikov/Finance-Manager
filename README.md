@@ -44,7 +44,8 @@ Every screen and every `@Preview` of the app is also rendered by CI into a
 
 ## Download
 
-Pre-release APKs are attached to [GitHub Releases](https://github.com/IliaVoskoboinikov/Finance-Manager/releases).
+APKs are published as pre-releases on [GitHub Releases](https://github.com/IliaVoskoboinikov/Finance-Manager/releases);
+the first one is not out yet — until then, build the app from source (see [Getting started](#getting-started)).
 Guest mode works without an account or network.
 
 <!-- Google Play badge goes here once the app is published (FM-211). -->
