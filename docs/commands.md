@@ -368,7 +368,7 @@ CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, 
 | [`ci.yml`](../.github/workflows/ci.yml) | `push` в `master`, `pull_request`, `workflow_call` из `cd_release.yml`; правка только `**/*.md` / `docs/**` пропускает джобы кода | джобы проверок (сборка, тесты, покрытие, линтеры, граф модулей, `aalekhCheck`, `navCheck` с картой навигации) + отчёты |
 | [`board.yml`](../.github/workflows/board.yml) | `push` в `feature/FM-*`, события PR | карточка задачи на доске: In Progress / In Review, недельная сводка |
 | [`cd_tests.yml`](../.github/workflows/cd_tests.yml) | `push` в `tests/**` | тестовая сборка + раздача в Firebase App Distribution |
-| [`cd_release.yml`](../.github/workflows/cd_release.yml) | `push` в `releases/**`, имя обязано заканчиваться на `v.X.Y.Z` | подписанные APK + AAB, публикация в Play, отчёт в Telegram, черновик GitHub Release (`0.x` — pre-release). ⚠️ Сейчас **заблокирован**: `assembleRelease` и `bundleRelease` падают на R8 (см. «Релизная сборка локально» выше), поэтому APK/AAB не собираются и публикации не запускаются — [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73) |
+| [`cd_release.yml`](../.github/workflows/cd_release.yml) | `push` в `releases/**`, имя обязано заканчиваться на `v.X.Y.Z` | подписанные APK + AAB, публикация в Play, отчёт в Telegram, черновик GitHub Release (`0.x` — pre-release) |
 | [`pages.yml`](../.github/workflows/pages.yml) | зелёный CI на `push` в `master` (`workflow_run`) | отчёты навигации и Aalekh → GitHub Pages |
 
 ```bash
