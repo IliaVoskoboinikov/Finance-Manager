@@ -461,7 +461,7 @@ CI намеренно тонкий, поэтому «где что настро�
 
 | Задача | Что сейчас не так |
 | :--- | :--- |
-| [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72), [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73) | release-сборка (R8) в CI не собирается и сейчас падает |
+| [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72) | release-сборку (R8) CI не собирает: её падение видно только при релизе |
 | [FM-71](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/71) | в `cd_tests.yml` и `cd_release.yml` нет явного блока `permissions:` |
 | [FM-74](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/74) | `YANDEX_CLIENT_ID` не передаётся в сборки CI и CD — вход через Яндекс в них не работает |
 | [FM-75](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/75) | `printVersionName` не знает про `-PversionName`, Telegram-отчёты показывают неверную версию |

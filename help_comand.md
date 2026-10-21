@@ -82,7 +82,7 @@ echo "$GOOGLE_SERVICES_JSON" | base64 --decode > app/google-services.json
 | `./gradlew :app:assembleDebug` | debug-APK → `app/build/outputs/apk/debug/app-debug.apk` |
 | `./gradlew :app:installDebug` | собрать и поставить на подключённое устройство/эмулятор |
 | `./gradlew :app:uninstallDebug` | снести debug-сборку |
-| `./gradlew :app:assembleRelease` | release-APK: R8 + shrink ресурсов + подпись ⚠️ см. ниже |
+| `./gradlew :app:assembleRelease` | release-APK: R8 + shrink ресурсов + подпись (см. ниже) |
 | `./gradlew :app:bundleRelease` | AAB для Google Play |
 | `./gradlew :app:signingReport` | SHA-1 / SHA-256 отпечатки (нужны для Firebase и Яндекс OAuth) |
 | `./gradlew -q :app:printVersionName` | печатает `Const.VERSION_NAME`; ⚠️ не знает про `-PversionName` (см. [FM-75](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/75)) |
@@ -111,14 +111,23 @@ Keystore берётся из **`app/release.jks`** (`./gradlew :app:signingRepor
 смотрит конфиг). Файл `release.jks` в корне репозитория сборкой **не используется** — его надо
 положить в `app/`; в CI туда его кладёт CD-workflow из секрета `JKS_KS`.
 
-> ⚠️ **Сейчас `assembleRelease` падает** на `:app:minifyReleaseWithR8`:
-> `Missing class kotlinx.parcelize.Parcelize (referenced from: com.yandex.authsdk.YandexAuthLoginOptions)`.
-> Готовое правило R8 генерирует сам — `app/build/outputs/mapping/release/missing_rules.txt`
-> (`-dontwarn kotlinx.parcelize.Parcelize`), его нужно перенести в `app/proguard-rules.pro`.
-> Через ту же задачу идут `:app:bundleRelease` и `:app:analyzeReleaseBundle` — они тоже упадут.
-> Причина, по которой это всплыло
-> только сейчас: CI не собирает release. Задачи — [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73)
-> (починить R8) и [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72) (собирать release в CI).
+Проверить release без релизного keystore — подписать его debug-ключом (APK ставится на
+эмулятор, в Play такой не уйдёт). Локально добавь `-x :app:uploadCrashlyticsMappingFileRelease`:
+иначе маппинг уходит в Firebase.
+
+```bash
+./gradlew :app:assembleRelease -x :app:uploadCrashlyticsMappingFileRelease \
+  -Pandroid.injected.signing.store.file=$HOME/.android/debug.keystore \
+  -Pandroid.injected.signing.store.password=android \
+  -Pandroid.injected.signing.key.alias=androiddebugkey \
+  -Pandroid.injected.signing.key.password=android
+```
+
+Если `:app:minifyReleaseWithR8` падает на `Missing class …`, R8 сам пишет нужные правила в
+`app/build/outputs/mapping/release/missing_rules.txt`. Их переносят в `app/proguard-rules.pro`
+с комментарием, почему класса нет (пример — `-dontwarn kotlinx.parcelize.Parcelize` для Yandex
+ID SDK), и проверяют сценарий на release-сборке. CI release пока не собирает, поэтому такие
+падения всплывают только при релизе — [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72).
 
 В CD версия вычисляется из имени ветки `releases/**v.X.Y.Z`
 (`VERSION_CODE = MAJOR*1000000 + MINOR*1000 + PATCH`) — см. [docs/ci-cd.md](docs/ci-cd.md).
