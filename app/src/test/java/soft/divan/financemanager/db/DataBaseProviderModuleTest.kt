@@ -52,6 +52,9 @@ class DataBaseProviderModuleTest {
         assertThat(db.currencyDao().getCurrencyById("rub")).isNotNull()
         assertThat(db.accountDao().getPendingSync()).isEmpty()
         assertThat(db.transactionDao().getPendingSync()).isEmpty()
+        assertThat(
+            db.outboxDao().getReadyToSend(now = Long.MAX_VALUE, staleBefore = 0, limit = 10)
+        ).isEmpty()
     }
 
     @Test
@@ -60,10 +63,12 @@ class DataBaseProviderModuleTest {
         assertThat(DataBaseProviderModule.provideCategoryDao(db)).isNotNull()
         assertThat(DataBaseProviderModule.provideAccountDao(db)).isNotNull()
         assertThat(DataBaseProviderModule.provideCurrencyDao(db)).isNotNull()
+        assertThat(DataBaseProviderModule.provideOutboxDao(db)).isNotNull()
 
         val cleanup = DataBaseProviderModule.provideDatabaseCleanupManager(
             accountDao = db.accountDao(),
-            transactionDao = db.transactionDao()
+            transactionDao = db.transactionDao(),
+            outboxDao = db.outboxDao()
         )
         cleanup.clearUserData()
 

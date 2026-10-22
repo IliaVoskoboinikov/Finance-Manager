@@ -13,7 +13,7 @@ import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import soft.divan.financemanager.core.data.source.impl.CurrencyLocalDataSourceImpl
-import soft.divan.financemanager.core.data.util.coroutne.impl.DefaultAppCoroutineContext
+import soft.divan.financemanager.core.data.util.coroutine.impl.DefaultAppCoroutineContext
 import soft.divan.financemanager.core.database.dao.CurrencyDao
 
 class CoreDataDiModulesTest {

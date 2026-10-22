@@ -4,6 +4,9 @@
 какие модули задействованы, как планируются фоновые задачи и в каком порядке
 синхронизируются сущности.
 
+> Немедленные пуши, инициированные внутри локальной БД-транзакции, откладываются до её
+> успешного commit — см. [Post-commit sync](./post-commit-sync.md).
+
 ## Goals
 
 - Гарантировать **корректный порядок** синка:
@@ -46,10 +49,14 @@ flowchart TB
       SyncWorker["SyncWorker\n(CoroutineWorker + Synchronizer)"]
     end
 
-    subgraph DATA["core:data – sync managers"]
+    subgraph DATA["core:data – pull с сервера"]
       CatSync["CategorySyncManagerImpl"]
       AccSync["AccountSyncManagerImpl"]
       TxSync["TransactionSyncManagerImpl"]
+    end
+
+    subgraph OUTBOX["core:data – отправка на сервер"]
+      Proc["OutboxProcessor"]
     end
 
     SyncScreen -->|"setInterval / syncNow"| SYNC_DOMAIN
@@ -58,6 +65,7 @@ flowchart TB
     SyncWorker --> CatSync
     SyncWorker --> AccSync
     SyncWorker --> TxSync
+    SyncWorker --> Proc
     SyncWorker --> SetLastTime
 ```
 
@@ -65,28 +73,53 @@ flowchart TB
 
 Ключевая логика синка находится в `SyncWorker`:
 
-1. Запускается `SyncWorker` (через `DelegatingWorker` из `:core:workmanager` — он общий
-   с `:core:notifications`, подробности в [`notifications.md`](./notifications.md))
-   по расписанию или по требованию.
-2. Внутри `doWork()`:
-    - выполняется `CategorySyncManagerImpl.sync()` — категории не зависят ни от кого;
-    - выполняется `AccountSyncManagerImpl.sync()` — счета опираются на категории;
-    - выполняется `TransactionSyncManagerImpl.sync()` — транзакции зависят от счетов;
-3. Каждый шаг оборачивается в `runStep(name) { ... }`:
+1. Запускается `SyncWorker` по расписанию или по требованию (через `DelegatingWorker` из
+   `:core:workmanager` — он общий с `:core:notifications`, подробности в
+   [`notifications.md`](./notifications.md)).
+2. Внутри `doWork()` вызывается `SyncCoordinator.syncAll()`, который тянет данные **с сервера**.
+   Порядок важен (категории нужны транзакциям, счета тоже), но сбой шага **не отменяет
+   следующие**: каждый работает с тем, что уже есть локально, и приносит частичный прогресс —
+    - `CategorySyncManagerImpl.sync()` — категории не зависят ни от кого;
+    - `AccountSyncManagerImpl.sync()` — счета опираются на категории;
+    - `TransactionSyncManagerImpl.sync()` — транзакции зависят от счетов;
+3. Затем разбирается очередь исходящих операций — `OutboxProcessor.process()`. Этот шаг
+   выполняется **всегда**, даже если какой-то pull не удался: накопленные локальные изменения не
+   должны ждать отправки из-за проблем с чтением (см. [outbox.md](./outbox.md));
+4. Каждый шаг оборачивается в `runStep(name) { ... }`:
     - логируем старт и завершение;
-    - при ошибке возвращаем `Result.retry()`, чтобы WorkManager повторил задачу;
-4. При успешном выполнении всех шагов вызывается `SetLastSyncTimeUseCase` с текущим временем.
+    - исключение шага — это его сбой, но отмена корутины пробрасывается дальше: остановленная
+      работа не должна продолжаться со следующего шага;
+    - при ошибке `SyncWorker` возвращает `Result.retry()`, чтобы WorkManager повторил задачу;
+5. При успешном выполнении всех шагов вызывается `SetLastSyncTimeUseCase` с текущим временем.
+
+> Отправкой локальных изменений менеджеры больше не занимаются: `syncWith` у них выполняет только
+> pull. За доставку на сервер отвечает очередь — с повторами, backoff и dead-letter.
+
+**Что считается успехом шага.** `safeApiCall` исключений не бросает, поэтому `syncWith`
+возвращает результат pull'а, а не «завершился без исключений» — иначе без сети шаг выглядел бы
+удачным, время синхронизации обновлялось бы, а повтор не запрашивался. Сбой — ошибка сети или
+сервера и ошибка чтения локальных записей (в этом случае pull прерывается: без них каждая
+серверная запись выглядела бы новой и вставлялась бы дубликатом). Сеть, заблокированная
+состоянием клиента — гость или нет сессии, — сбоем **не** считается: повтор работы этого не
+изменит. Так же устроен шаг очереди: `process()` возвращает `false`, только если записи остались
+неотправленными по временной причине.
 
 Упрощённый псевдокод:
 
 ```kotlin
-suspend fun doWork(): Result = withContext(ioDispatcher) {
-    if (!runStep("CategorySync") { categorySyncManager.sync() }) return Result.retry()
-    if (!runStep("AccountSync") { accountSyncManager.sync() }) return Result.retry()
-    if (!runStep("TransactionSync") { transactionSyncManager.sync() }) return Result.retry()
+suspend fun syncAll(): Boolean {
+    // Результаты в переменные: `&&` пропустил бы оставшиеся шаги при первом же сбое
+    val categoriesPulled = runStep("CategorySync") { categorySyncManager.sync() }
+    val accountsPulled = runStep("AccountSync") { accountSyncManager.sync() }
+    val transactionsPulled = runStep("TransactionSync") { transactionSyncManager.sync() }
+    val pulled = categoriesPulled && accountsPulled && transactionsPulled
 
-    setLastSyncTimeUseCase(System.currentTimeMillis())
-    Result.success()
+    // Очередь разбирается независимо от исхода pull
+    val pushed = runStep("OutboxSync") { outboxProcessor.process() }
+
+    val success = pulled && pushed
+    if (success) setLastSyncTimeUseCase(System.currentTimeMillis())
+    return success
 }
 ```
 
