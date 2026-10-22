@@ -44,8 +44,8 @@
 
 ## Скачать
 
-APK выкладываются pre-release-сборками в [GitHub Releases](https://github.com/IliaVoskoboinikov/Finance-Manager/releases);
-первой пока нет — до неё приложение собирается из исходников (см. [Как запустить](#как-запустить)).
+APK выкладываются pre-release-сборками в [GitHub Releases](https://github.com/IliaVoskoboinikov/Finance-Manager/releases) —
+бери свежий `app-release.apk` там же, либо собирай из исходников (см. [Как запустить](#как-запустить)).
 Гостевой режим работает без аккаунта и без сети.
 
 <!-- Сюда — бейдж Google Play после публикации (FM-211). -->
