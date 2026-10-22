@@ -8,6 +8,10 @@
 - `presenter/navigation/RootNavGraph.kt` и `BottomNavGraph.kt` — корневой навигационный
   граф: внедряет `FeatureApi` всех фич через Hilt и вызывает их `registerGraph(...)`,
   так что фичи не ссылаются на экраны друг друга напрямую.
+- Тема на старте: окно `Theme.FinanceManager` (DayNight, фон из `values`/`values-night`
+  `colors.xml`), `MainActivity` не рисует контент, пока не прочитан режим темы, передаёт его
+  системе через `UiModeManager.setApplicationNightMode` (API 31+, системный сплэш в нужной
+  теме) и задаёт стиль system bars по теме приложения (`presenter/theme/ThemeModeExt.kt`).
 - `di/AppModule` и `db/DataBaseProviderModule` — app-уровневая DI-конфигурация.
 - Конфигурация сборки: подпись, manifest-плейсхолдеры Yandex OAuth
   (`YANDEX_CLIENT_ID` из `local.properties` / CI-секрета, см. `:feature:auth:impl`).
