@@ -1,21 +1,30 @@
 package soft.divan.financemanager.presenter
 
 import android.Manifest
+import android.app.UiModeManager
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.core.content.ContextCompat
@@ -39,6 +48,8 @@ import soft.divan.financemanager.feature.security.impl.presenter.screen.PinLockS
 import soft.divan.financemanager.feature.splashscreen.api.SplashScreenFeatureApi
 import soft.divan.financemanager.presenter.navigation.RootNavDisplay
 import soft.divan.financemanager.presenter.screens.MainScreen
+import soft.divan.financemanager.presenter.theme.isDarkTheme
+import soft.divan.financemanager.presenter.theme.toApplicationNightMode
 import soft.divan.financemanager.uikit.theme.AccentColor
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 import javax.inject.Inject
@@ -147,11 +158,17 @@ class MainActivity : AppCompatActivity() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(inactivityObserver)
 
         setContent {
-            val themeMode by getThemeModeUseCase().collectAsState(initial = ThemeMode.LIGHT)
-            val isDark = when (themeMode) {
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            // null — DataStore ещё не прочитан. Пока режим неизвестен, ничего не рисуем: виден
+            // фон окна (DayNight), а не светлая тема по умолчанию, которая сменилась бы на
+            // выбранную через кадр.
+            val themeMode = getThemeModeUseCase()
+                .collectAsState(initial = null).value ?: return@setContent
+            val isDark = themeMode.isDarkTheme(isSystemDark = isSystemInDarkTheme())
+
+            LaunchedEffect(themeMode) { applyApplicationNightMode(themeMode) }
+            DisposableEffect(isDark) {
+                applySystemBarsStyle(isDark)
+                onDispose {}
             }
 
             val accentColor by getAccentColorUseCase().collectAsState(initial = AccentColor.MINT)
@@ -170,23 +187,62 @@ class MainActivity : AppCompatActivity() {
                 accentColor = accentColor,
                 customColor = customColor
             ) {
-                if (isPinSet.value && !isPinVerified) {
-                    PinLockScreen(onPinCorrect = {
-                        isPinVerified = true
-                        shouldLock.value = false
-                    })
-                } else {
-                    RootNavDisplay(
-                        splashFeatureApi = splashFeatureApi,
-                        authFeatureApi = authFeatureApi,
-                        getAuthStatusUseCase = getAuthStatusUseCase,
-                        mainScreen = {
-                            MainScreen(features = features)
-                        }
-                    )
+                // Фон темы под всеми экранами: стартовая Lottie прозрачная, и без него под ней
+                // был бы фон окна, который не знает про выбранную в приложении тему.
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
+                    if (isPinSet.value && !isPinVerified) {
+                        PinLockScreen(onPinCorrect = {
+                            isPinVerified = true
+                            shouldLock.value = false
+                        })
+                    } else {
+                        RootNavDisplay(
+                            splashFeatureApi = splashFeatureApi,
+                            authFeatureApi = authFeatureApi,
+                            getAuthStatusUseCase = getAuthStatusUseCase,
+                            mainScreen = {
+                                MainScreen(features = features)
+                            }
+                        )
+                    }
                 }
             }
         }
+    }
+
+    /**
+     * Передаёт выбранный режим системе (API 31+): она сохраняет его между запусками и сразу
+     * рисует системный сплэш и окно в нужной теме. Без этого при тёмной теме в приложении и
+     * светлой в системе холодный старт начинается со светлого сплэша. `uiMode` объявлен в
+     * `configChanges`, так что смена режима не пересоздаёт Activity. Повторный вызов с тем же
+     * режимом конфигурацию не меняет.
+     */
+    private fun applyApplicationNightMode(mode: ThemeMode) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        getSystemService(UiModeManager::class.java)
+            ?.setApplicationNightMode(mode.toApplicationNightMode())
+    }
+
+    /**
+     * Цвет иконок status/navigation bar по теме приложения, а не системы: `enableEdgeToEdge()`
+     * без стиля смотрит на системную тему и при тёмной теме приложения в светлой системе
+     * рисует тёмные иконки на тёмном фоне.
+     */
+    private fun applySystemBarsStyle(isDark: Boolean) {
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                lightScrim = Color.TRANSPARENT,
+                darkScrim = Color.TRANSPARENT
+            ) { isDark },
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = LIGHT_NAVIGATION_SCRIM,
+                darkScrim = DARK_NAVIGATION_SCRIM
+            ) { isDark }
+        )
     }
 
     /**
@@ -208,5 +264,11 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         ProcessLifecycleOwner.get().lifecycle.removeObserver(autoLockObserver)
         ProcessLifecycleOwner.get().lifecycle.removeObserver(inactivityObserver)
+    }
+
+    private companion object {
+        // Скримы navigation bar по умолчанию из enableEdgeToEdge() (в activity они internal).
+        const val LIGHT_NAVIGATION_SCRIM = 0xE6FFFFFF.toInt()
+        const val DARK_NAVIGATION_SCRIM = 0x801B1B1B.toInt()
     }
 }
