@@ -4,6 +4,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import soft.divan.financemanager.core.featureapi.Navigator
+import soft.divan.financemanager.feature.account.api.AccountKey
 import soft.divan.financemanager.feature.transaction.api.TransactionFeatureApi
 import soft.divan.financemanager.feature.transaction.api.TransactionKey
 import soft.divan.financemanager.feature.transaction.impl.precenter.screens.TransactionScreen
@@ -21,7 +22,8 @@ class TransactionFeatureImpl @Inject constructor() : TransactionFeatureApi {
                 modifier = modifier,
                 isIncome = transactionKey.isIncome,
                 transactionId = transactionKey.transactionId,
-                onNavigateBack = { navigator.back(from = transactionKey) }
+                onNavigateBack = { navigator.back(from = transactionKey) },
+                onCreateAccount = { navigator.goTo(AccountKey()) }
             )
         }
     }
