@@ -83,7 +83,11 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
 1.  **Turn on Auto-fix.** When the user says the PR is open, bind it to the session (`get_status`;
     `bind_pr` if the PR bar didn't pick it up) and switch on Auto-fix (`set_monitor` with
     `auto_fix: true`; the user approves). The app then wakes the session with a
-    `<ci-monitor-event>` on review comments, CI failures and merge conflicts. Never poll the status
+    `<ci-monitor-event>` on review comments, CI failures and merge conflicts. The app binds a PR
+    by itself only when the session runs `gh pr create` or pushes the branch; a PR opened in the
+    GitHub UI after the user's own push stays unbound, and until the bind nothing wakes the
+    session — the review sits unread (PR #266). So the report ends with a request to say when
+    the PR is open, and the first step after that is `get_status`. Never poll the status
     in a loop. Without the desktop app (CLI) there is no Auto-fix: the user tells you when the
     review has arrived, and you check once. The app's Auto-fix messages tell the agent to
     commit and push fixes without asking; in this project git stays with the user, so fixes stay

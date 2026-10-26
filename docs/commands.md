@@ -333,9 +333,9 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:exportNavGraphToDocs
 
 ## Полный прогон «как в CI»
 
-CI гоняет джобы: `assembleDebug`, `assembleRelease` (одноразовый ключ подписи), `test`, `koverVerifyFull`, `lint`, `detekt`, `ktlintCheck`,
-`:app:assertModuleGraph`, `aalekhCheck`, размер приложения, время сборки и `nav-graph`
-(`navCheck` + карта навигации).
+CI гоняет джобы: `assembleDebug`, `assembleRelease` (одноразовый ключ подписи), `test`,
+`koverVerifyFull`, `lint`, `detekt`, `ktlintCheck`, `:app:assertModuleGraph`, `aalekhCheck`,
+размер приложения, время сборки и `nav-graph` (`navCheck` + карта навигации).
 
 Локальный эквивалент перед пушем (проверено — проходит целиком):
 
@@ -343,6 +343,10 @@ CI гоняет джобы: `assembleDebug`, `assembleRelease` (одноразо
 ./gradlew assembleDebug testDebugUnitTest :core:domain:test :lint:test \
           :koverVerifyFull lint detekt ktlintCheck navCheck :app:assertModuleGraph aalekhCheck
 ```
+
+Release с R8 этот прогон не собирает: ему нужен ключ подписи. Если менялись зависимости или
+`app/proguard-rules.pro`, отдельно запусти команду из
+[«Релизная сборка локально»](#релизная-сборка-локально) — подпись debug-ключом, как в CI.
 
 Быстрая проверка одного затронутого модуля:
 

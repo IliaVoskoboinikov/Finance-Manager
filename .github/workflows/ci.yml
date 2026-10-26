@@ -110,6 +110,12 @@ jobs:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' && !inputs.release-gate }}
     runs-on: ubuntu-latest
+    # Холодная сборка с R8 — около шести минут; лимит, чтобы зависшая не держала раннер шесть часов.
+    timeout-minutes: 30
+    # Gradle-код PR выполняется здесь, а SARIF и check-run джоба не публикует: workflow-level
+    # security-events/checks ей не нужны. Job-level permissions заменяют workflow-level целиком.
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v7
