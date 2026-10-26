@@ -23,7 +23,7 @@ import sys
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 OWNER = os.environ.get("BOARD_OWNER", "IliaVoskoboinikov")
@@ -34,10 +34,13 @@ PROJECT_URL = f"https://github.com/users/{OWNER}/projects/{PROJECT_NUMBER}"
 
 STATUSES = ("Backlog", "In Progress", "In Review", "Done")
 PRIORITIES = ("P0", "P1", "P2", "P3")
-FLAG_LABELS = ("blocked", "needs-backend", "needs-decision")
 EPIC_LABEL = "epic"
 STALE_DAYS = 7
 CLOSED_WINDOW_DAYS = 7
+# Сделанной считается задача, закрытая как выполненная: NOT_PLANNED и DUPLICATE — не работа.
+DONE_REASON = "COMPLETED"
+# Сколько строк показывать в одном разделе сводки; остальное — одной строкой «и ещё N».
+SECTION_LIMIT = 25
 # Лимит Telegram на сообщение — 4096 символов; запас на многоточие.
 TELEGRAM_LIMIT = 3900
 
@@ -108,17 +111,14 @@ query($owner: String!, $number: Int!, $after: String) {
           status: fieldValueByName(name: "Status") {
             ... on ProjectV2ItemFieldSingleSelectValue { name updatedAt }
           }
-          priority: fieldValueByName(name: "Priority") {
-            ... on ProjectV2ItemFieldSingleSelectValue { name }
-          }
           content {
             ... on Issue {
               number
               title
               state
+              stateReason
               closedAt
               labels(first: 20) { nodes { name } }
-              subIssuesSummary { total completed }
             }
           }
         }
@@ -160,15 +160,13 @@ class Card:
     number: int
     title: str
     state: str
+    state_reason: Optional[str]
     status: Optional[str]
-    priority: Optional[str]
     labels: frozenset
     # Когда последний раз менялся Status: время issue сдвигают и комментарии, и лейблы,
     # а «застрявшая» карточка — та, что давно не меняла колонку.
     status_changed_at: datetime
     closed_at: Optional[datetime]
-    sub_total: int
-    sub_done: int
 
     @property
     def key(self) -> str:
@@ -413,20 +411,17 @@ def fetch_cards() -> list:
             content = node.get("content") or {}
             if "number" not in content:  # PR или черновик — на нашей доске их не бывает
                 continue
-            summary = content.get("subIssuesSummary") or {}
             status = node.get("status") or {}
             cards.append(
                 Card(
                     number=content["number"],
                     title=content["title"],
                     state=content["state"],
+                    state_reason=content.get("stateReason"),
                     status=status.get("name"),
-                    priority=(node.get("priority") or {}).get("name"),
                     labels=frozenset(n["name"] for n in content["labels"]["nodes"]),
                     status_changed_at=parse_ts(status.get("updatedAt")) or now_utc(),
                     closed_at=parse_ts(content.get("closedAt")),
-                    sub_total=summary.get("total", 0),
-                    sub_done=summary.get("completed", 0),
                 )
             )
         if not items["pageInfo"]["hasNextPage"]:
@@ -438,65 +433,49 @@ def shorten(title: str, limit: int = 60) -> str:
     return title if len(title) <= limit else title[: limit - 1] + "…"
 
 
-def describe(cards) -> str:
-    return " · ".join(f"{c.key} {shorten(c.title)}" for c in sorted(cards, key=lambda c: c.number))
-
-
-def priority_rank(card: Card) -> tuple:
-    rank = PRIORITIES.index(card.priority) if card.priority in PRIORITIES else len(PRIORITIES)
-    return rank, card.number
+def section(header: str, cards, note=lambda card: "") -> list:
+    """Раздел сводки: заголовок со счётчиком и по строке на карточку, длинный хвост — одной строкой."""
+    if not cards:
+        return [f"{header}: ничего"]
+    ordered = sorted(cards, key=lambda c: c.number)
+    lines = [f"{header} ({len(ordered)}):"]
+    lines += [f"• {c.key} {shorten(c.title)}{note(c)}" for c in ordered[:SECTION_LIMIT]]
+    if len(ordered) > SECTION_LIMIT:
+        lines.append(f"• и ещё {len(ordered) - SECTION_LIMIT}")
+    return lines
 
 
 def build_digest(cards, now: datetime) -> str:
-    """Недельная сводка доски обычным текстом: без разметки, чтобы названия не ломали Telegram."""
-    open_cards = [c for c in cards if c.state == "OPEN"]
-    work = [c for c in open_cards if not c.is_epic]
+    """Недельная сводка доски обычным текстом: без разметки, чтобы названия не ломали Telegram.
+
+    Сводка — отчёт о неделе: что в работе, что на ревью и что сделано. Бэклог в неё не входит,
+    его разбирают на самой доске. Период в заголовке — даты, а не номер недели: GitHub маскирует
+    в логе любое совпадение со значением секрета, и короткое число вроде «44» превращается в «***».
+    """
+    work = [c for c in cards if c.state == "OPEN" and not c.is_epic]
     in_progress = [c for c in work if c.status == "In Progress"]
     in_review = [c for c in work if c.status == "In Review"]
-    backlog = [c for c in work if (c.status or "Backlog") == "Backlog"]
-    stale = [c for c in in_progress if (now - c.status_changed_at).days >= STALE_DAYS]
-    startable = sorted((c for c in backlog if not c.labels & set(FLAG_LABELS)), key=priority_rank)
-    p0 = [c for c in backlog if c.priority == "P0"]
-    no_priority = [c for c in work if c.priority is None]
-    flagged = [c for c in work if c.labels & set(FLAG_LABELS)]
-    closed = [
+    done = [
         c
         for c in cards
         if c.state == "CLOSED"
-        and not c.is_epic
+        and c.state_reason == DONE_REASON
         and c.closed_at
         and (now - c.closed_at).days < CLOSED_WINDOW_DAYS
     ]
 
-    lines = [f"📋 Доска — неделя {now.isocalendar()[1]}"]
-    if in_progress:
-        lines.append(f"🔨 В работе ({len(in_progress)}): {describe(in_progress)}")
-    else:
-        lines.append("🔨 В работе: ничего")
-    if in_review:
-        lines.append(f"👀 На ревью ({len(in_review)}): {describe(in_review)}")
-    if stale:
-        aged = ", ".join(f"{c.key} ({(now - c.status_changed_at).days} дн.)" for c in stale)
-        lines.append(f"⏳ В In Progress {STALE_DAYS}+ дней: {aged}")
-    if startable:
-        top = startable[0]
-        label = top.priority or "без приоритета"
-        lines.append(f"➡️ Дальше: {top.key} {shorten(top.title)} ({label})")
-    if p0:
-        lines.append(f"🔴 P0 в Backlog: {len(p0)}")
-    if no_priority:
-        lines.append(f"🆕 Без приоритета: {len(no_priority)} — пора разобрать")
-    if flagged:
-        counts = ", ".join(
-            f"{label}: {sum(1 for c in flagged if label in c.labels)}"
-            for label in FLAG_LABELS
-            if any(label in c.labels for c in flagged)
-        )
-        lines.append(f"⛔ Заблокировано: {len(flagged)} ({counts})")
-    for epic in sorted((c for c in open_cards if c.is_epic), key=lambda c: c.number):
-        lines.append(f"🧩 {epic.key} {shorten(epic.title)} — {epic.sub_done}/{epic.sub_total}")
-    lines.append(f"✅ Закрыто за неделю: {len(closed)}")
-    lines.append(f"Доска: {PROJECT_URL}")
+    def stale(card: Card) -> str:
+        days = (now - card.status_changed_at).days
+        return f" — ⏳ {days} дн." if days >= STALE_DAYS else ""
+
+    start = now - timedelta(days=CLOSED_WINDOW_DAYS)
+    lines = [f"📋 Доска: {start:%d.%m} – {now:%d.%m}", ""]
+    lines += section("🔨 В работе", in_progress, stale)
+    lines.append("")
+    lines += section("👀 На ревью", in_review)
+    lines.append("")
+    lines += section("✅ Сделано за неделю", done)
+    lines += ["", f"Доска: {PROJECT_URL}"]
 
     text = "\n".join(lines)
     return text if len(text) <= TELEGRAM_LIMIT else text[: TELEGRAM_LIMIT - 1] + "…"

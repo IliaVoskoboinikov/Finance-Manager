@@ -12,20 +12,23 @@ import ci_failure
 NOW = datetime(2026, 10, 12, 6, 0, tzinfo=timezone.utc)
 
 
-def card(number, title="Задача", status="Backlog", priority=None, labels=(), state="OPEN",
-         status_days_ago=0, closed_days_ago=None, sub=(0, 0)):
+def card(number, title="Задача", status="Backlog", labels=(), state="OPEN", state_reason=None,
+         status_days_ago=0, closed_days_ago=None):
     return board.Card(
         number=number,
         title=title,
         state=state,
+        state_reason=state_reason,
         status=status,
-        priority=priority,
         labels=frozenset(labels),
         status_changed_at=NOW - timedelta(days=status_days_ago),
         closed_at=None if closed_days_ago is None else NOW - timedelta(days=closed_days_ago),
-        sub_total=sub[1],
-        sub_done=sub[0],
     )
+
+
+def closed(number, title="Задача", days_ago=1, reason="COMPLETED", labels=()):
+    return card(number, title, status="Done", labels=labels, state="CLOSED", state_reason=reason,
+                closed_days_ago=days_ago)
 
 
 class IssueFromBranchTest(unittest.TestCase):
@@ -79,45 +82,47 @@ class EscapeCommandTest(unittest.TestCase):
 class DigestTest(unittest.TestCase):
     def test_full_digest(self):
         cards = [
-            card(1, "Эпик", status="In Progress", labels=["epic"], sub=(2, 5)),
-            card(2, "В работе", status="In Progress", priority="P1", status_days_ago=9),
-            card(3, "На ревью", status="In Review", priority="P1"),
-            card(4, "Срочный баг", priority="P0", labels=["bug"]),
-            card(5, "Обычная", priority="P2"),
-            card(6, "Без приоритета"),
-            card(7, "Ждёт бэкенд", priority="P0", labels=["needs-backend"]),
-            card(8, "Закрыта", status="Done", state="CLOSED", closed_days_ago=2),
-            card(9, "Давно закрыта", status="Done", state="CLOSED", closed_days_ago=30),
+            card(1, "Эпик", status="In Progress", labels=["epic"]),
+            card(2, "Давно в работе", status="In Progress", status_days_ago=9),
+            card(3, "Свежая", status="In Progress", status_days_ago=2),
+            card(4, "На ревью", status="In Review"),
+            card(5, "Срочный баг в бэклоге", labels=["bug"]),
+            closed(6, "Сделана"),
+            closed(7, "Эпик закрыт", labels=["epic"]),
         ]
         text = board.build_digest(cards, NOW)
-        self.assertIn("неделя 42", text)
-        self.assertIn("🔨 В работе (1): FM-2 В работе", text)
-        self.assertIn("👀 На ревью (1): FM-3 На ревью", text)
-        self.assertIn("⏳ В In Progress 7+ дней: FM-2 (9 дн.)", text)
-        # Следующая — P0 без блокирующих флагов: FM-7 ждёт бэкенд и не годится.
-        self.assertIn("➡️ Дальше: FM-4 Срочный баг (P0)", text)
-        self.assertIn("🔴 P0 в Backlog: 2", text)
-        self.assertIn("🆕 Без приоритета: 1", text)
-        self.assertIn("⛔ Заблокировано: 1 (needs-backend: 1)", text)
-        self.assertIn("🧩 FM-1 Эпик — 2/5", text)
-        self.assertIn("✅ Закрыто за неделю: 1", text)
+        self.assertTrue(text.startswith("📋 Доска: 05.10 – 12.10\n"))
+        self.assertIn("🔨 В работе (2):\n• FM-2 Давно в работе — ⏳ 9 дн.\n• FM-3 Свежая\n", text)
+        self.assertIn("👀 На ревью (1):\n• FM-4 На ревью\n", text)
+        self.assertIn("✅ Сделано за неделю (2):\n• FM-6 Сделана\n• FM-7 Эпик закрыт\n", text)
+        # Бэклог и открытые эпики в отчёт о неделе не попадают.
+        self.assertNotIn("FM-5", text)
+        self.assertNotIn("FM-1 ", text)
         self.assertTrue(text.endswith(board.PROJECT_URL))
 
     def test_empty_board(self):
         text = board.build_digest([], NOW)
         self.assertIn("🔨 В работе: ничего", text)
-        self.assertNotIn("➡️", text)
-        self.assertNotIn("🆕", text)
-        self.assertIn("✅ Закрыто за неделю: 0", text)
+        self.assertIn("👀 На ревью: ничего", text)
+        self.assertIn("✅ Сделано за неделю: ничего", text)
 
-    def test_epic_is_not_counted_as_work(self):
-        text = board.build_digest([card(1, "Эпик", status="In Progress", labels=["epic"])], NOW)
-        self.assertIn("🔨 В работе: ничего", text)
-        self.assertNotIn("Без приоритета", text)
+    def test_done_is_completed_within_window(self):
+        cards = [
+            closed(1, "Вчера"),
+            closed(2, "Шесть дней назад", days_ago=6),
+            closed(3, "Неделю назад", days_ago=7),
+            closed(4, "Не будем делать", reason="NOT_PLANNED"),
+            closed(5, "Дубль", reason="DUPLICATE"),
+        ]
+        text = board.build_digest(cards, NOW)
+        self.assertIn("✅ Сделано за неделю (2):\n• FM-1 Вчера\n• FM-2 Шесть дней назад\n", text)
 
-    def test_unprioritized_card_is_proposed_last(self):
-        cards = [card(1, "Без приоритета"), card(2, "P3", priority="P3")]
-        self.assertIn("➡️ Дальше: FM-2 P3 (P3)", board.build_digest(cards, NOW))
+    def test_long_section_is_cut_with_remainder(self):
+        cards = [closed(n) for n in range(1, board.SECTION_LIMIT + 4)]
+        text = board.build_digest(cards, NOW)
+        self.assertIn(f"✅ Сделано за неделю ({board.SECTION_LIMIT + 3}):", text)
+        self.assertIn(f"• FM-{board.SECTION_LIMIT} Задача\n• и ещё 3\n", text)
+        self.assertNotIn(f"FM-{board.SECTION_LIMIT + 1} ", text)
 
     def test_long_digest_is_truncated_to_telegram_limit(self):
         cards = [card(n, "Очень длинное название " * 5, status="In Progress") for n in range(1, 200)]
