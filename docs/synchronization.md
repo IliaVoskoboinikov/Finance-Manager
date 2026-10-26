@@ -108,10 +108,16 @@ val request = PeriodicWorkRequestBuilder<DelegatingWorker>(
 WorkManager.getInstance(context)
     .enqueueUniquePeriodicWork(
         SYNC_PERIODIC_WORK,
-        ExistingPeriodicWorkPolicy.KEEP,
+        ExistingPeriodicWorkPolicy.UPDATE,
         request
     )
 ```
+
+`schedulePeriodicSync` вызывается и на каждом старте (`SyncInitializer`), и при смене интервала
+в настройках (`SetSyncIntervalHoursUseCase`). Политика — `UPDATE`: она меняет период уже
+поставленной задачи на месте и сохраняет время прошлого запуска, поэтому старт приложения не
+сдвигает отсчёт, а идущий синк не прерывается. `KEEP` оставлял задачу со старым периодом, и
+новый интервал не применялся; `REPLACE` сбрасывал бы отсчёт на каждом старте.
 
 - **Одноразовый синк** (например, по кнопке "Синхронизировать сейчас"):
 
