@@ -13,7 +13,7 @@
 
 ```mermaid
 flowchart TD
-    pr["pull_request<br/>(любая ветка)"] --> ci["ci.yml — CI<br/>11 параллельных джоб"]
+    pr["pull_request<br/>(любая ветка)"] --> ci["ci.yml — CI<br/>13 параллельных джоб"]
     pushM["push в master"] --> ci
     pr --> sec["security.yml<br/>gitleaks + dependency-review"]
     pushM --> sec
@@ -107,7 +107,8 @@ JDK **21** во всех джобах, ставится в [`init-gradle`](../.g
 **Гейт релиза** — вход `release-gate: true` у `workflow_call`. В этом режиме джоба `changes` не
 запускается (фильтра по диффу нет, проверки идут всегда), `run-tests` гоняет полный `test`, как на
 `master`, а рекомендательная `dependency-analysis` пропускается — иначе публикация ждала бы её
-до получаса ради текста, который ничего не блокирует.
+до получаса ради текста, который ничего не блокирует. Пропускается и `build-release`: release
+там и так собирают `build-apk` и `build-aab` настоящим ключом.
 
 **Правки только документации проверки кода не запускают.** Первой идёт лёгкая джоба `changes`
 ([`dorny/paths-filter`](https://github.com/dorny/paths-filter)): если все изменённые файлы —
@@ -120,13 +121,14 @@ to be reported» по required-чекам ruleset `master`. Пропущенна
 упала, выход пустой, и проверки запускаются, а не пропускаются молча. Secret scan
 (`security.yml`) фильтра не имеет — секрет может утечь и в Markdown.
 
-Двенадцать джоб проверок ждут только `changes`, а между собой не связаны `needs`: падение одной
-не останавливает остальные, и в сводке прогона видно сразу все проблемы. Одиннадцать из них
+Тринадцать джоб проверок ждут только `changes`, а между собой не связаны `needs`: падение одной
+не останавливает остальные, и в сводке прогона видно сразу все проблемы. Двенадцать из них
 блокирующие, `dependency-analysis` — рекомендательная (`continue-on-error`).
 
 | Джоба | Команда / action | Что проверяет | Артефакты и отчёты |
 |---|---|---|---|
 | `build-app` | `./gradlew assembleDebug` | Проект компилируется. | `debug-apk`; таблица времени сборки в Step Summary. |
+| `build-release` | `./gradlew :app:assembleRelease` (одноразовый ключ подписи) | Release собирается: R8 и шринк ресурсов проходят с текущими `proguard-rules.pro`. Не идёт в гейте релиза. | `r8-missing-rules` при падении. |
 | `run-tests` | `./gradlew test` (master) / `runAffectedUnitTests` (ветки и PR) | Юнит-тесты (JVM + Robolectric) и архитектурные тесты `:konsist`. | Аннотации на упавших тестах в diff, `unit-tests-html` при падении. |
 | `check-dependency-guard` | `./gradlew :app:dependencyGuard` | Release-classpath не разошёлся со слепком. | — |
 | `dependency-analysis` | `./gradlew buildHealth` | Неиспользуемые и неверно объявленные зависимости. Не блокирует (`continue-on-error`). | `dependency-analysis-report`; первые 200 строк отчёта в Step Summary. |
@@ -140,6 +142,21 @@ to be reported» по required-чекам ruleset `master`. Пропущенна
 | `nav-graph` | `./gradlew navCheck --continue` + [`actions/nav-graph`](../.github/actions/nav-graph/action.yml) | Граф навигации из аннотаций совпадает с бейзлайнами `*/nav/*.nav`; карта экранов и галерея `@Preview` собираются без ошибок. | `nav-graph-report` (PNG + интерактивный HTML + `index.html`); результат `navCheck` с диффом расхождения и таблицы экранов/переходов в Step Summary. |
 
 ### Как устроены отдельные джобы
+
+**`build-release`.** R8 и шринк ресурсов включены только для release (`AndroidAppConventionPlugin`),
+а `build-app` собирает debug, поэтому без этой джобы сломанное keep-правило или `Missing class`
+всплывали лишь в `cd_release.yml` — в момент релиза. Релизного keystore в CI нет и быть не
+должно: в джобе выполняется код PR, а секрет `JKS_KS` доступен только CD. Поэтому шаг
+`keytool -genkeypair` создаёт в `$RUNNER_TEMP` одноразовый ключ, и сборка подписывается им через
+`-Pandroid.injected.signing.*`: проверяется сборка, а не подпись, `signingConfig` в
+`build-logic` не трогается, и релиз без keystore по-прежнему падает, а не уходит с чужой подписью.
+`uploadCrashlyticsMappingFileRelease` исключён (`-x`): маппинг PR-сборки в Firebase не нужен.
+При падении `missing_rules.txt`, который пишет R8, уходит артефактом `r8-missing-rules` — его
+правила переносят в `app/proguard-rules.pro` (см. [команды](./commands.md#релизная-сборка-локально)).
+Джоба ловит ошибки сборки, но не крэши в рантайме из-за вырезанного рефлексией класса: для
+этого release-APK нужно запускать. Отдельная джоба, а не шаг в `build-app`: debug и release —
+разные варианты, общих задач компиляции у них почти нет, и шаг лишь удлинил бы `build-app`
+на время R8 вместо параллельного прогона.
 
 **`run-coverage`.** Вся логика — в composite action `coverage`: сначала генерируются
 отчёты (`:koverHtmlReportFull`, `:koverXmlReportFull`), потом Python-скрипт парсит XML и
@@ -483,7 +500,7 @@ CI намеренно тонкий, поэтому «где что настро�
 
 ## Ограничения
 
-- **Двенадцать джоб — двенадцать холодных сборок.** Общего build cache между джобами нет,
+- **Тринадцать джоб — тринадцать холодных сборок.** Общего build cache между джобами нет,
   поэтому новые проверки по возможности встраиваются шагом в джобу, которая уже собирает
   нужное, — так подключён `navCheck`.
 - **Гейт релиза — только `ci.yml`.** Secret scan (`security.yml`) на `releases/**` идёт отдельным
@@ -499,7 +516,6 @@ CI намеренно тонкий, поэтому «где что настро�
 
 | Задача | Что сейчас не так |
 | :--- | :--- |
-| [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72) | release-сборку (R8) CI не собирает: её падение видно только при релизе |
 | [FM-71](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/71) | в `cd_tests.yml` и `cd_release.yml` нет явного блока `permissions:` |
 | [FM-74](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/74) | `YANDEX_CLIENT_ID` не передаётся в сборки CI и CD — вход через Яндекс в них не работает |
 | [FM-75](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/75) | `printVersionName` не знает про `-PversionName`, Telegram-отчёты показывают неверную версию |

@@ -10,6 +10,11 @@ so the PR doesn't go red on something a local run would have caught:
 # Build (CI job build-app)
 ./gradlew assembleDebug
 
+# Release build with R8 (CI job build-release); signed with a throwaway key, see docs/commands.md
+./gradlew :app:assembleRelease -x :app:uploadCrashlyticsMappingFileRelease \
+  -Pandroid.injected.signing.store.file=<keystore> -Pandroid.injected.signing.store.password=… \
+  -Pandroid.injected.signing.key.alias=… -Pandroid.injected.signing.key.password=…
+
 # Run unit tests (pure JVM modules have only `test`)
 ./gradlew testDebugUnitTest
 ./gradlew :core:domain:test :konsist:test :lint:test

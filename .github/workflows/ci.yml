@@ -100,6 +100,46 @@ jobs:
           name: debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
+  # R8 и шринк ресурсов включены только в release, а build-app собирает debug: без этой джобы
+  # сломанное правило в proguard-rules.pro всплывало лишь в cd_release.yml, в момент релиза.
+  # Релизного keystore здесь нет и быть не должно (код PR выполняется в джобе), поэтому APK
+  # подписывается одноразовым ключом — проверяется сборка, а не подпись. Маппинг в Crashlytics
+  # не отправляется: это не релиз. В гейте релиза джоба не нужна — release там собирают
+  # build-apk и build-aab в cd_release.yml.
+  build-release:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.outputs.code != 'false' && !inputs.release-gate }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
+      # Пароли не секрет: ключ живёт до конца джобы и ничего, кроме этой сборки, не подписывает.
+      - name: Create throwaway signing key
+        run: |
+          keytool -genkeypair -keystore "$RUNNER_TEMP/ci-release.p12" -storetype PKCS12 \
+            -storepass android -keypass android -alias ci \
+            -keyalg RSA -keysize 2048 -validity 1 -dname "CN=Finance Manager CI"
+      - name: Build release APK
+        run: |
+          ./gradlew :app:assembleRelease $gradleFlags \
+            -x :app:uploadCrashlyticsMappingFileRelease \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/ci-release.p12" \
+            -Pandroid.injected.signing.store.password=android \
+            -Pandroid.injected.signing.key.alias=ci \
+            -Pandroid.injected.signing.key.password=android
+      # На Missing class R8 сам пишет недостающие правила — их переносят в app/proguard-rules.pro.
+      - name: Upload R8 missing rules
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: r8-missing-rules
+          path: app/build/outputs/mapping/release/missing_rules.txt
+          if-no-files-found: ignore
+
   run-tests:
     needs: changes
     if: ${{ !cancelled() && needs.changes.outputs.code != 'false' }}
