@@ -131,7 +131,8 @@ Keystore берётся из **`app/release.jks`** (`./gradlew :app:signingRepor
 `app/build/outputs/mapping/release/missing_rules.txt`. Их переносят в `app/proguard-rules.pro`
 с комментарием, почему класса нет (пример — `-dontwarn kotlinx.parcelize.Parcelize` для Yandex
 ID SDK), и проверяют сценарий на release-сборке. В CI release собирает джоба `build-release` на
-каждом PR, а при падении выкладывает этот файл артефактом `r8-missing-rules` — см.
+каждом PR с изменениями кода (правки только `*.md` / `docs/**` её пропускают), а при падении
+выкладывает этот файл артефактом `r8-missing-rules` — см.
 [docs/ci-cd.md](ci-cd.md#как-устроены-отдельные-джобы).
 
 В CD версия вычисляется из имени ветки `releases/**v.X.Y.Z`
