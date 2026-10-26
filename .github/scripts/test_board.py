@@ -117,16 +117,33 @@ class DigestTest(unittest.TestCase):
         text = board.build_digest(cards, NOW)
         self.assertIn("✅ Сделано за неделю (2):\n• FM-1 Вчера\n• FM-2 Шесть дней назад\n", text)
 
-    def test_long_section_is_cut_with_remainder(self):
-        cards = [closed(n) for n in range(1, board.SECTION_LIMIT + 4)]
+    def test_long_sections_share_telegram_limit(self):
+        long = "Очень длинное название " * 5
+        cards = [card(n, long, status="In Progress", status_days_ago=30) for n in range(1, 200)]
+        cards += [card(n, long, status="In Review") for n in range(200, 400)]
+        cards += [closed(n, long) for n in range(400, 600)]
         text = board.build_digest(cards, NOW)
-        self.assertIn(f"✅ Сделано за неделю ({board.SECTION_LIMIT + 3}):", text)
-        self.assertIn(f"• FM-{board.SECTION_LIMIT} Задача\n• и ещё 3\n", text)
-        self.assertNotIn(f"FM-{board.SECTION_LIMIT + 1} ", text)
+        self.assertLessEqual(len(text), board.TELEGRAM_LIMIT)
+        # Длинные разделы в работе и на ревью не вытесняют сделанное и ссылку на доску.
+        for header in ("🔨 В работе (199):", "👀 На ревью (200):", "✅ Сделано за неделю (200):"):
+            self.assertIn(header, text)
+        self.assertEqual(text.count("• и ещё "), 3)
+        self.assertIn("• FM-400 ", text)
+        self.assertTrue(text.endswith(board.PROJECT_URL))
 
-    def test_long_digest_is_truncated_to_telegram_limit(self):
-        cards = [card(n, "Очень длинное название " * 5, status="In Progress") for n in range(1, 200)]
-        self.assertLessEqual(len(board.build_digest(cards, NOW)), board.TELEGRAM_LIMIT)
+    def test_short_section_leaves_room_to_next(self):
+        long = "Очень длинное название " * 5
+        cards = [card(1, "Одна", status="In Progress")] + [closed(n, long) for n in range(2, 60)]
+        text = board.build_digest(cards, NOW)
+        self.assertLessEqual(len(text), board.TELEGRAM_LIMIT)
+        # Раздел «Сделано» получает место, которое не заняли «В работе» и «На ревью».
+        self.assertGreater(text.count("• FM-"), 40)
+
+    def test_remainder_counts_hidden_cards(self):
+        text = board.section("✅ Сделано", [closed(n) for n in range(1, 6)], budget=60)
+        shown = text.count("• FM-")
+        self.assertIn(f"• и ещё {5 - shown}", text)
+        self.assertLessEqual(len(text), 60)
 
     def test_title_is_shortened(self):
         self.assertEqual(len(board.shorten("а" * 100)), 60)

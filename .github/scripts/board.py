@@ -39,9 +39,11 @@ STALE_DAYS = 7
 CLOSED_WINDOW_DAYS = 7
 # Сделанной считается задача, закрытая как выполненная: NOT_PLANNED и DUPLICATE — не работа.
 DONE_REASON = "COMPLETED"
-# Сколько строк показывать в одном разделе сводки; остальное — одной строкой «и ещё N».
-SECTION_LIMIT = 25
-# Лимит Telegram на сообщение — 4096 символов; запас на многоточие.
+# Место под строку «• и ещё N» в конце обрезанного раздела сводки.
+REMAINDER_RESERVE = 16
+# Разделы сводки отделены пустой строкой.
+BLOCK_SEPARATOR = "\n\n"
+# Лимит Telegram на сообщение — 4096 символов; берём с запасом.
 TELEGRAM_LIMIT = 3900
 
 # Ветки задач живут в feature/, как и остальные: feature/FM-42-fix_navigation.
@@ -433,16 +435,22 @@ def shorten(title: str, limit: int = 60) -> str:
     return title if len(title) <= limit else title[: limit - 1] + "…"
 
 
-def section(header: str, cards, note=lambda card: "") -> list:
-    """Раздел сводки: заголовок со счётчиком и по строке на карточку, длинный хвост — одной строкой."""
+def section(header: str, cards, budget: int, note=None) -> str:
+    """Раздел сводки не длиннее budget символов: по строке на карточку, хвост — строкой «и ещё N»."""
     if not cards:
-        return [f"{header}: ничего"]
+        return f"{header}: ничего"
     ordered = sorted(cards, key=lambda c: c.number)
     lines = [f"{header} ({len(ordered)}):"]
-    lines += [f"• {c.key} {shorten(c.title)}{note(c)}" for c in ordered[:SECTION_LIMIT]]
-    if len(ordered) > SECTION_LIMIT:
-        lines.append(f"• и ещё {len(ordered) - SECTION_LIMIT}")
-    return lines
+    size = len(lines[0])
+    for index, card in enumerate(ordered):
+        line = f"• {card.key} {shorten(card.title)}{note(card) if note else ''}"
+        reserve = REMAINDER_RESERVE if index < len(ordered) - 1 else 0
+        if size + 1 + len(line) + reserve > budget:
+            lines.append(f"• и ещё {len(ordered) - index}")
+            break
+        lines.append(line)
+        size += 1 + len(line)
+    return "\n".join(lines)
 
 
 def build_digest(cards, now: datetime) -> str:
@@ -469,16 +477,21 @@ def build_digest(cards, now: datetime) -> str:
         return f" — ⏳ {days} дн." if days >= STALE_DAYS else ""
 
     start = now - timedelta(days=CLOSED_WINDOW_DAYS)
-    lines = [f"📋 Доска: {start:%d.%m} – {now:%d.%m}", ""]
-    lines += section("🔨 В работе", in_progress, stale)
-    lines.append("")
-    lines += section("👀 На ревью", in_review)
-    lines.append("")
-    lines += section("✅ Сделано за неделю", done)
-    lines += ["", f"Доска: {PROJECT_URL}"]
-
-    text = "\n".join(lines)
-    return text if len(text) <= TELEGRAM_LIMIT else text[: TELEGRAM_LIMIT - 1] + "…"
+    title = f"📋 Доска: {start:%d.%m} – {now:%d.%m}"
+    footer = f"Доска: {PROJECT_URL}"
+    sections = [("🔨 В работе", in_progress, stale), ("👀 На ревью", in_review, None),
+                ("✅ Сделано за неделю", done, None)]
+    # Лимит Telegram делится между разделами поровну, а то, что раздел не израсходовал, переходит
+    # следующим: так длинный список в работе не вытеснит из сообщения сделанное и ссылку на доску.
+    separators = len(BLOCK_SEPARATOR) * (len(sections) + 1)
+    remaining = TELEGRAM_LIMIT - len(title) - len(footer) - separators
+    blocks = [title]
+    for left, (header, group, note) in zip(range(len(sections), 0, -1), sections):
+        block = section(header, group, remaining // left, note)
+        remaining -= len(block)
+        blocks.append(block)
+    blocks.append(footer)
+    return BLOCK_SEPARATOR.join(blocks)
 
 
 def write_github_output(name: str, value: str) -> None:
