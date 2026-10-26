@@ -130,8 +130,10 @@ Keystore берётся из **`app/release.jks`** (`./gradlew :app:signingRepor
 Если `:app:minifyReleaseWithR8` падает на `Missing class …`, R8 сам пишет нужные правила в
 `app/build/outputs/mapping/release/missing_rules.txt`. Их переносят в `app/proguard-rules.pro`
 с комментарием, почему класса нет (пример — `-dontwarn kotlinx.parcelize.Parcelize` для Yandex
-ID SDK), и проверяют сценарий на release-сборке. CI release пока не собирает, поэтому такие
-падения всплывают только при релизе — [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72).
+ID SDK), и проверяют сценарий на release-сборке. В CI release собирает джоба `build-release` на
+каждом PR с изменениями кода (правки только `*.md` / `docs/**` её пропускают), а при падении
+выкладывает этот файл артефактом `r8-missing-rules` — см.
+[docs/ci-cd.md](ci-cd.md#как-устроены-отдельные-джобы).
 
 В CD версия вычисляется из имени ветки `releases/**v.X.Y.Z`
 (`VERSION_CODE = MAJOR*1000000 + MINOR*1000 + PATCH`) — см. [docs/ci-cd.md](ci-cd.md).
@@ -332,9 +334,9 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) ./gradlew :app:exportNavGraphToDocs
 
 ## Полный прогон «как в CI»
 
-CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, `detekt`, `ktlintCheck`,
-`:app:assertModuleGraph`, `aalekhCheck`, размер приложения, время сборки и `nav-graph`
-(`navCheck` + карта навигации).
+CI гоняет джобы: `assembleDebug`, `assembleRelease` (одноразовый ключ подписи), `test`,
+`koverVerifyFull`, `lint`, `detekt`, `ktlintCheck`, `:app:assertModuleGraph`, `aalekhCheck`,
+размер приложения, время сборки и `nav-graph` (`navCheck` + карта навигации).
 
 Локальный эквивалент перед пушем (проверено — проходит целиком):
 
@@ -342,6 +344,10 @@ CI гоняет джобы: `assembleDebug`, `test`, `koverVerifyFull`, `lint`, 
 ./gradlew assembleDebug testDebugUnitTest :core:domain:test :lint:test \
           :koverVerifyFull lint detekt ktlintCheck navCheck :app:assertModuleGraph aalekhCheck
 ```
+
+Release с R8 этот прогон не собирает: ему нужен ключ подписи. Если менялись зависимости или
+`app/proguard-rules.pro`, отдельно запусти команду из
+[«Релизная сборка локально»](#релизная-сборка-локально) — подпись debug-ключом, как в CI.
 
 Быстрая проверка одного затронутого модуля:
 

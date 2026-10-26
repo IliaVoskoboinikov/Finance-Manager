@@ -10,6 +10,11 @@ so the PR doesn't go red on something a local run would have caught:
 # Build (CI job build-app)
 ./gradlew assembleDebug
 
+# Release build with R8 (CI job build-release); signed with a throwaway key, see docs/commands.md
+./gradlew :app:assembleRelease -x :app:uploadCrashlyticsMappingFileRelease \
+  -Pandroid.injected.signing.store.file=<keystore> -Pandroid.injected.signing.store.password=… \
+  -Pandroid.injected.signing.key.alias=… -Pandroid.injected.signing.key.password=…
+
 # Run unit tests (pure JVM modules have only `test`)
 ./gradlew testDebugUnitTest
 ./gradlew :core:domain:test :konsist:test :lint:test
@@ -78,7 +83,11 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
 1.  **Turn on Auto-fix.** When the user says the PR is open, bind it to the session (`get_status`;
     `bind_pr` if the PR bar didn't pick it up) and switch on Auto-fix (`set_monitor` with
     `auto_fix: true`; the user approves). The app then wakes the session with a
-    `<ci-monitor-event>` on review comments, CI failures and merge conflicts. Never poll the status
+    `<ci-monitor-event>` on review comments, CI failures and merge conflicts. The app binds a PR
+    by itself only when the session runs `gh pr create` or pushes the branch; a PR opened in the
+    GitHub UI after the user's own push stays unbound, and until the bind nothing wakes the
+    session — the review sits unread (PR #266). So the report ends with a request to say when
+    the PR is open, and the first step after that is `get_status`. Never poll the status
     in a loop. Without the desktop app (CLI) there is no Auto-fix: the user tells you when the
     review has arrived, and you check once. The app's Auto-fix messages tell the agent to
     commit and push fixes without asking; in this project git stays with the user, so fixes stay
