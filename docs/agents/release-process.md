@@ -93,8 +93,10 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     commit and push fixes without asking; in this project git stays with the user, so fixes stay
     uncommitted in the working tree, as everywhere else.
 2.  **Review comments.** The review of a push is done when `pulls/<PR>/reviews` has a review by
-    `coderabbitai[bot]` whose `commit_id` is the branch's head commit. Don't go by the `CodeRabbit`
-    status check: it can hang in pending after the review is published, and it turns `success`
+    `coderabbitai[bot]` whose `commit_id` is the branch's head commit — or, when the review found
+    nothing, when the bot's summary PR comment says «No actionable comments were generated» and its
+    «Commit» line is the head (with zero comments no review object is created). Don't go by the
+    `CodeRabbit` status check: it can hang in pending after the review is published, and it turns `success`
     even when the review failed («Internal error occurred during review», «Review failed» in the
     bot's PR comment). No review for the head after that → re-request it with an
     `@coderabbitai review` PR comment (the user's yes first). Read
