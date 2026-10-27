@@ -109,7 +109,8 @@ dependencyAnalysis {
  *
  * Из метрики исключены сгенерированный код (Hilt/Dagger, Room `*_Impl`, BuildConfig,
  * Compose singletons) и UI-слой (@Composable/@Preview, Activity/App, navigation
- * `*FeatureImpl`) — Compose-тесты осознанно отложены; всё остальное держим на уровне 98%.
+ * `*FeatureImpl`) — Compose-тесты осознанно отложены; всё остальное держим не ниже 95%
+ * (порог `minBound` ниже — единственный источник истины для документации).
  */
 kover {
     merge {

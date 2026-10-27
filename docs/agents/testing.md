@@ -22,6 +22,9 @@
 *   **CI gate:** aggregate line coverage of testable code ≥ 95% (`./gradlew :koverVerifyFull`, rule and
     exclusions in the root `build.gradle.kts`). UI (`@Composable`/`@Preview`, `*ScreenKt`, Activities,
     `*FeatureImpl`) and generated code are excluded — everything else counts, so untested logic fails CI.
+    The number lives in `minBound` there; when it changes, update every doc that repeats it
+    (`git grep -nE "95 ?%|minBound\("`): `CLAUDE.md`, `README.md` + `README.ru.md`, `CONTRIBUTING.md`,
+    `docs/testing.md`, `docs/agents/*.md`, the KDoc above `kover {}`.
 
 ## Test Scenarios
 *   **Happy Path:** Standard successful execution.

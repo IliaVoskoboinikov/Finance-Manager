@@ -59,7 +59,7 @@ Android-`debug`-варианты). Ключевые задачи:
 |--------|-----------|
 | `./gradlew koverHtmlReportFull` | HTML-отчёт: `build/reports/kover/htmlFull/index.html`. |
 | `./gradlew koverXmlReportFull` | XML-отчёт (для CI/парсинга): `build/reports/kover/reportFull.xml`. |
-| `./gradlew koverVerifyFull` | Проверяет порог `minBound(99)` по строкам; падает, если ниже. |
+| `./gradlew koverVerifyFull` | Проверяет порог `minBound(95)` по строкам; падает, если ниже. |
 
 Фактическое покрытие тестируемого кода — **~99.6 %** по строкам.
 
@@ -90,7 +90,7 @@ Kover-метрику основного проекта. Его тесты зап
 
 # Покрытие
 ./gradlew koverHtmlReportFull      # человекочитаемый отчёт
-./gradlew koverVerifyFull          # гейт 98 %
+./gradlew koverVerifyFull          # гейт 95 %
 
 # Полный локальный гейт «как в CI»
 ./gradlew testDebugUnitTest :lint:test :core:domain:test \
