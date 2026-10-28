@@ -9,8 +9,8 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import soft.divan.common.di.ApplicationScope
 import soft.divan.common.di.IoDispatcher
-import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
-import soft.divan.financemanager.core.data.util.coroutne.impl.DefaultAppCoroutineContext
+import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
+import soft.divan.financemanager.core.data.util.coroutine.impl.DefaultAppCoroutineContext
 import javax.inject.Singleton
 
 @Module

@@ -30,8 +30,8 @@ so the PR doesn't go red on something a local run would have caught:
 # Classpath, module graph, architecture, navigation
 ./gradlew :app:dependencyGuard :app:assertModuleGraph aalekhCheck navCheck
 
-# App size (CI job check-app-size)
-./gradlew :app:analyzeDebugBundle
+# App size (CI job check-app-size); with the configuration cache Ruler fails ("Cannot open apk")
+./gradlew :app:analyzeDebugBundle --no-configuration-cache
 ```
 When a job is added to or removed from `ci.yml`, update this list. A change touching only
 `**/*.md` / `docs/**` skips the code jobs in CI, so they aren't run locally either. The release

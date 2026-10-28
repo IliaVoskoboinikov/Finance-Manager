@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import soft.divan.financemanager.core.database.dao.AccountDao
 import soft.divan.financemanager.core.database.dao.CategoryDao
+import soft.divan.financemanager.core.database.dao.OutboxDao
 import soft.divan.financemanager.core.database.dao.TransactionDao
 
 class DatabaseCleanupManagerImplTest {
@@ -15,10 +16,12 @@ class DatabaseCleanupManagerImplTest {
     private val accountDao = mockk<AccountDao>(relaxUnitFun = true)
     private val transactionDao = mockk<TransactionDao>(relaxUnitFun = true)
     private val categoryDao = mockk<CategoryDao>(relaxUnitFun = true)
+    private val outboxDao = mockk<OutboxDao>(relaxUnitFun = true)
 
     private val cleanupManager = DatabaseCleanupManagerImpl(
         accountDao = accountDao,
-        transactionDao = transactionDao
+        transactionDao = transactionDao,
+        outboxDao = outboxDao
     )
 
     @Test
@@ -30,10 +33,19 @@ class DatabaseCleanupManagerImplTest {
     }
 
     @Test
-    fun `clearUserData removes transactions before accounts`() = runTest {
+    fun `clearUserData clears the outbox queue`() = runTest {
+        // Операции ушедшего пользователя не должны отправиться под новой сессией
+        cleanupManager.clearUserData()
+
+        coVerify(exactly = 1) { outboxDao.deleteAll() }
+    }
+
+    @Test
+    fun `clearUserData removes outbox before the data it references`() = runTest {
         cleanupManager.clearUserData()
 
         coVerifyOrder {
+            outboxDao.deleteAll()
             transactionDao.deleteAll()
             accountDao.deleteAll()
         }
