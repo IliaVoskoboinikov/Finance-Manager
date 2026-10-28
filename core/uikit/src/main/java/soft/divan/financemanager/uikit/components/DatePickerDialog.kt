@@ -11,9 +11,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import soft.divan.financemanager.core.uikit.R
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,7 +21,7 @@ fun FMDatePickerDialog(
     onDismissRequest: () -> Unit
 ) {
     val pickerState = rememberDatePickerState(
-        initialSelectedDateMillis = initialDate.toEpochDay() * 24 * 60 * 60 * 1000
+        initialSelectedDateMillis = initialDate.toDatePickerMillis()
     )
 
     DatePickerDialog(
@@ -31,9 +29,7 @@ fun FMDatePickerDialog(
         confirmButton = {
             TextButton(onClick = {
                 pickerState.selectedDateMillis?.let {
-                    val selectedDate =
-                        Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
-                    onDateSelect(selectedDate)
+                    onDateSelect(datePickerMillisToLocalDate(it))
                     onDismissRequest()
                 }
             }) {

@@ -96,7 +96,10 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     `coderabbitai[bot]` whose `commit_id` is the branch's head commit. Don't go by the `CodeRabbit`
     status check: it can hang in pending after the review is published, and it turns `success`
     even when the review failed («Internal error occurred during review», «Review failed» in the
-    bot's PR comment). No review for the head after that → re-request it with an
+    bot's PR comment). A clean review posts no review object at all: the bot's summary PR
+    comment then says «No actionable comments were generated in the recent review» with
+    «Commit: <head>» in its run info — that counts as done (PR #273). No review for the head
+    after that → re-request it with an
     `@coderabbitai review` PR comment (the user's yes first). Read
     every unresolved thread with all its comments, whoever started it: the owner's reply in a bot
     thread («это осознанно») changes the verdict. The bot's login is `coderabbitai` in GraphQL and
