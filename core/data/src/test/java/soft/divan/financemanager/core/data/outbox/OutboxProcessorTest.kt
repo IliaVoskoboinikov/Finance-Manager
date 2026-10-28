@@ -353,9 +353,25 @@ class OutboxProcessorTest {
         coEvery { localDataSource.markInProgress(any(), any(), any()) } returns true
         coEvery { entryHandler.handle(any()) } returns OutboxEntryOutcome.DONE
 
-        processor.process()
+        val drained = processor.process()
 
-        // Разбор обязан завершиться: остальное подберёт следующий прогон
+        // Разбор обязан завершиться, а остаток — уехать повтором, а не ждать периодического синка
+        assertThat(drained).isFalse()
+        coVerify(exactly = OutboxProcessor.MAX_PASSES) {
+            localDataSource.getReadyToSend(any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `a run that ends before the pass limit does not ask for a retry`() = runTest {
+        // Последний проход ничего не закрыл — очередь разобрана, повтор не нужен
+        val passes = List(OutboxProcessor.MAX_PASSES - 1) { listOf(entry(sequenceNo = it + 1L)) }
+        givenPasses(*passes.toTypedArray(), emptyList())
+        coEvery { entryHandler.handle(any()) } returns OutboxEntryOutcome.DONE
+
+        val drained = processor.process()
+
+        assertThat(drained).isTrue()
         coVerify(exactly = OutboxProcessor.MAX_PASSES) {
             localDataSource.getReadyToSend(any(), any(), any())
         }
