@@ -229,10 +229,11 @@ otherwise pick the sensible default and note it.
   when the user asks to start on a new branch, `git fetch origin` and
   `git switch --no-track -c feature/FM-N-… origin/master` from a clean tree.
 - **Hard rules are backed by `.claude/settings.json`:** `deny` blocks the plain
-  `git commit` / `push` / `reset` / `rebase` (not `git -C <dir> …` — the rule above still
-  applies), `gh pr create` / `merge`, and the Read tool on the
-  keystore, `local.properties` and `google-services.json` (a deny rule doesn't cover shell
-  commands: never print those files' secrets); the Stop hook (`.claude/hooks/verify-changes.py`)
+  `git commit` / `push` / `reset` / `rebase` and `gh pr create` / `merge`; the PreToolUse hook
+  `.claude/hooks/deny-git.py` parses each Bash command and refuses the same subcommands in other
+  forms (`git -C <dir> push`, `git -c k=v commit`, `bash -c "…"`). `deny` also stops the Read
+  tool on the keystore, `local.properties` and `google-services.json` (a deny rule doesn't cover
+  shell commands: never print those files' secrets); the Stop hook (`.claude/hooks/verify-changes.py`)
   runs `ktlintFormat`, then `ktlintCheck` on the changed modules and `detekt`. Personal
   allowlists go to the gitignored `settings.local.json`.
 - **A board task runs through the `fm-task` skill** (`/fm-task FM-N`): card → interview →

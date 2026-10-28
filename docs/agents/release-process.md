@@ -70,7 +70,8 @@ moved to a card, and the leftovers.
 - [ ] Dependencies changed → `./gradlew :app:dependencyGuardBaseline` re-recorded.
 - [ ] Navigation changed → `./gradlew navDump` re-recorded.
 - [ ] Every blocking CI job passed locally (list above).
-- [ ] Automatic review loop done: no valid finding left or 3 rounds, final pass run (see above).
+- [ ] Automatic review loop done: no valid finding left or 3 rounds, then the final pass — skipped
+      for a docs-only change (see above).
 - [ ] After the user opens the PR: Auto-fix is on, CodeRabbit's comments are triaged (see below).
 
 ## Self-review
@@ -103,8 +104,11 @@ with the user, so the loop is: you leave changes in the working tree → the use
 and opens the PR → you triage the review → the user pushes the fixes → CodeRabbit reviews again.
 
 1.  **Turn on Auto-fix.** When the user says the PR is open, bind it to the session (`get_status`;
-    `bind_pr` if the PR bar didn't pick it up) and switch on Auto-fix (`set_monitor` with
-    `auto_fix: true`; the user approves). The app then wakes the session with a
+    `bind_pr` if the PR bar didn't pick it up) and try Auto-fix (`set_monitor` with
+    `auto_fix: true`; the user approves). The app lets the agent switch it on only for a PR the
+    session opened with `gh pr create`, which `.claude/settings.json` denies — so for the usual
+    PR opened by the user, `set_monitor` is refused: say so once and fall back to the user telling
+    you when the review has arrived (below). The app then wakes the session with a
     `<ci-monitor-event>` on review comments, CI failures and merge conflicts. The app binds a PR
     by itself only when the session runs `gh pr create` or pushes the branch; a PR opened in the
     GitHub UI after the user's own push stays unbound, and until the bind nothing wakes the

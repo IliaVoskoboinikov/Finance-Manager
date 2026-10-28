@@ -47,14 +47,13 @@ def tail(text: str, limit: int) -> str:
 
 
 def project_root(data: dict) -> Optional[Path]:
-    # The session may stand in a subdirectory or another repo; the hook is about this one.
-    env = os.environ.get("CLAUDE_PROJECT_DIR")
-    if env:
-        return Path(env).resolve()
+    # The checkout the session works in: its cwd may be a subdirectory or a worktree, and
+    # CLAUDE_PROJECT_DIR can still point at the original checkout, so it is only a fallback.
+    cwd = data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR") or "."
     try:
         out = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
-            cwd=data.get("cwd") or ".", capture_output=True, text=True, timeout=15,
+            cwd=cwd, capture_output=True, text=True, timeout=15,
         )
     except Exception:
         return None
