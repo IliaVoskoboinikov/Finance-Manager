@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Read(./release.jks)",
+      "Read(./local.properties)",
+      "Read(./**/google-services.json)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/verify-changes.py\"",
+            "timeout": 600,
+            "statusMessage": "ktlintFormat, ktlintCheck и detekt по изменённым модулям"
+          }
+        ]
+      }
+    ]
+  }
+}

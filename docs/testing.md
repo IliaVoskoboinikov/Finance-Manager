@@ -5,8 +5,11 @@
 
 ## Цели
 
-- Покрыть юнит-тестами всю тестируемую на JVM логику (домен, данные, синхронизация,
-  ViewModel'и, мапперы) — целевой порог **95 %** по строкам.
+- Покрыть юнит-тестами тестируемую на JVM логику (домен, данные, синхронизация,
+  ViewModel'и, мапперы). Гейт CI — **70 %** по строкам (ниже — красный прогон), ориентир —
+  **90 %**. Ориентир не гейт: код ради покрытия не пишем и не перекраиваем, а тесты, которые
+  ничего не проверяют, а только проходят строки, не добавляем. Новая логика — с тестами
+  на поведение; тривиальный код без тестов допустим, пока покрытие выше гейта.
 - Проверять поведение, а не реализацию: happy-path, граничные случаи, сценарии ошибок.
 - Держать быстрый фидбэк: основная масса тестов — обычные JVM-юниты без эмулятора.
 - Изолировать «тяжёлые» тесты (Room, WorkManager, системные API) в Robolectric, но так,
@@ -59,7 +62,7 @@ Android-`debug`-варианты). Ключевые задачи:
 |--------|-----------|
 | `./gradlew koverHtmlReportFull` | HTML-отчёт: `build/reports/kover/htmlFull/index.html`. |
 | `./gradlew koverXmlReportFull` | XML-отчёт (для CI/парсинга): `build/reports/kover/reportFull.xml`. |
-| `./gradlew koverVerifyFull` | Проверяет порог `minBound(99)` по строкам; падает, если ниже. |
+| `./gradlew koverVerifyFull` | Проверяет порог `minLineCoverage` (70 %) по строкам; падает, если ниже. |
 
 Фактическое покрытие тестируемого кода — **~99.6 %** по строкам.
 
@@ -90,7 +93,7 @@ Kover-метрику основного проекта. Его тесты зап
 
 # Покрытие
 ./gradlew koverHtmlReportFull      # человекочитаемый отчёт
-./gradlew koverVerifyFull          # гейт 98 %
+./gradlew koverVerifyFull          # гейт 70 %
 
 # Полный локальный гейт «как в CI»
 ./gradlew testDebugUnitTest :lint:test :core:domain:test \
@@ -147,7 +150,7 @@ Kover-метрику основного проекта. Его тесты зап
    задача, без no-op в модулях).
 2. **Coverage summary** — парсит XML и выводит таблицу LINE/BRANCH-покрытия в сводку прогона
    (`$GITHUB_STEP_SUMMARY`).
-3. `:koverVerifyFull` — гейт: падает, если покрытие ниже порога `minBound` из корневого
+3. `:koverVerifyFull` — гейт: падает, если покрытие ниже порога `minLineCoverage` из корневого
    `build.gradle.kts` (единственный источник истины для числа).
 
 Сама джоба после action грузит HTML-отчёт артефактом `kover-coverage-html` (`if: always()`).
@@ -179,14 +182,13 @@ Kover-метрику основного проекта. Его тесты зап
 | [FM-112](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/112) | скриншот-тесты на Roborazzi |
 | [FM-107](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/107) | настоящие миграции Room и `MigrationTestHelper` |
 | [FM-83](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/83) | instrumented-тесты и эмулятор в CI |
-| [FM-78](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/78) | свести порог покрытия к одному числу в документации |
 | [FM-135](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/135) | добить покрытие: хвосты и фильтры Kover |
 
 ## Ключевые файлы
 
 | Файл | Роль |
 | :--- | :--- |
-| [`build.gradle.kts`](../build.gradle.kts) | Kover: фильтры знаменателя и порог `minBound` |
+| [`build.gradle.kts`](../build.gradle.kts) | Kover: фильтры знаменателя и порог `minLineCoverage` |
 | [`gradle/libs.versions.toml`](../gradle/libs.versions.toml) | бандл `unit-test`: JUnit, MockK, AssertJ, coroutines-test |
 | [`.github/actions/coverage/action.yml`](../.github/actions/coverage/action.yml) | отчёты, сводка и гейт покрытия в CI |
 | [`build-logic/convention/`](../build-logic/convention/) | конвеншен-плагины, которые подключают тестовый стек, и их TestKit-тесты |

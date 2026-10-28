@@ -263,6 +263,11 @@ hs_err_pid*
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,androidstudio,macos,windows
 
+### Claude Code ###
+# Общие правила агента — в .claude/settings.json; личные разрешения не коммитятся.
+.claude/settings.local.json
+.claude/worktrees/
+
 ### Publish secrets ###
 google_play_api_key.json
 secrets.properties

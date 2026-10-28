@@ -38,6 +38,26 @@ When a job is added to or removed from `ci.yml`, update this list. A change touc
 gate (`release-gate: true`) runs them regardless, but a docs-only change can't break them: Gradle
 only writes into `docs/`, no check reads from it.
 
+## Automatic Review Loop
+Green checks don't end a task: once every job above passes, review the change yourself, without
+being asked, and loop until it is clean — before the report and before the user commits.
+
+1.  **Review round:** run the `code-review` skill at `high` on the working-tree diff.
+2.  **Triage** every finding as for CodeRabbit (see «After the PR is opened», step 3): valid → fix;
+    false or contradicting a deliberate decision → reject with the reason; valid but outside the
+    task → a draft card.
+3.  **Fixed something** → rerun the checks the fix touches (the list above), then go back to step 1.
+4.  **Stop** when a round leaves no valid finding, or after 3 rounds — then the leftovers go to the
+    report for the user to decide, not into a fourth round.
+5.  **Final pass** once the loop stops (clean or after round 3): the `pr-review-toolkit` agents
+    `code-reviewer`, `silent-failure-hunter` and `pr-test-analyzer` on the same diff, as subagents
+    in parallel. Triage as in step 2; after its fixes rerun only the checks they touch — no return
+    to step 1, and the pass itself is not repeated.
+
+A change touching only `**/*.md` / `docs/**` gets the review rounds without the final pass. The
+report lists every round and the final pass: what was found, fixed, rejected (with the reason) or
+moved to a card, and the leftovers.
+
 ## Completion Checklist
 - [ ] Code compiles without errors.
 - [ ] All unit tests pass.
@@ -45,10 +65,12 @@ only writes into `docs/`, no check reads from it.
 - [ ] KDoc added for new public APIs.
 - [ ] Module `README.md` updated/created.
 - [ ] `@Preview` added for new UI components.
-- [ ] New non-UI logic has tests (CI gate `koverVerifyFull`: ≥ 95% lines of testable code).
+- [ ] New non-UI logic has behaviour tests (CI gate `koverVerifyFull`: ≥ 70% lines of testable code,
+      target 90%; no code or tests written only for the number).
 - [ ] Dependencies changed → `./gradlew :app:dependencyGuardBaseline` re-recorded.
 - [ ] Navigation changed → `./gradlew navDump` re-recorded.
 - [ ] Every blocking CI job passed locally (list above).
+- [ ] Automatic review loop done: no valid finding left or 3 rounds, final pass run (see above).
 - [ ] After the user opens the PR: Auto-fix is on, CodeRabbit's comments are triaged (see below).
 
 ## Self-review
@@ -142,5 +164,7 @@ Provide a summary including:
 2. **Architecture impact:** Any changes to module graph or core layers.
 3. **Test coverage:** List of new tests.
 4. **Self-review:** Faults, edge cases, improvements (see above).
-5. **Instruction updates:** Rules added to or changed in the agent instructions (`docs/agents/*.md`, root instruction files), if any.
-6. **Task:** Card key and title (`FM-N <title>`), its status, proposed branch `feature/FM-N-…`, commit message ending with `(FM-N)`, drafts of follow-up cards (see `task-board.md`).
+5. **Review loop:** each round of the automatic review and the final pass — found, fixed, rejected
+   with the reason, moved to a card — and any leftovers.
+6. **Instruction updates:** Rules added to or changed in the agent instructions (`docs/agents/*.md`, root instruction files), if any.
+7. **Task:** Card key and title (`FM-N <title>`), its status, proposed branch `feature/FM-N-…`, commit message ending with `(FM-N)`, drafts of follow-up cards (see `task-board.md`).
