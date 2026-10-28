@@ -54,7 +54,8 @@ Run checks for the modules you touched; fix every violation your change introduc
 
 CI (`.github/workflows/ci.yml`) runs, as separate jobs, on every PR and push to
 `master`, and as the release gate inside `cd_release.yml` (push to `releases/**`; publishing
-waits for it): `assembleDebug` (+ build-time report); unit tests (full `test` on master,
+waits for it): `assembleDebug` (+ build-time report); `:app:assembleRelease` signed with a
+throwaway key (job `build-release`, R8 + resource shrinking; skipped in the release gate); unit tests (full `test` on master,
 affected modules + `:konsist:test` on branches); coverage gate (`koverVerifyFull`); `lint`;
 `detekt`; `ktlintCheck`; `:app:dependencyGuard`; `:app:assertModuleGraph`; `aalekhCheck`
 (architecture); `navCheck` (job `nav-graph`); app size (`analyzeDebugBundle`).
@@ -143,9 +144,17 @@ category → account → transaction sync order + last-write-wins are handled in
   `core:database`, DTOs in a `dto` package, ViewModels annotated `@HiltViewModel`, no legacy dates.
 - **Building in a git worktree:** the gitignored `local.properties` and `app/google-services.json`
   are absent. Compile/test/lint tasks need `ANDROID_HOME=<sdk path>` before `./gradlew`
-  (ktlint/detekt run without it). `:app` tasks need the google-services plugin set to
-  `missingGoogleServicesStrategy = WARN` via an `--init-script` kept outside the repo — never copy
-  the real `google-services.json`. Release/R8 builds locally: `-x :app:uploadCrashlyticsMappingFileRelease`.
+  (ktlint/detekt run without it). Without `google-services.json` the build only warns
+  (`missingGoogleServicesStrategy = WARN` in `AndroidAppFirebaseConventionPlugin`) and the app runs
+  without Firebase — never copy the real `google-services.json`. Firebase SDK calls must therefore
+  check `FirebaseApp.getApps(context)` first (see `CrashlyticsLogger`, `PushSubscriptionManagerImpl`):
+  `getInstance()` throws when Firebase isn't initialized. Release/R8 builds locally:
+  `-x :app:uploadCrashlyticsMappingFileRelease`.
+- **Root files and language:** `README.md` and the community files (`CONTRIBUTING.md`,
+  `CODE_OF_CONDUCT.md`, `SECURITY.md`) are in English; `README.ru.md` is the full Russian mirror of
+  `README.md` — change both in the same commit. Everything else (`docs/`, module READMEs, KDoc,
+  commits, issues) stays Russian. Don't add loose files to the repository root: tool state goes to
+  `config/<tool>/` (e.g. `config/aalekh/`), docs to `docs/`.
 - **Editing:** never mutate source with shell `sed`/`awk`/`echo >` — use the Edit/Write tools.
 
 ## Detailed guidelines (mandatory reading per area)
@@ -204,6 +213,10 @@ otherwise pick the sensible default and note it.
   operations. Leave changes in the working tree. Once the code is done, only **write a short
   proposed commit message** (conventional-commit style, matching the existing Russian history,
   e.g. `fix(network): …`) for the user to copy — do not run `git commit`.
+- **After the PR is opened, the task goes on:** before the report, run every blocking CI job
+  locally; once the user opens the PR, turn on Auto-fix and triage CodeRabbit's comments each
+  time it wakes the session — fix the valid ones, reject the rest with a reason, never comply
+  silently. Loop and limits: `docs/agents/release-process.md` («After the PR is opened»).
 - **No Claude/Anthropic attribution** in commits or generated text (no `Co-Authored-By`,
   no "Generated with Claude Code").
 - **Task board:** work is tracked on the GitHub Projects board, a task's key is `FM-<issue>`.

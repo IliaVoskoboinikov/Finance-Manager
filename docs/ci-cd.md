@@ -13,7 +13,7 @@
 
 ```mermaid
 flowchart TD
-    pr["pull_request<br/>(любая ветка)"] --> ci["ci.yml — CI<br/>11 параллельных джоб"]
+    pr["pull_request<br/>(любая ветка)"] --> ci["ci.yml — CI<br/>13 параллельных джоб"]
     pushM["push в master"] --> ci
     pr --> sec["security.yml<br/>gitleaks + dependency-review"]
     pushM --> sec
@@ -22,6 +22,8 @@ flowchart TD
     pushR["push в releases/**"] --> cdr["cd_release.yml — App release"]
     pushR --> sec
     cdr -->|"гейт качества<br/>(workflow_call)"| ci
+    ci -->|"workflow_run<br/>(зелёный push в master)"| pages["pages.yml — Pages"]
+    pages --> art6["Сайт: карта навигации,<br/>галерея превью, отчёт Aalekh"]
     wd["workflow_dispatch"] -.-> cdt
     wd -.-> cdr
 
@@ -43,6 +45,7 @@ Workflow разделены по назначению:
 | **CI failure** | [`.github/workflows/ci-failure.yml`](../.github/workflows/ci-failure.yml) | Красный `master` → issue с лейблом `ci-failure`; зелёный прогон закрывает его. |
 | **App test** | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Доставка тестовой (debug) сборки тестировщикам. |
 | **App release** | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз: APK + AAB, публикация в Google Play, черновик GitHub Release. |
+| **Pages** | [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | Публикует отчёты зелёного CI на master (карта навигации, галерея превью, Aalekh) на GitHub Pages. |
 
 Обновление зависимостей автоматизировано **Renovate** ([`.github/renovate.json5`](../.github/renovate.json5)):
 он читает `gradle/libs.versions.toml`, `gradle-wrapper.properties` и версии actions,
@@ -104,7 +107,8 @@ JDK **21** во всех джобах, ставится в [`init-gradle`](../.g
 **Гейт релиза** — вход `release-gate: true` у `workflow_call`. В этом режиме джоба `changes` не
 запускается (фильтра по диффу нет, проверки идут всегда), `run-tests` гоняет полный `test`, как на
 `master`, а рекомендательная `dependency-analysis` пропускается — иначе публикация ждала бы её
-до получаса ради текста, который ничего не блокирует.
+до получаса ради текста, который ничего не блокирует. Пропускается и `build-release`: release
+там и так собирают `build-apk` и `build-aab` настоящим ключом.
 
 **Правки только документации проверки кода не запускают.** Первой идёт лёгкая джоба `changes`
 ([`dorny/paths-filter`](https://github.com/dorny/paths-filter)): если все изменённые файлы —
@@ -117,13 +121,14 @@ to be reported» по required-чекам ruleset `master`. Пропущенна
 упала, выход пустой, и проверки запускаются, а не пропускаются молча. Secret scan
 (`security.yml`) фильтра не имеет — секрет может утечь и в Markdown.
 
-Двенадцать джоб проверок ждут только `changes`, а между собой не связаны `needs`: падение одной
-не останавливает остальные, и в сводке прогона видно сразу все проблемы. Одиннадцать из них
+Тринадцать джоб проверок ждут только `changes`, а между собой не связаны `needs`: падение одной
+не останавливает остальные, и в сводке прогона видно сразу все проблемы. Двенадцать из них
 блокирующие, `dependency-analysis` — рекомендательная (`continue-on-error`).
 
 | Джоба | Команда / action | Что проверяет | Артефакты и отчёты |
 |---|---|---|---|
 | `build-app` | `./gradlew assembleDebug` | Проект компилируется. | `debug-apk`; таблица времени сборки в Step Summary. |
+| `build-release` | `./gradlew :app:assembleRelease` (одноразовый ключ подписи) | Release собирается: R8 и шринк ресурсов проходят с текущими `proguard-rules.pro`. Не идёт в гейте релиза. | `r8-missing-rules` при падении. |
 | `run-tests` | `./gradlew test` (master) / `runAffectedUnitTests` (ветки и PR) | Юнит-тесты (JVM + Robolectric) и архитектурные тесты `:konsist`. | Аннотации на упавших тестах в diff, `unit-tests-html` при падении. |
 | `check-dependency-guard` | `./gradlew :app:dependencyGuard` | Release-classpath не разошёлся со слепком. | — |
 | `dependency-analysis` | `./gradlew buildHealth` | Неиспользуемые и неверно объявленные зависимости. Не блокирует (`continue-on-error`). | `dependency-analysis-report`; первые 200 строк отчёта в Step Summary. |
@@ -137,6 +142,21 @@ to be reported» по required-чекам ruleset `master`. Пропущенна
 | `nav-graph` | `./gradlew navCheck --continue` + [`actions/nav-graph`](../.github/actions/nav-graph/action.yml) | Граф навигации из аннотаций совпадает с бейзлайнами `*/nav/*.nav`; карта экранов и галерея `@Preview` собираются без ошибок. | `nav-graph-report` (PNG + интерактивный HTML + `index.html`); результат `navCheck` с диффом расхождения и таблицы экранов/переходов в Step Summary. |
 
 ### Как устроены отдельные джобы
+
+**`build-release`.** R8 и шринк ресурсов включены только для release (`AndroidAppConventionPlugin`),
+а `build-app` собирает debug, поэтому без этой джобы сломанное keep-правило или `Missing class`
+всплывали лишь в `cd_release.yml` — в момент релиза. Релизного keystore в CI нет и быть не
+должно: в джобе выполняется код PR, а секрет `JKS_KS` доступен только CD. Поэтому шаг
+`keytool -genkeypair` создаёт в `$RUNNER_TEMP` одноразовый ключ, и сборка подписывается им через
+`-Pandroid.injected.signing.*`: проверяется сборка, а не подпись, `signingConfig` в
+`build-logic` не трогается, и релиз без keystore по-прежнему падает, а не уходит с чужой подписью.
+`uploadCrashlyticsMappingFileRelease` исключён (`-x`): маппинг PR-сборки в Firebase не нужен.
+При падении `missing_rules.txt`, который пишет R8, уходит артефактом `r8-missing-rules` — его
+правила переносят в `app/proguard-rules.pro` (см. [команды](./commands.md#релизная-сборка-локально)).
+Джоба ловит ошибки сборки, но не крэши в рантайме из-за вырезанного рефлексией класса: для
+этого release-APK нужно запускать. Отдельная джоба, а не шаг в `build-app`: debug и release —
+разные варианты, общих задач компиляции у них почти нет, и шаг лишь удлинил бы `build-app`
+на время R8 вместо параллельного прогона.
 
 **`run-coverage`.** Вся логика — в composite action `coverage`: сначала генерируются
 отчёты (`:koverHtmlReportFull`, `:koverXmlReportFull`), потом Python-скрипт парсит XML и
@@ -299,6 +319,13 @@ flowchart LR
 
 Триггер — `push` в `releases/**` либо `workflow_dispatch`.
 
+У push-триггера есть `paths-ignore: '**.md'`, и после push новой ветки, которая указывает на
+уже существующий коммит (например, `git push origin origin/master:refs/heads/releases/v.X.Y.Z`),
+прогона может не быть: так было с `releases/v.0.2.0`. Перед ручным запуском проверь, что
+прогона действительно нет (`gh run list --workflow cd_release.yml --branch releases/v.X.Y.Z`),
+иначе релиз соберётся дважды. Если нет — запусти на этой ветке:
+`gh workflow run cd_release.yml --ref releases/v.X.Y.Z` (версия берётся из имени ветки и так).
+
 ```mermaid
 flowchart LR
     v["validate-version<br/>парсит имя ветки"] --> apk["build-apk<br/>assembleRelease"]
@@ -319,14 +346,23 @@ workflow с `release-gate: true` — те же проверки, что в CI, �
 `publish-play`, `github-release`), стоит в `needs:` на гейт: упал хоть один блокирующий чек —
 публикации пропускаются. Гейт ждёт `validate-version`, чтобы не гонять проверки на ветке с
 неверным именем. Права токена вызывающая джоба выдаёт явно: права вложенных джоб не могут
-превышать её собственные, а `ci.yml` нужны `security-events: write` (SARIF) и `checks: write`
-(отчёт о тестах). Секреты (`API_TOKEN`, `GOOGLE_SERVICES_JSON`) передаются через
+превышать её собственные, а `ci.yml` нужны `security-events: write` (SARIF), `checks: write`
+(отчёт о тестах) и `pull-requests: write` (комментарий Aalekh в `check-architecture`; его
+шаги идут только на `pull_request`, в релизе право не используется). Если права не покрывают
+хоть одну джобу `ci.yml`, GitHub отклоняет весь `cd_release.yml` до старта (`startup_failure`,
+без логов): новое право у джобы в `ci.yml` надо добавить и в `quality-gate`. Секреты (`API_TOKEN`, `GOOGLE_SERVICES_JSON`) передаются через
 `secrets: inherit`.
 
 Джоба `github-release` создаёт именно **черновик**: тег и release notes GitHub собирает сам
 (`generate_release_notes: true` — из PR и коммитов с прошлого тега), а публикует релиз
 человек кнопкой Publish. Симметрично `status: draft` в Play — ни одна из двух публикаций
-не происходит автоматически.
+не происходит автоматически. Версии `0.x` (до v1.0) помечаются **pre-release**
+(`validate-version` отдаёт `prerelease`): это превью, и `releases/latest` их не показывает,
+поэтому README ведёт на страницу `releases`, а бейдж релиза — с `include_prereleases`.
+
+**Firebase обязателен только здесь.** Сборки `build-apk` и `build-aab` вызывают `android-setup`
+с `google-services-required: 'true'`: без секрета `GOOGLE_SERVICES_JSON` прогон падает, а не
+выпускает релиз без Crashlytics. В остальных workflow секрет необязателен (см. «Composite actions»).
 
 **Версия берётся из имени ветки.** Джоба `validate-version` требует, чтобы ветка
 заканчивалась на `v.X.Y.Z` (например `releases/v.1.2.3`), иначе прогон падает. Из неё
@@ -354,22 +390,41 @@ VERSION_CODE = X * 1_000_000 + Y * 1_000 + Z
 `draft` — то есть релиз создаётся, но не раскатывается; финальную публикацию делает человек
 в Play Console.
 
+## Pages (`pages.yml`)
+
+Сайт проекта — <https://iliavoskoboinikov.github.io/Finance-Manager/>: лендинг
+([`.github/pages/index.html`](../.github/pages/index.html)), карта навигации с галереей превью
+(`nav-graph/`) и интерактивный отчёт Aalekh (`architecture/`).
+
+Воркфлоу ничего не собирает: по `workflow_run` после зелёного CI на `master` он скачивает
+артефакты `nav-graph-report` и `aalekh-report` этого прогона и выкладывает их через
+`actions/deploy-pages`. Отдельный воркфлоу, а не джоба в `ci.yml`, — чтобы сбой деплоя не красил
+CI. Ручной запуск (`workflow_dispatch`) берёт последний зелёный push в `master` с обоими
+артефактами.
+
+- Берутся только прогоны события `push` из этого репозитория: фильтр `branches` смотрит на одно
+  имя ветки, и PR из форка с веткой `master` под него тоже подходит, а его артефакты собраны чужим
+  кодом.
+- Правка только документации пропускает джобы отчётов — артефактов нет, сайт остаётся прежним.
+- Нужна настройка репозитория: Settings → Pages → Source: **GitHub Actions**. До неё деплой
+  падает, на CI это не влияет.
+
 ## Composite actions
 
 Переиспользуемые кирпичи в `.github/actions/`:
 
 | Action | Что делает |
 |---|---|
-| [`android-setup`](../.github/actions/android-setup/action.yml) | Зонтичный: checkout → `init-gradle` → `create-google-services`. Одна строка в джобе вместо трёх. |
+| [`android-setup`](../.github/actions/android-setup/action.yml) | Зонтичный: checkout → `init-gradle` → `create-google-services`. Одна строка в джобе вместо трёх. Вход `google-services-required` пробрасывается в `create-google-services`. |
 | [`init-gradle`](../.github/actions/init-gradle/action.yaml) | JDK 21 (Temurin) + `gradle/actions/setup-gradle` + `chmod +x gradlew`. |
-| [`create-google-services`](../.github/actions/create-google-services/action.yml) | Декодирует секрет `GOOGLE_SERVICES_JSON` (base64) в `app/google-services.json`; падает, если секрет пуст. |
+| [`create-google-services`](../.github/actions/create-google-services/action.yml) | Декодирует секрет `GOOGLE_SERVICES_JSON` (base64) в `app/google-services.json`. Без секрета (PR из форка) по умолчанию пропускается с предупреждением — сборка идёт без Firebase (`missingGoogleServicesStrategy = WARN`); с `required: 'true'` (релиз) падает. |
 | [`coverage`](../.github/actions/coverage/action.yml) | Kover: отчёты → сводка в Step Summary → гейт `koverVerifyFull`. |
 | [`ktlint`](../.github/actions/ktlint/action.yml) | `ktlintCheck`, склейка SARIF по модулям, подробный Markdown-отчёт. |
 | [`report-renderer`](../.github/actions/report-renderer/action.yml) | Markdown → styled HTML через Pandoc (со светлой и тёмной темой). |
 | [`build-time-report`](../.github/actions/build-time-report/action.yaml) | CSV от `build-time-tracker` → Markdown-таблица в Step Summary (`csv2md.sh`). |
 | [`draw-graph`](../.github/actions/draw-graph/action.yaml) | DOT → PNG через Graphviz. |
 | [`nav-graph`](../.github/actions/nav-graph/action.yml) | Рендер карты навигации и галереи `@Preview` (PNG + HTML), лендинг `index.html`, таблицы экранов и переходов в Step Summary. Гейт `navCheck` — не здесь, а отдельным шагом джобы. |
-| [`send-file-tg`](../.github/actions/send-file-tg/action.yaml) | Отправка файла и подписи в Telegram (`sendDocument`, поддержка тредов). |
+| [`send-file-tg`](../.github/actions/send-file-tg/action.yaml) | Отправка файла и подписи в Telegram (`sendDocument`, поддержка тредов). Значения передаются через `env:`, текстовые поля — через `--form-string`, подпись уходит без разметки. |
 | [`send-message-tg`](../.github/actions/send-message-tg/action.yml) | Отправка текста в Telegram (`sendMessage`, поддержка тредов). Значения передаются через `env:`, текст уходит без разметки. |
 
 ## Секреты
@@ -380,7 +435,7 @@ protection rules сейчас нет.
 | Секрет | Где используется | Зачем |
 |---|---|---|
 | `API_TOKEN` | все workflow (env) | Токен бэкенда, читается сборкой `:core:network` (локально — из `local.properties`). |
-| `GOOGLE_SERVICES_JSON` | все workflow (env) | base64 `google-services.json` для Firebase/Crashlytics. |
+| `GOOGLE_SERVICES_JSON` | все workflow (env) | base64 `google-services.json` для Firebase/Crashlytics. Обязателен только в `cd_release`; без него остальные сборки идут без Firebase. |
 | `JKS_KS` | `cd_release` | base64 release-keystore. |
 | `JKS_KS_PASS`, `JKS_ALIAS`, `JKS_KEY_PASS` | `cd_release` | Пароль стора, алиас и пароль ключа. |
 | `PLAY_SERVICE_ACCOUNT_JSON`, `PLAY_PACKAGE_NAME` | `cd_release` | Сервисный аккаунт и applicationId для Play Publishing API. |
@@ -445,7 +500,7 @@ CI намеренно тонкий, поэтому «где что настро�
 
 ## Ограничения
 
-- **Двенадцать джоб — двенадцать холодных сборок.** Общего build cache между джобами нет,
+- **Тринадцать джоб — тринадцать холодных сборок.** Общего build cache между джобами нет,
   поэтому новые проверки по возможности встраиваются шагом в джобу, которая уже собирает
   нужное, — так подключён `navCheck`.
 - **Гейт релиза — только `ci.yml`.** Secret scan (`security.yml`) на `releases/**` идёт отдельным
@@ -461,8 +516,6 @@ CI намеренно тонкий, поэтому «где что настро�
 
 | Задача | Что сейчас не так |
 | :--- | :--- |
-| [FM-70](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/70) | `send-file-tg` подставляет сообщение коммита прямо в `run:` — инъекция шелла на раннере с доступом к keystore |
-| [FM-72](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/72), [FM-73](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/73) | release-сборка (R8) в CI не собирается и сейчас падает |
 | [FM-71](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/71) | в `cd_tests.yml` и `cd_release.yml` нет явного блока `permissions:` |
 | [FM-74](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/74) | `YANDEX_CLIENT_ID` не передаётся в сборки CI и CD — вход через Яндекс в них не работает |
 | [FM-75](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/75) | `printVersionName` не знает про `-PversionName`, Telegram-отчёты показывают неверную версию |
@@ -475,6 +528,7 @@ CI намеренно тонкий, поэтому «где что настро�
 | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | Гейт качества на PR и push в `master`; reusable-гейт релиза. |
 | [`.github/workflows/cd_tests.yml`](../.github/workflows/cd_tests.yml) | Тестовая раздача (Telegram + Firebase). |
 | [`.github/workflows/cd_release.yml`](../.github/workflows/cd_release.yml) | Подписанный релиз и публикация в Play. |
+| [`.github/workflows/pages.yml`](../.github/workflows/pages.yml), [`.github/pages/`](../.github/pages/) | Сайт на GitHub Pages из отчётов CI. |
 | [`.github/workflows/security.yml`](../.github/workflows/security.yml) | gitleaks + dependency-review. |
 | [`.github/workflows/dependency-submission.yml`](../.github/workflows/dependency-submission.yml) | Граф зависимостей для Dependabot alerts. |
 | [`.github/workflows/board.yml`](../.github/workflows/board.yml) | Статусы карточек по веткам и PR, недельная сводка. |

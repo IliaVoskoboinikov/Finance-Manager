@@ -191,7 +191,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             val isSyncSuccess = syncCoordinator.syncAll()
             if (!isSyncSuccess) {
-                _eventFlow.emit(AuthEvent.ShowToast("Sync failed. Using local data."))
+                _eventFlow.emit(AuthEvent.ShowToast(R.string.auth_sync_failed))
             }
             _eventFlow.emit(AuthEvent.NavigateToMain)
             _uiState.value = successState.copy(isSyncing = false)
