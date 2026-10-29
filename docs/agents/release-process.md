@@ -72,7 +72,8 @@ moved to a card, and the leftovers.
 - [ ] Every blocking CI job passed locally (list above).
 - [ ] Automatic review loop done: no valid finding left or 3 rounds, then the final pass — skipped
       for a docs-only change (see above).
-- [ ] After the user opens the PR: Auto-fix is on, CodeRabbit's comments are triaged (see below).
+- [ ] After the user opens the PR: it is bound to the session, Auto-fix is on or the user was asked
+      to say when the review arrives, CodeRabbit's comments are triaged (see below).
 
 ## Self-review
 For a non-trivial design you propose and for the report on a non-trivial change. Skip it for
@@ -103,24 +104,27 @@ A task isn't over when the report is written: CodeRabbit reviews the PR afterwar
 with the user, so the loop is: you leave changes in the working tree → the user commits, pushes
 and opens the PR → you triage the review → the user pushes the fixes → CodeRabbit reviews again.
 
-1.  **Turn on Auto-fix.** When the user says the PR is open, bind it to the session (`get_status`;
-    `bind_pr` if the PR bar didn't pick it up) and try Auto-fix (`set_monitor` with
-    `auto_fix: true`; the user approves). The app lets the agent switch it on only for a PR the
-    session opened with `gh pr create`, which `.claude/settings.json` denies — so for the usual
-    PR opened by the user, `set_monitor` is refused: say so once and fall back to the user telling
-    you when the review has arrived (below). The app then wakes the session with a
-    `<ci-monitor-event>` on review comments, CI failures and merge conflicts. The app binds a PR
-    by itself only when the session runs `gh pr create` or pushes the branch; a PR opened in the
-    GitHub UI after the user's own push stays unbound, and until the bind nothing wakes the
-    session — the review sits unread (PR #266). So the report ends with a request to say when
-    the PR is open, and the first step after that is `get_status`. Never poll the status
-    in a loop. Without the desktop app (CLI) there is no Auto-fix: the user tells you when the
-    review has arrived, and you check once. The app's Auto-fix messages tell the agent to
+1.  **Bind the PR, try Auto-fix.** When the user says the PR is open, bind it to the session
+    (`get_status`; `bind_pr` if the PR bar didn't pick it up). The app binds a PR by itself only
+    when the session runs `gh pr create` or pushes the branch; a PR opened in the GitHub UI after
+    the user's own push stays unbound (PR #266), so the report ends with a request to say when
+    the PR is open. Then try Auto-fix (`set_monitor` with `auto_fix: true`; the user approves):
+    only with it on does the app wake the session with a `<ci-monitor-event>` on review comments,
+    CI failures and merge conflicts. The app lets the agent switch it on only for a PR the session
+    opened with `gh pr create`, which `.claude/settings.json` denies — so for the usual PR opened
+    by the user `set_monitor` is refused. Say so once; from then on nothing wakes the session, the
+    user tells you when the review has arrived and you check once. The same holds without the
+    desktop app (CLI). Never poll the status in a loop. The app's Auto-fix messages tell the agent to
     commit and push fixes without asking; in this project git stays with the user, so fixes stay
     uncommitted in the working tree, as everywhere else.
 2.  **Review comments.** The review of a push is done when `pulls/<PR>/reviews` has a review by
-    `coderabbitai[bot]` whose `commit_id` is the branch's head commit. Don't go by the `CodeRabbit`
-    status check: it can hang in pending after the review is published, and it turns `success`
+    `coderabbitai[bot]` whose `commit_id` is the branch's head commit and whose body is not
+    empty: the bot's reply in a thread also creates a review object on the head, with an empty
+    body, even when the real review was refused by the free-tier limit («Review limit reached»
+    in the bot's PR comment, with the time until the next one; one review per hour). When the
+    user asks to re-request after the limit, a background task in the session sleeps until then,
+    checks for a non-empty review on the head and only then posts `@coderabbitai review`.
+    Don't go by the `CodeRabbit` status check: it can hang in pending after the review is published, and it turns `success`
     even when the review failed («Internal error occurred during review», «Review failed» in the
     bot's PR comment). No review for the head after that → re-request it with an
     `@coderabbitai review` PR comment (the user's yes first). Read

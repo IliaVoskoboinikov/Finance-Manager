@@ -47,8 +47,18 @@ def subcommand(rest: list, opts_with_arg: set) -> tuple:
 
 def runs_as_script(toks: list, i: int) -> bool:
     prev = toks[i - 1] if i >= 1 else ""
-    before = os.path.basename(toks[i - 2]) if i >= 2 else ""
-    return prev == "eval" or (prev == "-c" and before in SHELLS)
+    if prev == "eval":
+        return True
+    # -c alone or in a cluster of short options (-c, -lc, -ec), the shell earlier in the same
+    # command with any options between: bash -lc, bash -e -c, bash --norc -o pipefail -c.
+    if not (prev.startswith("-") and not prev.startswith("--") and "c" in prev[1:]):
+        return False
+    for tok in reversed(toks[:i - 1]):
+        if set(tok) <= SEPARATORS:
+            return False
+        if os.path.basename(tok) in SHELLS:
+            return True
+    return False
 
 
 def denied(command: str, depth: int = 0) -> str:
