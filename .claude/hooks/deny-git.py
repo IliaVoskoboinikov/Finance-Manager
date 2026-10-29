@@ -69,26 +69,28 @@ def runs_as_script(toks: list, i: int) -> bool:
     return False
 
 
-def denied(command: str, depth: int = 0) -> str:
-    toks = tokens(command)
-    for i, tok in enumerate(toks):
-        name = os.path.basename(tok)
-        if name == "git":
-            sub, _ = subcommand(toks[i + 1:], GIT_OPTS_WITH_ARG)
-            if sub in GIT_DENIED:
-                return f"git {sub}"
-        elif name == "gh":
-            sub, after = subcommand(toks[i + 1:], GH_OPTS_WITH_ARG)
-            if sub == "pr":
-                action, _ = subcommand(after, GH_OPTS_WITH_ARG)
-                if action in GH_PR_DENIED:
-                    return f"gh pr {action}"
-        elif depth < 2 and runs_as_script(toks, i):
-            # A quoted script that is executed: bash -c "git push", eval '...'.
-            # Quoted text that is only data (echo "git push", grep 'git push') is left alone.
-            found = denied(tok, depth + 1)
-            if found:
-                return found
+def denied(command: str) -> str:
+    # A worklist instead of recursion with a depth cap: any nesting of bash -c is unwrapped.
+    # It ends because every nested script is a strict part of the command around it.
+    pending = [command]
+    while pending:
+        toks = tokens(pending.pop())
+        for i, tok in enumerate(toks):
+            name = os.path.basename(tok)
+            if name == "git":
+                sub, _ = subcommand(toks[i + 1:], GIT_OPTS_WITH_ARG)
+                if sub in GIT_DENIED:
+                    return f"git {sub}"
+            elif name == "gh":
+                sub, after = subcommand(toks[i + 1:], GH_OPTS_WITH_ARG)
+                if sub == "pr":
+                    action, _ = subcommand(after, GH_OPTS_WITH_ARG)
+                    if action in GH_PR_DENIED:
+                        return f"gh pr {action}"
+            elif runs_as_script(toks, i):
+                # A quoted script that is executed: bash -c "git push", eval '...'.
+                # Quoted text that is only data (echo "git push", grep 'git push') is left alone.
+                pending.append(tok)
     return ""
 
 
