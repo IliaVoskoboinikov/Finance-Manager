@@ -81,9 +81,11 @@ def denied(command: str) -> str:
     while pending:
         toks = tokens(pending.pop())
         for i, tok in enumerate(toks):
-            # A program name has no spaces: a script ending in `/git` (git push origin
-            # feature/git) is a script, not the git binary.
-            name = "" if any(c.isspace() for c in tok) else os.path.basename(tok)
+            # Script or program is told by position, not by spaces: after -c / eval the token
+            # is a script (git push origin feature/git), elsewhere a program path may hold
+            # spaces ("/opt/my tools/git" push).
+            script = runs_as_script(toks, i)
+            name = "" if script else os.path.basename(tok)
             if name == "git":
                 sub, _ = subcommand(toks[i + 1:], GIT_OPTS_WITH_ARG)
                 if sub in GIT_DENIED:
@@ -94,7 +96,7 @@ def denied(command: str) -> str:
                     action, _ = subcommand(after, GH_OPTS_WITH_ARG)
                     if action in GH_PR_DENIED:
                         return f"gh pr {action}"
-            if runs_as_script(toks, i):
+            if script:
                 # A quoted script that is executed: bash -c "git push", eval '...'.
                 # Quoted text that is only data (echo "git push", grep 'git push') is left alone.
                 pending.append(tok)
