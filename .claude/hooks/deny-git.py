@@ -99,7 +99,17 @@ def denied(command: str) -> str:
             if script:
                 # A quoted script that is executed: bash -c "git push", eval '...'.
                 # Quoted text that is only data (echo "git push", grep 'git push') is left alone.
-                pending.append(tok)
+                if toks[i - 1] == "eval":
+                    # eval joins its unquoted arguments with spaces and parses the result
+                    # again, as bash does: eval git push, eval 'git commit -m x'.
+                    args = []
+                    for arg in toks[i:]:
+                        if set(arg) <= SEPARATORS:
+                            break
+                        args.append(arg)
+                    pending.append(" ".join(args))
+                else:
+                    pending.append(tok)
     return ""
 
 
