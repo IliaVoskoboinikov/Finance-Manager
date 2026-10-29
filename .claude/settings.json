@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/deny-git.py\"",
+            "command": "python3 -c 'import json,os,subprocess,sys\nd=sys.stdin.read()\ntry:\n    cwd=json.loads(d).get(\"cwd\") or \".\"\nexcept Exception:\n    cwd=\".\"\nroots=[]\ntry:\n    r=subprocess.run([\"git\",\"rev-parse\",\"--show-toplevel\"],cwd=cwd,capture_output=True,text=True,timeout=15)\n    roots+=[r.stdout.strip()] if r.returncode==0 else []\nexcept Exception:\n    pass\nroots.append(os.environ.get(\"CLAUDE_PROJECT_DIR\",\"\"))\nfor root in roots:\n    f=os.path.join(root,\".claude\",\"hooks\",sys.argv[1])\n    if root and os.path.isfile(f):\n        sys.exit(subprocess.run([sys.executable,f],input=d,text=True).returncode)\n' deny-git.py",
             "timeout": 10
           }
         ]
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/verify-changes.py\"",
+            "command": "python3 -c 'import json,os,subprocess,sys\nd=sys.stdin.read()\ntry:\n    cwd=json.loads(d).get(\"cwd\") or \".\"\nexcept Exception:\n    cwd=\".\"\nroots=[]\ntry:\n    r=subprocess.run([\"git\",\"rev-parse\",\"--show-toplevel\"],cwd=cwd,capture_output=True,text=True,timeout=15)\n    roots+=[r.stdout.strip()] if r.returncode==0 else []\nexcept Exception:\n    pass\nroots.append(os.environ.get(\"CLAUDE_PROJECT_DIR\",\"\"))\nfor root in roots:\n    f=os.path.join(root,\".claude\",\"hooks\",sys.argv[1])\n    if root and os.path.isfile(f):\n        sys.exit(subprocess.run([sys.executable,f],input=d,text=True).returncode)\n' verify-changes.py",
             "timeout": 600,
             "statusMessage": "ktlintFormat, ktlintCheck и detekt по изменённым модулям"
           }

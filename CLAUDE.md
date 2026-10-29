@@ -234,8 +234,11 @@ otherwise pick the sensible default and note it.
   forms (`git -C <dir> push`, `git -c k=v commit`, `bash -c "…"`). `deny` also stops the Read
   tool on the keystore, `local.properties` and `google-services.json` (a deny rule doesn't cover
   shell commands: never print those files' secrets); the Stop hook (`.claude/hooks/verify-changes.py`)
-  runs `ktlintFormat`, then `ktlintCheck` on the changed modules and `detekt`. Personal
-  allowlists go to the gitignored `settings.local.json`.
+  runs `ktlintFormat`, then `ktlintCheck` on the changed modules and `detekt`. Both hooks start
+  through an inline launcher that finds the script in the current checkout by the hook's `cwd`
+  and only then in `$CLAUDE_PROJECT_DIR`, and exits 0 when there is none: in a worktree that
+  variable can point at the original checkout, and a missing script (`python3` exit 2) would
+  block every Bash call. Personal allowlists go to the gitignored `settings.local.json`.
 - **A board task runs through the `fm-task` skill** (`/fm-task FM-N`): card → interview →
   branch → plan → implement → checks → review loop → report, in that order.
 - **Green checks start the review loop:** once every blocking CI job passes locally, review the

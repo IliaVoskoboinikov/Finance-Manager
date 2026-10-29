@@ -20,6 +20,8 @@ GIT_OPTS_WITH_ARG = {"-C", "-c", "--git-dir", "--work-tree", "--namespace", "--e
 GH_OPTS_WITH_ARG = {"-R", "--repo"}
 SEPARATORS = set(";&|()\n")
 SHELLS = {"bash", "sh", "zsh", "dash"}
+# Shell options that take their value as the next token (bash -o pipefail, -O extglob).
+SHELL_OPTS_WITH_ARG = {"-o", "+o", "-O", "+O"}
 
 
 def tokens(command: str) -> list:
@@ -49,15 +51,21 @@ def runs_as_script(toks: list, i: int) -> bool:
     prev = toks[i - 1] if i >= 1 else ""
     if prev == "eval":
         return True
-    # -c alone or in a cluster of short options (-c, -lc, -ec), the shell earlier in the same
-    # command with any options between: bash -lc, bash -e -c, bash --norc -o pipefail -c.
+    # -c alone or in a cluster of short options (-c, -lc, -ec), preceded only by the shell's own
+    # options: bash -lc, bash -e -c, bash --norc -o pipefail -c. A -c after the script is an
+    # argument of that script (bash -c 'rg "$@"' _ -c 'git push'), not a new one.
     if not (prev.startswith("-") and not prev.startswith("--") and "c" in prev[1:]):
         return False
-    for tok in reversed(toks[:i - 1]):
-        if set(tok) <= SEPARATORS:
-            return False
+    j = i - 2
+    while j >= 0:
+        tok = toks[j]
         if os.path.basename(tok) in SHELLS:
             return True
+        is_option = tok.startswith(("-", "+"))
+        is_option_value = j >= 1 and toks[j - 1] in SHELL_OPTS_WITH_ARG
+        if not (is_option or is_option_value):
+            return False
+        j -= 1
     return False
 
 

@@ -122,8 +122,9 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     empty: the bot's reply in a thread also creates a review object on the head, with an empty
     body, even when the real review was refused by the free-tier limit («Review limit reached»
     in the bot's PR comment, with the time until the next one; one review per hour). When the
-    user asks to re-request after the limit, a background task in the session sleeps until then,
-    checks for a non-empty review on the head and only then posts `@coderabbitai review`.
+    user asks to re-request after the limit, a background task in the session sleeps until then
+    and posts `@coderabbitai review` only if the head still has no review with a non-empty body
+    (the bot may have reviewed on its own meanwhile).
     Don't go by the `CodeRabbit` status check: it can hang in pending after the review is published, and it turns `success`
     even when the review failed («Internal error occurred during review», «Review failed» in the
     bot's PR comment). No review for the head after that → re-request it with an
