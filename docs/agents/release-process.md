@@ -119,12 +119,14 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     uncommitted in the working tree, as everywhere else.
 2.  **Review comments.** The review of a push is done when `pulls/<PR>/reviews` has a review by
     `coderabbitai[bot]` whose `commit_id` is the branch's head commit and whose body is not
-    empty: the bot's reply in a thread also creates a review object on the head, with an empty
-    body, even when the real review was refused by the free-tier limit («Review limit reached»
-    in the bot's PR comment, with the time until the next one; one review per hour). When the
-    user asks to re-request after the limit, a background task in the session sleeps until then
-    and posts `@coderabbitai review` only if the head still has no review with a non-empty body
-    (the bot may have reviewed on its own meanwhile).
+    empty — or, when the review found nothing, when the bot's summary PR comment says «No
+    actionable comments were generated» and its «Commit» line is the head (with zero comments no
+    review object is created). The bot's reply in a thread also creates a review object on the
+    head, with an empty body, even when the real review was refused by the free-tier limit
+    («Review limit reached» in the bot's PR comment, with the time until the next one; one review
+    per hour). When the user asks to re-request after the limit, a background task in the session
+    sleeps until then and posts `@coderabbitai review` only if neither a non-empty review nor
+    «No actionable comments» for the head has appeared (the bot may have reviewed on its own).
     Don't go by the `CodeRabbit` status check: it can hang in pending after the review is published, and it turns `success`
     even when the review failed («Internal error occurred during review», «Review failed» in the
     bot's PR comment). No review for the head after that → re-request it with an
