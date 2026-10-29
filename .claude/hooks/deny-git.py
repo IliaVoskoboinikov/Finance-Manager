@@ -7,6 +7,11 @@ parses the command instead: for every `git` / `gh` invocation it skips the globa
 options, takes the real subcommand and refuses it when it is commit / push / reset /
 rebase or `gh pr create` / `gh pr merge`. `git stash push`, `git log --grep push` and
 other commands are left alone — the subcommand there is `stash` / `log`.
+
+It covers the forms an agent writes, nested `sh -c` / `eval` included; it is not a security
+boundary. A command built at run time (`$(echo git) push`, a variable, a git alias, a script
+file) is not read — the rule in CLAUDE.md («Never run git yourself») still binds the agent,
+and only a sandbox enforces anything regardless of the command text.
 """
 import json
 import os
@@ -76,7 +81,9 @@ def denied(command: str) -> str:
     while pending:
         toks = tokens(pending.pop())
         for i, tok in enumerate(toks):
-            name = os.path.basename(tok)
+            # A program name has no spaces: a script ending in `/git` (git push origin
+            # feature/git) is a script, not the git binary.
+            name = "" if any(c.isspace() for c in tok) else os.path.basename(tok)
             if name == "git":
                 sub, _ = subcommand(toks[i + 1:], GIT_OPTS_WITH_ARG)
                 if sub in GIT_DENIED:
@@ -87,7 +94,7 @@ def denied(command: str) -> str:
                     action, _ = subcommand(after, GH_OPTS_WITH_ARG)
                     if action in GH_PR_DENIED:
                         return f"gh pr {action}"
-            elif runs_as_script(toks, i):
+            if runs_as_script(toks, i):
                 # A quoted script that is executed: bash -c "git push", eval '...'.
                 # Quoted text that is only data (echo "git push", grep 'git push') is left alone.
                 pending.append(tok)
