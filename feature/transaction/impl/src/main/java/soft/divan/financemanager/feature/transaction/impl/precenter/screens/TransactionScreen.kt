@@ -1,6 +1,8 @@
 package soft.divan.financemanager.feature.transaction.impl.precenter.screens
 
+import android.content.res.Configuration
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,12 +21,15 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.Button
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -47,12 +53,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.github.skydoves.navgraph.annotations.NavDestination
+import com.github.skydoves.navgraph.annotations.NavEdge
 import com.github.skydoves.navgraph.annotations.NavPreview
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.feature.account.api.AccountKey
 import soft.divan.financemanager.feature.transaction.api.TransactionKey
 import soft.divan.financemanager.feature.transaction.impl.R
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.CategoryUi
+import soft.divan.financemanager.feature.transaction.impl.precenter.model.EmptyReason
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionActions
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionMode
@@ -96,9 +105,42 @@ private fun TransactionScreenPreview() {
                 onTimeChange = { },
                 onCategoryChange = { },
                 onAccountChange = { },
-                onDelete = { }
+                onDelete = { },
+                onRetry = { },
+                onCreateAccount = { }
             ),
             snackbarHostState = remember { SnackbarHostState() }
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFF000000,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun EmptyNoAccountsPreview() {
+    FinanceManagerTheme {
+        TransactionEmptyContent(
+            reason = EmptyReason.NO_ACCOUNTS,
+            isIncome = false,
+            onCreateAccount = { },
+            onNavigateBack = { }
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF, fontScale = 1.5f)
+@Composable
+private fun EmptyNoCategoriesPreview() {
+    FinanceManagerTheme {
+        TransactionEmptyContent(
+            reason = EmptyReason.NO_CATEGORIES,
+            isIncome = true,
+            onCreateAccount = { },
+            onNavigateBack = { }
         )
     }
 }
@@ -120,11 +162,13 @@ private fun AccountPreview() {
 }
 
 @NavDestination(route = TransactionKey::class)
+@NavEdge(to = AccountKey::class, label = "создать счёт")
 @Composable
 fun TransactionScreen(
     isIncome: Boolean,
     transactionId: String?,
     onNavigateBack: () -> Unit,
+    onCreateAccount: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TransactionViewModel =
         hiltViewModel<TransactionViewModel, TransactionViewModel.Factory> { factory ->
@@ -166,7 +210,9 @@ fun TransactionScreen(
             onTimeChange = viewModel::updateTime,
             onCategoryChange = viewModel::updateCategory,
             onAccountChange = viewModel::updateAccount,
-            onDelete = viewModel::delete
+            onDelete = viewModel::delete,
+            onRetry = viewModel::load,
+            onCreateAccount = onCreateAccount
         ),
         snackbarHostState = snackbarHostState
     )
@@ -196,12 +242,70 @@ fun TransactionContent(
             when (uiState) {
                 is TransactionUiState.Loading -> LoadingProgressBar()
 
-                is TransactionUiState.Error -> ErrorContent(onClick = actions.onSave)
+                is TransactionUiState.Error -> ErrorContent(
+                    onClick = actions.onRetry,
+                    messageResId = uiState.messageRes
+                )
+
+                is TransactionUiState.Empty -> TransactionEmptyContent(
+                    reason = uiState.reason,
+                    isIncome = isIncome,
+                    onCreateAccount = actions.onCreateAccount,
+                    onNavigateBack = actions.onNavigateBack
+                )
 
                 is TransactionUiState.Success -> TransactionForm(
                     uiState = uiState,
                     actions = actions
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Пустое состояние новой операции: объясняет, чего не хватает. Без счёта предлагает его создать;
+ * категории пользователь не создаёт, поэтому без них остаётся только закрыть экран.
+ */
+@Composable
+private fun TransactionEmptyContent(
+    reason: EmptyReason,
+    isIncome: Boolean,
+    onCreateAccount: () -> Unit,
+    onNavigateBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val messageRes = when (reason) {
+        EmptyReason.NO_ACCOUNTS -> R.string.empty_no_accounts
+
+        EmptyReason.NO_CATEGORIES ->
+            if (isIncome) R.string.empty_no_income_categories else R.string.empty_no_expense_categories
+    }
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically)
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Info,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(48.dp)
+        )
+        Text(
+            text = stringResource(messageRes),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center
+        )
+        when (reason) {
+            EmptyReason.NO_ACCOUNTS -> Button(onClick = onCreateAccount) {
+                Text(text = stringResource(R.string.create_account))
+            }
+
+            EmptyReason.NO_CATEGORIES -> OutlinedButton(onClick = onNavigateBack) {
+                Text(text = stringResource(R.string.close))
             }
         }
     }

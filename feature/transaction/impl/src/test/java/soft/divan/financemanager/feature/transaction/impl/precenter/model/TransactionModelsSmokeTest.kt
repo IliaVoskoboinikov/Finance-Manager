@@ -19,7 +19,9 @@ class TransactionModelsSmokeTest {
             onTimeChange = { calls++ },
             onCategoryChange = { calls++ },
             onAccountChange = { calls++ },
-            onDelete = { calls++ }
+            onDelete = { calls++ },
+            onRetry = { calls++ },
+            onCreateAccount = { calls++ }
         )
 
         actions.onNavigateBack()
@@ -31,8 +33,10 @@ class TransactionModelsSmokeTest {
         actions.onCategoryChange(mockCategories.first())
         actions.onAccountChange(mockAccounts.first())
         actions.onDelete()
+        actions.onRetry()
+        actions.onCreateAccount()
 
-        assertThat(calls).isEqualTo(9)
+        assertThat(calls).isEqualTo(11)
     }
 
     @Test

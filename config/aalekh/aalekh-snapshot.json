@@ -207,6 +207,7 @@
         ":feature:transaction:impl>:core:data",
         ":feature:transaction:impl>:core:domain",
         ":feature:transaction:impl>:core:uikit",
+        ":feature:transaction:impl>:feature:account:api",
         ":feature:transaction:impl>:feature:haptics:api",
         ":feature:transaction:impl>:feature:sounds:api",
         ":feature:transaction:impl>:feature:transaction:api",
@@ -298,9 +299,9 @@
     "metrics": {
         "cycleCount": 0,
         "godModuleCount": 1,
-        "ccd": 289,
+        "ccd": 290,
         "tanglePercent": 0.0,
-        "averageInstability": 0.3077501202501203,
+        "averageInstability": 0.30726310726310724,
         "criticalPathLength": 7
     },
     "aalekhVersion": "0.7.0"
