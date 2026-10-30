@@ -16,17 +16,36 @@
     plugins; Robolectric / `work-testing` / `androidx.test:core` are declared per module. Details: `docs/testing.md`.
 
 ## Coverage Expectations
-*   **UseCases:** 100% logic coverage.
+*   **UseCases:** every branch of real logic has a behaviour test (plain pass-throughs need none).
 *   **ViewModels:** Cover state transitions and event handling.
 *   **Repositories:** Cover data mapping and error handling logic.
-*   **CI gate:** aggregate line coverage of testable code ≥ 95% (`./gradlew :koverVerifyFull`, rule and
+*   **CI gate:** aggregate line coverage of testable code ≥ 70% (`./gradlew :koverVerifyFull`, rule and
     exclusions in the root `build.gradle.kts`). UI (`@Composable`/`@Preview`, `*ScreenKt`, Activities,
-    `*FeatureImpl`) and generated code are excluded — everything else counts, so untested logic fails CI.
+    `*FeatureImpl`) and generated code are excluded — everything else counts.
+*   **Target:** 90% — a direction, not a gate. Never add or reshape production code just to make it
+    coverable, and never write tests that only execute lines without asserting behaviour. New logic
+    ships with behaviour tests; trivial code may stay untested while the total is above the gate.
+    With the real coverage far above the gate, Kover won't catch new logic without tests — the
+    review does (self-review loop, CodeRabbit).
+*   **Changing the gate or the target:** the gate lives in `minLineCoverage` (root
+    `build.gradle.kts`), the target only in docs; both are repeated, so update every copy in the
+    same change — `git grep -nE "<old> ?%"` finds `CLAUDE.md`, `README.md` + `README.ru.md`,
+    `CONTRIBUTING.md`, `docs/testing.md`, `docs/agents/*.md`, the KDoc above `kover {}`.
 
 ## Test Scenarios
 *   **Happy Path:** Standard successful execution.
 *   **Edge Cases:** Empty lists, null values, max/min values.
 *   **Failure Scenarios:** Network timeouts, 401 Unauthorized, Database constraints.
+
+## Bug fixes: test first
+*   Before touching the fix, write a test that reproduces the bug, run it and see it fail for
+    the reason the card describes. Then fix the code until it passes; don't weaken the test or
+    its assertions to make it green.
+*   The test stays as the regression guard and names the behaviour, not the card
+    (`passes are capped so an endless supply cannot loop forever`, not `FM-278`).
+*   A bug that can't be reproduced on the JVM even under Robolectric (Compose UI, a device-only
+    API) gets no fake test: say so in the report and describe how the fix was checked on the
+    emulator.
 
 ## Verification
 *   Always run `./gradlew testDebugUnitTest` before completion. Pure JVM modules (`:core:domain`,

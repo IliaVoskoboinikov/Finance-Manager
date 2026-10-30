@@ -79,8 +79,9 @@ APK выкладываются pre-release-сборками в [GitHub Releases]
   например запрет `java.util.Date` / `Calendar` в пользу `java.time`.
 - **Convention plugins.** Каждый модуль настраивается плагином `soft.divan.*` из
   [`build-logic`](build-logic/README.md); сами плагины покрыты тестами на Gradle TestKit.
-- **Гейт покрытия 95%.** Kover роняет CI, если покрытие строк тестируемого кода (без UI и
-  сгенерированного) опускается ниже 95%. → [docs/testing.md](docs/testing.md)
+- **Гейт покрытия.** Kover роняет CI, если покрытие строк тестируемого кода (без UI и
+  сгенерированного) опускается ниже 70%; ориентир — 90%, без кода ради цифры.
+  → [docs/testing.md](docs/testing.md)
 - **Ошибки как значения.** Доменный слой не бросает исключений через границы: репозитории и use
   case возвращают `DomainResult` с sealed `DomainError`. → [docs/domain-result.md](docs/domain-result.md)
 - **Своя криптография.** [`CryptoManager`](core/security/README.md) (AES/GCM + Android KeyStore)
@@ -170,7 +171,7 @@ cd Finance-Manager
 
 ## Гейты качества
 
-Каждый PR проходит отдельными джобами CI: сборку, юнит-тесты, покрытие Kover ≥ 95%, Android Lint,
+Каждый PR проходит отдельными джобами CI: сборку, юнит-тесты, покрытие Kover ≥ 70%, Android Lint,
 Detekt, ktlint, проверку архитектуры Aalekh, проверку графа модулей, проверку графа навигации,
 `dependency-guard` (бейзлайн релизного classpath) и поиск секретов. Правка только Markdown
 пропускает джобы кода. Подробно — [docs/ci-cd.md](docs/ci-cd.md).

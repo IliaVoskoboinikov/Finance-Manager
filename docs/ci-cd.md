@@ -163,7 +163,8 @@ to be reported» по required-чекам ruleset `master`. Пропущенна
 печатает таблицу покрытия в `$GITHUB_STEP_SUMMARY`, и только затем запускается гейт
 `:koverVerifyFull`. Порядок важен: HTML-отчёт и сводка доступны, даже если порог не пройден.
 Само число порога задаётся **только** в корневом `build.gradle.kts`
-(`kover { reports { verify { rule { minBound(...) } } } }`) — CI его не дублирует.
+(константа `minLineCoverage`, она уходит в `kover { reports { verify { rule { minBound(...) } } } }`)
+— CI его не дублирует.
 Подробности про фильтры и что исключено из знаменателя — в [Testing & Coverage](./testing.md).
 
 **`run-detekt`.** Шаг с Detekt помечен `continue-on-error: true`, чтобы успели выполниться
