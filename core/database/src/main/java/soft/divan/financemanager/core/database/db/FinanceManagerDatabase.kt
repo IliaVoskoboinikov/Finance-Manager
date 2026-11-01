@@ -20,8 +20,6 @@ import soft.divan.financemanager.core.database.util.Converters
         AccountEntity::class,
         CurrencyEntity::class
     ],
-    // Должна быть строго больше версии прешипнутого ассета category_db.db (user_version = 1),
-    // иначе Room видит одинаковую версию с другим identity hash и падает на проверке целостности.
     version = 4,
     exportSchema = true
 )

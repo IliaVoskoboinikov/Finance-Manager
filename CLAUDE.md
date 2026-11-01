@@ -118,9 +118,9 @@ category → account → transaction sync order + last-write-wins are handled in
 
 ## Non-obvious constraints
 
-- **DB migrations:** pre-release the DB uses `fallbackToDestructiveMigration`. The `@Database`
-  version MUST stay strictly greater than the prepackaged `category_db.db` asset's
-  `user_version` (currently 1), or Room fails at runtime with an identity-hash mismatch.
+- **DB migrations:** pre-release the DB uses `fallbackToDestructiveMigration`. The category
+  reference set is seeded in code (`core:database` `seed/DefaultCategories`, server GUIDs) by
+  `SeedDatabaseCallback` on create and after a destructive migration — no prepackaged asset.
   Adding an index = schema change = version bump. Real `Migration`s + migration tests are
   required before release (`exportSchema = true`).
 - **Layer isolation:** never leak Room `Entity`, Retrofit `Response`/DTOs, or `HttpException`
