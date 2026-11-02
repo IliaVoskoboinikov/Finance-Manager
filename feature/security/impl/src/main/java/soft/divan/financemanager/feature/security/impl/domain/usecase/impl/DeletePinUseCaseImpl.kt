@@ -17,7 +17,9 @@ class DeletePinUseCaseImpl @Inject constructor(
 ) : DeletePinUseCase {
 
     override suspend fun invoke(pin: String): DeletePinResult = when {
-        protection.currentLevel() == DataProtectionLevel.PIN -> DeletePinResult.NOT_ALLOWED
+        // Уровень не прочитать — неизвестно, не завёрнут ли PIN-ом ключ данных: как на уровне PIN
+        protection.currentLevel().let { it == null || it == DataProtectionLevel.PIN } ->
+            DeletePinResult.NOT_ALLOWED
 
         !withContext(ioDispatcher) { repository.verifyPin(pin) } -> DeletePinResult.WRONG_PIN
 

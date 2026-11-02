@@ -8,5 +8,12 @@ import java.security.GeneralSecurityException
  *
  * Это не «неверный PIN»: восстановить доступ, повторив попытку, нельзя.
  */
-class KeyUnavailableException(message: String, cause: Throwable? = null) :
+open class KeyUnavailableException(message: String, cause: Throwable? = null) :
     GeneralSecurityException(message, cause)
+
+/**
+ * Хранилище Keystore не удалось прочитать. В отличие от потерянного или инвалидированного ключа,
+ * сбой бывает временным, поэтому завёрнутые копии из-за него не удаляют.
+ */
+class KeystoreUnreadableException(alias: String, cause: Throwable) :
+    KeyUnavailableException("Keystore key $alias is unreadable", cause)

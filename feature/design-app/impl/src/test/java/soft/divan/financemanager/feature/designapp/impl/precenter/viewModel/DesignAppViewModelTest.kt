@@ -2,6 +2,7 @@ package soft.divan.financemanager.feature.designapp.impl.precenter.viewModel
 
 import androidx.compose.ui.graphics.Color
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -120,9 +121,18 @@ class DesignAppViewModelTest {
 
         vm.setCustomColor(Color(0xFF123456))
 
-        coVerify(exactly = 1) { setCustomAccentColorUseCase(Color(0xFF123456)) }
-        coVerify(exactly = 1) { setAccentColorUseCase(AccentColor.CUSTOM) }
-        // клик хаптик срабатывает и в setCustomColor, и во вложенном setAccentColor
-        verify(exactly = 2) { hapticsManager.perform(HapticType.CLICK) }
+        coVerifyOrder {
+            setCustomAccentColorUseCase(Color(0xFF123456))
+            setAccentColorUseCase(AccentColor.CUSTOM)
+        }
+    }
+
+    @Test
+    fun `setCustomColor performs click haptic exactly once`() = runTest {
+        val vm = viewModel()
+
+        vm.setCustomColor(Color(0xFF123456))
+
+        verify(exactly = 1) { hapticsManager.perform(HapticType.CLICK) }
     }
 }

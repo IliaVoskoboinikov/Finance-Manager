@@ -12,6 +12,7 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -140,6 +141,30 @@ class SqlCipherDatabaseFactoryTest {
         assertTrue("Opening took $elapsed ms", elapsed < RAW_KEY_OPEN_BUDGET_MS)
     }
 
+    @Test
+    fun destructiveMigrationReseedsTheEncryptedDatabase() = runBlocking {
+        // Зашифрованная база «старой» версии: данные есть, справочник пуст, user_version ниже
+        // текущей, а миграции нет — Room пересоздаст таблицы деструктивным откатом
+        factory.open(key(1)).also { opened ->
+            opened.database.currencyDao().insertCurrencies(listOf(CurrencyEntity("rub", "Рубль")))
+            opened.database.openHelper.writableDatabase.apply {
+                execSQL("DELETE FROM categories")
+                execSQL("PRAGMA user_version = $OLD_VERSION")
+            }
+            opened.close()
+        }
+
+        val reopened = factory.open(key(1))
+        val categories = reopened.database.categoryDao().getAll().first()
+        val currency = reopened.database.currencyDao().getCurrencyById("rub")
+        reopened.close()
+
+        assertEquals(SEEDED_CATEGORIES, categories.size)
+        // Откат стёр прежние строки — значит, сработал именно он, а не обычное открытие
+        assertNull(currency)
+        assertFalse(files.isPlaintext())
+    }
+
     private fun key(seed: Int) = ByteArray(RawKey.KEY_SIZE) { (it * seed + seed).toByte() }
 
     private fun transaction(date: String) = TransactionEntity(
@@ -162,6 +187,9 @@ class SqlCipherDatabaseFactoryTest {
     private companion object {
         const val TAG = "SqlCipherTest"
         const val SEEDED_CATEGORIES = 24
+
+        /** Версия схемы ниже текущей, до которой нет миграции. */
+        const val OLD_VERSION = 3
         const val RAW_KEY_OPEN_BUDGET_MS = 1_000L
 
         /** Формат `TimeMapper.toApi`; в поясах восточнее UTC это уже следующий день. */

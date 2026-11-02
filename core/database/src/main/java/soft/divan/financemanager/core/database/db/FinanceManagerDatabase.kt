@@ -27,8 +27,6 @@ import soft.divan.financemanager.core.database.util.Converters
     // Версия 6: в outbox добавлен targetServerId — адрес ресурса для PUT/DELETE.
     // Версия 7: в outbox добавлен dependencyKey — ссылка на обязательного предшественника.
     // Версия 8: барьер порядка ищет предшественников по entityLocalId — сменились индексы outbox.
-    // Версия 8 — базовая для миграций (schemas/…/8.json): каждое изменение схемы дальше —
-    // новая версия, Migration в DatabaseMigrations и тест в MigrationTest.
     version = 8,
     exportSchema = true
 )

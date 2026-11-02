@@ -6,6 +6,10 @@
     `local.properties` for local development. Keystore credentials (`KEYSTORE_PASSWORD` / `KEY_ALIAS` /
     `KEY_PASSWORD`) are read from environment variables only.
 *   Use CI/CD secrets for release builds. `release.jks` and `google-services.json` are gitignored.
+*   GitHub Actions: never put `${{ … }}` into a `run:` script — pass the value through `env:` and use
+    `"$VAR"`. Text that reaches the runner (commit messages, branch and task names) would otherwise run
+    as shell. In `curl` multipart, send text fields with `--form-string`: `-F` reads a value that
+    starts with `@` or `<` as a file. Reference: `.github/actions/send-file-tg`.
 
 ## Data Protection
 *   Encrypt sensitive values with the project's own **`CryptoManager`** (`core:security`) —
@@ -38,7 +42,9 @@
     the user can move the wall clock forward to skip a pause. The wall `Clock` only turns the
     remaining time into an `Instant` for the UI.
 *   Biometrics unlock the DEK only via `BiometricPrompt.CryptoObject` with `BIOMETRIC_STRONG`;
-    an invalidated biometric key removes the biometric copy (PIN remains), it never wipes data.
+    an invalidated or missing biometric key removes the biometric copy (PIN remains), it never wipes
+    data; an unreadable Keystore (`KeystoreUnreadableException`) is treated as transient and keeps
+    the copy.
 
 ## Screen & Backups
 *   `FLAG_SECURE` is a user setting that is **on by default**; `MainActivity` adds it before the

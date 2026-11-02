@@ -27,10 +27,10 @@ fun Context.syncForegroundInfo() = ForegroundInfo(
 private fun Context.syncWorkNotification(): Notification {
     val channel = NotificationChannel(
         SYNC_NOTIFICATION_CHANNEL_ID,
-        "sync",
+        getString(R.string.sync_notification_channel_name),
         NotificationManager.IMPORTANCE_DEFAULT
     ).apply {
-        description = "Sync"
+        description = getString(R.string.sync_notification_channel_description)
     }
     // Register the channel with the system
     val notificationManager: NotificationManager? =
@@ -43,7 +43,7 @@ private fun Context.syncWorkNotification(): Notification {
         SYNC_NOTIFICATION_CHANNEL_ID
     )
         .setSmallIcon(R.drawable.ic_sync_notification)
-        .setContentTitle("Sync")
+        .setContentTitle(getString(R.string.sync_notification_title))
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .build()
 }

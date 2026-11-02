@@ -20,7 +20,7 @@ class AccountFeatureImpl @Inject constructor() : AccountFeatureApi {
             AccountScreenScreen(
                 modifier = modifier,
                 accountId = accountKey.accountId,
-                onNavigateBack = navigator::back
+                onNavigateBack = { navigator.back(from = accountKey) }
             )
         }
     }

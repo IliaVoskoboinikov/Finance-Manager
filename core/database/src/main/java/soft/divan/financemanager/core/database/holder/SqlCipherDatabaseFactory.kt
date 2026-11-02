@@ -1,5 +1,6 @@
 package soft.divan.financemanager.core.database.holder
 
+import soft.divan.financemanager.core.database.db.appDatabaseBuilder
 import android.content.Context
 import androidx.room.Room
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -27,13 +28,8 @@ class SqlCipherDatabaseFactory @Inject constructor(
             // Дальше ключ живёт только в виде passphrase — её SQLCipher и держит до закрытия
             key.fill(0)
         }
-        val database = Room.databaseBuilder(
-            context,
-            FinanceManagerDatabase::class.java,
-            DatabaseFiles.NAME
-        )
+        val database = appDatabaseBuilder(context)
             .openHelperFactory(SupportOpenHelperFactory(passphrase))
-            .withAppDefaults()
             .build()
         var verified = false
         try {
@@ -52,7 +48,13 @@ class SqlCipherDatabaseFactory @Inject constructor(
     private companion object {
         /** Нативная часть SQLCipher; загружается один раз на процесс, до первого открытия. */
         val nativeLibraryLoaded: Boolean by lazy {
-            System.loadLibrary("sqlcipher")
+            try {
+                System.loadLibrary("sqlcipher")
+            } catch (e: UnsatisfiedLinkError) {
+                // Error прошёл бы мимо обработки сбоев открытия, и данные зависли бы в
+                // Initializing; как исключение он становится «данные не открыть»
+                throw IllegalStateException("SQLCipher native library is missing", e)
+            }
             true
         }
     }

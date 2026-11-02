@@ -1,5 +1,7 @@
 package soft.divan.financemanager.core.data.vault
 
+import java.security.KeyStoreException
+import soft.divan.financemanager.core.security.keystore.KeystoreUnreadableException
 import android.content.Context
 import android.database.sqlite.SQLiteFullException
 import androidx.test.core.app.ApplicationProvider
@@ -200,6 +202,22 @@ class BiometricVaultTest {
         harness.keys.delete(harness.store.read()!!.sealed!!.alias)
 
         assertThat(biometrics.startEnrollment(PIN)).isEqualTo(BiometricEnrollmentStart.Unavailable)
+    }
+
+    @Test
+    fun `unreadable keystore keeps the biometric copy for the next attempt`() = biometricTest {
+        enroll()
+        harness.vault.lock()
+        val alias = harness.store.read()!!.biometric!!.alias
+        harness.keys.onFind = { found ->
+            if (found == alias) throw KeystoreUnreadableException(found, KeyStoreException("busy"))
+        }
+
+        val session = biometrics.startUnlock()
+
+        assertThat(session).isNull()
+        assertThat(harness.store.read()!!.biometric!!.alias).isEqualTo(alias)
+        assertThat(harness.keys.keys).containsKey(alias)
     }
 
     private suspend fun enroll() {

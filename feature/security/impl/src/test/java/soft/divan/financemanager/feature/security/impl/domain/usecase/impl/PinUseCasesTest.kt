@@ -175,6 +175,16 @@ class PinUseCasesTest {
     }
 
     @Test
+    fun `pin cannot be deleted while the protection level is unreadable`() = runTest {
+        val delete = DeletePinUseCaseImpl(protection, securityRepository, io)
+        coEvery { protection.currentLevel() } returns null
+        every { securityRepository.verifyPin(PIN) } returns true
+
+        assertThat(delete(PIN)).isEqualTo(DeletePinResult.NOT_ALLOWED)
+        verify(exactly = 0) { securityRepository.deletePin() }
+    }
+
+    @Test
     fun `pin deletion needs the current pin`() = runTest {
         val delete = DeletePinUseCaseImpl(protection, securityRepository, io)
         coEvery { protection.currentLevel() } returns DataProtectionLevel.NONE

@@ -454,6 +454,37 @@ class LocalDataVaultTest {
         assertThat(result).isEqualTo(ProtectionChangeResult.Changed)
     }
 
+    @Test
+    fun `failed keystore cleanup at start ends in key lost, not initializing`() = vaultTest {
+        harness.keys.failAliases = IllegalStateException("Keystore is busy")
+
+        vault.initialize()
+
+        assertThat(vault.state.value).isEqualTo(LocalDataState.KeyLost)
+    }
+
+    @Test
+    fun `unreadable keyset on lock closes the database instead of leaving it open`() = vaultTest {
+        vault.initialize()
+        rawKeyset { it[stringPreferencesKey("level")] = "BROKEN" }
+
+        vault.lock()
+
+        assertThat(vault.state.value).isEqualTo(LocalDataState.KeyLost)
+        assertThat(harness.holder.state.value).isEqualTo(DatabaseState.CLOSED)
+    }
+
+    @Test
+    fun `failed wipe is reported as key lost, not as stale open data`() = vaultTest {
+        vault.initialize()
+        harness.failNextClose = IllegalStateException("close failed")
+
+        vault.wipe()
+
+        assertThat(vault.state.value).isEqualTo(LocalDataState.KeyLost)
+        assertThat(harness.store.read()).isNull()
+    }
+
     private suspend fun lockedAtPinLevel() {
         enablePinLevel()
         vault.lock()

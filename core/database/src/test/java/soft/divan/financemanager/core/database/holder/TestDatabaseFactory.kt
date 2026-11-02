@@ -1,5 +1,6 @@
 package soft.divan.financemanager.core.database.holder
 
+import soft.divan.financemanager.core.database.db.appDatabaseBuilder
 import android.content.Context
 import androidx.room.Room
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
@@ -33,11 +34,12 @@ class TestDatabaseFactory(
             throw error
         }
         val builder = if (inMemory) {
-            Room.inMemoryDatabaseBuilder(context, FinanceManagerDatabase::class.java)
+            Room.inMemoryDatabaseBuilder(context, FinanceManagerDatabase::class.java).withAppDefaults()
         } else {
-            Room.databaseBuilder(context, FinanceManagerDatabase::class.java, DatabaseFiles.NAME)
+            // Тот же рецепт, что у рабочей базы, — без шифрования
+            appDatabaseBuilder(context)
         }
-        val database = builder.withAppDefaults().build()
+        val database = builder.build()
         database.openHelper.writableDatabase
         keys += key
         val closeError = failClose.also { failClose = null }

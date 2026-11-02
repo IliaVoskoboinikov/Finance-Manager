@@ -63,6 +63,17 @@ class VaultCoreTest {
     }
 
     @Test
+    fun `rejected keyset keeps the reason it did not unseal`() {
+        val dek = envelope.newDek()
+        val next = envelope.sealDevice(dek)
+        keys.delete(next.sealed!!.alias)
+
+        assertThatThrownBy { core.verify(next, dek, pin = null, previous = null) }
+            .isInstanceOf(KeyUnavailableException::class.java)
+            .hasCauseInstanceOf(KeyUnavailableException::class.java)
+    }
+
+    @Test
     fun `pin keyset is verified with the pin`() {
         val dek = envelope.newDek()
         val next = envelope.sealPin(dek, "2468".toCharArray())

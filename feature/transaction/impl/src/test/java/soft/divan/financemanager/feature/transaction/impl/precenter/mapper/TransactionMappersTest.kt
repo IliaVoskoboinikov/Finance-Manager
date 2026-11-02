@@ -97,6 +97,13 @@ class TransactionMappersTest {
     }
 
     @Test
+    fun `Transaction toUi maps null comment to empty string`() {
+        val ui = transaction.copy(comment = null).toUi(categoryUi)
+
+        assertThat(ui.comment).isEmpty()
+    }
+
+    @Test
     fun `ui to domain round-trip preserves values up to minutes precision`() {
         val roundTrip = transaction.toUi(categoryUi).toDomain()
 

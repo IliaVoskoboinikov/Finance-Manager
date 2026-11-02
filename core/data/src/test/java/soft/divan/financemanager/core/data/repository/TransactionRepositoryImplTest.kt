@@ -11,12 +11,14 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
+import soft.divan.financemanager.core.data.transaction.TransactionRollbackException
 import soft.divan.financemanager.core.data.transaction.TransactionRunner
 import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
 import soft.divan.financemanager.core.data.outbox.OutboxEnqueuer
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
+import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
@@ -43,9 +45,22 @@ class TransactionRepositoryImplTest {
     private val syncManager = mockk<TransactionSyncManager>(relaxed = true)
     private val outboxEnqueuer = mockk<OutboxEnqueuer>(relaxed = true)
 
-    /** Выполняет блок как есть: атомарность проверяется отдельно, на реальном Room. */
+    /** По умолчанию в очереди нет операций над транзакцией. */
+    private val outboxLocalDataSource = mockk<OutboxLocalDataSource> {
+        coEvery { hasOpenOperationsAffecting(any()) } returns false
+    }
+
+    /**
+     * Выполняет блок как есть, но, как и настоящий runner, превращает откат в `Failure`:
+     * сама атомарность проверяется отдельно, на реальном Room.
+     */
     private val transactionRunner = object : TransactionRunner {
-        override suspend fun <T> runInTransaction(block: suspend () -> T): T = block()
+        override suspend fun <T> runInTransaction(block: suspend () -> T): T = try {
+            block()
+        } catch (e: TransactionRollbackException) {
+            @Suppress("UNCHECKED_CAST")
+            DomainResult.Failure(e.error) as T
+        }
     }
     private val appCoroutineContext = RecordingAppCoroutineContext()
     private val errorLogger = mockk<ErrorLogger>(relaxed = true)
@@ -58,6 +73,7 @@ class TransactionRepositoryImplTest {
         syncManager = syncManager,
         transactionRunner = transactionRunner,
         outboxEnqueuer = outboxEnqueuer,
+        outboxLocalDataSource = outboxLocalDataSource,
         appCoroutineContext = appCoroutineContext,
         errorLogger = errorLogger
     )
@@ -306,6 +322,54 @@ class TransactionRepositoryImplTest {
 
         coVerify(exactly = 0) { localDataSource.update(any()) }
     }
+
+    @Test
+    fun `getById does not refresh a transaction with a pending operation`() = runTest {
+        // Строка ждёт отправки удаления: ответ сервера вернул бы её в списки
+        coEvery { localDataSource.getByLocalId("local-t1") } returns
+            entity(serverId = "server-t1", syncStatus = SyncStatus.PENDING_DELETE)
+
+        repository.getById("local-t1")
+        appCoroutineContext.runAll()
+
+        coVerify(exactly = 0) { remoteDataSource.get(any()) }
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+    }
+
+    @Test
+    fun `getById does not overwrite a transaction queued for sending during the refresh`() =
+        runTest {
+            coEvery { localDataSource.getByLocalId("local-t1") } returns
+                entity(serverId = "server-t1")
+            coEvery { remoteDataSource.get("server-t1") } returns Response.success(
+                TransactionDto(
+                    id = "server-t1",
+                    createdAt = createdAt,
+                    updatedAt = updatedAt,
+                    accountId = "server-a1",
+                    categoryId = "cat-1",
+                    amount = BigDecimal("99.00"),
+                    dateTime = transactionDate,
+                    comment = null
+                )
+            )
+            coEvery { categoryLocalDataSource.getById("cat-1") } returns CategoryEntity(
+                id = "cat-1",
+                createdAt = createdAt,
+                updatedAt = updatedAt,
+                name = "Food",
+                emoji = "🍔",
+                isIncome = false
+            )
+            // До запроса очередь пуста, к моменту ответа в ней появилась правка
+            coEvery { outboxLocalDataSource.hasOpenOperationsAffecting("local-t1") } returnsMany
+                listOf(false, true)
+
+            repository.getById("local-t1")
+            appCoroutineContext.runAll()
+
+            coVerify(exactly = 0) { localDataSource.update(any()) }
+        }
 
     @Test
     fun `getById does not chase an unsynced transaction`() = runTest {

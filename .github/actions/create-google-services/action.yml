@@ -6,18 +6,32 @@ inputs:
     description: "Path where google-services.json will be created"
     required: false
     default: "app/google-services.json"
+  required:
+    description: >
+      'true' — без секрета шаг падает (релиз не должен уйти без Firebase). 'false' — шаг
+      пропускается с предупреждением: так собирается PR из форка, где секретов нет, —
+      сборка без файла работает без Firebase (missingGoogleServicesStrategy = WARN).
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
   steps:
     - name: Create google-services.json
       shell: bash
+      env:
+        OUTPUT_PATH: ${{ inputs.output-path }}
+        REQUIRED: ${{ inputs.required }}
       run: |
         if [ -z "$GOOGLE_SERVICES_JSON" ]; then
-          echo "❌ GOOGLE_SERVICES_JSON is not set"
-          exit 1
+          if [ "$REQUIRED" = "true" ]; then
+            echo "❌ GOOGLE_SERVICES_JSON is not set"
+            exit 1
+          fi
+          echo "::warning::GOOGLE_SERVICES_JSON is not set — building without Firebase"
+          exit 0
         fi
 
-        mkdir -p $(dirname "${{ inputs.output-path }}")
-        echo "$GOOGLE_SERVICES_JSON" | base64 --decode > "${{ inputs.output-path }}"
-        echo "✅ google-services.json created at ${{ inputs.output-path }}"
+        mkdir -p "$(dirname "$OUTPUT_PATH")"
+        echo "$GOOGLE_SERVICES_JSON" | base64 --decode > "$OUTPUT_PATH"
+        echo "✅ google-services.json created at $OUTPUT_PATH"

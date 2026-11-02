@@ -24,7 +24,7 @@ class HistoryFeatureImpl @Inject constructor() : HistoryFeatureApi {
             HistoryScreen(
                 modifier = modifier,
                 isIncome = isIncome,
-                onNavigateBack = navigator::back,
+                onNavigateBack = { navigator.back(from = historyKey) },
                 onNavigateToTransaction = { transactionId ->
                     navigator.goTo(
                         TransactionKey(isIncome = isIncome, transactionId = transactionId)

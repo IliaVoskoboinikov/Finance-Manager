@@ -54,6 +54,9 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+      # До скачивания APK: checkout внутри android-setup чистит рабочий каталог (git clean).
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
       - name: Download apk
         uses: actions/download-artifact@v8
         with:
@@ -71,12 +74,12 @@ jobs:
           thread-id: ${{ secrets.TG_THREAD_TEST }}
           file: app-debug.apk
           text: |
-            🧪 *Test Build*
+            🧪 Test Build
 
             📦 Version: ${{ env.VERSION_NAME }}
             🌿 Branch: ${{ github.ref_name }}
             ✏️ Commit: ${{ github.event.head_commit.message }}
-            🔗 [Open CI Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            🔗 CI Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
   distribute-app-firebase:
     name: Distribute app firebase
@@ -87,6 +90,9 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+      # До скачивания APK: checkout внутри android-setup чистит рабочий каталог (git clean).
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
       - name: Download apk
         uses: actions/download-artifact@v8
         with:

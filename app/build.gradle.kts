@@ -38,6 +38,12 @@ android {
         manifestPlaceholders["YANDEX_CLIENT_ID"] = yandexClientId
         manifestPlaceholders["YANDEX_OAUTH_HOST"] = "oauth.yandex.ru"
     }
+    testOptions {
+        unitTests {
+            // Robolectric-тестам нужен доступ к ресурсам приложения
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 dependencies {

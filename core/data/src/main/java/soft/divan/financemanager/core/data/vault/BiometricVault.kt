@@ -9,6 +9,7 @@ import soft.divan.financemanager.core.security.keyset.DekEnvelope
 import soft.divan.financemanager.core.security.keyset.KeyLevel
 import soft.divan.financemanager.core.security.keyset.Keyset
 import soft.divan.financemanager.core.security.keystore.KeyUnavailableException
+import soft.divan.financemanager.core.security.keystore.KeystoreUnreadableException
 import java.security.GeneralSecurityException
 import javax.inject.Inject
 
@@ -34,6 +35,10 @@ class BiometricVault @Inject constructor(
         } else {
             try {
                 BiometricSession(biometricEnvelope.unlockCipher(keyset), copy.alias, dek = null)
+            } catch (e: KeystoreUnreadableException) {
+                // Keystore не прочитался — сбой бывает временным, а удалённую копию не вернуть
+                Log.w(TAG, "Keystore is unreadable, biometric copy kept", e)
+                null
             } catch (e: KeyUnavailableException) {
                 Log.w(TAG, "Biometric copy is unusable and removed", e)
                 replaceKeyset(keyset, keyset.withoutBiometric())

@@ -22,6 +22,9 @@ class FakeKeystoreKeys : KeystoreKeys {
     /** Создание ключей падает — как на прошивке без поддержки нужного режима. */
     var failCreate = false
 
+    /** Список алиасов падает — как при сбое Keystore во время уборки ключей. */
+    var failAliases: RuntimeException? = null
+
     /** Вызывается при каждом обращении к ключу — чтобы увидеть, что уже сделано к этому моменту. */
     var onFind: (alias: String) -> Unit = {}
 
@@ -46,8 +49,10 @@ class FakeKeystoreKeys : KeystoreKeys {
         protections.remove(alias)
     }
 
-    override fun aliases(prefix: String): Set<String> =
-        keys.keys.filterTo(mutableSetOf()) { it.startsWith(prefix) }
+    override fun aliases(prefix: String): Set<String> {
+        failAliases?.let { throw it }
+        return keys.keys.filterTo(mutableSetOf()) { it.startsWith(prefix) }
+    }
 
     /** Ключ остаётся, но пользоваться им нельзя — как после нового отпечатка в системе. */
     fun invalidate(alias: String) {

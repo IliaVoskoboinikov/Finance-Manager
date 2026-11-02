@@ -120,11 +120,13 @@ issue #42 в коммитах, PR и комментариях.
 | Auto-add sub-issues | подзадачи эпика попадают на доску | встроенная, UI |
 | Ветка → In Progress | первый push ветки `feature/FM-N-…` переводит задачу из Backlog; задачу в другом статусе не трогает | `board.yml` |
 | PR → статус и `Closes #N` | открытый PR — In Review; черновик или PR, закрытый без мержа, — In Progress; в описание PR дописывается `Closes #N`, если его нет. PR из ветки не по схеме получает замечание в сводке джобы | `board.yml` |
-| Дайджест | сводка доски в Telegram по понедельникам: в работе, на ревью, что неделю и дольше не меняло статус, что брать дальше, P0, без приоритета, заблокированное, прогресс эпиков | `board.yml` |
+| Дайджест | отчёт о неделе в Telegram по понедельникам: что в работе (с пометкой ⏳, если статус не менялся неделю и дольше), что на ревью и что сделано — задачи, закрытые за 7 дней как выполненные (`NOT_PLANNED` и дубли не считаются). Бэклог в сводку не входит. Период в заголовке — даты, а не номер недели: GitHub маскирует в логе совпадения со значениями секретов | `board.yml` |
 | Красный `master` | issue с лейблами `bug` и `ci-failure` и приоритетом P1; повторное падение — комментарий; зелёный прогон того же workflow закрывает issue. Решает только самый свежий прогон workflow на `master`: поздно завершившийся старый прогон issue не трогает | `ci-failure.yml` |
 | Связь PR и задачи | CodeRabbit проверяет, закрывает ли PR связанный issue | `.coderabbit.yaml` |
 
-Дополнительно шаблон PR подставляет `Closes #` и чек-лист того, чего не видит CI.
+Дополнительно шаблон PR подставляет `Closes #` и место под сводку CodeRabbit. Ручного чек-листа
+в нём нет: всё, что он перечислял, проверяют CI (`navCheck`, покрытие Kover) и CodeRabbit
+(`custom_checks` и `path_instructions` в `.coderabbit.yaml`).
 
 Логика `board.yml` и `ci-failure.yml` живёт в скриптах `.github/scripts/` (stdlib Python и `gh`),
 поэтому её можно запускать и локально, а флаг `--dry-run` показывает изменения, не внося их:
@@ -142,7 +144,8 @@ python3 -m unittest discover -s .github/scripts -p 'test_*.py'
 
 ## Еженедельный разбор
 
-Раз в неделю, минут пятнадцать:
+Раз в неделю, минут пятнадцать, по фильтрам самой доски (сводка в Telegram бэклог не
+показывает):
 
 1. Карточки без приоритета: фильтр `no:priority` — проставить Priority и `area:*`.
 2. Карточки с `blocked`, `needs-backend`, `needs-decision`: что-то изменилось?
@@ -215,7 +218,7 @@ AI-агента (#50), инвентаризация (#51), перенос (#52),
 | [`.github/ISSUE_TEMPLATE/feature.yml`](../.github/ISSUE_TEMPLATE/feature.yml) | форма фичи |
 | [`.github/ISSUE_TEMPLATE/tech-debt.yml`](../.github/ISSUE_TEMPLATE/tech-debt.yml) | форма техдолга |
 | [`.github/ISSUE_TEMPLATE/config.yml`](../.github/ISSUE_TEMPLATE/config.yml) | пустые issue разрешены, ссылка на этот документ |
-| [`.github/pull_request_template.md`](../.github/pull_request_template.md) | `Closes #` и чек-лист, место под сводку CodeRabbit |
+| [`.github/pull_request_template.md`](../.github/pull_request_template.md) | `Closes #` и место под сводку CodeRabbit |
 | [`.github/workflows/board.yml`](../.github/workflows/board.yml) | статусы по веткам и PR, недельная сводка |
 | [`.github/workflows/ci-failure.yml`](../.github/workflows/ci-failure.yml) | красный `master` → issue |
 | [`docs/agents/task-board.md`](./agents/task-board.md) | правила для AI-агента: когда и как заводить карточки, кто двигает статусы |

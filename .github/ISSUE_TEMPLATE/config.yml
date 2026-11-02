@@ -1,6 +1,12 @@
 # Пустые issue разрешены: быстрые заметки и карточки, которые заводят из командной строки.
 blank_issues_enabled: true
 contact_links:
+  - name: Вопросы и идеи / Questions and ideas
+    url: https://github.com/IliaVoskoboinikov/Finance-Manager/discussions
+    about: Как что-то устроено, предложения, обсуждения — в Discussions, не в issues
+  - name: Уязвимость / Security vulnerability
+    url: https://github.com/IliaVoskoboinikov/Finance-Manager/security/advisories/new
+    about: Только приватно, не в публичном issue — см. SECURITY.md
   - name: Как устроена доска задач
     url: https://github.com/IliaVoskoboinikov/Finance-Manager/blob/master/docs/task-tracking.md
     about: Статусы, приоритеты, лейблы, имена веток и автоматизации

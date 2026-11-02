@@ -11,6 +11,9 @@
   данных в `Open`: на уровне PIN это каждая разблокировка. См.
   [docs/encryption.md](../docs/encryption.md).
 
+Строки foreground-уведомления синка (имя и описание канала, заголовок) лежат в ресурсах модуля
+(`res/values`, `res/values-ru`).
+
 ## Module dependency graph
 
 <!--region graph-->

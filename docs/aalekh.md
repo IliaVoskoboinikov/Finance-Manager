@@ -102,10 +102,14 @@ graph TD
 
 | Файл | Роль | Когда обновлять |
 |------|------|-----------------|
-| `aalekh-baseline.json` | заморозка нарушений (падаем только на новых) + снимок метрик для quality gates | `./gradlew aalekhBaseline` после осознанного изменения набора нарушений |
-| `aalekh-snapshot.json` | слепок архитектуры для `aalekhDiff` | `./gradlew aalekhSnapshot` при изменении структуры графа |
+| `config/aalekh/aalekh-baseline.json` | заморозка нарушений (падаем только на новых) + снимок метрик для quality gates | `./gradlew aalekhBaseline` после осознанного изменения набора нарушений |
+| `config/aalekh/aalekh-snapshot.json` | слепок архитектуры для `aalekhDiff` | `./gradlew aalekhSnapshot` при изменении структуры графа |
 | `.aalekh/modules.json` | назначение/владелец/слой ключевых модулей (то, что плагин не выводит сам) | вручную при появлении важного модуля |
-| `docs/graphs/aalekh/index.html` | закоммиченная копия интерактивного отчёта | `aalekhReport` → `cp` (см. [help_comand.md](../help_comand.md)) |
+| `docs/graphs/aalekh/index.html` | закоммиченная копия интерактивного отчёта | `aalekhReport` → `cp` (см. [commands.md](./commands.md)) |
+
+Оба слепка лежат в `config/aalekh/`, а не в корне (дефолт плагина): пути заданы
+`baselineFile` / `snapshotFile` в блоке `aalekh { }`. Свежий отчёт с master публикуется на
+[GitHub Pages](https://iliavoskoboinikov.github.io/Finance-Manager/architecture/) (`pages.yml`).
 | `docs/graphs/aalekh/graph.md` | диффабельная mermaid-диаграмма графа | `aalekhMermaid` → `cp` |
 
 ## CI
@@ -143,10 +147,11 @@ graph TD
 | [`settings.gradle.kts`](../settings.gradle.kts) | применение плагина (settings-вариант) |
 | [`build.gradle.kts`](../build.gradle.kts) | блок `aalekh { }` — слои, правила, метрики, quality gates |
 | [`.aalekh/modules.json`](../.aalekh/modules.json) | назначение/владелец/слой ключевых модулей |
-| [`aalekh-baseline.json`](../aalekh-baseline.json) | заморозка нарушений + снимок метрик |
-| [`aalekh-snapshot.json`](../aalekh-snapshot.json) | слепок архитектуры для диффов |
+| [`config/aalekh/aalekh-baseline.json`](../config/aalekh/aalekh-baseline.json) | заморозка нарушений + снимок метрик |
+| [`config/aalekh/aalekh-snapshot.json`](../config/aalekh/aalekh-snapshot.json) | слепок архитектуры для диффов |
 | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | джоба `check-architecture` |
-| [`help_comand.md`](../help_comand.md) | все команды `aalekh*` |
+| [`.github/workflows/pages.yml`](../.github/workflows/pages.yml) | публикация отчёта на GitHub Pages |
+| [`commands.md`](./commands.md) | все команды `aalekh*` |
 
 ## Ссылки
 

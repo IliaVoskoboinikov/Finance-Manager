@@ -14,7 +14,7 @@ fun Transaction.toUi(category: CategoryUi): TransactionUi {
         amount = amount.stripTrailingZeros().toPlainString(),
         date = UiDateFormatter.formatDate(transactionDate),
         time = UiDateFormatter.formatTime(transactionDate),
-        comment = comment.toString(),
+        comment = comment.orEmpty(),
         createdAt = UiDateFormatter.formatDateTime(createdAt),
         updatedAt = UiDateFormatter.formatDateTime(updatedAt),
         currencyId = currencyId,

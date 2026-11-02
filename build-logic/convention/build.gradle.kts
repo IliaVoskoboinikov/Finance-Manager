@@ -43,6 +43,8 @@ dependencies {
     // Нужен только ради типов NavGraphExtension / RenderBackend в convention-плагинах:
     // сам плагин navgraph подключается через root build.gradle.kts (`apply false`).
     compileOnly(libs.navgraph.gradle.plugin)
+    // Ради типа GoogleServicesPluginConfig: сам плагин gms подключается через root (`apply false`).
+    compileOnly(libs.gms.gradle.plugin)
 
     testImplementation(libs.junit)
     testImplementation(libs.assertj.core)

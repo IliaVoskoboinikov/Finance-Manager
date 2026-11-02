@@ -102,18 +102,22 @@ class VaultCore @Inject constructor(
      * @throws KeyUnavailableException набор не разворачивается.
      */
     fun verify(next: Keyset, dek: ByteArray, pin: CharArray?, previous: Keyset?) {
-        val unsealed = runCatching {
+        val attempt = runCatching {
             if (next.level == KeyLevel.PIN) {
                 envelope.openWithPin(next, requireNotNull(pin))
             } else {
                 envelope.openWithoutUser(next)
             }
-        }.getOrNull()
+        }
+        val unsealed = attempt.getOrNull()
         val matches = unsealed != null && unsealed.contentEquals(dek)
         unsealed?.fill(0)
         if (!matches) {
             dropUnreferenced(next, previous)
-            throw KeyUnavailableException("New keyset does not unseal the database key")
+            throw KeyUnavailableException(
+                "New keyset does not unseal the database key",
+                attempt.exceptionOrNull()
+            )
         }
     }
 

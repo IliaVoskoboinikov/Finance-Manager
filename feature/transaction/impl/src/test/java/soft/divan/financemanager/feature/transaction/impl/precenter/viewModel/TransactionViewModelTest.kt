@@ -5,10 +5,12 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -38,6 +40,7 @@ import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteT
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetCategoriesByTypeUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.GetTransactionUseCase
 import soft.divan.financemanager.feature.transaction.impl.domain.usecase.UpdateTransactionAndUpdateAccountUseCase
+import soft.divan.financemanager.feature.transaction.impl.precenter.model.EmptyReason
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionUiState
@@ -212,6 +215,111 @@ class TransactionViewModelTest {
     }
 
     @Test
+    fun `create mode without accounts shows Empty and opens form once an account appears`() =
+        runTest {
+            val accounts = MutableStateFlow<DomainResult<List<Account>>>(
+                DomainResult.Success(emptyList())
+            )
+            every { getAccountsUseCase() } returns accounts
+            val vm = createModeViewModel()
+            val job = subscribe(vm)
+
+            assertThat(vm.uiState.value)
+                .isEqualTo(TransactionUiState.Empty(EmptyReason.NO_ACCOUNTS))
+
+            accounts.value = DomainResult.Success(listOf(account))
+
+            assertThat(success(vm).transaction.accountId).isEqualTo("a1")
+
+            job.cancel()
+        }
+
+    @Test
+    fun `create mode without categories shows Empty`() = runTest {
+        every { getCategoriesUseCase(any()) } returns flowOf(DomainResult.Success(emptyList()))
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        assertThat(vm.uiState.value)
+            .isEqualTo(TransactionUiState.Empty(EmptyReason.NO_CATEGORIES))
+
+        job.cancel()
+    }
+
+    @Test
+    fun `create mode without accounts and categories asks for an account first`() = runTest {
+        every { getCategoriesUseCase(any()) } returns flowOf(DomainResult.Success(emptyList()))
+        every { getAccountsUseCase() } returns flowOf(DomainResult.Success(emptyList()))
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        assertThat(vm.uiState.value)
+            .isEqualTo(TransactionUiState.Empty(EmptyReason.NO_ACCOUNTS))
+
+        job.cancel()
+    }
+
+    @Test
+    fun `later account updates do not rebuild the form and lose user input`() = runTest {
+        val accounts = MutableStateFlow<DomainResult<List<Account>>>(
+            DomainResult.Success(listOf(account))
+        )
+        every { getAccountsUseCase() } returns accounts
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        vm.updateComment("dinner")
+        accounts.value = DomainResult.Success(listOf(account, account.copy(id = "a2")))
+
+        assertThat(success(vm).transaction.comment).isEqualTo("dinner")
+        assertThat(success(vm).accounts.map { it.id }).containsExactly("a1")
+
+        job.cancel()
+    }
+
+    @Test
+    fun `edit mode without accounts still loads the transaction`() = runTest {
+        every { getAccountsUseCase() } returns flowOf(DomainResult.Success(emptyList()))
+        coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(domainTransaction)
+        coEvery { getAccountByIdUseCase("a1") } returns DomainResult.Success(account)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        assertThat(success(vm).transaction.id).isEqualTo("t1")
+
+        job.cancel()
+    }
+
+    @Test
+    fun `edit mode with unknown category produces Error state`() = runTest {
+        coEvery { getTransactionUseCase("t1") } returns
+            DomainResult.Success(domainTransaction.copy(categoryId = "missing"))
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        assertThat(vm.uiState.value).isInstanceOf(TransactionUiState.Error::class.java)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `retry after load failure reloads the form`() = runTest {
+        every { getCategoriesUseCase(any()) } returns
+            flowOf(DomainResult.Failure(DomainError.NetworkUnavailable))
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+        assertThat(vm.uiState.value).isInstanceOf(TransactionUiState.Error::class.java)
+
+        every { getCategoriesUseCase(any()) } returns
+            flowOf(DomainResult.Success(listOf(category)))
+        vm.load()
+
+        assertThat(success(vm).transaction.category.id).isEqualTo("cat-1")
+
+        job.cancel()
+    }
+
+    @Test
     fun `edit mode load failure produces Error state`() = runTest {
         coEvery { getTransactionUseCase("t1") } returns DomainResult.Failure(DomainError.NoData)
         val vm = editModeViewModel()
@@ -343,6 +451,95 @@ class TransactionViewModelTest {
 
         job.cancel()
         eventsJob.cancel()
+    }
+
+    /* ---------- повторные нажатия ---------- */
+
+    @Test
+    fun `repeated save while saving creates the transaction once`() = runTest {
+        val saving = CompletableDeferred<DomainResult<Unit>>()
+        coEvery { createUseCase(any()) } coAnswers { saving.await() }
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        vm.save()
+        vm.save()
+        saving.complete(DomainResult.Success(Unit))
+
+        coVerify(exactly = 1) { createUseCase(any()) }
+
+        job.cancel()
+    }
+
+    @Test
+    fun `save after a successful save is ignored until the screen closes`() = runTest {
+        coEvery { createUseCase(any()) } returns DomainResult.Success(Unit)
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+        val events = mutableListOf<TransactionEvent>()
+        val eventsJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.eventFlow.collect { events += it }
+        }
+
+        vm.save()
+        vm.save()
+
+        coVerify(exactly = 1) { createUseCase(any()) }
+        assertThat(events).containsExactly(TransactionEvent.TransactionSaved)
+
+        job.cancel()
+        eventsJob.cancel()
+    }
+
+    @Test
+    fun `save is allowed again after a failure`() = runTest {
+        coEvery { createUseCase(any()) } returnsMany listOf(
+            DomainResult.Failure(DomainError.Unknown(null)),
+            DomainResult.Success(Unit)
+        )
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        vm.save()
+        vm.save()
+
+        coVerify(exactly = 2) { createUseCase(any()) }
+
+        job.cancel()
+    }
+
+    @Test
+    fun `delete while saving is ignored`() = runTest {
+        val saving = CompletableDeferred<DomainResult<Unit>>()
+        coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(domainTransaction)
+        coEvery { updateUseCase(any()) } coAnswers { saving.await() }
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.save()
+        vm.delete()
+        saving.complete(DomainResult.Success(Unit))
+
+        coVerify(exactly = 0) { deleteUseCase(any()) }
+
+        job.cancel()
+    }
+
+    @Test
+    fun `repeated delete after success deletes once`() = runTest {
+        coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(domainTransaction)
+        coEvery { deleteUseCase(any()) } returns DomainResult.Success(Unit)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.delete()
+        vm.delete()
+        vm.save()
+
+        coVerify(exactly = 1) { deleteUseCase(any()) }
+        coVerify(exactly = 0) { updateUseCase(any()) }
+
+        job.cancel()
     }
 
     @Test

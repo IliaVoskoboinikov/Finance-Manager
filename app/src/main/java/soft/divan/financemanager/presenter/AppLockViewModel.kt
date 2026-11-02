@@ -8,7 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 /**
- * Прошёл ли пользователь замок приложения (PIN или отпечаток) в этом процессе.
+ * Прошёл ли пользователь замок приложения (PIN или отпечаток) в этом процессе и задан ли PIN.
  *
  * Состояние живёт в ViewModel, а не в `rememberSaveable`: оно переживает пересоздание Activity
  * (смена темы, масштаба шрифта), но не смерть процесса. Сохранённое состояние Activity система
@@ -22,7 +22,14 @@ class AppLockViewModel @Inject constructor() : ViewModel() {
     var unlocked: Boolean by mutableStateOf(false)
         private set
 
-    /** Замок пройден — или PIN только что создан в настройках: его ввели, спрашивать незачем. */
+    /**
+     * Задан ли PIN; `null` — ещё не прочитан. Пока так, главный экран не строится: иначе он
+     * мелькал бы до замка.
+     */
+    var pinSet: Boolean? by mutableStateOf(null)
+        private set
+
+    /** Замок пройден. */
     fun unlock() {
         unlocked = true
     }
@@ -30,5 +37,15 @@ class AppLockViewModel @Inject constructor() : ViewModel() {
     /** Приложение ушло в фон: при возвращении замок снова нужен. */
     fun lock() {
         unlocked = false
+    }
+
+    /**
+     * Новое значение «PIN задан». Только переход «точно не было → есть» — это PIN, созданный в
+     * настройках при открытом приложении: его только что ввели дважды, и замок не запирает
+     * экран. Первое прочтение (`null` → `true`) — холодный старт, там замок обязателен.
+     */
+    fun onPinSetChanged(set: Boolean) {
+        if (pinSet == false && set) unlocked = true
+        pinSet = set
     }
 }

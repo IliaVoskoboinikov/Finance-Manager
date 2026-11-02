@@ -1,6 +1,12 @@
 name: Android Setup
 description: Checkout + Gradle init + Google Services setup
 
+inputs:
+  google-services-required:
+    description: "'true' — падать без секрета GOOGLE_SERVICES_JSON (релизные сборки)"
+    required: false
+    default: "false"
+
 runs:
   using: "composite"
   steps:
@@ -12,3 +18,5 @@ runs:
 
     - name: Create google-services.json
       uses: ./.github/actions/create-google-services
+      with:
+        required: ${{ inputs.google-services-required }}

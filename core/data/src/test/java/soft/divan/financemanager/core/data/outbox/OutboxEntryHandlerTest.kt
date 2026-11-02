@@ -17,6 +17,7 @@ import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import java.util.concurrent.CancellationException
 
 /**
  * Тесты [OutboxEntryHandler] — судьбы **одной** записи после ответа сервера.
@@ -136,6 +137,69 @@ class OutboxEntryHandlerTest {
         // Эффект успел выполниться, но транзакция откатывается — рассогласования не остаётся
         assertThat(domainApplied).isTrue()
         assertThat(transactionLog).containsExactly("begin", "rollback")
+    }
+
+    /* ---------- сбой обработки («отравленная» запись) ---------- */
+
+    @Test
+    fun `a processing failure burns an attempt instead of breaking the run`() = runTest {
+        coEvery { sender.send(any()) } throws IllegalStateException("снимок не разобрался")
+
+        val outcome = handler.handle(entry(sequenceNo = 3, attemptCount = 1))
+
+        // Запись не висит в IN_PROGRESS: она вернулась в очередь с потраченной попыткой
+        assertThat(outcome).isEqualTo(OutboxEntryOutcome.STALLED)
+        coVerify(exactly = 1) {
+            localDataSource.scheduleRetry(3L, 2, any(), "сбой обработки: IllegalStateException", any())
+        }
+    }
+
+    @Test
+    fun `a failing local effect is retried later`() = runTest {
+        coEvery { sender.send(any()) } returns OutboxSendResult.Success(
+            localEffect = { error("сбой записи доменной строки") }
+        )
+
+        val outcome = handler.handle(entry(sequenceNo = 7))
+
+        assertThat(outcome).isEqualTo(OutboxEntryOutcome.STALLED)
+        coVerify(exactly = 1) { localDataSource.scheduleRetry(7L, 1, any(), any(), any()) }
+    }
+
+    @Test
+    fun `a poisoned entry ends up in dead letter once attempts are exhausted`() = runTest {
+        givenCascadeStub()
+        coEvery { sender.send(any()) } throws IllegalStateException("снимок не разобрался")
+
+        val outcome = handler.handle(
+            entry(sequenceNo = 4, attemptCount = OutboxRetryPolicy.MAX_ATTEMPTS - 1)
+        )
+
+        assertThat(outcome).isEqualTo(OutboxEntryOutcome.DONE)
+        coVerify(exactly = 1) { localDataSource.markFailed(4L, "T1", any(), any(), any()) }
+    }
+
+    @Test
+    fun `a processing failure is reported without its message`() = runTest {
+        coEvery { sender.send(any()) } throws IllegalStateException("""{"amount":"500.00"}""")
+        val message = slot<String>()
+        coEvery { errorLogger.recordError(capture(message)) } returns Unit
+
+        handler.handle(entry(sequenceNo = 3))
+
+        // Текст исключения может содержать кусок снимка с суммами
+        assertThat(message.captured).contains("T1", "IllegalStateException")
+        assertThat(message.captured).doesNotContain("500.00")
+    }
+
+    @Test
+    fun `cancellation is not turned into a retry`() = runTest {
+        coEvery { sender.send(any()) } throws CancellationException("прогон остановлен")
+
+        val result = runCatching { handler.handle(entry(sequenceNo = 3)) }
+
+        assertThat(result.exceptionOrNull()).isInstanceOf(CancellationException::class.java)
+        coVerify(exactly = 0) { localDataSource.scheduleRetry(any(), any(), any(), any(), any()) }
     }
 
     @Test

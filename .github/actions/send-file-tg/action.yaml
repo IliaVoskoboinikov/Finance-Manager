@@ -1,33 +1,46 @@
 name: send-file-tg
-description: Send file to Telegram
+description: Отправляет файл с подписью в Telegram
+
+# Значения inputs попадают в скрипт только через env: подстановка ${{ }} прямо в run:
+# позволила бы подписи (в неё входит сообщение коммита) выполнить произвольную команду
+# на раннере. Текстовые поля уходят через --form-string: у -F значение, начатое с «@» или «<»,
+# curl читает как путь к файлу. Подпись уходит без parse_mode: «_» и «*» в сообщении
+# коммита не должны ломать разметку.
 
 inputs:
   tg-token:
-    description: 'Telegram Token'
+    description: Токен бота
     required: true
   tg-chat:
-    description: 'Telegram chat id'
+    description: Id чата
     required: true
   thread-id:
-    description: 'Telegram chat id'
-    required: true
+    description: Id темы в чате; пустое значение — файл уйдёт в общий чат
+    required: false
+    default: ''
   file:
-    description: 'Path to file'
+    description: Путь к файлу
     required: true
   text:
-    description: 'Report message'
+    description: Подпись к файлу (до 1024 символов)
     required: true
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
     - name: Send file
       shell: bash
+      env:
+        TG_TOKEN: ${{ inputs.tg-token }}
+        TG_CHAT: ${{ inputs.tg-chat }}
+        TG_THREAD: ${{ inputs.thread-id }}
+        TG_FILE: ${{ inputs.file }}
+        TG_TEXT: ${{ inputs.text }}
       run: |
-        curl -X POST "https://api.telegram.org/bot${{ inputs.tg-token }}/sendDocument" \
-        -F chat_id=${{ inputs.tg-chat }} \
-        -F message_thread_id=${{ inputs.thread-id }} \
-        -F document=@${{ inputs.file }} \
-        -F parse_mode="Markdown" \
-        -F caption="${{ inputs.text }}"
-
+        args=(--form-string "chat_id=${TG_CHAT}" --form-string "caption=${TG_TEXT}")
+        if [ -n "${TG_THREAD}" ]; then
+          args+=(--form-string "message_thread_id=${TG_THREAD}")
+        fi
+        curl --silent --show-error --fail-with-body --request POST \
+          "https://api.telegram.org/bot${TG_TOKEN}/sendDocument" \
+          "${args[@]}" --form "document=@\"${TG_FILE}\"" > /dev/null

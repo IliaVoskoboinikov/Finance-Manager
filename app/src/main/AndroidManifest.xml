@@ -35,10 +35,13 @@
              API < 33 — AppCompatDelegate.setApplicationLocales) обрабатываем без пересоздания
              Activity — иначе окно моргает чёрным во время recreate. AppCompat при объявленных
              configChanges тоже не пересоздаёт, а шлёт onConfigurationChanged.
-             Compose сам перерисует stringResource() через обновление LocalConfiguration. -->
+             Compose сам перерисует stringResource() через обновление LocalConfiguration.
+             uiMode: по той же причине — смена темы (системной или через
+             UiModeManager.setApplicationNightMode в MainActivity) перерисовывается Compose
+             через isSystemInDarkTheme(), без recreate. -->
         <activity
             android:name=".presenter.MainActivity"
-            android:configChanges="locale|layoutDirection"
+            android:configChanges="locale|layoutDirection|uiMode"
             android:exported="true"
             android:label="@string/app_name"
             android:screenOrientation="portrait"

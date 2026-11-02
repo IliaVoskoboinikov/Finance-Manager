@@ -18,13 +18,18 @@ import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.data.sync.CategorySyncManager
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
 import soft.divan.financemanager.sync.domain.usecase.SetLastSyncTimeUseCase
+import java.util.concurrent.CancellationException
 
 class SyncCoordinatorImplTest {
 
     private val categorySyncManager = mockk<CategorySyncManager>()
     private val accountSyncManager = mockk<AccountSyncManager>()
     private val transactionSyncManager = mockk<TransactionSyncManager>()
-    private val outboxProcessor = mockk<OutboxProcessor>(relaxed = true)
+
+    /** По умолчанию очередь разобрана без временных сбоев. */
+    private val outboxProcessor = mockk<OutboxProcessor> {
+        coEvery { process() } returns true
+    }
     private val setLastSyncTimeUseCase = mockk<SetLastSyncTimeUseCase>(relaxed = true)
 
     private val coordinator = SyncCoordinatorImpl(
@@ -144,6 +149,31 @@ class SyncCoordinatorImplTest {
 
         assertThat(result).isFalse()
         coVerify(exactly = 1) { outboxProcessor.process() }
+    }
+
+    @Test
+    fun `syncAll asks for a retry when outbox entries are left for a temporary reason`() =
+        runTest {
+            stubManagers()
+            coEvery { outboxProcessor.process() } returns false
+
+            val result = coordinator.syncAll()
+
+            // Без сети операции остались в очереди — это не «успешная синхронизация»
+            assertThat(result).isFalse()
+            coVerify(exactly = 0) { setLastSyncTimeUseCase(any()) }
+        }
+
+    @Test
+    fun `syncAll does not swallow cancellation`() = runTest {
+        stubManagers()
+        coEvery { categorySyncManager.syncWith(any()) } throws CancellationException("stop")
+
+        val result = runCatching { coordinator.syncAll() }
+
+        // Остановленная работа не продолжает цикл со следующего шага
+        assertThat(result.exceptionOrNull()).isInstanceOf(CancellationException::class.java)
+        coVerify(exactly = 0) { accountSyncManager.syncWith(any()) }
     }
 
     @Test

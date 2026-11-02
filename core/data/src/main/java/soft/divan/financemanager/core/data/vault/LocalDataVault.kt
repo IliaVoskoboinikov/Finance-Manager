@@ -46,14 +46,23 @@ class LocalDataVault @Inject constructor(
     suspend fun initialize() = core.exclusive {
         val current = core.state.value
         if (current is LocalDataState.Initializing || current is LocalDataState.KeyLost) {
-            core.publish(restore())
+            // Весь restore() — под attempt: исключение из уборки ключей или стирания открытого
+            // файла иначе ушло бы из initialize, и данные навсегда остались бы в Initializing
+            core.publish(attempt { restore() })
         }
     }
 
     /** Закрывает базу уровня [KeyLevel.PIN]; ключ из памяти уходит вместе с ней. */
     suspend fun lock() = core.exclusive {
-        val keyset = core.readKeysetOrNull()
-        if (keyset?.level == KeyLevel.PIN && core.state.value == LocalDataState.Open) {
+        if (core.state.value != LocalDataState.Open) return@exclusive
+        val keyset = readKeyset().getOrElse { cause ->
+            // Уровень не прочитать — значит, неизвестно, можно ли оставить базу открытой. Закрываем:
+            // открыть её всё равно уже нечем, а «Попробовать снова» перечитает набор
+            core.publish(keyLost(cause))
+            core.holder.close()
+            return@exclusive
+        }
+        if (keyset?.level == KeyLevel.PIN) {
             // Экран замка появляется сразу; сама база закроется, когда доработают идущие операции
             core.publish(LocalDataState.Locked(biometricEnabled = keyset.biometric != null))
             core.holder.close()
@@ -67,9 +76,15 @@ class LocalDataVault @Inject constructor(
     suspend fun wipe() = core.exclusive {
         core.store.clear()
         core.deleteOrphans(keyset = null)
-        core.holder.wipe()
-        Log.i(TAG, "Local data wiped")
-        core.publish(createFresh())
+        // Сбой стирания файлов (или закрытия базы) — KeyLost, а не устаревшее Open над закрытой
+        // базой: ключи уже уничтожены, и экран восстановления предложит повторить
+        core.publish(
+            attempt {
+                core.holder.wipe()
+                Log.i(TAG, "Local data wiped")
+                createFresh()
+            }
+        )
     }
 
     private suspend fun restore(): LocalDataState {

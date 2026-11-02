@@ -1,6 +1,7 @@
 package soft.divan.financemanager.core.database.seed
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.flow.first
@@ -19,6 +20,11 @@ import java.util.UUID
 class DefaultCategoriesTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
+
+    private fun inMemoryDatabase() =
+        Room.inMemoryDatabaseBuilder(context, FinanceManagerDatabase::class.java)
+            .withAppDefaults()
+            .build()
 
     @Test
     fun `reference set has 24 categories with server ids`() {
@@ -42,9 +48,7 @@ class DefaultCategoriesTest {
 
     @Test
     fun `new database is created with the reference set`() = runTest {
-        val db = Room.inMemoryDatabaseBuilder(context, FinanceManagerDatabase::class.java)
-            .withAppDefaults()
-            .build()
+        val db = inMemoryDatabase()
 
         val stored = db.categoryDao().getAll().first()
         db.close()
@@ -54,9 +58,7 @@ class DefaultCategoriesTest {
 
     @Test
     fun `server version of a seeded category replaces it instead of duplicating`() = runTest {
-        val db = Room.inMemoryDatabaseBuilder(context, FinanceManagerDatabase::class.java)
-            .withAppDefaults()
-            .build()
+        val db = inMemoryDatabase()
         val seeded = DefaultCategories.all.first()
 
         val fromServer = seeded.copy(name = "С сервера", updatedAt = "2026-01-01T00:00:00Z")
@@ -66,5 +68,29 @@ class DefaultCategoriesTest {
         db.close()
         assertThat(stored).hasSize(DefaultCategories.all.size)
         assertThat(stored.single { it.id == seeded.id }.name).isEqualTo("С сервера")
+    }
+
+    @Test
+    fun `destructive migration from an older version seeds the reference set again`() = runTest {
+        val file = context.getDatabasePath(OLD_DATABASE_NAME)
+        file.parentFile?.mkdirs()
+        // База предыдущей версии без миграции до текущей: Room сотрёт её деструктивным откатом
+        SQLiteDatabase.openOrCreateDatabase(file, null).use { it.version = OLD_VERSION }
+
+        // Тот же сборщик, что у рабочей базы: откат и повторный засев настраивает withAppDefaults
+        val db = Room.databaseBuilder(context, FinanceManagerDatabase::class.java, OLD_DATABASE_NAME)
+            .withAppDefaults()
+            .build()
+
+        val stored = db.categoryDao().getAll().first()
+        db.close()
+        context.deleteDatabase(OLD_DATABASE_NAME)
+
+        assertThat(stored).containsExactlyInAnyOrderElementsOf(DefaultCategories.all)
+    }
+
+    private companion object {
+        const val OLD_DATABASE_NAME = "old_version.db"
+        const val OLD_VERSION = 3
     }
 }

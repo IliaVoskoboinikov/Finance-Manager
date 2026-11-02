@@ -43,12 +43,13 @@ class WorkManagerSyncSchedulerTest {
     }
 
     @Test
-    fun `schedulePeriodicSync enqueues unique periodic work with KEEP policy`() {
+    fun `schedulePeriodicSync enqueues unique periodic work with UPDATE policy`() {
+        // KEEP оставил бы старый период: смена интервала в настройках не применялась бы
         val request = slot<PeriodicWorkRequest>()
         every {
             workManager.enqueueUniquePeriodicWork(
                 SYNC_PERIODIC_WORK,
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 capture(request)
             )
         } returns mockk()

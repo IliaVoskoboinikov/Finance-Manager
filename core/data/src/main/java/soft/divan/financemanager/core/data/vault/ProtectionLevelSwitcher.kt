@@ -61,8 +61,13 @@ class ProtectionLevelSwitcher @Inject constructor(
                 KeyLevel.PIN -> envelope.sealPin(dek, requireNotNull(pin))
             }
             replace(current, next, dek, pin)
-            // Новый уровень начинается с чистого учёта ошибок
-            core.store.writeAttempts(PinAttempts())
+            // Новый уровень начинается с чистого учёта ошибок. Набор уже заменён, поэтому сбой этой
+            // записи не делает смену несостоявшейся: «Failed» ввёл бы в заблуждение
+            try {
+                core.store.writeAttempts(PinAttempts())
+            } catch (e: IOException) {
+                Log.e(TAG, "PIN attempts could not be reset after the level change", e)
+            }
             Log.i(TAG, "Protection level changed: ${current.level} -> $target")
             ProtectionChangeResult.Changed
         } finally {

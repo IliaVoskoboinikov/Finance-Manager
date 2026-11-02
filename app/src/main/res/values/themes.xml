@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.FinanceManager" parent="Theme.AppCompat.Light.NoActionBar" />
+    <!-- DayNight: фон окна (а на API 31+ и системного сплэша) сразу в тёмной/светлой теме,
+         до первого кадра Compose. Цвет — values/colors.xml и values-night/colors.xml. -->
+    <style name="Theme.FinanceManager" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+    </style>
 </resources>

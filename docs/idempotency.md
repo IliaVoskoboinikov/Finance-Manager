@@ -205,6 +205,11 @@ WHERE serverId IN (:ids) OR (localId IN (:ids) AND serverId IS NULL)
 [`AccountDao`](../core/database/src/main/java/soft/divan/financemanager/core/database/dao/AccountDao.kt),
 используется в `pullFromRemoteForAccount` / `performPull`.
 
+Список id подставляется в запрос дважды — по две bind-переменные на id, а системный SQLite на
+API 26–30 допускает не больше 999. Поэтому local data source разбивает список на пачки
+(`SYNC_IDS_CHUNK_SIZE`), а pull прерывается, если локальные записи прочитать не удалось: принять
+сбой за «локально ничего нет» значило бы вставить все серверные записи дубликатами.
+
 > Порядок внутри цикла синхронизации — `pull` перед `push` — делает этот сценарий не редким, а
 > **типичным**: pull успевает увидеть запись раньше, чем push дойдёт до её подтверждения.
 

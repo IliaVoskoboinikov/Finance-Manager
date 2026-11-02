@@ -1,5 +1,6 @@
 package soft.divan.financemanager.sync.worker
 
+import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
@@ -25,6 +26,7 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import soft.divan.financemanager.core.domain.model.LocalDataState
 import soft.divan.financemanager.core.domain.usecase.ObserveLocalDataStateUseCase
+import soft.divan.financemanager.sync.R
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -41,6 +43,8 @@ class SyncWorkersRobolectricTest {
 
         assertThat(info.notificationId).isEqualTo(1)
         assertThat(info.notification.smallIcon).isNotNull()
+        assertThat(info.notification.extras.getCharSequence(Notification.EXTRA_TITLE))
+            .isEqualTo(context.getString(R.string.sync_notification_title))
 
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
             as NotificationManager
@@ -48,6 +52,10 @@ class SyncWorkersRobolectricTest {
             .map { it as android.app.NotificationChannel }
             .firstOrNull { it.id == "SyncNotificationChannel" }
         assertThat(channel).isNotNull()
+        assertThat(channel?.name)
+            .isEqualTo(context.getString(R.string.sync_notification_channel_name))
+        assertThat(channel?.description)
+            .isEqualTo(context.getString(R.string.sync_notification_channel_description))
     }
 
     /* ---------- SyncWorker ---------- */

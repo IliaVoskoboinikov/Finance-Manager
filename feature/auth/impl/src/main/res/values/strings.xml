@@ -17,6 +17,7 @@
     <string name="auth_sync_data_button">Sync Data</string>
     <string name="auth_clear_data_button">Clear Local Data</string>
     <string name="auth_syncing_overlay">Syncing your data...</string>
+    <string name="auth_sync_failed">Sync failed. Using local data.</string>
     <string name="profile_title">Profile</string>
     <string name="profile_logout">Logout</string>
     <string name="profile_logout_confirm_text">Are you sure you want to log out? You can choose to clear your local data or keep it for offline use.</string>

@@ -33,10 +33,14 @@ class WorkManagerSyncScheduler @Inject constructor(
             .setInputData(SyncWorker::class.delegatedData())
             .build()
 
+        // UPDATE, а не KEEP: KEEP оставил бы задачу со старым периодом, и смена интервала
+        // в настройках ни на что не влияла бы. UPDATE меняет спецификацию на месте и сохраняет
+        // время прошлого запуска, поэтому вызов на каждом старте приложения не сдвигает отсчёт,
+        // а уже идущий синк не прерывается — новый период применяется со следующего запуска.
         WorkManager.getInstance(context)
             .enqueueUniquePeriodicWork(
                 SYNC_PERIODIC_WORK,
-                ExistingPeriodicWorkPolicy.KEEP,
+                ExistingPeriodicWorkPolicy.UPDATE,
                 request
             )
     }

@@ -5,9 +5,11 @@ import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
 import soft.divan.financemanager.core.data.sync.CategorySyncManager
 import soft.divan.financemanager.core.data.sync.Synchronizer
+import soft.divan.financemanager.core.data.sync.isPullSkipped
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
-import soft.divan.financemanager.core.domain.result.onSuccess
+import soft.divan.financemanager.core.domain.result.DomainResult
+import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import javax.inject.Inject
 
@@ -33,13 +35,10 @@ class CategorySyncManagerImpl @Inject constructor(
      *
      * В текущей реализации выполняется только pull-синхронизация.
      *
-     * Возвращает true, если pull завершился без исключений.
+     * Возвращает результат pull'а: `safeApiCall` исключений не бросает, поэтому судить об
+     * успехе можно только по нему, а не по отсутствию исключения.
      */
-    override suspend fun syncWith(synchronizer: Synchronizer): Boolean {
-        return runCatching {
-            pullServerData()
-        }.isSuccess
-    }
+    override suspend fun syncWith(synchronizer: Synchronizer): Boolean = pullServerData()
 
     /**
      * Загружает актуальные категории с сервера и обновляет локальную БД.
@@ -53,13 +52,15 @@ class CategorySyncManagerImpl @Inject constructor(
      * - Используется last-write-wins (сервер перезаписывает локальные данные)
      * - Все операции обёрнуты в safeApiCall / safeDbCall
      */
-    override suspend fun pullServerData() {
+    override suspend fun pullServerData(): Boolean =
         safeApiCall(errorLogger) {
             remoteDataSource.getAll()
-        }.onSuccess { categoryDtos ->
-            safeDbCall(errorLogger) {
-                localDataSource.insert(categoryDtos.map { it.toEntity() })
-            }
-        }
-    }
+        }.fold(
+            onSuccess = { categoryDtos ->
+                safeDbCall(errorLogger) {
+                    localDataSource.insert(categoryDtos.map { it.toEntity() })
+                } is DomainResult.Success
+            },
+            onFailure = { error -> error.isPullSkipped() }
+        )
 }

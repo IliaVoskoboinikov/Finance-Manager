@@ -138,7 +138,6 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime-android", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
-androidx-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 sqlcipher-android = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipherAndroid" }
 androidx-work-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
 androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "workManager" }
@@ -195,6 +194,7 @@ ruler-plugin = { group = "com.spotify.ruler", name = "ruler-gradle-plugin", vers
 module-graph-plugin = { module = "com.jraska.module.graph.assertion:plugin", version.ref = "graphPlugin" }
 dependency-guard-plugin = { module = "com.dropbox.dependency-guard:dependency-guard", version.ref = "dependencyGuard" }
 navgraph-gradle-plugin = { group = "com.github.skydoves", name = "compose-nav-graph-gradle", version.ref = "navgraph" }
+gms-gradle-plugin = { group = "com.google.gms", name = "google-services", version.ref = "gmsPlugin" }
 
 #Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
@@ -265,9 +265,6 @@ java-library = { id = "java-library" }
 # DI
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-
-# Storage
-room = { id = "androidx.room", version.ref = "room" }
 
 # Tools
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }

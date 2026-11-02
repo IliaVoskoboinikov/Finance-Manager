@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sync_notification_channel_name">Синхронизация</string>
+    <string name="sync_notification_channel_description">Фоновая синхронизация данных</string>
+    <string name="sync_notification_title">Синхронизация данных</string>
+</resources>

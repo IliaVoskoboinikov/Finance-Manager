@@ -1,5 +1,6 @@
 package soft.divan.financemanager.sync.initializers
 
+import android.util.Log
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -41,6 +42,23 @@ class SyncInitializer @Inject constructor(
             .map { it is LocalDataState.Open }
             .distinctUntilChanged()
             .filter { isOpen -> isOpen }
-            .collect { syncScheduler.scheduleOneTimeSync() }
+            .collect { scheduleOneTimeSyncSafely() }
+    }
+
+    /**
+     * Сбой планирования одного синка не должен останавливать подписку: на уровне PIN синк при
+     * разблокировке — единственный, и после исключения он не запускался бы до перезапуска процесса.
+     */
+    @Suppress("TooGenericExceptionCaught")
+    private fun scheduleOneTimeSyncSafely() {
+        try {
+            syncScheduler.scheduleOneTimeSync()
+        } catch (e: Exception) {
+            Log.e(TAG, "One-time sync could not be scheduled", e)
+        }
+    }
+
+    private companion object {
+        const val TAG = "SyncInitializer"
     }
 }

@@ -20,8 +20,10 @@ class AccountLocalDataSourceImpl @Inject constructor(
     override suspend fun getByServerId(id: String): AccountEntity? =
         holder.withDatabase { it.accountDao().getByServerId(id) }
 
+    /** По частям: запрос тратит две bind-переменные на id (см. [SYNC_IDS_CHUNK_SIZE]). */
     override suspend fun getBySyncIds(ids: List<String>): List<AccountEntity> =
-        holder.withDatabase { it.accountDao().getBySyncIds(ids) }
+        // Одна аренда на все части: база не закроется между ними
+        holder.withDatabase { db -> ids.queryInChunks { db.accountDao().getBySyncIds(it) } }
 
     override suspend fun getPendingSync(): List<AccountEntity> =
         holder.withDatabase { it.accountDao().getPendingSync() }

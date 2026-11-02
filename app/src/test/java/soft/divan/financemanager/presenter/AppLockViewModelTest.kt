@@ -21,4 +21,45 @@ class AppLockViewModelTest {
         lock.lock()
         assertThat(lock.unlocked).isFalse()
     }
+
+    @Test
+    fun `first read of an existing pin on a cold start keeps the lock`() {
+        val lock = AppLockViewModel()
+
+        lock.onPinSetChanged(true)
+
+        assertThat(lock.pinSet).isTrue()
+        assertThat(lock.unlocked).isFalse()
+    }
+
+    @Test
+    fun `pin created in settings while the app is open does not lock it`() {
+        val lock = AppLockViewModel()
+        lock.onPinSetChanged(false)
+
+        lock.onPinSetChanged(true)
+
+        assertThat(lock.unlocked).isTrue()
+    }
+
+    @Test
+    fun `pin removed by a wipe is reported and does not unlock anything`() {
+        val lock = AppLockViewModel()
+        lock.onPinSetChanged(true)
+
+        lock.onPinSetChanged(false)
+
+        assertThat(lock.pinSet).isFalse()
+        assertThat(lock.unlocked).isFalse()
+    }
+
+    @Test
+    fun `the same pin state read again changes nothing`() {
+        val lock = AppLockViewModel()
+        lock.onPinSetChanged(true)
+
+        lock.onPinSetChanged(true)
+
+        assertThat(lock.unlocked).isFalse()
+    }
 }

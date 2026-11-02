@@ -1,5 +1,6 @@
 package soft.divan.financemanager.core.data.vault
 
+import java.io.IOException
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -204,6 +205,16 @@ class ProtectionLevelSwitcherTest {
         switcher.changeLevel(KeyLevel.PIN, PIN.toCharArray())
 
         assertThat(harness.vault.state.value).isEqualTo(LocalDataState.Open)
+    }
+
+    @Test
+    fun `failed reset of the attempts after a level change still reports the change`() = switcherTest {
+        harness.store.failNextAttemptsWrite = IOException("disk is full")
+
+        val result = switcher.changeLevel(KeyLevel.OPEN, pin = null)
+
+        assertThat(result).isEqualTo(ProtectionChangeResult.Changed)
+        assertThat(harness.store.read()!!.level).isEqualTo(KeyLevel.OPEN)
     }
 
     private suspend fun enableBiometric() {

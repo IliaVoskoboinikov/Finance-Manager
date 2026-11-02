@@ -4,6 +4,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -339,6 +340,76 @@ class AccountViewModelTest {
 
         job.cancel()
         eventsJob.cancel()
+    }
+
+    /* ---------- повторные нажатия ---------- */
+
+    @Test
+    fun `repeated save while saving creates the account once`() = runTest {
+        val saving = CompletableDeferred<DomainResult<Unit>>()
+        coEvery { createAccountUseCase(any()) } coAnswers { saving.await() }
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        vm.createAccount()
+        vm.createAccount()
+        saving.complete(DomainResult.Success(Unit))
+
+        coVerify(exactly = 1) { createAccountUseCase(any()) }
+
+        job.cancel()
+    }
+
+    @Test
+    fun `save after a successful save is ignored until the screen closes`() = runTest {
+        coEvery { createAccountUseCase(any()) } returns DomainResult.Success(Unit)
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+        val events = mutableListOf<AccountEvent>()
+        val eventsJob = launch(UnconfinedTestDispatcher()) { vm.eventFlow.collect { events += it } }
+
+        vm.createAccount()
+        vm.createAccount()
+
+        coVerify(exactly = 1) { createAccountUseCase(any()) }
+        assertThat(events).containsExactly(AccountEvent.Saved)
+
+        job.cancel()
+        eventsJob.cancel()
+    }
+
+    @Test
+    fun `save is allowed again after a failure`() = runTest {
+        coEvery { createAccountUseCase(any()) } returnsMany listOf(
+            DomainResult.Failure(DomainError.Unknown(null)),
+            DomainResult.Success(Unit)
+        )
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        vm.createAccount()
+        vm.createAccount()
+
+        coVerify(exactly = 2) { createAccountUseCase(any()) }
+
+        job.cancel()
+    }
+
+    @Test
+    fun `repeated delete after success deletes once and blocks save`() = runTest {
+        coEvery { getAccountByIdUseCase("local-1") } returns DomainResult.Success(domainAccount)
+        coEvery { deleteAccountUseCase("local-1") } returns DomainResult.Success(Unit)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.delete()
+        vm.delete()
+        vm.createAccount()
+
+        coVerify(exactly = 1) { deleteAccountUseCase(any()) }
+        coVerify(exactly = 0) { updateAccountUseCase(any()) }
+
+        job.cancel()
     }
 
     @Test

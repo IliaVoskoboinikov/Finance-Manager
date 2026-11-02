@@ -43,7 +43,7 @@ Run checks for the modules you touched; fix every violation your change introduc
 ./gradlew detekt                        # static analysis, maxIssues: 0, no baseline — fix, don't snapshot
 ./gradlew lint                          # Android lint + custom :lint checkers
 ./gradlew :konsist:test                 # architecture rules read from sources (see constraints below)
-./gradlew :koverVerifyFull              # coverage gate: ≥ 95% lines of testable code
+./gradlew :koverVerifyFull              # coverage gate: ≥ 70% lines of testable code (target 90%)
 ./gradlew :app:assertModuleGraph        # validate module dependency graph
 ./gradlew aalekhCheck                   # enforce architecture: layers, feature isolation, reachability, cycles (docs/aalekh.md)
 ./gradlew navCheck                      # navigation graph matches the committed .nav baselines
@@ -54,7 +54,9 @@ Run checks for the modules you touched; fix every violation your change introduc
 ```
 
 CI (`.github/workflows/ci.yml`) runs, as separate jobs, on every PR and push to
-`master`/`releases/**`: `assembleDebug` (+ build-time report); unit tests (full `test` on master,
+`master`, and as the release gate inside `cd_release.yml` (push to `releases/**`; publishing
+waits for it): `assembleDebug` (+ build-time report); `:app:assembleRelease` signed with a
+throwaway key (job `build-release`, R8 + resource shrinking; skipped in the release gate); unit tests (full `test` on master,
 affected modules + `:konsist:test` on branches); coverage gate (`koverVerifyFull`); `lint`;
 `detekt`; `ktlintCheck`; `:app:dependencyGuard`; `:app:assertModuleGraph`; `aalekhCheck`
 (architecture); `navCheck` (job `nav-graph`); app size (`analyzeDebugBundle`).
@@ -87,7 +89,8 @@ Screens are addressed by `@Serializable` `NavKey`s declared in each feature's `:
 `<Name>FeatureApi : FeatureApi` and implements
 `registerEntries(scope: EntryProviderScope<NavKey>, navigator: Navigator, modifier)` in its
 `:impl`, registering **only its own** keys — a key may be registered exactly once. Navigation
-to another feature is `navigator.goTo(ItsKey)`; `back()` pops. `app` assembles the graph from a
+to another feature is `navigator.goTo(ItsKey)`; `navigator.back(from = ownKey)` closes the screen.
+Both are idempotent (guard against double taps). `app` assembles the graph from a
 Hilt `Set<FeatureApi>` multibinding (`di/FeatureNavigationModule.kt`) and owns two back stacks:
 the root one (`RootNavDisplay`: splash → auth → main) and one per bottom-nav tab
 (`TopLevelBackStack`). ViewModels that need nav arguments use Hilt assisted factories —
@@ -116,10 +119,13 @@ category → account → transaction sync order + last-write-wins are handled in
 
 ## Non-obvious constraints
 
-- **DB migrations:** real `Migration`s only — base schema v8, exported to
-  `core/database/schemas`. Any schema change (an index too) = version bump + `Migration` in
-  `DatabaseMigrations.ALL` + test in `MigrationTest`; no destructive fallback on upgrade.
-  Default categories are seeded in code (`SeedDatabaseCallback`), there is no DB asset.
+- **DB migrations:** pre-release the DB uses `fallbackToDestructiveMigration`. The category
+  reference set is seeded in code (`core:database` `seed/DefaultCategories`, server GUIDs) by
+  `SeedDatabaseCallback` on create and after a destructive migration — no prepackaged asset.
+  The production builder and test databases that stand in for it go through `withAppDefaults()`
+  (plain in-memory DAO/outbox test databases don't — they need empty tables). Adding an index =
+  schema change = version bump. Real `Migration`s + migration tests are required before release
+  (`exportSchema = true`).
 - **DB access & encryption:** the database is SQLCipher-encrypted and can be closed (PIN level,
   auto-lock, wipe), so DAOs are **not** injectable — go through `DatabaseHolder`
   (`withDatabase {}` for one-shot calls, `observe {}` for flows). Database keys live in
@@ -139,17 +145,27 @@ category → account → transaction sync order + last-write-wins are handled in
 - **Dependencies:** any change to the release classpath (new library, version bump, changed
   transitive) fails `:app:dependencyGuard` until `./gradlew :app:dependencyGuardBaseline` re-records
   `app/dependencies/releaseRuntimeClasspath.txt` — review that diff, it ships with the change.
-- **Coverage gate:** aggregate line coverage of testable code must stay ≥ 95% (`koverVerifyFull`,
-  rule and exclusions in the root `build.gradle.kts`). UI (`@Composable`, `*ScreenKt`, Activities,
-  `*FeatureImpl`) and generated code are excluded — so new non-UI logic ships with its tests.
+- **Coverage gate:** aggregate line coverage of testable code must stay ≥ 70% (`koverVerifyFull`,
+  rule and exclusions in the root `build.gradle.kts`); the target is 90%. UI (`@Composable`,
+  `*ScreenKt`, Activities, `*FeatureImpl`) and generated code are excluded. New non-UI logic ships
+  with behaviour tests, but never add or reshape code, or write assertion-free tests, just to
+  raise the number.
 - **Konsist** (`:konsist`) reads sources and fails on misplaced code: use cases and repository
   interfaces in a `domain` package (implementations outside it), Room entities only in
   `core:database`, DTOs in a `dto` package, ViewModels annotated `@HiltViewModel`, no legacy dates.
 - **Building in a git worktree:** the gitignored `local.properties` and `app/google-services.json`
   are absent. Compile/test/lint tasks need `ANDROID_HOME=<sdk path>` before `./gradlew`
-  (ktlint/detekt run without it). `:app` tasks need the google-services plugin set to
-  `missingGoogleServicesStrategy = WARN` via an `--init-script` kept outside the repo — never copy
-  the real `google-services.json`. Release/R8 builds locally: `-x :app:uploadCrashlyticsMappingFileRelease`.
+  (ktlint/detekt run without it). Without `google-services.json` the build only warns
+  (`missingGoogleServicesStrategy = WARN` in `AndroidAppFirebaseConventionPlugin`) and the app runs
+  without Firebase — never copy the real `google-services.json`. Firebase SDK calls must therefore
+  check `FirebaseApp.getApps(context)` first (see `CrashlyticsLogger`, `PushSubscriptionManagerImpl`):
+  `getInstance()` throws when Firebase isn't initialized. Release/R8 builds locally:
+  `-x :app:uploadCrashlyticsMappingFileRelease`.
+- **Root files and language:** `README.md` and the community files (`CONTRIBUTING.md`,
+  `CODE_OF_CONDUCT.md`, `SECURITY.md`) are in English; `README.ru.md` is the full Russian mirror of
+  `README.md` — change both in the same commit. Everything else (`docs/`, module READMEs, KDoc,
+  commits, issues) stays Russian. Don't add loose files to the repository root: tool state goes to
+  `config/<tool>/` (e.g. `config/aalekh/`), docs to `docs/`.
 - **Editing:** never mutate source with shell `sed`/`awk`/`echo >` — use the Edit/Write tools.
 
 ## Detailed guidelines (mandatory reading per area)
@@ -175,7 +191,8 @@ before writing a new doc or guessing how a subsystem works.
 
 - The user is an experienced Android engineer. Reply in Russian. Skip basics and pleasantries —
   unless asked to explain something «с нуля»; then explain fully, in chat, not as a new doc.
-- Verdict first, then reasoning. Give one recommendation, not a survey of options you won't pursue.
+- Verdict first, then reasoning. Give one recommendation, not a survey of options you won't pursue
+  (an interview card is the exception: the recommended option plus the realistic alternatives).
 - Be direct: flag logical gaps, anti-patterns and missed edge cases — in the user's proposals
   too, not only in your own code. Disagree with a reason instead of complying silently or hedging.
 - Before presenting a non-trivial design or change, self-review it by the three vectors in
@@ -186,12 +203,22 @@ before writing a new doc or guessing how a subsystem works.
 Do not start a non-trivial task on top of a guess. First scan the request for
 ambiguity, then resolve it:
 
-- **Ask the user** when the answer changes what you build and you can't settle it
-  from the code, this file, or the linked docs — e.g. unclear scope or acceptance
-  criteria, several valid architectural approaches with real trade-offs, which
+- **Interview the user before starting** when the answer changes what you build and you
+  can't settle it from the code, this file, or the linked docs — e.g. unclear scope or
+  acceptance criteria, several valid architectural approaches with real trade-offs, which
   module/feature is meant, destructive or irreversible actions, or an assumed
-  requirement that isn't stated. Ask up front, batch the questions, and propose a
-  recommended default for each — don't drip one question at a time mid-task.
+  requirement that isn't stated. Study the code first, then interview before writing any:
+  - **one question at a time**, as a question card (`AskUserQuestion`), not as prose; where the
+    tool isn't available, one question as text in the same shape;
+  - the recommended option goes first and is marked «(Рекомендуется)», followed by the
+    realistic alternatives the user might pick (2–4 options in all, each with a one-line
+    trade-off); the user can always type their own answer;
+  - the next question builds on the previous answer; stop when nothing that changes the
+    result is left open, then sum up the decisions in a few lines and start.
+- **Plan before code** for a non-trivial task (several files or modules, a new pattern,
+  DB / sync / navigation, a client↔server contract): after the interview, enter plan mode and
+  present the files, steps, risks and the checks you will run; write code only after the user
+  approves the plan. A local, obvious change goes straight to code.
 - **Decide yourself** for reversible, low-impact choices with an obvious
   convention (naming, file placement, which existing helper to reuse). State the
   assumption in your response and proceed — don't stall on things you can verify
@@ -207,7 +234,32 @@ otherwise pick the sensible default and note it.
 - **Never run git yourself** — do not commit, push, or open PRs; the user handles all git
   operations. Leave changes in the working tree. Once the code is done, only **write a short
   proposed commit message** (conventional-commit style, matching the existing Russian history,
-  e.g. `fix(network): …`) for the user to copy — do not run `git commit`.
+  e.g. `fix(network): …`) for the user to copy — do not run `git commit`. The one exception:
+  when the user asks to start on a new branch, `git fetch origin` and
+  `git switch --no-track -c feature/FM-N-… origin/master` from a clean tree.
+- **Hard rules are backed by `.claude/settings.json`:** `deny` blocks the plain
+  `git commit` / `push` / `reset` / `rebase` and `gh pr create` / `merge`; the PreToolUse hook
+  `.claude/hooks/deny-git.py` parses each Bash command and refuses the same subcommands in other
+  forms (`git -C <dir> push`, `git -c k=v commit`, `bash -c "…"`). `deny` also stops the Read
+  tool on the keystore, `local.properties` and `google-services.json` (a deny rule doesn't cover
+  shell commands: never print those files' secrets); the Stop hook (`.claude/hooks/verify-changes.py`)
+  runs `ktlintFormat`, then `ktlintCheck` on the changed modules and `detekt`. Both hooks start
+  through an inline launcher that finds the script in the current checkout by the hook's `cwd`
+  and only then in `$CLAUDE_PROJECT_DIR`, and exits 0 when there is none: in a worktree that
+  variable can point at the original checkout, and a missing script (`python3` exit 2) would
+  block every Bash call. Personal allowlists go to the gitignored `settings.local.json`.
+- **A board task runs through the `fm-task` skill** (`/fm-task FM-N`): card → interview →
+  branch → plan → implement → checks → review loop → report, in that order.
+- **Green checks start the review loop:** once every blocking CI job passes locally, review the
+  change unasked — `code-review` at `high`, triage, fix, recheck, repeat until no valid finding or
+  3 rounds, then (either way) one final pass by the `pr-review-toolkit` agents. Only then the
+  report. Details:
+  `docs/agents/release-process.md` («Automatic Review Loop»).
+- **After the PR is opened, the task goes on:** before the report, run every blocking CI job
+  locally and finish the review loop; once the user opens the PR, turn on Auto-fix and triage
+  CodeRabbit's comments each time it wakes the session — fix the valid ones, reject the rest with
+  a reason, never comply silently. Loop and limits: `docs/agents/release-process.md`
+  («After the PR is opened»).
 - **No Claude/Anthropic attribution** in commits or generated text (no `Co-Authored-By`,
   no "Generated with Claude Code").
 - **Task board:** work is tracked on the GitHub Projects board, a task's key is `FM-<issue>`.
@@ -233,6 +285,6 @@ otherwise pick the sensible default and note it.
 - Prefer the smallest change that satisfies the requirement; mirror existing style and patterns.
 - Don't rename public APIs or restructure packages without an explicit request.
 - When done, give a short report: what changed, architecture/module-graph impact, tests added,
-  self-review (faults / edge cases / improvements), instruction updates, and the task card
-  (`FM-N <title>`, its status, proposed branch `feature/FM-N-…`, commit message ending with
-  `(FM-N)`, follow-up cards to create).
+  self-review (faults / edge cases / improvements), review rounds + final pass, instruction updates, and
+  the task card (`FM-N <title>`, its status, proposed branch `feature/FM-N-…`, commit message
+  ending with `(FM-N)`, follow-up cards to create).

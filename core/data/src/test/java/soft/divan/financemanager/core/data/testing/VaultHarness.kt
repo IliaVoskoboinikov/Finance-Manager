@@ -1,5 +1,9 @@
 package soft.divan.financemanager.core.data.testing
 
+import java.io.IOException
+import soft.divan.financemanager.core.security.keyset.PinAttempts
+import soft.divan.financemanager.core.security.keyset.KeysetStore
+import soft.divan.financemanager.core.database.db.appDatabaseBuilder
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
@@ -58,10 +62,13 @@ class VaultHarness(
     /** Файл набора ключей как есть — чтобы тесты могли его испортить. */
     val dataStore: DataStore<Preferences> =
         PreferenceDataStoreFactory.create(scope = dataStoreScope, produceFile = { keysetFile })
-    val store = DataStoreKeysetStore(dataStore)
+    val store = ControllableKeysetStore(DataStoreKeysetStore(dataStore))
 
     /** Ключи, которыми открывалась база, — копии на момент открытия. */
     val openedWith = mutableListOf<ByteArray>()
+
+    /** Следующее закрытие базы упадёт с этим исключением (ключ всё равно затрётся). */
+    var failNextClose: RuntimeException? = null
 
     /** Следующее открытие базы упадёт с этим исключением — как на испорченном файле. */
     var failNextOpen: RuntimeException? = null
@@ -109,13 +116,16 @@ class VaultHarness(
                 throw error
             }
             openedWith += key.copyOf()
-            val database = Room.databaseBuilder(
-                context,
-                FinanceManagerDatabase::class.java,
-                DatabaseFiles.NAME
-            ).withAppDefaults().build()
+            // Тот же рецепт, что у рабочей базы, — без шифрования
+            val database = appDatabaseBuilder(context).build()
             database.openHelper.writableDatabase
-            OpenedDatabase(database) { key.fill(0) }
+            OpenedDatabase(database) {
+                key.fill(0)
+                failNextClose?.let { error ->
+                    failNextClose = null
+                    throw error
+                }
+            }
         }
         holder = RoomDatabaseHolder(factory, files, dispatcher)
         core = VaultCore(holder, store, keys, envelope, dispatcher)
@@ -139,4 +149,19 @@ class MutableClock(var now: Instant) : Clock() {
     override fun getZone(): ZoneId = ZoneOffset.UTC
     override fun withZone(zone: ZoneId?): Clock = this
     override fun instant(): Instant = now
+}
+
+/** [KeysetStore] с управляемыми сбоями поверх настоящего: остальное идёт в [delegate] как есть. */
+class ControllableKeysetStore(private val delegate: KeysetStore) : KeysetStore by delegate {
+
+    /** Следующая запись учёта попыток упадёт с этим исключением. */
+    var failNextAttemptsWrite: IOException? = null
+
+    override suspend fun writeAttempts(attempts: PinAttempts) {
+        failNextAttemptsWrite?.let { error ->
+            failNextAttemptsWrite = null
+            throw error
+        }
+        delegate.writeAttempts(attempts)
+    }
 }

@@ -25,8 +25,10 @@ class TransactionLocalDataSourceImpl @Inject constructor(
     override suspend fun getByServerId(id: String): TransactionEntity? =
         holder.withDatabase { it.transactionDao().getByServerId(id) }
 
+    /** По частям: запрос тратит две bind-переменные на id (см. [SYNC_IDS_CHUNK_SIZE]). */
     override suspend fun getBySyncIds(ids: List<String>): List<TransactionEntity> =
-        holder.withDatabase { it.transactionDao().getBySyncIds(ids) }
+        // Одна аренда на все части: база не закроется между ними
+        holder.withDatabase { db -> ids.queryInChunks { db.transactionDao().getBySyncIds(it) } }
 
     override suspend fun getByAccountId(accountId: String): List<TransactionEntity> =
         holder.withDatabase { it.transactionDao().getByAccountId(accountId) }

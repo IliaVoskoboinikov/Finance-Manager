@@ -14,4 +14,9 @@
     <string name="fail_delete_transaction">Не удалось удалить транзакцию</string>
     <string name="error_load_transaction">Не удалось загрузить транзакцию</string>
     <string name="archived_account_suffix"> (архив)</string>
+    <string name="empty_no_accounts">Чтобы добавить операцию, сначала создайте счёт</string>
+    <string name="empty_no_expense_categories">Категорий расходов пока нет. Они появятся после синхронизации</string>
+    <string name="empty_no_income_categories">Категорий доходов пока нет. Они появятся после синхронизации</string>
+    <string name="create_account">Создать счёт</string>
+    <string name="close">Закрыть</string>
 </resources>

@@ -1,5 +1,7 @@
 package soft.divan.financemanager.core.database.holder
 
+import java.io.IOException
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import androidx.test.core.app.ApplicationProvider
@@ -59,6 +61,22 @@ class DatabaseFilesTest {
     }
 
     @Test
+    fun `delete reports a file that stayed on disk`() {
+        val file = files.file
+        file.parentFile!!.mkdirs()
+        file.writeBytes(ByteArray(HEADER_SIZE))
+        // Каталог только для чтения: файл в нём не удалить — как при сбое файловой системы
+        file.parentFile!!.setWritable(false)
+        try {
+            assertThatThrownBy { files.delete() }.isInstanceOf(IOException::class.java)
+            assertThat(file).exists()
+        } finally {
+            file.parentFile!!.setWritable(true)
+            files.delete()
+        }
+    }
+
+    @Test
     fun `delete removes the database together with its journals`() {
         writeDatabaseFile(ByteArray(16))
         val wal = File(files.file.path + "-wal").apply { writeBytes(ByteArray(8)) }
@@ -74,5 +92,10 @@ class DatabaseFilesTest {
     private fun writeDatabaseFile(bytes: ByteArray) {
         files.file.parentFile!!.mkdirs()
         files.file.writeBytes(bytes)
+    }
+
+    private companion object {
+        /** Размер заголовка SQLite — содержимое файла здесь не важно. */
+        const val HEADER_SIZE = 16
     }
 }

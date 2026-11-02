@@ -10,7 +10,6 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.hilt) apply false
-    alias(libs.plugins.room) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.jetbrains.kotlin.jvm) apply false
     alias(libs.plugins.graph) apply false
@@ -106,11 +105,18 @@ dependencyAnalysis {
 }
 
 /**
+ * Гейт покрытия строк тестируемого кода, %. Единственный источник числа: документация его
+ * повторяет и правится вместе с ним.
+ */
+val minLineCoverage = 70
+
+/**
  * Агрегированное покрытие юнит-тестами (задачи koverHtmlReportFull / koverVerifyFull).
  *
  * Из метрики исключены сгенерированный код (Hilt/Dagger, Room `*_Impl`, BuildConfig,
  * Compose singletons) и UI-слой (@Composable/@Preview, Activity/App, navigation
- * `*FeatureImpl`) — Compose-тесты осознанно отложены; всё остальное держим на уровне 98%.
+ * `*FeatureImpl`) — Compose-тесты осознанно отложены. Гейт — [minLineCoverage], ориентир — 90%:
+ * тесты проверяют поведение, код ради цифры покрытия не пишем и не перекраиваем.
  */
 kover {
     merge {
@@ -165,8 +171,8 @@ kover {
             }
         }
         verify {
-            rule("Line coverage of testable code is at least 95%") {
-                minBound(95)
+            rule("Line coverage of testable code is at least $minLineCoverage%") {
+                minBound(minLineCoverage)
             }
         }
     }
@@ -250,8 +256,9 @@ subprojects {
  * внутри одного слоя разрешены всегда. Модуль попадает в ПЕРВЫЙ подходящий по шаблону слой.
  *
  * CI-джоба `check-architecture` в .github/workflows/ci.yml запускает `aalekhCheck` как
- * блокирующую проверку; текущие (унаследованные) нарушения заморожены в `aalekh-baseline.json`,
- * поэтому падение возможно только на НОВЫХ. Полное описание — docs/aalekh.md.
+ * блокирующую проверку; текущие (унаследованные) нарушения заморожены в
+ * `config/aalekh/aalekh-baseline.json`, поэтому падение возможно только на НОВЫХ.
+ * Полное описание — docs/aalekh.md.
  */
 aalekh {
     // В CI браузер открывать нельзя; локально путь к отчёту печатается в лог — открывается вручную.
@@ -267,9 +274,10 @@ aalekh {
     exportMetrics.set(true)
 
     // Слепок нарушений (freeze). Падаем только на новых. Обновлять: ./gradlew aalekhBaseline.
-    baselineFile.set("aalekh-baseline.json")
+    // Оба слепка лежат в config/aalekh/, рядом с конфигом detekt, а не в корне репозитория.
+    baselineFile.set("config/aalekh/aalekh-baseline.json")
     // Слепок архитектуры для aalekhDiff (комментарий в PR). Обновлять: ./gradlew aalekhSnapshot.
-    snapshotFile.set("aalekh-snapshot.json")
+    snapshotFile.set("config/aalekh/aalekh-snapshot.json")
     // aalekhDiff по умолчанию только отчитывается; ронять его на новом цикле/регрессии метрики
     // не нужно — за это отвечает блокирующий aalekhCheck (см. qualityGates ниже).
     failOnArchitectureRegression.set(false)

@@ -1,5 +1,9 @@
 package soft.divan.financemanager.sync.initializers
 
+import android.util.Log
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import org.assertj.core.api.Assertions.assertThat
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -68,6 +72,29 @@ class SyncInitializerTest {
 
         verify(exactly = 2) { syncScheduler.scheduleOneTimeSync() }
         job.cancel()
+    }
+
+    @Test
+    fun `a failed schedule does not stop syncing on later unlocks`() = runTest {
+        mockkStatic(Log::class)
+        every { Log.e(any(), any(), any()) } returns 0
+        every { observeSyncIntervalHoursUseCase() } returns flowOf(8)
+        every { syncScheduler.scheduleOneTimeSync() } throws IllegalStateException(
+            "WorkManager"
+        ) andThen Unit
+        val job = launch { initializer.initialize() }
+
+        dataState.value = LocalDataState.Open
+        runCurrent()
+        dataState.value = LocalDataState.Locked(biometricEnabled = false)
+        runCurrent()
+        dataState.value = LocalDataState.Open
+        runCurrent()
+
+        assertThat(job.isActive).isTrue()
+        verify(exactly = 2) { syncScheduler.scheduleOneTimeSync() }
+        job.cancel()
+        unmockkStatic(Log::class)
     }
 
     @Test

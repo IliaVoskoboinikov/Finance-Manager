@@ -12,11 +12,13 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
+import soft.divan.financemanager.core.data.transaction.TransactionRollbackException
 import soft.divan.financemanager.core.data.transaction.TransactionRunner
 import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.outbox.OutboxEnqueuer
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
+import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.sync.AccountSyncManager
 import soft.divan.financemanager.core.database.entity.AccountEntity
@@ -48,12 +50,25 @@ class AccountRepositoryImplTest {
     private val transactionLocalDataSource = mockk<TransactionLocalDataSource>()
     private val syncManager = mockk<AccountSyncManager>(relaxed = true)
     private val outboxEnqueuer = mockk<OutboxEnqueuer>(relaxed = true)
+
+    /** По умолчанию в очереди нет операций, которые меняют счёт. */
+    private val outboxLocalDataSource = mockk<OutboxLocalDataSource> {
+        coEvery { hasOpenOperationsAffecting(any()) } returns false
+    }
     private val appCoroutineContext = RecordingAppCoroutineContext()
     private val errorLogger = mockk<ErrorLogger>(relaxed = true)
 
-    /** Выполняет блок как есть: атомарность проверяется отдельно, на реальном Room. */
+    /**
+     * Выполняет блок как есть, но, как и настоящий runner, превращает откат в `Failure`:
+     * сама атомарность проверяется отдельно, на реальном Room.
+     */
     private val transactionRunner = object : TransactionRunner {
-        override suspend fun <T> runInTransaction(block: suspend () -> T): T = block()
+        override suspend fun <T> runInTransaction(block: suspend () -> T): T = try {
+            block()
+        } catch (e: TransactionRollbackException) {
+            @Suppress("UNCHECKED_CAST")
+            DomainResult.Failure(e.error) as T
+        }
     }
 
     private val repository = AccountRepositoryImpl(
@@ -63,6 +78,7 @@ class AccountRepositoryImplTest {
         syncManager = syncManager,
         transactionRunner = transactionRunner,
         outboxEnqueuer = outboxEnqueuer,
+        outboxLocalDataSource = outboxLocalDataSource,
         appCoroutineContext = appCoroutineContext,
         errorLogger = errorLogger
     )
@@ -251,6 +267,48 @@ class AccountRepositoryImplTest {
         assertThat(updated.captured.name).isEqualTo("Fresh")
         assertThat(updated.captured.syncStatus).isEqualTo(SyncStatus.SYNCED)
     }
+
+    private fun freshServerAccount() = AccountDto(
+        id = "server-1",
+        userId = "u1",
+        name = "Fresh",
+        balance = BigDecimal("200.00"),
+        currencyId = "rub-id",
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+    @Test
+    fun `getById does not refresh an account whose transactions are still in the queue`() =
+        runTest {
+            // Баланс уже учитывает неотправленную транзакцию, а серверный — ещё нет
+            coEvery { localDataSource.getByLocalId("local-1") } returns entity(serverId = "server-1")
+            coEvery { outboxLocalDataSource.hasOpenOperationsAffecting("local-1") } returns true
+
+            repository.getById("local-1")
+            appCoroutineContext.runAll()
+
+            coVerify(exactly = 0) { remoteDataSource.getById(any()) }
+            coVerify(exactly = 0) { localDataSource.update(any()) }
+        }
+
+    @Test
+    fun `getById does not overwrite an account edited while the refresh was in flight`() =
+        runTest {
+            coEvery { localDataSource.getByLocalId("local-1") } returnsMany listOf(
+                entity(serverId = "server-1"), // getById
+                entity(serverId = "server-1"), // проверка до запроса
+                entity(serverId = "server-1", syncStatus = SyncStatus.PENDING_UPDATE) // после
+            )
+            coEvery { remoteDataSource.getById("server-1") } returns
+                Response.success(freshServerAccount())
+
+            repository.getById("local-1")
+            appCoroutineContext.runAll()
+
+            // Ответ сервера не знает о правке — перезапись откатила бы её
+            coVerify(exactly = 0) { localDataSource.update(any()) }
+        }
 
     @Test
     fun `getById does not touch local db when server refresh fails`() = runTest {

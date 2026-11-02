@@ -7,6 +7,7 @@ import android.util.Log
 import soft.divan.financemanager.core.security.keystore.AliasedKey
 import soft.divan.financemanager.core.security.keystore.KeyProtection
 import soft.divan.financemanager.core.security.keystore.KeyUnavailableException
+import soft.divan.financemanager.core.security.keystore.KeystoreUnreadableException
 import soft.divan.financemanager.core.security.keystore.KeystoreKeys
 import java.security.GeneralSecurityException
 import java.security.KeyStore
@@ -36,7 +37,7 @@ class AndroidKeystoreKeys(
     override fun find(alias: String): SecretKey? = try {
         keyStore.getKey(alias, null) as? SecretKey
     } catch (e: GeneralSecurityException) {
-        throw KeyUnavailableException("Keystore key $alias is unreadable", e)
+        throw KeystoreUnreadableException(alias, e)
     }
 
     override fun create(prefix: String, protection: KeyProtection): AliasedKey {

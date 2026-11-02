@@ -16,10 +16,10 @@ class HapticFeatureImpl @Inject constructor() : HapticsFeatureApi {
         navigator: Navigator,
         modifier: Modifier
     ) {
-        scope.entry<HapticsKey> {
+        scope.entry<HapticsKey> { key ->
             HapticsScreen(
                 modifier = modifier,
-                onNavigateBack = navigator::back
+                onNavigateBack = { navigator.back(from = key) }
             )
         }
     }

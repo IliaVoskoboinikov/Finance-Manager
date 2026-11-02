@@ -9,11 +9,11 @@ import soft.divan.financemanager.core.data.outbox.OutboxLocalEffect
 import soft.divan.financemanager.core.data.outbox.OutboxSendResult
 import soft.divan.financemanager.core.data.outbox.OutboxSender
 import soft.divan.financemanager.core.data.outbox.outboxCall
+import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.model.OutboxOperation
-import soft.divan.financemanager.core.database.model.SyncStatus
 import javax.inject.Inject
 
 /**
@@ -26,6 +26,7 @@ import javax.inject.Inject
 class TransactionOutboxSender @Inject constructor(
     private val remoteDataSource: TransactionRemoteDataSource,
     private val localDataSource: TransactionLocalDataSource,
+    private val outboxLocalDataSource: OutboxLocalDataSource,
     private val gson: Gson
 ) : OutboxSender {
 
@@ -103,12 +104,12 @@ class TransactionOutboxSender @Inject constructor(
     }
 
     /**
-     * Описывает пометку локальной строки синхронизированной. [dto] непустой только для создания —
-     * из него берётся присвоенный сервером идентификатор.
+     * Описывает подтверждение локальной строки. [dto] непустой только для создания — из него
+     * берётся присвоенный сервером идентификатор.
      *
-     * Запись не выполняется здесь: её применит `OutboxProcessor` в одной транзакции с закрытием
-     * записи очереди (см. [OutboxLocalEffect]). Чтение строки тоже отложено внутрь эффекта,
-     * чтобы решение принималось по состоянию на момент транзакции.
+     * Запись не выполняется здесь: её применит `OutboxEntryHandler` в одной транзакции с
+     * закрытием записи очереди (см. [OutboxLocalEffect]). Чтение строки и очереди тоже отложено
+     * внутрь эффекта, чтобы решение принималось по состоянию на момент транзакции.
      */
     private fun confirm(entry: OutboxEntryEntity, dto: TransactionDto?): OutboxSendResult =
         OutboxSendResult.Success(
@@ -118,9 +119,12 @@ class TransactionOutboxSender @Inject constructor(
                 if (local != null) {
                     localDataSource.update(
                         local.copy(
-                            serverId = dto?.id ?: local.serverId,
+                            serverId = entry.confirmedServerId(dto?.id, local.serverId),
                             updatedAt = dto?.updatedAt ?: local.updatedAt,
-                            syncStatus = SyncStatus.SYNCED
+                            syncStatus = outboxLocalDataSource.syncStatusAfter(
+                                entry,
+                                local.syncStatus
+                            )
                         )
                     )
                 }

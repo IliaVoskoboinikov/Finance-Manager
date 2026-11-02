@@ -1,6 +1,7 @@
 package soft.divan.financemanager.core.database.holder
 
 import android.content.Context
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.IOException
@@ -32,14 +33,23 @@ class DatabaseFiles @Inject constructor(
         return try {
             val read = file.inputStream().use { it.read(header) }
             read == header.size && header.contentEquals(SQLITE_HEADER)
-        } catch (_: IOException) {
+        } catch (e: IOException) {
+            // Не прочитать — не повод считать файл открытым и стирать его
+            Log.w(TAG, "Database header is unreadable", e)
             false
         }
     }
 
-    /** Удаляет базу вместе с журналами (`-wal`, `-shm`, `-journal`). */
+    /**
+     * Удаляет базу вместе с журналами (`-wal`, `-shm`, `-journal`).
+     *
+     * @throws IOException файл остался на диске: стирание не состоялось, и новая база открывала бы
+     *   старый файл новым ключом.
+     */
     fun delete() {
-        context.deleteDatabase(NAME)
+        if (!context.deleteDatabase(NAME) && file.exists()) {
+            throw IOException("Database file ${file.name} could not be deleted")
+        }
     }
 
     companion object {
@@ -47,5 +57,6 @@ class DatabaseFiles @Inject constructor(
         const val NAME = "finance_manager_db.db"
 
         private val SQLITE_HEADER = "SQLite format 3\u0000".toByteArray(Charsets.US_ASCII)
+        private const val TAG = "DatabaseFiles"
     }
 }

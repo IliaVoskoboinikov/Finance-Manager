@@ -239,10 +239,22 @@ class OutboxProcessorTest {
 
         val drained = processor.process()
 
-        // Это состояние клиента, а не сервера: независимые операции упрутся в ту же стену
-        assertThat(drained).isFalse()
+        // Это состояние клиента, а не сервера: независимые операции упрутся в ту же стену.
+        // Повтор работы его не изменит, поэтому временным сбоем прогон не считается
+        assertThat(drained).isTrue()
         coVerify(exactly = 1) { entryHandler.handle(any()) }
         coVerify(exactly = 0) { localDataSource.markInProgress(2L, any(), any()) }
+    }
+
+    @Test
+    fun `a blocked network after a transient failure still asks for a retry`() = runTest {
+        givenReady(
+            entry(sequenceNo = 1, entityLocalId = "T1", dependencyKey = "A1"),
+            entry(sequenceNo = 2, entityLocalId = "T2", dependencyKey = "A2")
+        )
+        givenOutcome(OutboxEntryOutcome.STALLED, OutboxEntryOutcome.RUN_STALLED)
+
+        assertThat(processor.process()).isFalse()
     }
 
     @Test
@@ -341,9 +353,25 @@ class OutboxProcessorTest {
         coEvery { localDataSource.markInProgress(any(), any(), any()) } returns true
         coEvery { entryHandler.handle(any()) } returns OutboxEntryOutcome.DONE
 
-        processor.process()
+        val drained = processor.process()
 
-        // Разбор обязан завершиться: остальное подберёт следующий прогон
+        // Разбор обязан завершиться, а остаток — уехать повтором, а не ждать периодического синка
+        assertThat(drained).isFalse()
+        coVerify(exactly = OutboxProcessor.MAX_PASSES) {
+            localDataSource.getReadyToSend(any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `a run that ends before the pass limit does not ask for a retry`() = runTest {
+        // Последний проход ничего не закрыл — очередь разобрана, повтор не нужен
+        val passes = List(OutboxProcessor.MAX_PASSES - 1) { listOf(entry(sequenceNo = it + 1L)) }
+        givenPasses(*passes.toTypedArray(), emptyList())
+        coEvery { entryHandler.handle(any()) } returns OutboxEntryOutcome.DONE
+
+        val drained = processor.process()
+
+        assertThat(drained).isTrue()
         coVerify(exactly = OutboxProcessor.MAX_PASSES) {
             localDataSource.getReadyToSend(any(), any(), any())
         }

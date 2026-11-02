@@ -16,10 +16,10 @@ class LanguagesFeatureImpl @Inject constructor() : LanguagesFeatureApi {
         navigator: Navigator,
         modifier: Modifier
     ) {
-        scope.entry<LanguagesKey> {
+        scope.entry<LanguagesKey> { key ->
             LanguagesScreen(
                 modifier = modifier,
-                onNavigateBack = navigator::back
+                onNavigateBack = { navigator.back(from = key) }
             )
         }
     }

@@ -6,6 +6,8 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -69,6 +71,15 @@ class AccountViewModel @AssistedInject constructor(
 
     private var account: AccountUi? = null
     private var hasTransactions: Boolean = false
+
+    /** Идущая запись (сохранение или удаление): пока она не завершилась, новая не запускается. */
+    private var writeJob: Job? = null
+
+    /**
+     * Запись прошла успешно, экран закрывается. Флаг не сбрасывается: тап, пришедший после
+     * успеха, но до закрытия экрана, отправил бы на сервер второй запрос.
+     */
+    private var isWriteCompleted = false
 
     private val mode =
         if (accountId == null) AccountMode.Create else AccountMode.Edit(accountId)
@@ -149,9 +160,18 @@ class AccountViewModel @AssistedInject constructor(
         publishSuccess()
     }
 
+    /**
+     * Запускает запись [block], если другой записи сейчас нет и экран ещё не закрывается.
+     * Вызывается с главного потока, поэтому проверка и запуск не гоняются между собой.
+     */
+    private fun launchWrite(block: suspend CoroutineScope.() -> Unit) {
+        if (isWriteCompleted || writeJob?.isActive == true) return
+        writeJob = viewModelScope.launch(block = block)
+    }
+
     fun createAccount() {
-        viewModelScope.launch {
-            val current = account ?: return@launch
+        launchWrite {
+            val current = account ?: return@launchWrite
 
             _uiState.update { AccountUiState.Loading }
 
@@ -166,6 +186,7 @@ class AccountViewModel @AssistedInject constructor(
 
             result.fold(
                 onSuccess = {
+                    isWriteCompleted = true
                     hapticsManager.perform(HapticType.SUCCESS)
                     _eventFlow.emit(AccountEvent.Saved)
                 },
@@ -179,12 +200,13 @@ class AccountViewModel @AssistedInject constructor(
     }
 
     fun delete() {
-        viewModelScope.launch {
-            val id = account?.id ?: return@launch
-            if (mode !is AccountMode.Edit) return@launch
+        launchWrite {
+            val id = account?.id ?: return@launchWrite
+            if (mode !is AccountMode.Edit) return@launchWrite
 
             deleteAccountUseCase(id).fold(
                 onSuccess = {
+                    isWriteCompleted = true
                     hapticsManager.perform(HapticType.SUCCESS)
                     _eventFlow.emit(AccountEvent.Deleted)
                 },

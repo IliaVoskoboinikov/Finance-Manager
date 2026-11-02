@@ -85,7 +85,9 @@ gh api graphql -f query='mutation($p:ID!,$c:ID!){addSubIssue(input:{issueId:$p,s
    python3 .github/scripts/board.py move "In Progress" --issue N --only-from Backlog
    ```
 
-4. Propose the branch `feature/FM-N-<snake_case_name>`; git stays with the user.
+4. Propose the branch `feature/FM-N-<snake_case_name>`. Create it only when the user asked
+   to start on a new branch (`fm-task` skill, step 3); every other git step stays with the
+   user.
 
 ## Other moves
 

@@ -33,18 +33,40 @@
     a rollback won't undo them. Use `AppCoroutineContext.launchSync`: inside `runInTransaction`
     it defers the action until a successful commit (and drops it on rollback), outside it runs
     immediately. Mechanism and caveats: [docs/post-commit-sync.md](../post-commit-sync.md).
+*   `safeDbCall` inside `runInTransaction` swallows the exception, and only an exception rolls the
+    transaction back — so end it with `.rollbackOnError()`. Otherwise a failing second write
+    (e.g. the outbox `enqueue`) commits the first one alone.
+
+## Queries
+*   A `List` parameter expands into one bind variable per element, and the platform SQLite on
+    API 26–30 allows at most 999. Split long id lists before the DAO call (`queryInChunks`,
+    `SYNC_IDS_CHUNK_SIZE`), and remember a list used twice in one query costs double. Never treat
+    a failed lookup as "nothing found locally" — in a pull that inserts duplicates.
 
 ## Migrations
-*   Every schema change (including adding an index) REQUIRES a version bump, a
-    `Migration(n, n + 1)` in `DatabaseMigrations.ALL` and a test in `MigrationTest`
-    (`MigrationTestHelper`). The base schema is **v8**; schemas are exported by the Room Gradle
-    plugin to `core/database/schemas` — commit the new `<version>.json`.
-*   There is no destructive fallback on upgrade: a missing migration fails on open (and in tests)
-    instead of silently dropping user data. Only a downgrade recreates the database
-    (developer branch switching).
-*   Default categories are seeded in code (`SeedDatabaseCallback`, `DefaultCategories`) on
-    database creation — there is no prepackaged asset anymore (`createFromAsset` cannot be
-    encrypted). Every builder (production and tests) uses `withAppDefaults()`.
+*   For production, schema changes REQUIRE a `Migration` plus a migration test
+    (`MigrationTestHelper`); `exportSchema = true` is enabled for this.
+*   **Current pre-release state:** the DB uses `fallbackToDestructiveMigration`. This destructive
+    setup is acceptable only while there are no real users (offline-first, data re-syncs from the
+    server) and MUST be replaced with real migrations before release.
+
+## Seed data
+*   Reference data the app needs offline (the 24 categories) is seeded in code:
+    `seed/DefaultCategories` + `SeedDatabaseCallback`, ids equal to the backend's GUIDs so the
+    server pull `REPLACE`s the same rows instead of adding duplicates, and guest transactions
+    merged on sign-in point to categories the server knows.
+*   Don't go back to `createFromAsset`: an asset older than the schema is dropped by the
+    destructive migration (fresh installs had zero categories, FM-128), and its version would
+    have to track `@Database` on every bump. An asset is also a plain SQLite file, and the
+    encrypted database cannot be created from it.
+*   The production builder (SQLCipher) and test databases that stand in for it
+    (`TestDatabaseFactory`, `VaultHarness`, `DefaultCategoriesTest`) go through `withAppDefaults()`
+    (`core:database` `db/DatabaseDefaults.kt`): the seed callback and the destructive fallback live
+    there. Plain in-memory databases for DAO and outbox tests are built without it — they rely on
+    empty tables.
+*   Room calls `onDestructiveMigration` after dropping the tables but **before** creating them
+    again — writing there fails with `no such table`. The callback only sets a flag and seeds in
+    `onOpen`.
 
 ## Data Isolation
 *   Room `Entity` classes are internal to the data layer.
