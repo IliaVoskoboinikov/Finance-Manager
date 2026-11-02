@@ -23,6 +23,8 @@ commands are in [`.github/scripts/board.py`](../../.github/scripts/board.py).
     the head and closes the PR (`head_ref_deleted`), and it cannot be reopened under the new
     name. Link such a PR with `Closes #N` in its body, or open a new PR from the renamed branch.
 *   Git stays with the user: propose the branch name and the commit message, don't create them.
+    The one exception is a new branch the user asked to start on (`CLAUDE.md`, «Never run git
+    yourself»); commits stay with the user either way.
 
 ## When to propose a card
 *   The user asks for a task.

@@ -8,12 +8,14 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import retrofit2.Response
+import soft.divan.financemanager.core.auth.data.interceptor.GuestModeNetworkBlockedException
 import soft.divan.financemanager.core.data.dto.CategoryDto
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
-import soft.divan.financemanager.core.data.sync.util.Synchronizer
+import soft.divan.financemanager.core.data.sync.Synchronizer
 import soft.divan.financemanager.core.database.entity.CategoryEntity
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
+import java.net.SocketTimeoutException
 
 class CategorySyncManagerImplTest {
 
@@ -66,5 +68,28 @@ class CategorySyncManagerImplTest {
 
         assertThat(result).isTrue()
         coVerify(exactly = 1) { remoteDataSource.getAll() }
+    }
+
+    @Test
+    fun `syncWith reports failure when the server call fails`() = runTest {
+        // safeApiCall исключение не пробрасывает — сбой виден только по результату pull'а
+        coEvery { remoteDataSource.getAll() } throws SocketTimeoutException("offline")
+
+        assertThat(syncManager.syncWith(object : Synchronizer {})).isFalse()
+    }
+
+    @Test
+    fun `syncWith does not treat a guest as a failure`() = runTest {
+        coEvery { remoteDataSource.getAll() } throws GuestModeNetworkBlockedException()
+
+        assertThat(syncManager.syncWith(object : Synchronizer {})).isTrue()
+    }
+
+    @Test
+    fun `pullServerData reports failure when categories cannot be stored`() = runTest {
+        coEvery { remoteDataSource.getAll() } returns Response.success(listOf(dto("1")))
+        coEvery { localDataSource.insert(any()) } throws IllegalStateException("db")
+
+        assertThat(syncManager.pullServerData()).isFalse()
     }
 }

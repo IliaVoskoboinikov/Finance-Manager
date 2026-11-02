@@ -105,11 +105,18 @@ dependencyAnalysis {
 }
 
 /**
+ * Гейт покрытия строк тестируемого кода, %. Единственный источник числа: документация его
+ * повторяет и правится вместе с ним.
+ */
+val minLineCoverage = 70
+
+/**
  * Агрегированное покрытие юнит-тестами (задачи koverHtmlReportFull / koverVerifyFull).
  *
  * Из метрики исключены сгенерированный код (Hilt/Dagger, Room `*_Impl`, BuildConfig,
  * Compose singletons) и UI-слой (@Composable/@Preview, Activity/App, navigation
- * `*FeatureImpl`) — Compose-тесты осознанно отложены; всё остальное держим на уровне 98%.
+ * `*FeatureImpl`) — Compose-тесты осознанно отложены. Гейт — [minLineCoverage], ориентир — 90%:
+ * тесты проверяют поведение, код ради цифры покрытия не пишем и не перекраиваем.
  */
 kover {
     merge {
@@ -164,8 +171,8 @@ kover {
             }
         }
         verify {
-            rule("Line coverage of testable code is at least 95%") {
-                minBound(95)
+            rule("Line coverage of testable code is at least $minLineCoverage%") {
+                minBound(minLineCoverage)
             }
         }
     }

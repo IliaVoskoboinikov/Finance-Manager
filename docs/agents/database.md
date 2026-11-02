@@ -16,9 +16,19 @@
 ## Transactions
 *   Use `@Transaction` (DAOs) / `withTransaction` (`RoomTransactionRunner`) for multi-step atomic
     operations, e.g. updating an account balance together with a transaction.
-*   Do **not** launch un-rollbackable side effects (network sync via `appCoroutineContext.launch`)
-    *inside* a DB transaction — a rollback won't undo them. Enqueue such work after a successful
-    commit.
+*   Do **not** launch un-rollbackable side effects (network sync) *inside* a DB transaction —
+    a rollback won't undo them. Use `AppCoroutineContext.launchSync`: inside `runInTransaction`
+    it defers the action until a successful commit (and drops it on rollback), outside it runs
+    immediately. Mechanism and caveats: [docs/post-commit-sync.md](../post-commit-sync.md).
+*   `safeDbCall` inside `runInTransaction` swallows the exception, and only an exception rolls the
+    transaction back — so end it with `.rollbackOnError()`. Otherwise a failing second write
+    (e.g. the outbox `enqueue`) commits the first one alone.
+
+## Queries
+*   A `List` parameter expands into one bind variable per element, and the platform SQLite on
+    API 26–30 allows at most 999. Split long id lists before the DAO call (`queryInChunks`,
+    `SYNC_IDS_CHUNK_SIZE`), and remember a list used twice in one query costs double. Never treat
+    a failed lookup as "nothing found locally" — in a pull that inserts duplicates.
 
 ## Migrations
 *   For production, schema changes REQUIRE a `Migration` plus a migration test

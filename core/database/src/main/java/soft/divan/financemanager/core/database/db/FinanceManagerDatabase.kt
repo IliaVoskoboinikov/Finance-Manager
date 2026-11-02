@@ -6,10 +6,12 @@ import androidx.room.TypeConverters
 import soft.divan.financemanager.core.database.dao.AccountDao
 import soft.divan.financemanager.core.database.dao.CategoryDao
 import soft.divan.financemanager.core.database.dao.CurrencyDao
+import soft.divan.financemanager.core.database.dao.OutboxDao
 import soft.divan.financemanager.core.database.dao.TransactionDao
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.entity.CategoryEntity
 import soft.divan.financemanager.core.database.entity.CurrencyEntity
+import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.entity.TransactionEntity
 import soft.divan.financemanager.core.database.util.Converters
 
@@ -18,9 +20,14 @@ import soft.divan.financemanager.core.database.util.Converters
         TransactionEntity::class,
         CategoryEntity::class,
         AccountEntity::class,
-        CurrencyEntity::class
+        CurrencyEntity::class,
+        OutboxEntryEntity::class
     ],
-    version = 4,
+    // Версия 5: добавлена таблица outbox (очередь исходящих операций).
+    // Версия 6: в outbox добавлен targetServerId — адрес ресурса для PUT/DELETE.
+    // Версия 7: в outbox добавлен dependencyKey — ссылка на обязательного предшественника.
+    // Версия 8: барьер порядка ищет предшественников по entityLocalId — сменились индексы outbox.
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -29,4 +36,5 @@ abstract class FinanceManagerDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
     abstract fun accountDao(): AccountDao
     abstract fun currencyDao(): CurrencyDao
+    abstract fun outboxDao(): OutboxDao
 }

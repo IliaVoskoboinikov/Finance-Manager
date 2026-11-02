@@ -8,7 +8,9 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
 import okhttp3.Interceptor
+import okhttp3.Request
 import okhttp3.Response
+import okio.Buffer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
@@ -90,6 +92,50 @@ class RetryInterceptorTest {
 
         assertThat(result.code).isEqualTo(404)
         verify(exactly = 1) { chain.proceed(any()) }
+    }
+
+    @Test
+    fun `does not retry terminal client errors`() {
+        // 400 — ошибка валидации, 409 — «уже существует»: повтор не изменит исход,
+        // ретрай только жёг бы батарею и задерживал следующие pending-операции
+        listOf(400, 409).forEach { code ->
+            val chain = chainReturning(HttpTestFactory.response(request, code))
+            val interceptor = RetryInterceptor(maxRetries = 3, baseDelayMillis = 0)
+
+            val result = interceptor.intercept(chain)
+
+            assertThat(result.code).isEqualTo(code)
+            verify(exactly = 1) { chain.proceed(any()) }
+        }
+    }
+
+    @Test
+    fun `resends the same body on every retry so the idempotency key stays stable`() {
+        // Транспортный ретрай POST безопасен только пока каждая попытка несёт тот же
+        // клиентский id: иначе сервер увидел бы новую сущность и создал дубль.
+        val payload = """{"id":"local-t1","amount":"42.42"}"""
+        val post = HttpTestFactory.request(method = "POST", body = payload)
+        val sent = mutableListOf<Request>()
+        val chain = mockk<Interceptor.Chain>()
+        every { chain.request() } returns post
+        every { chain.proceed(capture(sent)) } returnsMany listOf(
+            HttpTestFactory.response(post, 500),
+            HttpTestFactory.response(post, 503),
+            HttpTestFactory.response(post, 200)
+        )
+        val interceptor = RetryInterceptor(maxRetries = 3, baseDelayMillis = 0)
+
+        val result = interceptor.intercept(chain)
+
+        assertThat(result.code).isEqualTo(200)
+        assertThat(sent).hasSize(3)
+        assertThat(sent.map { it.readBody() }).containsExactly(payload, payload, payload)
+    }
+
+    private fun Request.readBody(): String {
+        val buffer = Buffer()
+        body?.writeTo(buffer)
+        return buffer.readUtf8()
     }
 
     @Test

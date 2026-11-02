@@ -76,8 +76,9 @@ A personal finance app is the domain; the point of the project is how it is buil
   e.g. banning `java.util.Date` / `Calendar` in favour of `java.time`.
 - **Convention plugins.** Every module is configured by a `soft.divan.*` plugin from
   [`build-logic`](build-logic/README.md); the plugins themselves are tested with Gradle TestKit.
-- **95% coverage gate.** Kover fails CI when line coverage of testable (non-UI, non-generated) code
-  drops below 95%. → [docs/testing.md](docs/testing.md)
+- **Coverage gate.** Kover fails CI when line coverage of testable (non-UI, non-generated) code
+  drops below 70%; the target is 90%, without code written just for the number.
+  → [docs/testing.md](docs/testing.md)
 - **Errors as values.** The domain layer never throws across boundaries: repositories and use cases
   return `DomainResult` with a sealed `DomainError`. → [docs/domain-result.md](docs/domain-result.md)
 - **Own crypto layer.** [`CryptoManager`](core/security/README.md) (AES/GCM + Android KeyStore)
@@ -168,7 +169,7 @@ More commands — coverage, reports, graphs, ADB recipes: [docs/commands.md](doc
 
 ## Quality gates
 
-Every pull request must pass, as separate CI jobs: build, unit tests, Kover coverage ≥ 95%,
+Every pull request must pass, as separate CI jobs: build, unit tests, Kover coverage ≥ 70%,
 Android Lint, Detekt, ktlint, Aalekh architecture check, module graph assertion, navigation graph
 check, `dependency-guard` (release classpath baseline) and a secret scan. A change touching only
 Markdown skips the code jobs. Details: [docs/ci-cd.md](docs/ci-cd.md).

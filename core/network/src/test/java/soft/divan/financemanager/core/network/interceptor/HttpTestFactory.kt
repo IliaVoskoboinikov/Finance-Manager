@@ -3,6 +3,7 @@ package soft.divan.financemanager.core.network.interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Protocol
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 
@@ -12,9 +13,14 @@ import okhttp3.ResponseBody.Companion.toResponseBody
  */
 internal object HttpTestFactory {
 
-    fun request(url: String = "https://example.com/v1/test"): Request =
+    fun request(
+        url: String = "https://example.com/v1/test",
+        method: String = "GET",
+        body: String? = null
+    ): Request =
         Request.Builder()
             .url(url)
+            .method(method, body?.toRequestBody("application/json".toMediaTypeOrNull()))
             .build()
 
     fun response(

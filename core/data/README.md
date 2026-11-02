@@ -2,7 +2,26 @@
 
 ## Responsibility
 
-Слой управления данными приложения.
+Слой управления данными приложения: реализации репозиториев (`core:domain`), локальные и
+удалённые data sources, маппинг Entity/DTO ↔ Domain, sync-менеджеры (pull с сервера,
+last-write-wins), очередь исходящих операций и транзакционный механизм.
+
+## Направления синхронизации
+
+Два направления разделены: **с сервера** — sync-менеджеры (`sync/`), **на сервер** — очередь
+исходящих операций (`outbox/`). Репозитории не ходят в сеть при записи: они кладут операцию в
+очередь той же транзакцией, что и сами данные, а `OutboxProcessor` отправляет её с повторами и
+dead-letter. Дизайн — [docs/outbox.md](../../docs/outbox.md), гарантии от дублей —
+[docs/idempotency.md](../../docs/idempotency.md).
+
+## Transactions & post-commit sync
+
+Составные локальные операции выполняются атомарно через `TransactionRunner`
+(`RoomTransactionRunner` + `rollbackOnError()`). Сетевые пуши, инициированные внутри
+транзакции, откладываются до успешного commit и отбрасываются при rollback —
+см. [docs/post-commit-sync.md](../../docs/post-commit-sync.md). В suspend-методах
+репозиториев для запуска фонового синка после записи используйте
+`AppCoroutineContext.launchSync`, а не `launch`.
 
 ## Module dependency graph
 

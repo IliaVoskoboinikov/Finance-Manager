@@ -42,7 +42,15 @@ fun AccountEntity.toDomain(): Account = Account(
     status = AccountStatus.fromWire(status)
 )
 
+/**
+ * Запрос на создание счёта (`POST /account`) из доменной модели.
+ *
+ * `id = id` — стабильный клиентский UUID как идемпотентный ключ: сервер принимает клиентский id
+ * и на повтор с тем же id отбивает дубль по первичному ключу (защита от двойного создания при
+ * потере ACK и ретраях).
+ */
 fun Account.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
+    id = id,
     name = name,
     balance = balance,
     currencyId = currencyId
@@ -54,7 +62,14 @@ fun AccountEntity.toUpdateDto(): UpdateAccountRequestDto = UpdateAccountRequestD
     currencyId = currencyId
 )
 
+/**
+ * Запрос на создание счёта из локальной сущности (push pending-записи).
+ *
+ * `id = localId` — стабильный клиентский UUID как идемпотентный ключ (см. [Account.toDto]):
+ * сервер дедуплицирует повтор по первичному ключу.
+ */
 fun AccountEntity.toDto(): CreateAccountRequestDto = CreateAccountRequestDto(
+    id = localId,
     name = name,
     balance = balance.toBigDecimal(),
     currencyId = currencyId

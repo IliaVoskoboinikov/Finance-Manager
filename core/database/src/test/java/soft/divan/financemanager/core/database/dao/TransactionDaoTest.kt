@@ -110,14 +110,36 @@ class TransactionDaoTest : RoomDaoTest() {
     }
 
     @Test
-    fun `getByServerIds returns only requested transactions`() = runTest {
+    fun `getBySyncIds returns only requested transactions`() = runTest {
         dao.insert(entity("t1", serverId = "s1"))
         dao.insert(entity("t2", serverId = "s2"))
         dao.insert(entity("t3", serverId = "s3"))
 
-        val found = dao.getByServerIds(listOf("s1", "s3", "ghost"))
+        val found = dao.getBySyncIds(listOf("s1", "s3", "ghost"))
 
         assertThat(found.map { it.localId }).containsExactlyInAnyOrder("t1", "t3")
+    }
+
+    @Test
+    fun `getBySyncIds matches locally created transaction awaiting ack by client id`() = runTest {
+        // create ушёл с id = localId, ACK не дошёл → serverId ещё null, но сервер знает запись
+        dao.insert(entity("t1", serverId = null, syncStatus = SyncStatus.PENDING_CREATE))
+        dao.insert(entity("t2", serverId = null, syncStatus = SyncStatus.PENDING_CREATE))
+
+        val found = dao.getBySyncIds(listOf("t1", "ghost"))
+
+        assertThat(found.map { it.localId }).containsExactly("t1")
+    }
+
+    @Test
+    fun `getBySyncIds does not match confirmed transaction by its local id`() = runTest {
+        // Защита от ложного совпадения: запись уже подтверждена (serverId проставлен),
+        // поэтому её localId в сопоставлении участвовать не должен
+        dao.insert(entity("t1", serverId = "s1", syncStatus = SyncStatus.SYNCED))
+
+        val found = dao.getBySyncIds(listOf("t1"))
+
+        assertThat(found).isEmpty()
     }
 
     @Test

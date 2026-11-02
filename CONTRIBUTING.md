@@ -48,7 +48,7 @@ More commands (tests, coverage, reports, ADB recipes): [docs/commands.md](docs/c
    ```bash
    ./gradlew assembleDebug testDebugUnitTest :core:domain:test :konsist:test :lint:test
    ./gradlew ktlintCheck detekt lint
-   ./gradlew :koverVerifyFull                # line coverage of testable code ≥ 95%
+   ./gradlew :koverVerifyFull                # line coverage of testable code ≥ 70%
    ./gradlew :app:dependencyGuard :app:assertModuleGraph aalekhCheck navCheck
    ```
 

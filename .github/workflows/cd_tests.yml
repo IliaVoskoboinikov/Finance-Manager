@@ -54,6 +54,9 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+      # До скачивания APK: checkout внутри android-setup чистит рабочий каталог (git clean).
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
       - name: Download apk
         uses: actions/download-artifact@v8
         with:
@@ -87,6 +90,9 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+      # До скачивания APK: checkout внутри android-setup чистит рабочий каталог (git clean).
+      - name: Setup environment
+        uses: ./.github/actions/android-setup
       - name: Download apk
         uses: actions/download-artifact@v8
         with:

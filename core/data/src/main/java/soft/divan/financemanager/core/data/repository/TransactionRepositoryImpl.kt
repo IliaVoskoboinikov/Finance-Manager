@@ -2,28 +2,37 @@ package soft.divan.financemanager.core.data.repository
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import soft.divan.financemanager.core.data.transaction.TransactionRunner
+import soft.divan.financemanager.core.data.transaction.rollbackOnError
 import soft.divan.financemanager.core.data.error.DataError
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
 import soft.divan.financemanager.core.data.mapper.TimeMapper
 import soft.divan.financemanager.core.data.mapper.toDomain
 import soft.divan.financemanager.core.data.mapper.toDomainError
+import soft.divan.financemanager.core.data.mapper.toDto
 import soft.divan.financemanager.core.data.mapper.toEntity
+import soft.divan.financemanager.core.data.mapper.toUpdateDto
+import soft.divan.financemanager.core.data.outbox.OutboxEnqueuer
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
+import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.TransactionSyncManager
-import soft.divan.financemanager.core.data.util.coroutne.AppCoroutineContext
+import soft.divan.financemanager.core.data.util.coroutine.AppCoroutineContext
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbFlow
 import soft.divan.financemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.model.OutboxEntityType
+import soft.divan.financemanager.core.database.model.OutboxOperation
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.Transaction
 import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.repository.TransactionRepository
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
+import soft.divan.financemanager.core.domain.result.getOrNull
 import soft.divan.financemanager.core.domain.result.onSuccess
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.time.Instant
@@ -36,11 +45,14 @@ class TransactionRepositoryImpl @Inject constructor(
     private val accountLocalDataSource: AccountLocalDataSource,
     private val categoryLocalDataSource: CategoryLocalDataSource,
     private val syncManager: TransactionSyncManager,
+    private val transactionRunner: TransactionRunner,
+    private val outboxEnqueuer: OutboxEnqueuer,
+    private val outboxLocalDataSource: OutboxLocalDataSource,
     private val appCoroutineContext: AppCoroutineContext,
     private val errorLogger: ErrorLogger
 ) : TransactionRepository {
 
-    /** Создаем транзакцию в БД и сразу запускаем синхронизацию */
+    /** Сохраняет транзакцию локально и ставит её создание в очередь исходящих операций. */
     override suspend fun create(transaction: Transaction): DomainResult<Unit> {
         val transactionEntity = transaction.toEntity(
             serverId = null,
@@ -48,12 +60,22 @@ class TransactionRepositoryImpl @Inject constructor(
             syncStatus = SyncStatus.PENDING_CREATE
         )
 
-        appCoroutineContext.launch {
-            syncManager.syncCreate(transactionEntity)
-        }
-
-        return safeDbCall(errorLogger) {
-            localDataSource.insert(transactionEntity)
+        return transactionRunner.runInTransaction {
+            safeDbCall(errorLogger) {
+                localDataSource.insert(transactionEntity)
+                outboxEnqueuer.enqueue(
+                    entityType = OutboxEntityType.TRANSACTION,
+                    entityLocalId = transactionEntity.localId,
+                    // Предшественник транзакции — её счёт: сервер отвергнет её с неизвестным
+                    // accountId, поэтому она обязана уехать после создания счёта
+                    dependencyKey = transactionEntity.accountLocalId,
+                    operation = OutboxOperation.CREATE,
+                    body = transactionEntity.toDto(transactionEntity.accountSyncId())
+                )
+            }.rollbackOnError()
+            // Без rollbackOnError транзакция закоммитила бы строку без операции в очереди:
+            // safeDbCall гасит исключение, а откатывает её только исключение
+            DomainResult.Success(Unit)
         }
     }
 
@@ -88,9 +110,7 @@ class TransactionRepositoryImpl @Inject constructor(
     /**
      * 1. Получаем транзакцию из локальной БД (источник истины)
      * 2. Возвращаем ее сразу (offline-first)
-     * 3. В фоне:
-     *    - если есть serverId → обновляем с сервера
-     *    - если нет → пытаемся создать на сервере
+     * 3. В фоне, если у транзакции есть serverId, обновляем её с сервера (см. [refreshFromServer])
      */
     override suspend fun getById(localId: String): DomainResult<Transaction> {
         val resultDb = getLocalOrFail(localId)
@@ -98,37 +118,64 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (resultDb as DomainResult.Success).data
 
-        appCoroutineContext.launch {
-            val serverId = transactionEntity.serverId
-            if (serverId != null) {
-                safeApiCall(errorLogger) {
-                    remoteDataSource.get(serverId)
-                }.onSuccess { transactionDto ->
-                    val category = categoryLocalDataSource.getById(
-                        transactionDto.categoryId
-                    ) ?: return@onSuccess
-                    val type = if (category.isIncome) TransactionType.INCOME else TransactionType.EXPENSE
+        // Несинхронизированную транзакцию догонять не нужно: её создание уже стоит в очереди
+        val serverId = transactionEntity.serverId
+        if (serverId != null) {
+            appCoroutineContext.launchSync {
+                refreshFromServer(transactionEntity, serverId)
+            }
+        }
 
-                    safeDbCall(errorLogger) {
+        return DomainResult.Success(transactionEntity.toDomain())
+    }
+
+    /**
+     * Заменяет локальную транзакцию серверной версией, если её можно принять
+     * ([canTakeServerVersion]).
+     *
+     * Проверка делается дважды. До запроса — потому что `getById` зовут и use case'ы записи:
+     * обновление стартует после их commit, когда операция ещё в очереди, и ответ сервера заведомо
+     * не знает о ней. После ответа, в одной транзакции с записью, — потому что за время запроса
+     * пользователь мог изменить транзакцию.
+     */
+    private suspend fun refreshFromServer(local: TransactionEntity, serverId: String) {
+        val canRefresh = safeDbCall(errorLogger) { canTakeServerVersion(local.localId) }.getOrNull()
+        if (canRefresh != true) return
+
+        safeApiCall(errorLogger) {
+            remoteDataSource.get(serverId)
+        }.onSuccess { transactionDto ->
+            val category = categoryLocalDataSource.getById(
+                transactionDto.categoryId
+            ) ?: return@onSuccess
+            val type = if (category.isIncome) TransactionType.INCOME else TransactionType.EXPENSE
+
+            safeDbCall(errorLogger) {
+                transactionRunner.runInTransaction {
+                    if (canTakeServerVersion(local.localId)) {
                         localDataSource.update(
                             transactionDto.toEntity(
-                                localId = transactionEntity.localId,
-                                accountLocalId = transactionEntity.accountLocalId,
-                                currencyId = transactionEntity.currencyId,
+                                localId = local.localId,
+                                accountLocalId = local.accountLocalId,
+                                currencyId = local.currencyId,
                                 type = type,
                                 syncStatus = SyncStatus.SYNCED
                             )
                         )
                     }
                 }
-            } else {
-                // Транзакция не синхронизирована с сервером то создаем на сервере
-                syncManager.syncCreate(transactionEntity)
             }
         }
-
-        return DomainResult.Success(transactionEntity.toDomain())
     }
+
+    /**
+     * Можно ли заменить локальную транзакцию серверной версией: строка синхронизирована и в
+     * очереди нет её операций. Иначе ответ сервера откатил бы ещё не отправленную правку, а
+     * `PENDING_DELETE` сменился бы на `SYNCED`, вернув удалённую транзакцию в списки.
+     */
+    private suspend fun canTakeServerVersion(localId: String): Boolean =
+        localDataSource.getByLocalId(localId)?.syncStatus == SyncStatus.SYNCED &&
+            !outboxLocalDataSource.hasOpenOperationsAffecting(localId)
 
     /** Вытаскиваем из бд транзакцию(так как только в БД храним serverId) обновляем локальныую трнакцию и
      * запускаем синхронизацию если транзакция не синхронизирована с сервером то создаем на сервере и
@@ -139,43 +186,34 @@ class TransactionRepositoryImpl @Inject constructor(
         if (resultDb is DomainResult.Failure) return resultDb
 
         val transactionEntity = (resultDb as DomainResult.Success).data
-        appCoroutineContext.launch {
-            if (transactionEntity.serverId == null) {
-                syncManager.syncCreate(
-                    transaction.toEntity(
-                        serverId = null,
-                        accountServerId = transactionEntity.accountServerId,
-                        syncStatus = SyncStatus.PENDING_CREATE
-                    )
-                )
+        val updatedEntity = transactionEntity.copy(
+            categoryId = transaction.categoryId,
+            currencyId = transaction.currencyId,
+            amount = transaction.amount.toPlainString(),
+            transactionDate = TimeMapper.toApi(transaction.transactionDate),
+            comment = transaction.comment.orEmpty(),
+            createdAt = TimeMapper.toApi(transaction.createdAt),
+            updatedAt = TimeMapper.toApi(transaction.updatedAt),
+            syncStatus = if (transactionEntity.serverId == null) {
+                SyncStatus.PENDING_CREATE
             } else {
-                syncManager.syncUpdate(
-                    transaction.toEntity(
-                        serverId = transactionEntity.serverId,
-                        accountServerId = transactionEntity.accountServerId,
-                        syncStatus = SyncStatus.PENDING_UPDATE
-                    )
-                )
+                SyncStatus.PENDING_UPDATE
             }
-        }
+        )
 
-        return safeDbCall(errorLogger) {
-            localDataSource.update(
-                transactionEntity.copy(
-                    categoryId = transaction.categoryId,
-                    currencyId = transaction.currencyId,
-                    amount = transaction.amount.toPlainString(),
-                    transactionDate = TimeMapper.toApi(transaction.transactionDate),
-                    comment = transaction.comment.orEmpty(),
-                    createdAt = TimeMapper.toApi(transaction.createdAt),
-                    updatedAt = TimeMapper.toApi(transaction.updatedAt),
-                    syncStatus = if (transactionEntity.serverId == null) {
-                        SyncStatus.PENDING_CREATE
-                    } else {
-                        SyncStatus.PENDING_UPDATE
-                    }
+        return transactionRunner.runInTransaction {
+            safeDbCall(errorLogger) {
+                localDataSource.update(updatedEntity)
+                outboxEnqueuer.enqueue(
+                    entityType = OutboxEntityType.TRANSACTION,
+                    entityLocalId = updatedEntity.localId,
+                    dependencyKey = updatedEntity.accountLocalId,
+                    operation = OutboxOperation.UPDATE,
+                    targetServerId = updatedEntity.syncId(),
+                    body = updatedEntity.toUpdateDto(updatedEntity.accountSyncId())
                 )
-            )
+            }.rollbackOnError()
+            DomainResult.Success(Unit)
         }
     }
 
@@ -185,14 +223,20 @@ class TransactionRepositoryImpl @Inject constructor(
 
         val transactionEntity = (localResult as DomainResult.Success).data
 
-        appCoroutineContext.launch {
-            syncManager.syncDelete(transactionEntity)
-        }
-
-        return safeDbCall(errorLogger) {
-            localDataSource.update(
-                transactionEntity.copy(syncStatus = SyncStatus.PENDING_DELETE)
-            )
+        return transactionRunner.runInTransaction {
+            safeDbCall(errorLogger) {
+                localDataSource.update(
+                    transactionEntity.copy(syncStatus = SyncStatus.PENDING_DELETE)
+                )
+                outboxEnqueuer.enqueue(
+                    entityType = OutboxEntityType.TRANSACTION,
+                    entityLocalId = transactionEntity.localId,
+                    dependencyKey = transactionEntity.accountLocalId,
+                    operation = OutboxOperation.DELETE,
+                    targetServerId = transactionEntity.syncId()
+                )
+            }.rollbackOnError()
+            DomainResult.Success(Unit)
         }
     }
 
@@ -222,3 +266,16 @@ class TransactionRepositoryImpl @Inject constructor(
         )
     }
 }
+
+/**
+ * Идентификатор, под которым транзакция известна серверу.
+ *
+ * Пока создание не подтверждено, `serverId` ещё не проставлен — но сервер узнает запись по
+ * клиентскому `localId`, с которым ушёл `POST`. Адресовать правку можно уже сейчас, потому
+ * что барьер порядка по `dependencyKey` не выпустит её раньше создания той же сущности —
+ * даже если создание ушло в backoff или удерживает аренду.
+ */
+private fun TransactionEntity.syncId(): String = serverId ?: localId
+
+/** То же для родительского счёта: до подтверждения он известен серверу под своим `localId`. */
+private fun TransactionEntity.accountSyncId(): String = accountServerId ?: accountLocalId
