@@ -11,6 +11,9 @@
 *   `feature:*:impl` -> `core:*`
 *   `feature:*:impl` -> `feature:other:api` (NEVER depend on another `:impl`).
 *   `app` -> all `feature:*:api` and `feature:*:impl`.
+*   Any new module edge, even an allowed `feature:*:impl -> feature:other:api`, raises the CCD
+    metric, and `aalekhCheck` fails on `metric-regression`. After an intentional edge, re-record
+    `./gradlew aalekhBaseline aalekhSnapshot` and ship `config/aalekh/*.json` with the change.
 
 ## Build Logic & Conventions
 *   **Convention Plugins:** Every module must use `soft.divan.*` convention plugins from `build-logic`.

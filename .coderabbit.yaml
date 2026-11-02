@@ -217,9 +217,10 @@ reviews:
       instructions: |
         Room: FinanceManagerDatabase, сущности, DAO.
         - Любое изменение схемы (поле @Entity, его тип, таблица, индекс) — в этом же PR
-          поднята version в @Database. Версия обязана оставаться строго больше
-          user_version предзаполненного ассета category_db.db (сейчас 1), иначе падение
-          на identity hash.
+          поднята version в @Database.
+        - Справочник категорий засевается кодом (seed/DefaultCategories,
+          SeedDatabaseCallback) при создании и после деструктивной миграции. Возврат к
+          createFromAsset не предлагай: ассет старше схемы стирается деструктивной миграцией.
         - fallbackToDestructiveMigration до релиза — осознанное решение. Если PR готовит
           релиз, нужны настоящие Migration и тест на MigrationTestHelper.
         - @ForeignKey и @Index не используются намеренно (offline-first, мягкие удаления,

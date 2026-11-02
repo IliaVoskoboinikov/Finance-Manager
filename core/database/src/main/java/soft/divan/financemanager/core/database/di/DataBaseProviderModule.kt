@@ -13,6 +13,7 @@ import soft.divan.financemanager.core.database.dao.CurrencyDao
 import soft.divan.financemanager.core.database.dao.OutboxDao
 import soft.divan.financemanager.core.database.dao.TransactionDao
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
+import soft.divan.financemanager.core.database.seed.SeedDatabaseCallback
 import soft.divan.financemanager.core.database.util.DatabaseCleanupManager
 import soft.divan.financemanager.core.database.util.DatabaseCleanupManagerImpl
 import javax.inject.Singleton
@@ -28,7 +29,7 @@ object DataBaseProviderModule {
     ): FinanceManagerDatabase =
         Room.databaseBuilder(context, FinanceManagerDatabase::class.java, "finance_manager_db.db")
             .fallbackToDestructiveMigration(true)
-            .createFromAsset("database/category_db.db")
+            .addCallback(SeedDatabaseCallback())
             .build()
 
     @Provides

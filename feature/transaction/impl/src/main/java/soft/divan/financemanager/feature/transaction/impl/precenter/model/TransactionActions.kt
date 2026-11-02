@@ -12,5 +12,7 @@ data class TransactionActions(
     val onTimeChange: (LocalTime) -> Unit,
     val onCategoryChange: (CategoryUi) -> Unit,
     val onAccountChange: (AccountUi) -> Unit,
-    val onDelete: () -> Unit
+    val onDelete: () -> Unit,
+    val onRetry: () -> Unit,
+    val onCreateAccount: () -> Unit
 )

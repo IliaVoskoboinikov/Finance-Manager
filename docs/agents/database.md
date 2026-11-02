@@ -33,12 +33,21 @@
 ## Migrations
 *   For production, schema changes REQUIRE a `Migration` plus a migration test
     (`MigrationTestHelper`); `exportSchema = true` is enabled for this.
-*   **Current pre-release state:** the DB uses `fallbackToDestructiveMigration`. The `@Database`
-    version MUST stay strictly greater than the prepackaged `category_db.db` asset's `user_version`
-    (currently 1) — with an equal version but a different schema, Room fails at runtime with an
-    identity-hash mismatch. This destructive setup is acceptable only while there are no real users
-    (offline-first, data re-syncs from the server) and MUST be replaced with real migrations before
-    release.
+*   **Current pre-release state:** the DB uses `fallbackToDestructiveMigration`. This destructive
+    setup is acceptable only while there are no real users (offline-first, data re-syncs from the
+    server) and MUST be replaced with real migrations before release.
+
+## Seed data
+*   Reference data the app needs offline (the 24 categories) is seeded in code:
+    `seed/DefaultCategories` + `SeedDatabaseCallback`, ids equal to the backend's GUIDs so the
+    server pull `REPLACE`s the same rows instead of adding duplicates, and guest transactions
+    merged on sign-in point to categories the server knows.
+*   Don't go back to `createFromAsset`: an asset older than the schema is dropped by the
+    destructive migration (fresh installs had zero categories, FM-128), and its version would
+    have to track `@Database` on every bump.
+*   Room calls `onDestructiveMigration` after dropping the tables but **before** creating them
+    again — writing there fails with `no such table`. The callback only sets a flag and seeds in
+    `onOpen`.
 
 ## Data Isolation
 *   Room `Entity` classes are internal to the data layer.

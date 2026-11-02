@@ -13,12 +13,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.data.util.generateUUID
+import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.result.DomainResult
@@ -41,6 +45,7 @@ import soft.divan.financemanager.feature.transaction.impl.precenter.mapper.toDom
 import soft.divan.financemanager.feature.transaction.impl.precenter.mapper.toUi
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.CategoryUi
+import soft.divan.financemanager.feature.transaction.impl.precenter.model.EmptyReason
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionEvent
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionUi
@@ -86,6 +91,9 @@ class TransactionViewModel @AssistedInject constructor(
     private var categories: List<CategoryUi> = emptyList()
     private var accounts: List<AccountUi> = emptyList()
 
+    /** Идущая загрузка: в пустом состоянии она продолжает слушать БД. */
+    private var loadJob: Job? = null
+
     /** Идущая запись (сохранение или удаление): пока она не завершилась, новая не запускается. */
     private var writeJob: Job? = null
 
@@ -112,31 +120,72 @@ class TransactionViewModel @AssistedInject constructor(
         }
     }
 
+    /**
+     * Загружает счета и категории и собирает форму. Для новой операции без счёта или категории
+     * показывает [TransactionUiState.Empty] и продолжает слушать БД, пока данные не появятся.
+     * Повторный вызов отменяет предыдущую загрузку.
+     */
     fun load() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _uiState.update { TransactionUiState.Loading }
-            val categoriesResult = getCategoriesUseCase(isIncome).first()
-            val accountsResult = getAccountsUseCase().first()
+            // takeWhile, а не first { }: тот бросает исключение, если поток кончится пустым
+            combine(getCategoriesUseCase(isIncome), getAccountsUseCase(), ::Pair)
+                .takeWhile { (categoriesResult, accountsResult) ->
+                    !applyLoaded(categoriesResult, accountsResult)
+                }
+                .collect()
+        }
+    }
 
-            if (categoriesResult !is DomainResult.Success || accountsResult !is DomainResult.Success) {
-                _uiState.update { TransactionUiState.Error(R.string.error_load_transaction) }
-                return@launch
-            }
+    /**
+     * Применяет очередную выдачу счетов и категорий. Возвращает `true`, когда загрузка
+     * закончена (форма собрана или показана ошибка), и `false`, если ждём данных дальше.
+     */
+    private suspend fun applyLoaded(
+        categoriesResult: DomainResult<List<Category>>,
+        accountsResult: DomainResult<List<Account>>
+    ): Boolean {
+        if (categoriesResult !is DomainResult.Success || accountsResult !is DomainResult.Success) {
+            _uiState.update { TransactionUiState.Error(R.string.error_load_transaction) }
+            return true
+        }
 
-            categories = categoriesResult.data.map { it.toUi() }
-            accounts = accountsResult.data.map { it.toUi() }
+        categories = categoriesResult.data.map { it.toUi() }
+        accounts = accountsResult.data.map { it.toUi() }
 
-            when (mode) {
-                is TransactionMode.Create -> initForCreate()
-                is TransactionMode.Edit -> initForEdit(mode.id)
+        return when (mode) {
+            is TransactionMode.Create -> applyLoadedForCreate()
+
+            is TransactionMode.Edit -> {
+                initForEdit(mode.id)
+                true
             }
         }
     }
 
+    /** Собирает новую операцию или, если не хватает данных, показывает пустое состояние. */
+    private fun applyLoadedForCreate(): Boolean {
+        val emptyReason = emptyReason()
+        if (emptyReason != null) {
+            _uiState.update { TransactionUiState.Empty(emptyReason) }
+        } else {
+            initForCreate()
+        }
+        return emptyReason == null
+    }
+
+    /** Счёт важнее категорий: его пользователь может создать сам, прямо с этого экрана. */
+    private fun emptyReason(): EmptyReason? = when {
+        accounts.isEmpty() -> EmptyReason.NO_ACCOUNTS
+        categories.isEmpty() -> EmptyReason.NO_CATEGORIES
+        else -> null
+    }
+
     private fun initForCreate() {
         val now = LocalDateTime.now()
-        val account = accounts.firstOrNull() ?: return
-        val category = categories.firstOrNull() ?: return
+        val account = accounts.first()
+        val category = categories.first()
 
         transactionUi = TransactionUi(
             id = generateUUID(),
@@ -161,7 +210,10 @@ class TransactionViewModel @AssistedInject constructor(
         getTransactionUseCase(id).fold(
             onSuccess = { domainTransaction ->
                 val category = categories.firstOrNull { it.id == domainTransaction.categoryId }
-                    ?: return@fold
+                if (category == null) {
+                    _uiState.update { TransactionUiState.Error(R.string.error_load_transaction) }
+                    return@fold
+                }
 
                 transactionUi = domainTransaction.toUi(category)
                 resolveArchivedAccountIfNeeded()

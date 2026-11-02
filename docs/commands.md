@@ -433,7 +433,6 @@ rm -rf .gradle build */build                       # 5. локальный кэ�
 | «Configuration cache state could not be cached» | `build/reports/configuration-cache/**/configuration-cache-report.html` |
 | Любые предупреждения/проблемы сборки | `build/reports/problems/problems-report.html` |
 | Падение R8 в release | `app/build/outputs/mapping/release/missing_rules.txt` |
-| Room ругается на identity hash | версия `@Database` должна быть **строго больше** `user_version` ассета — см. [«База данных»](#база-данных) |
 
 ---
 
@@ -568,7 +567,8 @@ adb pull /sdcard/demo.mp4
 
 ## База данных
 
-БД — `finance_manager_db.db`, создаётся из ассета `app/src/main/assets/database/category_db.db`.
+БД — `finance_manager_db.db`; справочник категорий засевается кодом при её создании
+(`SeedDatabaseCallback`).
 Удобнее всего смотреть через **App Inspection → Database Inspector** в Android Studio, но можно
 и вытащить файл (debug-сборка отлаживаемая, поэтому `run-as` работает):
 
@@ -579,14 +579,7 @@ adb exec-out run-as $PKG cat databases/finance_manager_db.db-wal > fm.db-wal
 sqlite3 fm.db ".tables"                    # account categories currency transactions …
 sqlite3 fm.db "PRAGMA user_version;"       # должно совпасть с version в @Database
 sqlite3 fm.db "select count(*) from transactions;"
-```
-
-Проверка ключевого инварианта проекта — версия `@Database` обязана быть **строго больше**
-`user_version` прешипнутого ассета, иначе Room падает на несовпадении identity hash:
-
-```bash
-sqlite3 app/src/main/assets/database/category_db.db "PRAGMA user_version;"   # сейчас 1
-grep -n "version = " core/database/src/main/java/soft/divan/financemanager/core/database/db/FinanceManagerDatabase.kt
+sqlite3 fm.db "select count(*) from categories;"   # 24 сразу после установки, даже у гостя
 ```
 
 📖 [docs/bd.md](bd.md)

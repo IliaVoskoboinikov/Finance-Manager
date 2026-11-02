@@ -83,11 +83,12 @@ erDiagram
 - **Миграций нет.** До релиза база собирается с `fallbackToDestructiveMigration`: при смене
   схемы локальные данные стираются и заново приходят с сервера. Это допустимо, пока нет
   реальных пользователей.
-- **Версия схемы и ассет.** База создаётся из ассета `category_db.db` (`createFromAsset`), у
-  которого `user_version = 1`. Версия `@Database` обязана быть строго больше: при равной
-  версии и другой схеме Room падает на проверке identity hash. Обратная сторона: ассет старше
-  схемы, миграции из него нет, поэтому на свежей установке деструктивная миграция выбрасывает
-  его вместе с категориями ([FM-128](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/128)).
+- **Справочник категорий засевается кодом.** `SeedDatabaseCallback` кладёт 24 категории из
+  `DefaultCategories` при создании базы и после деструктивной миграции. Id совпадают с GUID
+  серверного засева, поэтому синк обновляет те же строки, а операции гостя после входа
+  ссылаются на категории, которые есть на сервере. Раньше справочник шёл ассетом
+  `category_db.db`, но ассет был старше схемы, и деструктивная миграция выбрасывала его: на
+  свежей установке категорий не было вовсе ([FM-128](https://github.com/IliaVoskoboinikov/Finance-Manager/issues/128)).
 
 ## Связанные задачи
 
@@ -103,5 +104,6 @@ erDiagram
 | :--- | :--- |
 | `core/database/.../db/FinanceManagerDatabase.kt` | `@Database`: сущности, версия схемы |
 | `core/database/.../entity/*Entity.kt` | Room-сущности: счёт, категория, транзакция, валюта |
-| `core/database/.../di/DataBaseProviderModule.kt` | сборка базы: ассет, деструктивная миграция |
-| `app/src/main/assets/database/category_db.db` | предзагруженные категории |
+| `core/database/.../di/DataBaseProviderModule.kt` | сборка базы: засев, деструктивная миграция |
+| `core/database/.../seed/DefaultCategories.kt` | справочник категорий с серверными GUID |
+| `core/database/.../seed/SeedDatabaseCallback.kt` | засев при создании и после деструктивной миграции |

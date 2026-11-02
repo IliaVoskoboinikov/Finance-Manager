@@ -14,4 +14,9 @@
     <string name="fail_delete_transaction">Failed to delete transaction</string>
     <string name="error_load_transaction">Failed to load transaction</string>
     <string name="archived_account_suffix"> (archived)</string>
+    <string name="empty_no_accounts">To add a transaction, create an account first</string>
+    <string name="empty_no_expense_categories">No expense categories yet. They will appear after synchronization</string>
+    <string name="empty_no_income_categories">No income categories yet. They will appear after synchronization</string>
+    <string name="create_account">Create account</string>
+    <string name="close">Close</string>
 </resources>

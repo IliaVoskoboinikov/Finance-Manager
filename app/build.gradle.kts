@@ -40,7 +40,7 @@ android {
     }
     testOptions {
         unitTests {
-            // Robolectric-тестам БД нужен доступ к assets (prepackaged category_db.db)
+            // Robolectric-тестам нужен доступ к ресурсам приложения
             isIncludeAndroidResources = true
         }
     }
