@@ -51,7 +51,7 @@ hiltExt = "1.3.0"
 # Networking
 retrofit = "3.0.0"
 converterGson = "3.0.0"
-loggingInterceptor = "5.4.0"
+loggingInterceptor = "5.5.1"
 
 # Auth (OAuth)
 yandexAuthSdk = "3.1.3"
