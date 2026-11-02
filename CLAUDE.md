@@ -22,7 +22,8 @@ DB migration rules below).
   serialized with kotlinx.serialization.
 - **Architecture:** Clean Architecture + MVVM + Unidirectional Data Flow (UDF), offline-first.
 - **DI:** Dagger Hilt. **Async:** Coroutines + Flow.
-- **Storage:** Room (`FinanceManagerDatabase`, SSOT) + DataStore.
+- **Storage:** Room (`FinanceManagerDatabase`, SSOT) on SQLCipher (`sqlcipher-android`; 4.18+
+  needs `compileSdk 37`) + DataStore.
 - **Network:** Retrofit + OkHttp + Gson; custom interceptors (Auth, Retry, NetworkConnection, Logging).
 - **Background:** WorkManager (`:sync`; shared `DelegatingWorker` infra in `core:workmanager`).
   **Security:** `core:security` `CryptoManager` (AES/GCM + KeyStore).
@@ -121,8 +122,15 @@ category → account → transaction sync order + last-write-wins are handled in
 - **DB migrations:** pre-release the DB uses `fallbackToDestructiveMigration`. The category
   reference set is seeded in code (`core:database` `seed/DefaultCategories`, server GUIDs) by
   `SeedDatabaseCallback` on create and after a destructive migration — no prepackaged asset.
-  Adding an index = schema change = version bump. Real `Migration`s + migration tests are
-  required before release (`exportSchema = true`).
+  The production builder and test databases that stand in for it go through `withAppDefaults()`
+  (plain in-memory DAO/outbox test databases don't — they need empty tables). Adding an index =
+  schema change = version bump. Real `Migration`s + migration tests are required before release
+  (`exportSchema = true`).
+- **DB access & encryption:** the database is SQLCipher-encrypted and can be closed (PIN level,
+  auto-lock, wipe), so DAOs are **not** injectable — go through `DatabaseHolder`
+  (`withDatabase {}` for one-shot calls, `observe {}` for flows). Database keys live in
+  `core:security` (`DekEnvelope`, `KeysetStore`) and change only via `core:data` `VaultCore`
+  (verify → atomic write → delete old Keystore aliases). See `docs/encryption.md`.
 - **Layer isolation:** never leak Room `Entity`, Retrofit `Response`/DTOs, or `HttpException`
   past the data layer. Map with `toDomain()` / `toEntity()` / `toDto()`. No business logic in UI.
 - **Custom lint:** the `:lint` module enforces project rules — e.g. `OldDate` bans
@@ -131,6 +139,7 @@ category → account → transaction sync order + last-write-wins are handled in
   deprecated `androidx.security.crypto`. JWT is encrypted → DataStore (`core:auth`); PIN is
   hashed (PBKDF2 + salt) then the hash encrypted → SharedPreferences (`feature:security`).
   Never lift a raw secret/PIN into the presentation layer — expose only `verify(...)`.
+  Never silently recreate a lost database Keystore key — that is `LocalDataState.KeyLost`.
 - **Coroutines:** inject `CoroutineDispatcher`; never hardcode `Dispatchers.IO`/`Default` or
   use `GlobalScope`. Collect flows in UI with `collectAsStateWithLifecycle()`.
 - **Dependencies:** any change to the release classpath (new library, version bump, changed

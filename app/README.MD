@@ -8,11 +8,18 @@
 - `presenter/navigation/RootNavGraph.kt` и `BottomNavGraph.kt` — корневой навигационный
   граф: внедряет `FeatureApi` всех фич через Hilt и вызывает их `registerGraph(...)`,
   так что фичи не ссылаются на экраны друг друга напрямую.
+- `di/` — app-уровневая DI-конфигурация (`AppModule`, сборка графа фич).
 - Тема на старте: окно `Theme.FinanceManager` (DayNight, фон из `values`/`values-night`
   `colors.xml`), `MainActivity` не рисует контент, пока не прочитан режим темы, передаёт его
   системе через `UiModeManager.setApplicationNightMode` (API 31+, системный сплэш в нужной
   теме) и задаёт стиль system bars по теме приложения (`presenter/theme/ThemeModeExt.kt`).
-- `di/AppModule` и `db/DataBaseProviderModule` — app-уровневая DI-конфигурация.
+- Доступ к локальным данным: `App` читает ключи базы до всего остального
+  (`InitializeLocalDataUseCase`), `MainActivity` строит главный экран только при открытых данных
+  (замок уровня PIN, экран потери ключа), ставит `FLAG_SECURE` до первого кадра;
+  `lifecycle/LocalDataAutoLock` закрывает базу уровня PIN через 5 минут в фоне. См.
+  [docs/encryption.md](../docs/encryption.md).
+- Бэкапы: `res/xml/data_extraction_rules.xml` и `backup_rules.xml` исключают все данные из
+  облачного бэкапа и переноса между устройствами.
 - Конфигурация сборки: подпись, manifest-плейсхолдеры Yandex OAuth
   (`YANDEX_CLIENT_ID` из `local.properties` / CI-секрета, см. `:feature:auth:impl`).
 - `proguard-rules.pro` — keep-правила R8 для release: Gson DTO, ключи Navigation 3 и

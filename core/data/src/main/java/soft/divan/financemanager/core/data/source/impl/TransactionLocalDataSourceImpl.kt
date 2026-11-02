@@ -2,44 +2,46 @@ package soft.divan.financemanager.core.data.source.impl
 
 import kotlinx.coroutines.flow.Flow
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
-import soft.divan.financemanager.core.database.dao.TransactionDao
 import soft.divan.financemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.holder.DatabaseHolder
 import javax.inject.Inject
 
 class TransactionLocalDataSourceImpl @Inject constructor(
-    private val transactionDao: TransactionDao
+    private val holder: DatabaseHolder
 ) : TransactionLocalDataSource {
-    override suspend fun insert(transaction: TransactionEntity) = transactionDao.insert(transaction)
+    override suspend fun insert(transaction: TransactionEntity) =
+        holder.withDatabase { it.transactionDao().insert(transaction) }
 
     override fun getByAccountAndPeriod(
         accountId: String,
         startDate: String,
         endDate: String
     ): Flow<List<TransactionEntity>> =
-        transactionDao.getByAccountAndPeriod(accountId, startDate, endDate)
+        holder.observe { it.transactionDao().getByAccountAndPeriod(accountId, startDate, endDate) }
 
     override suspend fun getByLocalId(localId: String): TransactionEntity? =
-        transactionDao.getByLocalId(localId)
+        holder.withDatabase { it.transactionDao().getByLocalId(localId) }
 
     override suspend fun getByServerId(id: String): TransactionEntity? =
-        transactionDao.getByServerId(id)
+        holder.withDatabase { it.transactionDao().getByServerId(id) }
 
     /** По частям: запрос тратит две bind-переменные на id (см. [SYNC_IDS_CHUNK_SIZE]). */
     override suspend fun getBySyncIds(ids: List<String>): List<TransactionEntity> =
-        ids.queryInChunks { transactionDao.getBySyncIds(it) }
+        // Одна аренда на все части: база не закроется между ними
+        holder.withDatabase { db -> ids.queryInChunks { db.transactionDao().getBySyncIds(it) } }
 
     override suspend fun getByAccountId(accountId: String): List<TransactionEntity> =
-        transactionDao.getByAccountId(accountId)
+        holder.withDatabase { it.transactionDao().getByAccountId(accountId) }
 
     override suspend fun getPendingSync(): List<TransactionEntity> =
-        transactionDao.getPendingSync()
+        holder.withDatabase { it.transactionDao().getPendingSync() }
 
     override suspend fun update(transaction: TransactionEntity) =
-        transactionDao.update(transaction)
+        holder.withDatabase { it.transactionDao().update(transaction) }
 
     override suspend fun delete(localId: String) =
-        transactionDao.delete(localId)
+        holder.withDatabase { it.transactionDao().delete(localId) }
 
     override suspend fun deleteAll() =
-        transactionDao.deleteAll()
+        holder.withDatabase { it.transactionDao().deleteAll() }
 }

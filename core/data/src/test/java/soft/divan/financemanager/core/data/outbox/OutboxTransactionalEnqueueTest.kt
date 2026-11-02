@@ -20,6 +20,7 @@ import soft.divan.financemanager.core.data.repository.AccountRepositoryImpl
 import soft.divan.financemanager.core.data.source.impl.AccountLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.OutboxLocalDataSourceImpl
 import soft.divan.financemanager.core.data.source.impl.TransactionLocalDataSourceImpl
+import soft.divan.financemanager.core.data.testing.OpenDatabaseHolder
 import soft.divan.financemanager.core.data.transaction.PostCommitSyncQueue
 import soft.divan.financemanager.core.data.transaction.impl.RoomTransactionRunner
 import soft.divan.financemanager.core.data.transaction.rollbackOnError
@@ -84,9 +85,9 @@ class OutboxTransactionalEnqueueTest {
             FinanceManagerDatabase::class.java
         ).allowMainThreadQueries().build()
 
-        runner = RoomTransactionRunner(db, NoopAppCoroutineContext())
+        runner = RoomTransactionRunner(OpenDatabaseHolder(db), NoopAppCoroutineContext())
         enqueuer = OutboxEnqueuer(
-            localDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
+            localDataSource = OutboxLocalDataSourceImpl(OpenDatabaseHolder(db)),
             gson = Gson(),
             clock = Clock.fixed(now, ZoneOffset.UTC),
             appCoroutineContext = NoopAppCoroutineContext(),
@@ -166,15 +167,15 @@ class OutboxTransactionalEnqueueTest {
     /** Репозиторий на живом Room, у которого постановка в очередь падает. */
     private fun repositoryWithFailingEnqueue() = AccountRepositoryImpl(
         remoteDataSource = mockk(),
-        localDataSource = AccountLocalDataSourceImpl(db.accountDao()),
-        transactionLocalDataSource = TransactionLocalDataSourceImpl(db.transactionDao()),
+        localDataSource = AccountLocalDataSourceImpl(OpenDatabaseHolder(db)),
+        transactionLocalDataSource = TransactionLocalDataSourceImpl(OpenDatabaseHolder(db)),
         syncManager = mockk(relaxed = true),
         transactionRunner = runner,
         outboxEnqueuer = mockk {
             coEvery { enqueue(any(), any(), any(), any(), any(), any()) } throws
                 SQLiteFullException("database or disk is full")
         },
-        outboxLocalDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
+        outboxLocalDataSource = OutboxLocalDataSourceImpl(OpenDatabaseHolder(db)),
         appCoroutineContext = NoopAppCoroutineContext(),
         errorLogger = mockk<ErrorLogger>(relaxed = true)
     )
@@ -221,10 +222,10 @@ class OutboxTransactionalEnqueueTest {
         // ещё не зафиксированную запись (то же соединение Room) и отправил бы её на сервер до
         // commit — при откате получился бы ровно тот фантом, от которого защищает outbox.
         val context = CollectingAppCoroutineContext()
-        val localRunner = RoomTransactionRunner(db, context)
+        val localRunner = RoomTransactionRunner(OpenDatabaseHolder(db), context)
         val processor = mockk<OutboxProcessor>(relaxed = true)
         val localEnqueuer = OutboxEnqueuer(
-            localDataSource = OutboxLocalDataSourceImpl(db.outboxDao()),
+            localDataSource = OutboxLocalDataSourceImpl(OpenDatabaseHolder(db)),
             gson = Gson(),
             clock = Clock.fixed(now, ZoneOffset.UTC),
             appCoroutineContext = context,

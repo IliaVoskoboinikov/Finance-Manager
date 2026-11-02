@@ -7,34 +7,37 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
+import soft.divan.financemanager.core.domain.model.LocalDataState
+import soft.divan.financemanager.core.domain.usecase.ObserveLocalDataStateUseCase
 import soft.divan.financemanager.core.featureapi.FeatureApi
 import soft.divan.financemanager.core.notifications.fcm.PushSubscriptionManager
 import soft.divan.financemanager.core.notifications.scheduler.InactivityReminderScheduler
@@ -43,7 +46,9 @@ import soft.divan.financemanager.feature.designapp.impl.domain.model.ThemeMode
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetAccentColorUseCase
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetCustomAccentColorUseCase
 import soft.divan.financemanager.feature.designapp.impl.domain.usecase.GetThemeModeUseCase
-import soft.divan.financemanager.feature.security.impl.domain.usecase.IsPinSetUseCase
+import soft.divan.financemanager.feature.security.impl.domain.usecase.ObservePinSetUseCase
+import soft.divan.financemanager.feature.security.impl.domain.usecase.ObserveSecureScreenUseCase
+import soft.divan.financemanager.feature.security.impl.presenter.screen.KeyLostScreen
 import soft.divan.financemanager.feature.security.impl.presenter.screen.PinLockScreen
 import soft.divan.financemanager.feature.splashscreen.api.SplashScreenFeatureApi
 import soft.divan.financemanager.presenter.navigation.RootNavDisplay
@@ -80,7 +85,13 @@ class MainActivity : AppCompatActivity() {
     lateinit var getCustomAccentColorUseCase: GetCustomAccentColorUseCase
 
     @Inject
-    lateinit var isPinSetUseCase: IsPinSetUseCase
+    lateinit var observePinSet: ObservePinSetUseCase
+
+    @Inject
+    lateinit var observeLocalDataState: ObserveLocalDataStateUseCase
+
+    @Inject
+    lateinit var observeSecureScreen: ObserveSecureScreenUseCase
 
     @Inject
     lateinit var inactivityReminderScheduler: InactivityReminderScheduler
@@ -88,25 +99,13 @@ class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var pushSubscriptionManager: PushSubscriptionManager
 
-    private val shouldLock = mutableStateOf(false)
+    /** Пройден ли замок приложения — см. [AppLockViewModel]. */
+    private val appLock: AppLockViewModel by viewModels()
 
-    // Кешируем «установлен ли PIN». Раньше значение читалось синхронно прямо
-    // в composition (disk I/O + crypto на главном потоке на каждой рекомпозиции).
-    // Теперь читаем вне главного потока и обновляем по жизненному циклу.
-    private val isPinSet = mutableStateOf(false)
-
+    // Сброс синхронный: состояние читается гейтом напрямую, без эффекта, который отработал бы
+    // только на следующем кадре и дал бы главному экрану мелькнуть при возвращении.
     private val autoLockObserver = LifecycleEventObserver { _, event ->
-        when (event) {
-            Lifecycle.Event.ON_START -> refreshPinSet()
-
-            Lifecycle.Event.ON_STOP -> {
-                if (isPinSet.value) {
-                    shouldLock.value = true
-                }
-            }
-
-            else -> Unit
-        }
+        if (event == Lifecycle.Event.ON_STOP) appLock.lock()
     }
 
     /**
@@ -125,9 +124,14 @@ class MainActivity : AppCompatActivity() {
             // Отказ — штатный сценарий: NotificationHelper сам молча пропустит показ.
         }
 
-    private fun refreshPinSet() {
+    private fun observePinSetState() {
         lifecycleScope.launch {
-            isPinSet.value = withContext(Dispatchers.IO) { isPinSetUseCase() }
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                // «PIN задан» — из потока: он сразу сообщает, что PIN сняло стирание данных
+                // («забыл PIN», исчерпанные попытки, восстановление), и замок не требует PIN,
+                // которого уже нет. Логика перехода — в AppLockViewModel.onPinSetChanged
+                observePinSet().collect(appLock::onPinSetChanged)
+            }
         }
     }
 
@@ -145,11 +149,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Защита экрана (`FLAG_SECURE`) включена по умолчанию и ставится **до** первого кадра: иначе
+     * превью в списке недавних успело бы сняться, пока настройка читается с диска. Если
+     * пользователь её выключил, флаг снимется, как только настройка прочитается.
+     *
+     * Диалоги Compose — отдельные окна; они наследуют флаг (`SecureFlagPolicy.Inherit`).
+     */
+    private fun applySecureScreen() {
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                observeSecureScreen().collect { secure ->
+                    if (secure) {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        applySecureScreen()
 
-        refreshPinSet()
+        observePinSetState()
         requestNotificationPermissionIfNeeded()
         // Здесь, а не в App.onCreate(): к моменту старта Activity FirebaseApp гарантированно
         // поднят своим ContentProvider'ом, и подписка не зависит от фоновых стартов процесса.
@@ -174,14 +201,6 @@ class MainActivity : AppCompatActivity() {
             val accentColor by getAccentColorUseCase().collectAsState(initial = AccentColor.MINT)
             val customColor = getCustomAccentColorUseCase().collectAsState(initial = null).value
 
-            var isPinVerified by rememberSaveable { mutableStateOf(false) }
-
-            LaunchedEffect(shouldLock.value) {
-                if (shouldLock.value) {
-                    isPinVerified = false
-                }
-            }
-
             FinanceManagerTheme(
                 darkTheme = isDark,
                 accentColor = accentColor,
@@ -194,23 +213,37 @@ class MainActivity : AppCompatActivity() {
                         .fillMaxSize()
                         .background(MaterialTheme.colorScheme.background)
                 ) {
-                    if (isPinSet.value && !isPinVerified) {
-                        PinLockScreen(onPinCorrect = {
-                            isPinVerified = true
-                            shouldLock.value = false
-                        })
-                    } else {
-                        RootNavDisplay(
-                            splashFeatureApi = splashFeatureApi,
-                            authFeatureApi = authFeatureApi,
-                            getAuthStatusUseCase = getAuthStatusUseCase,
-                            mainScreen = {
-                                MainScreen(features = features)
-                            }
-                        )
-                    }
+                    LocalDataGate()
                 }
             }
+        }
+    }
+
+    /**
+     * Что показать, зависит прежде всего от того, доступны ли данные: главный экран строится только
+     * при открытой базе. Выбор — в [resolveLocalDataScreen], здесь только отрисовка.
+     */
+    @Composable
+    private fun LocalDataGate() {
+        val dataState by observeLocalDataState().collectAsStateWithLifecycle()
+        val onUnlocked = appLock::unlock
+
+        when (resolveLocalDataScreen(dataState, appLock.pinSet, appLock.unlocked)) {
+            LocalDataScreen.KEY_LOST -> KeyLostScreen()
+
+            LocalDataScreen.DATA_LOCK, LocalDataScreen.UI_LOCK -> PinLockScreen(onUnlock = onUnlocked)
+
+            // Пока ключи или PIN не прочитаны, главный экран не строится — виден только фон темы
+            LocalDataScreen.NOTHING -> Unit
+
+            LocalDataScreen.MAIN -> RootNavDisplay(
+                splashFeatureApi = splashFeatureApi,
+                authFeatureApi = authFeatureApi,
+                getAuthStatusUseCase = getAuthStatusUseCase,
+                mainScreen = {
+                    MainScreen(features = features)
+                }
+            )
         }
     }
 

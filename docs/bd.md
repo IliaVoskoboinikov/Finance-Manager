@@ -104,6 +104,7 @@ erDiagram
 | :--- | :--- |
 | `core/database/.../db/FinanceManagerDatabase.kt` | `@Database`: сущности, версия схемы |
 | `core/database/.../entity/*Entity.kt` | Room-сущности: счёт, категория, транзакция, валюта |
-| `core/database/.../di/DataBaseProviderModule.kt` | сборка базы: засев, деструктивная миграция |
+| `core/database/.../holder/SqlCipherDatabaseFactory.kt` | открытие зашифрованной базы (SQLCipher) |
+| `core/database/.../db/DatabaseDefaults.kt` | общая настройка сборщика: засев, деструктивная миграция |
 | `core/database/.../seed/DefaultCategories.kt` | справочник категорий с серверными GUID |
 | `core/database/.../seed/SeedDatabaseCallback.kt` | засев при создании и после деструктивной миграции |

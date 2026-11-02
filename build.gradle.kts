@@ -477,11 +477,10 @@ tasks.withType<Detekt>().configureEach {
 
     include("**/*.kt", "**/*.kts")
     exclude("**/build/**")
-    exclude("**/.gradle/**")
     exclude("**/generated/**")
-    // Локальные git worktree агента (gitignored): в CI их нет, а локально detekt нашёл бы
-    // в них сотни чужих нарушений.
-    exclude("**/.claude/**")
+    // Скрытые каталоги (.gradle, локальные git worktree и т. п.) — не исходники проекта: копии
+    // репозитория в них сканировались бы как свои и валили бы проверку, которой в CI нет
+    exclude("**/.*/**")
 
     reports {
         xml.required.set(true)

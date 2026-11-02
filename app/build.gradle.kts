@@ -113,9 +113,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
     testImplementation(libs.bundles.unit.test)
-    testImplementation(libs.robolectric)
-    testImplementation(libs.androidx.test.core)
-    testImplementation(libs.androidx.room.runtime)
 }
 
 tasks.register("printVersionName") {

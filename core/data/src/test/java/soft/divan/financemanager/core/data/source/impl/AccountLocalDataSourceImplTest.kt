@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import soft.divan.financemanager.core.data.testing.OpenDatabaseHolder
+import soft.divan.financemanager.core.data.testing.mockDatabase
 import soft.divan.financemanager.core.database.dao.AccountDao
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
@@ -15,7 +17,8 @@ import soft.divan.financemanager.core.database.model.SyncStatus
 class AccountLocalDataSourceImplTest {
 
     private val dao = mockk<AccountDao>(relaxUnitFun = true)
-    private val dataSource = AccountLocalDataSourceImpl(dao)
+    private val dataSource =
+        AccountLocalDataSourceImpl(OpenDatabaseHolder(mockDatabase(accountDao = dao)))
 
     private val entity = AccountEntity(
         localId = "local-1",

@@ -568,18 +568,18 @@ adb pull /sdcard/demo.mp4
 ## База данных
 
 БД — `finance_manager_db.db`; справочник категорий засевается кодом при её создании
-(`SeedDatabaseCallback`).
-Удобнее всего смотреть через **App Inspection → Database Inspector** в Android Studio, но можно
-и вытащить файл (debug-сборка отлаживаемая, поэтому `run-as` работает):
+(`SeedDatabaseCallback`). Файл **всегда зашифрован SQLCipher** ([encryption.md](encryption.md)):
+обычный `sqlite3` его не откроет (`file is not a database`). Ключ без участия приложения достаётся
+только на уровне защиты «Без защиты ключа» (L0) — он лежит в наборе ключей открытым (`open_key`,
+base64); на L1/L2 он завёрнут ключом Keystore и с устройства не извлекается.
 
 ```bash
 PKG=soft.divan.financemanager.debug
+# На L0: ключ из набора ключей (base64 → hex)
+adb exec-out run-as $PKG cat no_backup/security/keyset.preferences_pb | strings | grep -A1 open_key
 adb exec-out run-as $PKG cat databases/finance_manager_db.db     > fm.db
 adb exec-out run-as $PKG cat databases/finance_manager_db.db-wal > fm.db-wal
-sqlite3 fm.db ".tables"                    # account categories currency transactions …
-sqlite3 fm.db "PRAGMA user_version;"       # должно совпасть с version в @Database
-sqlite3 fm.db "select count(*) from transactions;"
-sqlite3 fm.db "select count(*) from categories;"   # 24 сразу после установки, даже у гостя
+sqlcipher fm.db "PRAGMA key = \"x'<64 hex>'\";" ".tables"   # account categories currency transactions …
 ```
 
 📖 [docs/bd.md](bd.md)

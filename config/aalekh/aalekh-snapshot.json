@@ -120,6 +120,7 @@
         ":core:data>:core:domain",
         ":core:data>:core:logging-error",
         ":core:data>:core:network",
+        ":core:data>:core:security",
         ":core:network>:core:auth",
         ":core:notifications>:core:workmanager",
         ":feature:account:api>:core:feature-api",
@@ -176,6 +177,9 @@
         ":feature:my-accounts:impl>:feature:haptics:api",
         ":feature:my-accounts:impl>:feature:my-accounts:api",
         ":feature:security:api>:core:feature-api",
+        ":feature:security:impl>:core:auth",
+        ":feature:security:impl>:core:common",
+        ":feature:security:impl>:core:data",
         ":feature:security:impl>:core:domain",
         ":feature:security:impl>:core:network",
         ":feature:security:impl>:core:security",
@@ -222,6 +226,7 @@
         ":feature:transactions-today:impl>:feature:transactions-today:api",
         ":sync>:core:common",
         ":sync>:core:data",
+        ":sync>:core:domain",
         ":sync>:core:workmanager"
     ],
     "cycles": [],
@@ -299,9 +304,9 @@
     "metrics": {
         "cycleCount": 0,
         "godModuleCount": 1,
-        "ccd": 290,
+        "ccd": 292,
         "tanglePercent": 0.0,
-        "averageInstability": 0.30726310726310724,
+        "averageInstability": 0.30834535834535837,
         "criticalPathLength": 7
     },
     "aalekhVersion": "0.7.0"

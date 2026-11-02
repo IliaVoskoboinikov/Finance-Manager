@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import soft.divan.financemanager.core.data.testing.OpenDatabaseHolder
+import soft.divan.financemanager.core.data.testing.mockDatabase
 import soft.divan.financemanager.core.database.dao.CurrencyDao
 import soft.divan.financemanager.core.database.entity.CurrencyEntity
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
@@ -23,7 +25,8 @@ class CurrencyLocalDataSourceImplTest {
 
     private val dataStore = mockk<DataStore<Preferences>>()
     private val dao = mockk<CurrencyDao>(relaxUnitFun = true)
-    private val dataSource = CurrencyLocalDataSourceImpl(dataStore, dao)
+    private val dataSource =
+        CurrencyLocalDataSourceImpl(dataStore, OpenDatabaseHolder(mockDatabase(currencyDao = dao)))
 
     private val key = stringPreferencesKey("app_currency")
 

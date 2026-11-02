@@ -1,11 +1,11 @@
 {
     "version": "0.7.0",
-    "generatedAt": "2026-10-26T15:20:58.265909Z",
+    "generatedAt": "2026-11-02T08:49:55.711377Z",
     "fingerprints": [],
     "metrics": {
         "godModuleCount": 1,
-        "ccd": 290,
-        "averageInstability": 0.30726310726310724,
+        "ccd": 292,
+        "averageInstability": 0.30834535834535837,
         "criticalPathLength": 7
     }
 }

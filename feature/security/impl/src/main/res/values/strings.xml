@@ -13,4 +13,72 @@
     <string name="pin_codes_do_not_match">PIN codes do not match</string>
     <string name="wrong_pin">Wrong PIN, try again</string>
 
+    <!-- Экран замка -->
+    <string name="use_pin_instead">Use PIN</string>
+    <string name="unlock_with_biometrics">Unlock with biometrics</string>
+    <string name="erase_digit">Erase digit</string>
+    <string name="forgot_pin">Forgot PIN?</string>
+    <string name="wrong_pin_last_attempt">Wrong PIN. One attempt left — after it the data will be erased</string>
+    <string name="pin_last_attempt_warning">One attempt left — after it the data will be erased</string>
+    <plurals name="wrong_pin_attempts_left">
+        <item quantity="one">Wrong PIN. %d attempt left</item>
+        <item quantity="other">Wrong PIN. %d attempts left</item>
+    </plurals>
+    <string name="pin_locked_out">Too many attempts. Try again in %1$s</string>
+    <string name="biometric_invalidated">Biometric unlock is off: the fingerprints on this device have changed. Enter your PIN and turn it on again in the settings.</string>
+    <string name="forgot_pin_title">Reset the PIN?</string>
+    <string name="forgot_pin_message">To reset the PIN, the data on this device will be erased and you will be signed out. Your data will be downloaded from the server after you sign in again. Changes that have not been sent yet will be lost.</string>
+    <string name="forgot_pin_message_guest">To reset the PIN, all data will be erased. In guest mode it is stored only on this device and cannot be recovered.</string>
+    <string name="wipe_data_action">Erase data</string>
+    <string name="data_wiped">The data on this device has been erased</string>
+
+    <!-- Ключ утерян -->
+    <string name="key_lost_title">Data is unavailable</string>
+    <string name="key_lost_message">The encryption key of the data on this device is gone — for example, after the screen lock was reset or the system was restored. The saved data can no longer be read.</string>
+    <string name="key_lost_retry">Try again</string>
+    <string name="key_lost_wipe">Erase data and start over</string>
+    <string name="key_lost_wipe_message">The unreadable data will be erased. Your data will be downloaded from the server again; changes that have not been sent yet will be lost.</string>
+    <string name="key_lost_wipe_message_guest">The unreadable data will be erased. In guest mode it is stored only on this device and cannot be recovered.</string>
+
+    <!-- Настройки безопасности -->
+    <string name="section_data_protection">Data protection</string>
+    <string name="section_pin">PIN code</string>
+    <string name="section_screen">Screen</string>
+    <string name="level_none_title">No key protection</string>
+    <string name="level_none_description">The data file is encrypted, but its key is stored right next to it. Protects only against reading a single database file.</string>
+    <string name="level_device_title">Device key (recommended)</string>
+    <string name="level_device_description">The key is kept in the Android secure storage. Files copied from the phone are useless without it. Background sync works.</string>
+    <string name="level_pin_title">PIN code</string>
+    <string name="level_pin_description">The data opens only with the PIN or a fingerprint. No background sync; a forgotten PIN means erasing the data.</string>
+    <string name="change_pin">Change PIN</string>
+    <string name="enter_current_pin">Enter your current PIN</string>
+    <string name="come_up_with_new_pin">Come up with a new PIN</string>
+    <string name="biometric_unlock_title">Unlock with fingerprint</string>
+    <string name="biometric_unlock_description">A fingerprint opens the data instead of the PIN</string>
+    <string name="secure_screen_title">Hide app content</string>
+    <string name="secure_screen_description">Blocks screenshots and hides the app in the recent apps list</string>
+    <string name="confirm_level_none_title">Store the key unprotected?</string>
+    <string name="confirm_level_none_message">The encryption key will lie next to the data. Anyone who copies the app files will be able to read them.</string>
+    <string name="confirm_level_device_title">Turn off PIN protection?</string>
+    <string name="confirm_level_device_message">The data will open without the PIN and background sync will resume. The PIN stays as the app lock.</string>
+    <string name="confirm_level_pin_title">Protect the data with the PIN?</string>
+    <string name="confirm_level_pin_message">The data will open only with the PIN or a fingerprint.\n\n• Background sync stops: data syncs only while the app is open.\n• If you forget the PIN, the data will have to be erased and you will need to sign in again.</string>
+    <string name="confirm_level_pin_guest_warning">You are in guest mode: your data is stored only on this device, so with a forgotten PIN it will be lost for good.</string>
+    <string name="continue_action">Continue</string>
+    <string name="unsent_changes_title">Changes were not sent</string>
+    <string name="unsent_changes_message">PIN protection is not enabled: there is no background sync at that level, so unsent changes would get stuck. Connect to the internet and try again.</string>
+    <string name="ok_action">OK</string>
+    <string name="offer_biometric_title">Unlock with a fingerprint?</string>
+    <string name="offer_biometric_message">A fingerprint will open the data instead of the PIN. If the fingerprints on the device change, the PIN will still work.</string>
+    <string name="enable_action">Turn on</string>
+    <string name="not_now_action">Not now</string>
+    <string name="enable_biometric_title">Unlock with fingerprint</string>
+    <string name="enable_biometric_subtitle">Confirm to open the data with your fingerprint</string>
+    <string name="message_level_changed">Data protection changed</string>
+    <string name="message_change_failed">Could not change the protection. Try again</string>
+    <string name="message_pin_changed">PIN changed</string>
+    <string name="message_pin_deleted">PIN removed</string>
+    <string name="message_delete_not_allowed">First turn off data protection with the PIN</string>
+    <string name="message_biometric_enabled">Fingerprint unlock is on</string>
+    <string name="message_biometric_failed">Could not turn on fingerprint unlock</string>
 </resources>

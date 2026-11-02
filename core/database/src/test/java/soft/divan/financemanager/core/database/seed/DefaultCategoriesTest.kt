@@ -12,6 +12,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
+import soft.divan.financemanager.core.database.db.withAppDefaults
 import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
@@ -22,7 +23,7 @@ class DefaultCategoriesTest {
 
     private fun inMemoryDatabase() =
         Room.inMemoryDatabaseBuilder(context, FinanceManagerDatabase::class.java)
-            .addCallback(SeedDatabaseCallback())
+            .withAppDefaults()
             .build()
 
     @Test
@@ -76,9 +77,9 @@ class DefaultCategoriesTest {
         // База предыдущей версии без миграции до текущей: Room сотрёт её деструктивным откатом
         SQLiteDatabase.openOrCreateDatabase(file, null).use { it.version = OLD_VERSION }
 
+        // Тот же сборщик, что у рабочей базы: откат и повторный засев настраивает withAppDefaults
         val db = Room.databaseBuilder(context, FinanceManagerDatabase::class.java, OLD_DATABASE_NAME)
-            .fallbackToDestructiveMigration(true)
-            .addCallback(SeedDatabaseCallback())
+            .withAppDefaults()
             .build()
 
         val stored = db.categoryDao().getAll().first()

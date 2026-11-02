@@ -159,9 +159,11 @@ Kover-метрику основного проекта. Его тесты зап
 
 - **Compose UI не тестируется.** Экраны и компоненты `core:uikit` исключены из Kover-метрики,
   тестов на них пока нет.
-- **Instrumented-тестов нет.** Папки `src/androidTest` пустые, эмулятора в CI нет. БД работает
-  на `fallbackToDestructiveMigration` (см. [bd.md](./bd.md)), поэтому миграционных тестов
-  (`MigrationTestHelper`) тоже нет.
+- **Instrumented-тесты только у шифрования и в CI не идут.** `src/androidTest` есть в
+  `:core:database`, `:core:security` и `:core:data` (настоящие SQLCipher и Android Keystore, см.
+  [encryption.md](./encryption.md)); запуск вручную — `./gradlew connectedDebugAndroidTest` на
+  эмуляторе, эмулятора в CI нет. БД работает на `fallbackToDestructiveMigration` (см.
+  [bd.md](./bd.md)), поэтому миграционных тестов (`MigrationTestHelper`) нет.
 - **Compose Preview Screenshot Testing не подключён.** Официальная настройка плагина
   `com.android.compose.screenshot` — два шага: флаг `android.experimental.enableScreenshotTest=true`
   в корневом `gradle.properties` и `experimentalProperties["android.experimental.enableScreenshotTest"] = true`
