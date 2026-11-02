@@ -1,5 +1,8 @@
 package soft.divan.financemanager.feature.security.impl.data.sourse.impl
 
+import soft.divan.common.di.IoDispatcher
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.CoroutineDispatcher
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
@@ -25,7 +28,8 @@ private const val PIN_ALIAS = "pin_alias"
  */
 class SecurityLocalDataSourceImpl @Inject constructor(
     @ApplicationContext context: Context,
-    private val cryptoManager: CryptoManager
+    private val cryptoManager: CryptoManager,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : SecurityLocalDataSource {
 
     private val sharedPrefs: SharedPreferences by lazy {
@@ -52,7 +56,10 @@ class SecurityLocalDataSourceImpl @Inject constructor(
         sharedPrefs.registerOnSharedPreferenceChangeListener(listener)
         trySend(isPinSet())
         awaitClose { sharedPrefs.unregisterOnSharedPreferenceChangeListener(listener) }
-    }.distinctUntilChanged()
+    }
+        // Первое чтение SharedPreferences ждёт загрузки файла с диска — не на главном потоке
+        .flowOn(ioDispatcher)
+        .distinctUntilChanged()
 
     override fun deletePin() {
         sharedPrefs.edit { remove(USER_PIN_KEY) }

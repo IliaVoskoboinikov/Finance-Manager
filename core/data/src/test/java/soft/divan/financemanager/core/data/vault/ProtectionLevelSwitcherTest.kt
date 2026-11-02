@@ -217,6 +217,17 @@ class ProtectionLevelSwitcherTest {
         assertThat(harness.store.read()!!.level).isEqualTo(KeyLevel.OPEN)
     }
 
+    @Test
+    fun `keystore refusing to encrypt fails the change instead of crashing`() = switcherTest {
+        val before = harness.store.read()!!
+        harness.keys.createUnusable = true
+
+        val result = switcher.changeLevel(KeyLevel.PIN, PIN.toCharArray())
+
+        assertThat(result).isEqualTo(ProtectionChangeResult.Failed)
+        assertThat(harness.store.read()!!.sealed!!.alias).isEqualTo(before.sealed!!.alias)
+    }
+
     private suspend fun enableBiometric() {
         val start = harness.biometrics.startEnrollment(PIN) as BiometricEnrollmentStart.Ready
         assertThat(harness.biometrics.finishEnrollment(start.session)).isTrue()

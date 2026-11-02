@@ -20,7 +20,8 @@ class SecurityLocalDataSourceImplTest {
     private val cryptoManager = mockk<CryptoManager>()
     private val dataSource = SecurityLocalDataSourceImpl(
         RuntimeEnvironment.getApplication(),
-        cryptoManager
+        cryptoManager,
+        UnconfinedTestDispatcher()
     )
 
     @Test

@@ -22,6 +22,9 @@ class FakeKeystoreKeys : KeystoreKeys {
     /** Создание ключей падает — как на прошивке без поддержки нужного режима. */
     var failCreate = false
 
+    /** Новые ключи создаются, но шифровать ими нельзя — как при отказе Keystore на операции. */
+    var createUnusable = false
+
     /** Список алиасов падает — как при сбое Keystore во время уборки ключей. */
     var failAliases: RuntimeException? = null
 
@@ -38,7 +41,11 @@ class FakeKeystoreKeys : KeystoreKeys {
     override fun create(prefix: String, protection: KeyProtection): AliasedKey {
         if (failCreate) throw KeyUnavailableException("Key creation is disabled")
         val alias = "${prefix}_${++counter}"
-        val key = KeyGenerator.getInstance("AES").apply { init(KEY_SIZE_BITS) }.generateKey()
+        val key = if (createUnusable) {
+            SecretKeySpec(ByteArray(DES_KEY_SIZE), "DES")
+        } else {
+            KeyGenerator.getInstance("AES").apply { init(KEY_SIZE_BITS) }.generateKey()
+        }
         keys[alias] = key
         protections[alias] = protection
         return AliasedKey(alias, key)

@@ -8,6 +8,8 @@ import soft.divan.financemanager.core.security.keyset.Keyset
 import soft.divan.financemanager.core.security.keyset.PinAttempts
 import soft.divan.financemanager.core.security.keystore.KeyUnavailableException
 import java.io.IOException
+import java.security.GeneralSecurityException
+import java.security.ProviderException
 import javax.inject.Inject
 
 /**
@@ -109,8 +111,13 @@ class ProtectionLevelSwitcher @Inject constructor(
      */
     private inline fun guarded(block: () -> ProtectionChangeResult): ProtectionChangeResult = try {
         block()
-    } catch (e: KeyUnavailableException) {
+    } catch (e: GeneralSecurityException) {
+        // KeyUnavailableException и отказ Keystore при шифровании новым ключом
         Log.e(TAG, "Keyset change failed", e)
+        ProtectionChangeResult.Failed
+    } catch (e: ProviderException) {
+        // Keystore сообщает часть отказов непроверяемым исключением
+        Log.e(TAG, "Keystore refused the keyset change", e)
         ProtectionChangeResult.Failed
     } catch (e: IOException) {
         Log.e(TAG, "Keyset could not be written", e)
