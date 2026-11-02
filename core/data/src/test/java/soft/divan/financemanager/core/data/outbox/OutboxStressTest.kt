@@ -111,10 +111,11 @@ class OutboxStressTest {
                 throw IOException("оборвалась сеть")
             }
 
+            // Чтение проверяется раньше исправной сети: иначе GET ушёл бы в мутацию и удалил запись
             val code = when {
                 forcedCode != null -> forcedCode
-                alwaysSucceed -> applyMutation(request.method, id, body)
                 request.method == "GET" -> if (id in serverState) 200 else 404
+                alwaysSucceed -> applyMutation(request.method, id, body)
                 random.nextInt(100) < 25 -> 500
                 else -> applyMutation(request.method, id, body)
             }
