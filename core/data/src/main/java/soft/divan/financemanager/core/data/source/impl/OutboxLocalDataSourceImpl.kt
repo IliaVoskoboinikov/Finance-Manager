@@ -70,6 +70,9 @@ class OutboxLocalDataSourceImpl @Inject constructor(
 
     override suspend fun countUnsent(): Int = holder.withDatabase { it.outboxDao().countUnsent() }
 
+    override suspend fun hasDeferredEntries(now: Long): Boolean =
+        holder.withDatabase { it.outboxDao().hasDeferredEntries(now) }
+
     override suspend fun requeueFailed(updatedAt: Long): Int =
         holder.withDatabase { it.outboxDao().requeueFailed(updatedAt) }
 

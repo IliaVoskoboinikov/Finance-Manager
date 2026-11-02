@@ -57,6 +57,12 @@ interface OutboxLocalDataSource {
     /** Сколько операций ещё ждут отправки или отправляются (без dead-letter). */
     suspend fun countUnsent(): Int
 
+    /**
+     * Есть ли незакрытая запись, которую выборка на момент [now] не выдала бы: отбывает backoff
+     * или её держит другой прогон (см. `OutboxDao`).
+     */
+    suspend fun hasDeferredEntries(now: Long): Boolean
+
     /** Возвращает записи из dead-letter в очередь; результат — сколько записей вернулось. */
     suspend fun requeueFailed(updatedAt: Long): Int
 

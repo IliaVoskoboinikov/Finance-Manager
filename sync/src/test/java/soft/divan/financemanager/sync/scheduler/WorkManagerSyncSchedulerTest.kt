@@ -2,12 +2,14 @@ package soft.divan.financemanager.sync.scheduler
 
 import android.content.Context
 import android.util.Log
+import androidx.work.BackoffPolicy
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
+import androidx.work.impl.model.WorkSpec
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -18,6 +20,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import soft.divan.financemanager.core.data.outbox.OutboxRetryPolicy
 import soft.divan.financemanager.core.workmanager.WORKER_CLASS_NAME
 import soft.divan.financemanager.sync.initializers.SYNC_ONE_TIME_WORK
 import soft.divan.financemanager.sync.initializers.SYNC_PERIODIC_WORK
@@ -61,6 +64,7 @@ class WorkManagerSyncSchedulerTest {
         assertThat(spec.constraints.requiredNetworkType).isEqualTo(NetworkType.CONNECTED)
         assertThat(spec.input.getString(WORKER_CLASS_NAME))
             .contains("SyncWorker")
+        assertBackoffFollowsOutboxRetryPolicy(spec)
     }
 
     @Test
@@ -79,5 +83,15 @@ class WorkManagerSyncSchedulerTest {
         val spec = request.captured.workSpec
         assertThat(spec.constraints.requiredNetworkType).isEqualTo(NetworkType.CONNECTED)
         assertThat(spec.input.getString(WORKER_CLASS_NAME)).contains("SyncWorker")
+        assertBackoffFollowsOutboxRetryPolicy(spec)
+    }
+
+    /**
+     * Синк просит повтор, пока запись очереди ждёт backoff'а. Если пауза WorkManager растёт не
+     * от той же базы, повтор приходит раньше срока записи и крутится вхолостую.
+     */
+    private fun assertBackoffFollowsOutboxRetryPolicy(spec: WorkSpec) {
+        assertThat(spec.backoffPolicy).isEqualTo(BackoffPolicy.EXPONENTIAL)
+        assertThat(spec.backoffDelayDuration).isEqualTo(OutboxRetryPolicy.BASE_DELAY_MILLIS)
     }
 }

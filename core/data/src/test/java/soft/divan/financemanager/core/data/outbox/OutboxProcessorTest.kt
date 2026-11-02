@@ -14,6 +14,7 @@ import soft.divan.financemanager.core.database.model.OutboxOperation
 import soft.divan.financemanager.core.database.model.OutboxStatus
 import java.time.Clock
 import java.time.Instant
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 /**
@@ -36,6 +37,11 @@ class OutboxProcessorTest {
         entryHandler = entryHandler,
         clock = Clock.fixed(now, ZoneOffset.UTC)
     )
+
+    init {
+        // По умолчанию отложенных backoff'ом записей нет — их случаи заданы явно
+        coEvery { localDataSource.hasDeferredEntries(any()) } returns false
+    }
 
     private fun entry(
         sequenceNo: Long = 1L,
@@ -67,6 +73,16 @@ class OutboxProcessorTest {
     private fun givenPasses(vararg passes: List<OutboxEntryEntity>) {
         coEvery { localDataSource.getReadyToSend(any(), any(), any()) } returnsMany passes.toList()
         coEvery { localDataSource.markInProgress(any(), any(), any()) } returns true
+    }
+
+    /** Каждый проход получает новую запись и закрывает её: разбор упрётся в предел проходов. */
+    private fun givenEndlessSupply() {
+        var nextSequenceNo = 0L
+        coEvery { localDataSource.getReadyToSend(any(), any(), any()) } answers {
+            listOf(entry(sequenceNo = ++nextSequenceNo))
+        }
+        coEvery { localDataSource.markInProgress(any(), any(), any()) } returns true
+        coEvery { entryHandler.handle(any()) } returns OutboxEntryOutcome.DONE
     }
 
     private fun givenOutcome(vararg outcomes: OutboxEntryOutcome) {
@@ -257,6 +273,65 @@ class OutboxProcessorTest {
         assertThat(processor.process()).isFalse()
     }
 
+    /* ---------- записи в backoff ---------- */
+
+    @Test
+    fun `an entry waiting out its backoff asks for a retry`() = runTest {
+        // Выборка пуста, но запись не уехала: без повтора она ждала бы периодического синка
+        givenReady()
+        coEvery { localDataSource.hasDeferredEntries(nowMillis) } returns true
+
+        assertThat(processor.process()).isFalse()
+    }
+
+    @Test
+    fun `a blocked network does not ask for a retry because of deferred entries`() = runTest {
+        givenReady(entry(sequenceNo = 1))
+        givenOutcome(OutboxEntryOutcome.RUN_STALLED)
+        coEvery { localDataSource.hasDeferredEntries(any()) } returns true
+
+        // Пока клиент не вошёл, повтор работы ничего не отправит — в том числе отложенное
+        assertThat(processor.process()).isTrue()
+        coVerify(exactly = 0) { localDataSource.hasDeferredEntries(any()) }
+    }
+
+    @Test
+    fun `deferred entries are looked up at the moment of the last selection`() = runTest {
+        // Часы идут во время прогона: запись, чей backoff истёк после выборки, в неё не попала —
+        // и обязана считаться отложенной, иначе её не отправит никто до периодического синка
+        val ticks = generateSequence(nowMillis) { it + 1 }.iterator()
+        val tickingClock = object : Clock() {
+            override fun getZone(): ZoneId = ZoneOffset.UTC
+            override fun withZone(zone: ZoneId): Clock = this
+            override fun instant(): Instant = Instant.ofEpochMilli(ticks.next())
+        }
+        val selectedAt = slot<Long>()
+        coEvery {
+            localDataSource.getReadyToSend(capture(selectedAt), any(), any())
+        } returns emptyList()
+
+        OutboxProcessor(localDataSource, entryHandler, tickingClock).process()
+
+        coVerify(exactly = 1) { localDataSource.hasDeferredEntries(selectedAt.captured) }
+    }
+
+    @Test
+    fun `a run cut off by the pass limit does not look for deferred entries`() = runTest {
+        givenEndlessSupply()
+
+        assertThat(processor.process()).isFalse()
+        coVerify(exactly = 0) { localDataSource.hasDeferredEntries(any()) }
+    }
+
+    @Test
+    fun `a run that already asks for a retry does not look for deferred entries`() = runTest {
+        givenReady(entry(sequenceNo = 1))
+        givenOutcome(OutboxEntryOutcome.STALLED)
+
+        assertThat(processor.process()).isFalse()
+        coVerify(exactly = 0) { localDataSource.hasDeferredEntries(any()) }
+    }
+
     @Test
     fun `a closed entry does not block anything`() = runTest {
         givenPasses(
@@ -346,12 +421,7 @@ class OutboxProcessorTest {
 
     @Test
     fun `passes are capped so an endless supply cannot loop forever`() = runTest {
-        var nextSequenceNo = 0L
-        coEvery { localDataSource.getReadyToSend(any(), any(), any()) } answers {
-            listOf(entry(sequenceNo = ++nextSequenceNo))
-        }
-        coEvery { localDataSource.markInProgress(any(), any(), any()) } returns true
-        coEvery { entryHandler.handle(any()) } returns OutboxEntryOutcome.DONE
+        givenEndlessSupply()
 
         val drained = processor.process()
 

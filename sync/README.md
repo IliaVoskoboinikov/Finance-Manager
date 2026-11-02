@@ -10,6 +10,10 @@
 - `SyncInitializer` планирует периодический синк и запускает разовый **при каждом** переходе
   данных в `Open`: на уровне PIN это каждая разблокировка. См.
   [docs/encryption.md](../docs/encryption.md).
+- `WorkManagerSyncScheduler` задаёт обоим запросам backoff `EXPONENTIAL` от
+  `OutboxRetryPolicy.BASE_DELAY_MILLIS`: синк просит повтор и тогда, когда запись очереди ждёт
+  своего backoff, и повтор не должен приходить раньше её срока. См.
+  [docs/outbox.md](../docs/outbox.md#отложенные-записи).
 
 Строки foreground-уведомления синка (имя и описание канала, заголовок) лежат в ресурсах модуля
 (`res/values`, `res/values-ru`).
