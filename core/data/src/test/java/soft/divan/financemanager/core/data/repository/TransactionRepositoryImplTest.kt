@@ -385,7 +385,7 @@ class TransactionRepositoryImplTest {
         )
         coEvery { categoryLocalDataSource.getById("cat-1") } returns foodCategory()
         coEvery { accountLocalDataSource.getByServerId("server-a2") } returns
-            accountEntity(localId = "local-a2", serverId = "server-a2")
+            accountEntity(localId = "local-a2", serverId = "server-a2").copy(currencyId = "usd-id")
         val updated = slot<TransactionEntity>()
         coEvery { localDataSource.update(capture(updated)) } returns Unit
 
@@ -393,6 +393,8 @@ class TransactionRepositoryImplTest {
         appCoroutineContext.runAll()
 
         assertThat(updated.captured.accountLocalId).isEqualTo("local-a2")
+        // Валюта операции — валюта её счёта, как и при pull
+        assertThat(updated.captured.currencyId).isEqualTo("usd-id")
     }
 
     @Test
