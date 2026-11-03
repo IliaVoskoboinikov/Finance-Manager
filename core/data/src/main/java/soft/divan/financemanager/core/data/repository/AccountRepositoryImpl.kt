@@ -117,7 +117,9 @@ class AccountRepositoryImpl @Inject constructor(
      * за время запроса пользователь мог изменить счёт.
      */
     private suspend fun refreshFromServer(localId: String, serverId: String) {
-        val canRefresh = safeDbCall(errorLogger) { canTakeServerVersion(localId) }.getOrNull()
+        val canRefresh = safeDbCall(errorLogger) {
+            canTakeServerVersion(localId, serverUpdatedAt = null)
+        }.getOrNull()
         if (canRefresh != true) return
 
         safeApiCall(errorLogger) {
@@ -125,7 +127,7 @@ class AccountRepositoryImpl @Inject constructor(
         }.onSuccess { accountDto ->
             safeDbCall(errorLogger) {
                 transactionRunner.runInTransaction {
-                    if (canTakeServerVersion(localId)) {
+                    if (canTakeServerVersion(localId, accountDto.updatedAt)) {
                         localDataSource.update(
                             accountDto.toEntity(localId = localId, syncStatus = SyncStatus.SYNCED)
                         )
@@ -142,10 +144,22 @@ class AccountRepositoryImpl @Inject constructor(
      * Второе условие — ради баланса. Запись транзакции меняет баланс счёта только локально
      * ([updateBalanceLocal]), счёт при этом остаётся `SYNCED`; пока транзакция не уехала, серверный
      * баланс без неё затёр бы правильный локальный.
+     *
+     * Ответ с [serverUpdatedAt] старше строки тоже отвергается: пока шёл запрос, pull мог записать
+     * более новую серверную версию. Равный — принимается, в отличие от pull: неизвестно, сдвигает
+     * ли сервер `updatedAt` счёта, когда пересчитывает его баланс по операции. Нечитаемая дата
+     * не считается устаревшей: refresh ведёт себя как до сравнения дат.
      */
-    private suspend fun canTakeServerVersion(localId: String): Boolean =
-        localDataSource.getByLocalId(localId)?.syncStatus == SyncStatus.SYNCED &&
+    private suspend fun canTakeServerVersion(
+        localId: String,
+        serverUpdatedAt: String?
+    ): Boolean {
+        val local = localDataSource.getByLocalId(localId) ?: return false
+        val isStale = serverUpdatedAt != null && TimeMapper.isAfter(local.updatedAt, serverUpdatedAt)
+        return local.syncStatus == SyncStatus.SYNCED &&
+            !isStale &&
             !outboxLocalDataSource.hasOpenOperationsAffecting(localId)
+    }
 
     /** Вытаскиваем из бд аккаунт(так как только в БД храним serverId) обновляем локальный аккаунт и
      * запускаем синхронизацию если аккаунт не синхронизирован с сервером то создаем на сервере и

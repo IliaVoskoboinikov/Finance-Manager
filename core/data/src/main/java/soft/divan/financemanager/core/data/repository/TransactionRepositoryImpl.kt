@@ -141,7 +141,9 @@ class TransactionRepositoryImpl @Inject constructor(
      * пользователь мог изменить транзакцию.
      */
     private suspend fun refreshFromServer(local: TransactionEntity, serverId: String) {
-        val canRefresh = safeDbCall(errorLogger) { canTakeServerVersion(local.localId) }.getOrNull()
+        val canRefresh = safeDbCall(errorLogger) {
+            canTakeServerVersion(local.localId, serverUpdatedAt = null)
+        }.getOrNull()
         if (canRefresh != true) return
 
         safeApiCall(errorLogger) {
@@ -159,7 +161,7 @@ class TransactionRepositoryImpl @Inject constructor(
 
             safeDbCall(errorLogger) {
                 transactionRunner.runInTransaction {
-                    if (canTakeServerVersion(local.localId)) {
+                    if (canTakeServerVersion(local.localId, transactionDto.updatedAt)) {
                         localDataSource.update(
                             transactionDto.toEntity(
                                 localId = local.localId,
@@ -179,10 +181,20 @@ class TransactionRepositoryImpl @Inject constructor(
      * Можно ли заменить локальную транзакцию серверной версией: строка синхронизирована и в
      * очереди нет её операций. Иначе ответ сервера откатил бы ещё не отправленную правку, а
      * `PENDING_DELETE` сменился бы на `SYNCED`, вернув удалённую транзакцию в списки.
+     *
+     * Ответ с [serverUpdatedAt] старше строки тоже отвергается: пока шёл запрос, pull мог записать
+     * более новую серверную версию. Равная или нечитаемая дата устаревшей не считается.
      */
-    private suspend fun canTakeServerVersion(localId: String): Boolean =
-        localDataSource.getByLocalId(localId)?.syncStatus == SyncStatus.SYNCED &&
+    private suspend fun canTakeServerVersion(
+        localId: String,
+        serverUpdatedAt: String?
+    ): Boolean {
+        val local = localDataSource.getByLocalId(localId) ?: return false
+        val isStale = serverUpdatedAt != null && TimeMapper.isAfter(local.updatedAt, serverUpdatedAt)
+        return local.syncStatus == SyncStatus.SYNCED &&
+            !isStale &&
             !outboxLocalDataSource.hasOpenOperationsAffecting(localId)
+    }
 
     /**
      * Сохраняет правку локально и ставит `PUT` в очередь исходящих операций.
