@@ -139,7 +139,6 @@ class OutboxPayloadContractTest {
         accountLocalId = "local-a1",
         type = TransactionType.EXPENSE.name,
         targetAccountLocalId = null,
-        accountServerId = "local-a1",
         categoryId = "cat-1",
         currencyId = "rub-id",
         amount = amount,

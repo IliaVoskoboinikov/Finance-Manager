@@ -23,7 +23,6 @@ class EntitiesTest {
         accountLocalId = "local-1",
         type = "EXPENSE",
         targetAccountLocalId = null,
-        accountServerId = null,
         categoryId = "cat-1",
         currencyId = "rub-id",
         amount = "42.42",

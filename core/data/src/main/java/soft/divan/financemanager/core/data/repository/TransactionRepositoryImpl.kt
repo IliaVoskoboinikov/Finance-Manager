@@ -56,11 +56,13 @@ class TransactionRepositoryImpl @Inject constructor(
     override suspend fun create(transaction: Transaction): DomainResult<Unit> {
         val transactionEntity = transaction.toEntity(
             serverId = null,
-            accountServerId = accountLocalDataSource.getByLocalId(transaction.accountLocalId)?.serverId,
             syncStatus = SyncStatus.PENDING_CREATE
         )
 
         return transactionRunner.runInTransaction {
+            val accountSyncId =
+                getAccountSyncIdOrFail(transactionEntity.accountLocalId).rollbackOnError()
+
             safeDbCall(errorLogger) {
                 localDataSource.insert(transactionEntity)
                 outboxEnqueuer.enqueue(
@@ -70,7 +72,7 @@ class TransactionRepositoryImpl @Inject constructor(
                     // accountId, поэтому она обязана уехать после создания счёта
                     dependencyKey = transactionEntity.accountLocalId,
                     operation = OutboxOperation.CREATE,
-                    body = transactionEntity.toDto(transactionEntity.accountSyncId())
+                    body = transactionEntity.toDto(accountSyncId)
                 )
             }.rollbackOnError()
             // Без rollbackOnError транзакция закоммитила бы строку без операции в очереди:
@@ -180,11 +182,11 @@ class TransactionRepositoryImpl @Inject constructor(
     /**
      * Сохраняет правку локально и ставит `PUT` в очередь исходящих операций.
      *
-     * Строка берётся из БД — только там хранятся `serverId` и `accountServerId`. Если правка
-     * переносит операцию на другой счёт, вместе с ним меняются `accountServerId`, предшественник
-     * в очереди (`dependencyKey`) и `accountId` в теле запроса: правка уедет после создания
-     * нового счёта, и сервер переложит сумму со старого счёта на новый. Старый счёт уходит в
-     * `formerDependencyKey` — до отправки правки он считается затронутым ею.
+     * Строка берётся из БД — только там хранится `serverId`. Если правка переносит операцию на
+     * другой счёт, вместе с ним меняются предшественник в очереди (`dependencyKey`) и `accountId`
+     * в теле запроса: правка уедет после создания нового счёта, и сервер переложит сумму со
+     * старого счёта на новый. Старый счёт уходит в `formerDependencyKey` — до отправки правки он
+     * считается затронутым ею.
      */
     override suspend fun update(transaction: Transaction): DomainResult<Unit> {
         val resultDb = getLocalOrFail(transaction.id)
@@ -196,16 +198,11 @@ class TransactionRepositoryImpl @Inject constructor(
             .takeIf { it != transaction.accountLocalId }
 
         return transactionRunner.runInTransaction {
-            val accountServerId = if (formerAccountLocalId == null) {
-                transactionEntity.accountServerId
-            } else {
-                getAccountServerIdOrFail(transaction.accountLocalId).rollbackOnError()
-            }
+            val accountSyncId = getAccountSyncIdOrFail(transaction.accountLocalId).rollbackOnError()
 
             safeDbCall(errorLogger) {
                 val updatedEntity = transactionEntity.copy(
                     accountLocalId = transaction.accountLocalId,
-                    accountServerId = accountServerId,
                     type = transaction.type.name,
                     categoryId = transaction.categoryId,
                     currencyId = transaction.currencyId,
@@ -228,7 +225,7 @@ class TransactionRepositoryImpl @Inject constructor(
                     dependencyKey = updatedEntity.accountLocalId,
                     operation = OutboxOperation.UPDATE,
                     targetServerId = updatedEntity.syncId(),
-                    body = updatedEntity.toUpdateDto(updatedEntity.accountSyncId()),
+                    body = updatedEntity.toUpdateDto(accountSyncId),
                     // Пока перенос не уехал, сервер держит операцию на старом счёте: его
                     // удаление и серверная версия баланса должны дождаться этого PUT
                     formerDependencyKey = formerAccountLocalId
@@ -239,15 +236,20 @@ class TransactionRepositoryImpl @Inject constructor(
     }
 
     /**
-     * `serverId` счёта, на который переносят операцию (`null`, пока счёт не синхронизирован).
-     * Счёта нет локально — `NoData`: иначе `PUT` ушёл бы с неизвестным серверу `accountId`.
+     * Id, под которым сервер знает счёт операции сейчас: `serverId`, а до подтверждения создания —
+     * клиентский `localId`, с которым ушёл `POST` (барьер порядка не выпустит операцию раньше
+     * него). Читается из строки счёта при каждой постановке в очередь: копия в строке транзакции
+     * устарела бы, как только счёт получит `serverId`.
+     *
+     * Счёта нет локально — `NoData`: иначе запрос ушёл бы с неизвестным серверу `accountId` и
+     * осел бы в dead-letter.
      */
-    private suspend fun getAccountServerIdOrFail(accountLocalId: String): DomainResult<String?> {
+    private suspend fun getAccountSyncIdOrFail(accountLocalId: String): DomainResult<String> {
         return safeDbCall(errorLogger) {
             accountLocalDataSource.getByLocalId(accountLocalId)
         }.fold(
             onSuccess = { account ->
-                account?.let { DomainResult.Success(it.serverId) }
+                account?.let { DomainResult.Success(it.serverId ?: it.localId) }
                     ?: DomainResult.Failure(DataError.NotFound.toDomainError())
             },
             onFailure = { error -> DomainResult.Failure(error) }
@@ -313,6 +315,3 @@ class TransactionRepositoryImpl @Inject constructor(
  * даже если создание ушло в backoff или удерживает аренду.
  */
 private fun TransactionEntity.syncId(): String = serverId ?: localId
-
-/** То же для родительского счёта: до подтверждения он известен серверу под своим `localId`. */
-private fun TransactionEntity.accountSyncId(): String = accountServerId ?: accountLocalId

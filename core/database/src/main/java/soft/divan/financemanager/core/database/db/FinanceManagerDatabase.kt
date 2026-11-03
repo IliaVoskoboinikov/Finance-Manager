@@ -28,7 +28,8 @@ import soft.divan.financemanager.core.database.util.Converters
     // Версия 7: в outbox добавлен dependencyKey — ссылка на обязательного предшественника.
     // Версия 8: барьер порядка ищет предшественников по entityLocalId — сменились индексы outbox.
     // Версия 9: в outbox добавлен formerDependencyKey — старый счёт переносимой транзакции.
-    version = 9,
+    // Версия 10: из transactions удалён accountServerId — id счёта для запроса берётся из строки счёта.
+    version = 10,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

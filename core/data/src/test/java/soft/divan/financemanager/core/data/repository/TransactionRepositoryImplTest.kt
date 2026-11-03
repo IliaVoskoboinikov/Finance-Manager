@@ -9,11 +9,13 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
 import soft.divan.financemanager.core.data.transaction.TransactionRollbackException
 import soft.divan.financemanager.core.data.transaction.TransactionRunner
 import soft.divan.financemanager.core.data.dto.TransactionDto
+import soft.divan.financemanager.core.data.dto.TransactionRequestDto
 import soft.divan.financemanager.core.data.dto.UpdateTransactionRequestDto
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
 import soft.divan.financemanager.core.data.outbox.OutboxEnqueuer
@@ -107,7 +109,6 @@ class TransactionRepositoryImplTest {
         accountLocalId = "local-a1",
         type = TransactionType.EXPENSE.name,
         targetAccountLocalId = null,
-        accountServerId = "server-a1",
         categoryId = "cat-1",
         currencyId = "rub-id",
         amount = "42.42",
@@ -132,11 +133,16 @@ class TransactionRepositoryImplTest {
         syncStatus = SyncStatus.SYNCED
     )
 
+    /** Счёт операции по умолчанию синхронизирован; тесты с другим счётом переопределяют стаб. */
+    @Before
+    fun stubAccount() {
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+    }
+
     /* ---------- create ---------- */
 
     @Test
-    fun `create resolves account server id and stores PENDING_CREATE entity`() = runTest {
-        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+    fun `create stores PENDING_CREATE entity without server id`() = runTest {
         val saved = slot<TransactionEntity>()
         coEvery { localDataSource.insert(capture(saved)) } returns Unit
 
@@ -145,14 +151,13 @@ class TransactionRepositoryImplTest {
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(saved.captured.localId).isEqualTo("local-t1")
         assertThat(saved.captured.serverId).isNull()
-        assertThat(saved.captured.accountServerId).isEqualTo("server-a1")
         assertThat(saved.captured.syncStatus).isEqualTo(SyncStatus.PENDING_CREATE)
     }
 
     @Test
-    fun `create enqueues an outbox create operation`() = runTest {
-        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+    fun `create enqueues an outbox create addressed to the account server id`() = runTest {
         coEvery { localDataSource.insert(any()) } returns Unit
+        val body = slot<Any>()
 
         repository.create(transaction())
 
@@ -164,26 +169,68 @@ class TransactionRepositoryImplTest {
                 dependencyKey = "local-a1",
                 operation = OutboxOperation.CREATE,
                 targetServerId = null,
-                body = any()
+                body = capture(body)
             )
+        }
+        assertThat((body.captured as TransactionRequestDto).accountId).isEqualTo("server-a1")
+    }
+
+    @Test
+    fun `create on an account without serverId sends the account's client id`() = runTest {
+        // Гость или офлайн: счёт ещё не на сервере, но барьер порядка выпустит операцию только
+        // после POST счёта, а сервер создаст его под этим localId
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns
+            accountEntity(serverId = null)
+        coEvery { localDataSource.insert(any()) } returns Unit
+        val body = slot<Any>()
+
+        val result = repository.create(transaction())
+
+        assertThat(result).isEqualTo(DomainResult.Success(Unit))
+        coVerify {
+            outboxEnqueuer.enqueue(
+                entityType = any(),
+                entityLocalId = any(),
+                dependencyKey = "local-a1",
+                operation = OutboxOperation.CREATE,
+                targetServerId = any(),
+                body = capture(body)
+            )
+        }
+        assertThat((body.captured as TransactionRequestDto).accountId).isEqualTo("local-a1")
+    }
+
+    @Test
+    fun `create returns Failure and enqueues nothing when the account cannot be read`() = runTest {
+        val boom = IllegalStateException("db closed")
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } throws boom
+
+        val result = repository.create(transaction())
+
+        // Сбой чтения — не «счёта нет»: закрытая база не должна выглядеть как NoData
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.Unknown(boom)))
+        coVerify(exactly = 0) { localDataSource.insert(any()) }
+        coVerify(exactly = 0) {
+            outboxEnqueuer.enqueue(any(), any(), any(), any(), any(), any(), any())
         }
     }
 
     @Test
-    fun `create keeps null account server id when account is not synced`() = runTest {
-        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns
-            accountEntity(serverId = null)
-        val saved = slot<TransactionEntity>()
-        coEvery { localDataSource.insert(capture(saved)) } returns Unit
+    fun `create returns NoData when the account is missing`() = runTest {
+        // Без строки счёта POST ушёл бы с неизвестным серверу accountId и осел бы в dead-letter
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns null
 
-        repository.create(transaction())
+        val result = repository.create(transaction())
 
-        assertThat(saved.captured.accountServerId).isNull()
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NoData))
+        coVerify(exactly = 0) { localDataSource.insert(any()) }
+        coVerify(exactly = 0) {
+            outboxEnqueuer.enqueue(any(), any(), any(), any(), any(), any(), any())
+        }
     }
 
     @Test
     fun `create returns Failure when local insert throws`() = runTest {
-        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
         val boom = IllegalStateException("db")
         coEvery { localDataSource.insert(any()) } throws boom
 
@@ -461,7 +508,6 @@ class TransactionRepositoryImplTest {
 
         assertThat(result).isEqualTo(DomainResult.Success(Unit))
         assertThat(updated.captured.accountLocalId).isEqualTo("local-a2")
-        assertThat(updated.captured.accountServerId).isEqualTo("server-a2")
         assertThat(updated.captured.type).isEqualTo(TransactionType.INCOME.name)
         coVerify(exactly = 1) {
             outboxEnqueuer.enqueue(
@@ -484,13 +530,11 @@ class TransactionRepositoryImplTest {
         coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
         coEvery { accountLocalDataSource.getByLocalId("local-a2") } returns
             accountEntity(localId = "local-a2", serverId = null)
-        val updated = slot<TransactionEntity>()
-        coEvery { localDataSource.update(capture(updated)) } returns Unit
+        coEvery { localDataSource.update(any()) } returns Unit
         val body = slot<Any>()
 
         repository.update(transaction().copy(accountLocalId = "local-a2"))
 
-        assertThat(updated.captured.accountServerId).isNull()
         coVerify {
             outboxEnqueuer.enqueue(
                 entityType = any(),
@@ -507,15 +551,17 @@ class TransactionRepositoryImplTest {
     }
 
     @Test
-    fun `update keeps the account server id when the account does not change`() = runTest {
+    fun `update without moving sends the account server id it has now`() = runTest {
+        // Операция создана, пока счёт был без serverId; с тех пор он синхронизировался. Правка
+        // должна адресовать счёт по его текущему serverId, а не по снимку на момент создания
         coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
-        val updated = slot<TransactionEntity>()
-        coEvery { localDataSource.update(capture(updated)) } returns Unit
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns
+            accountEntity(serverId = "server-a1-new")
+        coEvery { localDataSource.update(any()) } returns Unit
+        val body = slot<Any>()
 
         repository.update(transaction())
 
-        assertThat(updated.captured.accountServerId).isEqualTo("server-a1")
-        coVerify(exactly = 0) { accountLocalDataSource.getByLocalId(any()) }
         coVerify(exactly = 1) {
             outboxEnqueuer.enqueue(
                 entityType = any(),
@@ -523,21 +569,23 @@ class TransactionRepositoryImplTest {
                 dependencyKey = "local-a1",
                 operation = any(),
                 targetServerId = any(),
-                body = any(),
+                body = capture(body),
                 formerDependencyKey = null
             )
         }
+        assertThat((body.captured as UpdateTransactionRequestDto).accountId)
+            .isEqualTo("server-a1-new")
     }
 
     @Test
     fun `update returns Failure when the new account cannot be read`() = runTest {
         coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
-        coEvery { accountLocalDataSource.getByLocalId("local-a2") } throws
-            IllegalStateException("db closed")
+        val boom = IllegalStateException("db closed")
+        coEvery { accountLocalDataSource.getByLocalId("local-a2") } throws boom
 
         val result = repository.update(transaction().copy(accountLocalId = "local-a2"))
 
-        assertThat(result).isInstanceOf(DomainResult.Failure::class.java)
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.Unknown(boom)))
         coVerify(exactly = 0) { localDataSource.update(any()) }
         coVerify(exactly = 0) {
             outboxEnqueuer.enqueue(any(), any(), any(), any(), any(), any(), any())
@@ -551,6 +599,20 @@ class TransactionRepositoryImplTest {
         coEvery { accountLocalDataSource.getByLocalId("local-a2") } returns null
 
         val result = repository.update(transaction().copy(accountLocalId = "local-a2"))
+
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NoData))
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+        coVerify(exactly = 0) {
+            outboxEnqueuer.enqueue(any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `update without moving returns NoData when the account is missing`() = runTest {
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns null
+
+        val result = repository.update(transaction())
 
         assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NoData))
         coVerify(exactly = 0) { localDataSource.update(any()) }

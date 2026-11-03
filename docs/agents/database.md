@@ -23,6 +23,11 @@
     are intentionally **not** used. This fits the offline-first model (split `localId`/`serverId`,
     soft deletes via `syncStatus = PENDING_DELETE`, and the category → account → transaction sync
     order + last-write-wins, all handled in the data layer).
+*   A row references another entity only by its `localId`. Don't copy the other entity's
+    `serverId` into the row: the copy is taken once and stays `null` for a guest or offline
+    account after it gets its `serverId`. Resolve the id for a request from the owner's row when
+    the operation is enqueued (`TransactionRepositoryImpl.getAccountSyncIdOrFail`:
+    `serverId ?: localId`, `NoData` when the row is missing).
 *   Indices (e.g. `transactions(accountLocalId, transactionDate)`, `transactions(serverId)`) may be
     added as an optimization when data grows — this changes the schema and REQUIRES a version bump.
 
