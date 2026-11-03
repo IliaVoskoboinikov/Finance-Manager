@@ -93,6 +93,38 @@ class OutboxEnqueuerTest {
     }
 
     @Test
+    fun `enqueue stores the former owner of a moved entity`() = runTest {
+        val enqueued = captureEnqueued()
+
+        enqueuer.enqueue(
+            entityType = OutboxEntityType.TRANSACTION,
+            entityLocalId = "local-t1",
+            dependencyKey = "local-a2",
+            operation = OutboxOperation.UPDATE,
+            body = requestDto(),
+            formerDependencyKey = "local-a1"
+        )
+
+        // Без него удаление старого счёта обогнало бы перенос, а pull затёр бы его баланс
+        assertThat(enqueued.captured.formerDependencyKey).isEqualTo("local-a1")
+    }
+
+    @Test
+    fun `enqueue leaves the former owner empty by default`() = runTest {
+        val enqueued = captureEnqueued()
+
+        enqueuer.enqueue(
+            entityType = OutboxEntityType.TRANSACTION,
+            entityLocalId = "local-t1",
+            dependencyKey = "local-a1",
+            operation = OutboxOperation.CREATE,
+            body = requestDto()
+        )
+
+        assertThat(enqueued.captured.formerDependencyKey).isNull()
+    }
+
+    @Test
     fun `enqueue stores a json snapshot of the request body`() = runTest {
         val enqueued = captureEnqueued()
 

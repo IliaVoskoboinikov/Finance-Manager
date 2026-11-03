@@ -33,6 +33,11 @@
     a rollback won't undo them. Use `AppCoroutineContext.launchSync`: inside `runInTransaction`
     it defers the action until a successful commit (and drops it on rollback), outside it runs
     immediately. Mechanism and caveats: [docs/post-commit-sync.md](../post-commit-sync.md).
+*   An outbox operation that moves an entity to another owner (a transaction to another account)
+    goes with `dependencyKey` = the new owner and `formerDependencyKey` = the old one: until it
+    is sent, the server still has the entity on the old owner, so the old owner's delete must
+    wait and its server version must not overwrite the local balance. Design:
+    [docs/outbox.md](../outbox.md) («Смена владельца»).
 *   `safeDbCall` inside `runInTransaction` swallows the exception, and only an exception rolls the
     transaction back — so end it with `.rollbackOnError()`. Otherwise a failing second write
     (e.g. the outbox `enqueue`) commits the first one alone.

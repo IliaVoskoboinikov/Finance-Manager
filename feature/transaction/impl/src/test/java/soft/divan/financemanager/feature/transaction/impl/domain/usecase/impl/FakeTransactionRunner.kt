@@ -26,8 +26,8 @@ class FakeTransactionRunner : TransactionRunner {
 
 val unknownError: DomainError = DomainError.Unknown(null)
 
-fun account(balance: String): Account = Account(
-    id = "account-1",
+fun account(balance: String, id: String = "account-1"): Account = Account(
+    id = id,
     name = "Main",
     balance = BigDecimal(balance),
     currencyId = "currency-1",
@@ -35,9 +35,13 @@ fun account(balance: String): Account = Account(
     updatedAt = Instant.parse("2026-01-01T00:00:00Z")
 )
 
-fun transaction(amount: String, type: TransactionType): Transaction = Transaction(
+fun transaction(
+    amount: String,
+    type: TransactionType,
+    accountLocalId: String = "account-1"
+): Transaction = Transaction(
     id = "transaction-1",
-    accountLocalId = "account-1",
+    accountLocalId = accountLocalId,
     targetAccountLocalId = null,
     currencyId = "currency-1",
     categoryId = "category-1",

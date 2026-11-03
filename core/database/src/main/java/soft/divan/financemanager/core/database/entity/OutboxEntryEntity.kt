@@ -38,6 +38,15 @@ import soft.divan.financemanager.core.database.model.OutboxStatus
  *   Без этого поля порядок держался только на `sequenceNo`, а он ломался фильтром готовности:
  *   операция, ушедшая в backoff или под аренду, выпадала из выборки, и следующая операция **той
  *   же сущности** обгоняла её (правка уезжала раньше создания и умирала с `404`).
+ * @property formerDependencyKey Прежний предшественник, если операция уводит сущность от него:
+ *   правка, которая переносит транзакцию на другой счёт, кладёт сюда `localId` старого счёта.
+ *   Для остальных операций — `null`.
+ *
+ *   Пока перенос не уехал, сервер держит транзакцию на старом счёте, а локально её там уже нет.
+ *   Поэтому для старого счёта эта операция — такой же зависящий, как его собственные транзакции:
+ *   удаление счёта ждёт её (обратное ребро барьера), а `hasOpenOperationsAffecting` считает
+ *   счёт затронутым — `AccountRepositoryImpl.refreshFromServer` не примет серверный баланс без
+ *   возврата суммы, пока она не отправлена.
  * @property operation Что именно делаем на сервере.
  * @property targetServerId Идентификатор ресурса на сервере — адрес для `PUT`/`DELETE`
  *   (`null` для [OutboxOperation.CREATE], где ресурса ещё нет). Хранится в записи, а не
@@ -70,7 +79,9 @@ import soft.divan.financemanager.core.database.model.OutboxStatus
         // полное сканирование очереди на каждую строку выборки.
         Index(value = ["entityLocalId", "status"]),
         // Каскад dead-letter находит по dependencyKey тех, кто ждал провалившуюся операцию.
-        Index(value = ["dependencyKey", "status"])
+        Index(value = ["dependencyKey", "status"]),
+        // Обратное ребро барьера и защита баланса ищут перенос по прежнему предшественнику.
+        Index(value = ["formerDependencyKey", "status"])
     ]
 )
 data class OutboxEntryEntity(
@@ -79,6 +90,7 @@ data class OutboxEntryEntity(
     val entityType: OutboxEntityType,
     val entityLocalId: String,
     val dependencyKey: String,
+    val formerDependencyKey: String? = null,
     val operation: OutboxOperation,
     val targetServerId: String?,
     val payload: String,

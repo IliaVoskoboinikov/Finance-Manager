@@ -14,6 +14,7 @@ import retrofit2.Response
 import soft.divan.financemanager.core.data.transaction.TransactionRollbackException
 import soft.divan.financemanager.core.data.transaction.TransactionRunner
 import soft.divan.financemanager.core.data.dto.TransactionDto
+import soft.divan.financemanager.core.data.dto.UpdateTransactionRequestDto
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
 import soft.divan.financemanager.core.data.outbox.OutboxEnqueuer
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
@@ -117,8 +118,11 @@ class TransactionRepositoryImplTest {
         syncStatus = syncStatus
     )
 
-    private fun accountEntity(serverId: String? = "server-a1") = AccountEntity(
-        localId = "local-a1",
+    private fun accountEntity(
+        localId: String = "local-a1",
+        serverId: String? = "server-a1"
+    ) = AccountEntity(
+        localId = localId,
         serverId = serverId,
         name = "Cash",
         balance = "0",
@@ -439,6 +443,119 @@ class TransactionRepositoryImplTest {
                 targetServerId = "local-t1",
                 body = any()
             )
+        }
+    }
+
+    @Test
+    fun `update moving to another account rewrites the account and waits for it`() = runTest {
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
+        coEvery { accountLocalDataSource.getByLocalId("local-a2") } returns
+            accountEntity(localId = "local-a2", serverId = "server-a2")
+        val updated = slot<TransactionEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+        val body = slot<Any>()
+
+        val result = repository.update(
+            transaction().copy(accountLocalId = "local-a2", type = TransactionType.INCOME)
+        )
+
+        assertThat(result).isEqualTo(DomainResult.Success(Unit))
+        assertThat(updated.captured.accountLocalId).isEqualTo("local-a2")
+        assertThat(updated.captured.accountServerId).isEqualTo("server-a2")
+        assertThat(updated.captured.type).isEqualTo(TransactionType.INCOME.name)
+        coVerify(exactly = 1) {
+            outboxEnqueuer.enqueue(
+                entityType = OutboxEntityType.TRANSACTION,
+                entityLocalId = "local-t1",
+                // Правка уходит после создания нового счёта, а не старого
+                dependencyKey = "local-a2",
+                operation = OutboxOperation.UPDATE,
+                targetServerId = "server-t1",
+                body = capture(body),
+                // Пока перенос не уехал, сервер держит операцию на старом счёте
+                formerDependencyKey = "local-a1"
+            )
+        }
+        assertThat((body.captured as UpdateTransactionRequestDto).accountId).isEqualTo("server-a2")
+    }
+
+    @Test
+    fun `update moving to an unsynced account addresses it by its client id`() = runTest {
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
+        coEvery { accountLocalDataSource.getByLocalId("local-a2") } returns
+            accountEntity(localId = "local-a2", serverId = null)
+        val updated = slot<TransactionEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+        val body = slot<Any>()
+
+        repository.update(transaction().copy(accountLocalId = "local-a2"))
+
+        assertThat(updated.captured.accountServerId).isNull()
+        coVerify {
+            outboxEnqueuer.enqueue(
+                entityType = any(),
+                entityLocalId = any(),
+                dependencyKey = "local-a2",
+                operation = any(),
+                targetServerId = any(),
+                body = capture(body),
+                formerDependencyKey = "local-a1"
+            )
+        }
+        // Сервер узнает счёт по localId, с которым ушло его создание
+        assertThat((body.captured as UpdateTransactionRequestDto).accountId).isEqualTo("local-a2")
+    }
+
+    @Test
+    fun `update keeps the account server id when the account does not change`() = runTest {
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
+        val updated = slot<TransactionEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        repository.update(transaction())
+
+        assertThat(updated.captured.accountServerId).isEqualTo("server-a1")
+        coVerify(exactly = 0) { accountLocalDataSource.getByLocalId(any()) }
+        coVerify(exactly = 1) {
+            outboxEnqueuer.enqueue(
+                entityType = any(),
+                entityLocalId = any(),
+                dependencyKey = "local-a1",
+                operation = any(),
+                targetServerId = any(),
+                body = any(),
+                formerDependencyKey = null
+            )
+        }
+    }
+
+    @Test
+    fun `update returns Failure when the new account cannot be read`() = runTest {
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
+        coEvery { accountLocalDataSource.getByLocalId("local-a2") } throws
+            IllegalStateException("db closed")
+
+        val result = repository.update(transaction().copy(accountLocalId = "local-a2"))
+
+        assertThat(result).isInstanceOf(DomainResult.Failure::class.java)
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+        coVerify(exactly = 0) {
+            outboxEnqueuer.enqueue(any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `update returns NoData when the new account is missing`() = runTest {
+        // Без строки счёта PUT ушёл бы с неизвестным серверу accountId и осел бы в dead-letter
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
+        coEvery { accountLocalDataSource.getByLocalId("local-a2") } returns null
+
+        val result = repository.update(transaction().copy(accountLocalId = "local-a2"))
+
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.NoData))
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+        coVerify(exactly = 0) {
+            outboxEnqueuer.enqueue(any(), any(), any(), any(), any(), any(), any())
         }
     }
 
