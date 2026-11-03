@@ -137,6 +137,7 @@ class TransactionRepositoryImplTest {
     @Before
     fun stubAccount() {
         coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery { accountLocalDataSource.getByServerId("server-a1") } returns accountEntity()
     }
 
     /* ---------- create ---------- */
@@ -373,6 +374,61 @@ class TransactionRepositoryImplTest {
 
         coVerify(exactly = 0) { localDataSource.update(any()) }
     }
+
+    @Test
+    fun `getById moves the transaction to the account of the server version`() = runTest {
+        // Другое устройство перенесло операцию на второй счёт: без этого следующая правка
+        // ушла бы со старым счётом и вернула перенос на сервере
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
+        coEvery { remoteDataSource.get("server-t1") } returns Response.success(
+            serverTransaction(accountId = "server-a2")
+        )
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns foodCategory()
+        coEvery { accountLocalDataSource.getByServerId("server-a2") } returns
+            accountEntity(localId = "local-a2", serverId = "server-a2")
+        val updated = slot<TransactionEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        repository.getById("local-t1")
+        appCoroutineContext.runAll()
+
+        assertThat(updated.captured.accountLocalId).isEqualTo("local-a2")
+    }
+
+    @Test
+    fun `getById skips refresh when account of server transaction is unknown`() = runTest {
+        coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
+        coEvery { remoteDataSource.get("server-t1") } returns Response.success(
+            serverTransaction(accountId = "server-unknown")
+        )
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns foodCategory()
+        coEvery { accountLocalDataSource.getByServerId("server-unknown") } returns null
+
+        repository.getById("local-t1")
+        appCoroutineContext.runAll()
+
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+    }
+
+    private fun serverTransaction(accountId: String) = TransactionDto(
+        id = "server-t1",
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        accountId = accountId,
+        categoryId = "cat-1",
+        amount = BigDecimal("99.00"),
+        dateTime = transactionDate,
+        comment = null
+    )
+
+    private fun foodCategory() = CategoryEntity(
+        id = "cat-1",
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        name = "Food",
+        emoji = "🍔",
+        isIncome = false
+    )
 
     @Test
     fun `getById does not refresh a transaction with a pending operation`() = runTest {
