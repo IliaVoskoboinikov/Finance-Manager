@@ -10,6 +10,12 @@ import soft.divan.financemanager.feature.transaction.impl.domain.usecase.DeleteT
 import soft.divan.financemanager.feature.transaction.impl.domain.util.AccountBalanceCalculator
 import javax.inject.Inject
 
+/**
+ * Удаляет операцию и откатывает её сумму на счёте.
+ *
+ * Из [Transaction] берётся только id: откатывается **сохранённая** версия. Экран передаёт свою
+ * копию, а в ней могут быть несохранённые правки — другой счёт или сумма увели бы откат не туда.
+ */
 class DeleteTransactionAndUpdateAccountUseCaseImpl @Inject constructor(
     private val transactionRunner: TransactionRunner,
     private val transactionRepository: TransactionRepository,
@@ -18,14 +24,15 @@ class DeleteTransactionAndUpdateAccountUseCaseImpl @Inject constructor(
 
     override suspend fun invoke(transaction: Transaction): DomainResult<Unit> {
         return transactionRunner.runInTransaction {
-            // 1. Получаем аккаунт
-            val account = accountRepository.getById(transaction.accountLocalId).rollbackOnError()
+            // 1. Получаем сохранённую транзакцию и её счёт
+            val stored = transactionRepository.getById(transaction.id).rollbackOnError()
+            val account = accountRepository.getById(stored.accountLocalId).rollbackOnError()
 
             // 2. Пересчитываем баланс (откатываем сумму транзакции)
             val newBalance = AccountBalanceCalculator.calculate(
                 currentBalance = account.balance,
-                transactionAmount = transaction.amount,
-                type = transaction.type,
+                transactionAmount = stored.amount,
+                type = stored.type,
                 isReverting = true
             )
 
@@ -34,7 +41,7 @@ class DeleteTransactionAndUpdateAccountUseCaseImpl @Inject constructor(
             accountRepository.updateBalanceLocal(account.id, newBalance).rollbackOnError()
 
             // 4. Удаляем транзакцию
-            transactionRepository.delete(transaction.id).rollbackOnError()
+            transactionRepository.delete(stored.id).rollbackOnError()
 
             DomainResult.Success(Unit)
         }

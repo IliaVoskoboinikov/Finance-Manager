@@ -69,7 +69,8 @@ class OutboxDaoTest : RoomDaoTest() {
 
         // Барьер ищет предшественников по entityLocalId, каскад dead-letter — по dependencyKey.
         // Без индексов это полное сканирование очереди на каждую строку выборки.
-        assertThat(indexedColumns).contains("entityLocalId", "dependencyKey", "status")
+        assertThat(indexedColumns)
+            .contains("entityLocalId", "dependencyKey", "formerDependencyKey", "status")
     }
 
     @Test
@@ -215,6 +216,63 @@ class OutboxDaoTest : RoomDaoTest() {
 
         assertThat(dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.operation })
             .containsExactly(OutboxOperation.CREATE)
+    }
+
+    @Test
+    fun `deleting an account waits for a transaction moving away from it`() = runTest {
+        // Пока перенос T1 с A1 на A2 не уехал, сервер держит T1 на A1: удаление A1, ушедшее
+        // вперёд, застало бы на счёте операцию
+        dao.insert(
+            entry("T1", operation = OutboxOperation.UPDATE, dependencyKey = "A2")
+                .copy(formerDependencyKey = "A1")
+        )
+        dao.insert(
+            entry("A1", entityType = OutboxEntityType.ACCOUNT, operation = OutboxOperation.DELETE)
+        )
+
+        assertThat(
+            dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId }
+        ).containsExactly("T1")
+    }
+
+    @Test
+    fun `a sent move no longer holds the former account`() = runTest {
+        val move = dao.insert(
+            entry("T1", operation = OutboxOperation.UPDATE, dependencyKey = "A2")
+                .copy(formerDependencyKey = "A1")
+        )
+        dao.markCompleted(sequenceNo = move, updatedAt = now)
+
+        assertThat(dao.hasOpenOperationsAffecting("A1")).isFalse()
+
+        dao.insert(
+            entry("A1", entityType = OutboxEntityType.ACCOUNT, operation = OutboxOperation.DELETE)
+        )
+        assertThat(
+            dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId }
+        ).containsExactly("A1")
+    }
+
+    @Test
+    fun `a move does not wait for operations of the former account`() = runTest {
+        // Счёт, с которого уезжает транзакция, на сервере уже есть: его переименование в backoff
+        // переносу не помеха
+        dao.insert(
+            entry(
+                "A1",
+                entityType = OutboxEntityType.ACCOUNT,
+                operation = OutboxOperation.UPDATE,
+                nextAttemptAt = now + 30_000
+            )
+        )
+        dao.insert(
+            entry("T1", operation = OutboxOperation.UPDATE, dependencyKey = "A2")
+                .copy(formerDependencyKey = "A1")
+        )
+
+        assertThat(
+            dao.getReadyToSend(now = now, staleBefore = 0, limit = 10).map { it.entityLocalId }
+        ).containsExactly("T1")
     }
 
     @Test
@@ -474,6 +532,20 @@ class OutboxDaoTest : RoomDaoTest() {
             assertThat(dao.hasOpenOperationsAffecting("A1")).isTrue()
             assertThat(dao.hasOpenOperationsAffecting("T1")).isTrue()
             assertThat(dao.hasOpenOperationsAffecting("A2")).isFalse()
+        }
+
+    @Test
+    fun `hasOpenOperationsAffecting sees a transaction moving away from the account`() =
+        runTest {
+            dao.insert(
+                entry("T1", operation = OutboxOperation.UPDATE, dependencyKey = "A2")
+                    .copy(formerDependencyKey = "A1")
+            )
+
+            // Возврат суммы на A1 сервер сделает только при этом PUT — до него серверный
+            // баланс A1 устарел
+            assertThat(dao.hasOpenOperationsAffecting("A1")).isTrue()
+            assertThat(dao.hasOpenOperationsAffecting("A2")).isTrue()
         }
 
     @Test

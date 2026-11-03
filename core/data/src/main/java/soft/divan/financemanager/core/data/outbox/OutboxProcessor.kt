@@ -174,6 +174,8 @@ class OutboxProcessor @Inject internal constructor(
                 OutboxEntryOutcome.STALLED -> {
                     stalledEntities += entry.entityLocalId
                     stalledDependencies += entry.dependencyKey
+                    // Застрявший перенос держит на сервере и старый счёт
+                    entry.formerDependencyKey?.let { stalledDependencies += it }
                     allDrained = false
                 }
 

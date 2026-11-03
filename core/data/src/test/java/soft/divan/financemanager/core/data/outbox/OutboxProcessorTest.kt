@@ -233,6 +233,37 @@ class OutboxProcessorTest {
     }
 
     @Test
+    fun `a stalled move blocks the operations on the former account`() = runTest {
+        // Транзакция переезжает с A1 на A2: пока перенос не уехал, сервер держит её на A1,
+        // и удаление A1 обогнало бы его
+        givenReady(
+            entry(sequenceNo = 1, entityLocalId = "T1", dependencyKey = "A2")
+                .copy(formerDependencyKey = "A1"),
+            entry(sequenceNo = 2, entityLocalId = "A1", dependencyKey = "A1")
+        )
+        givenOutcome(OutboxEntryOutcome.STALLED)
+
+        processor.process()
+
+        coVerify(exactly = 1) { entryHandler.handle(any()) }
+    }
+
+    @Test
+    fun `a stalled former account does not block a move away from it`() = runTest {
+        // Старый счёт на сервере уже есть — перенос его застрявшую правку не ждёт
+        givenReady(
+            entry(sequenceNo = 1, entityLocalId = "A1", dependencyKey = "A1"),
+            entry(sequenceNo = 2, entityLocalId = "T1", dependencyKey = "A2")
+                .copy(formerDependencyKey = "A1")
+        )
+        givenOutcome(OutboxEntryOutcome.STALLED, OutboxEntryOutcome.DONE)
+
+        processor.process()
+
+        coVerify(exactly = 2) { entryHandler.handle(any()) }
+    }
+
+    @Test
     fun `an unrelated entry is not blocked by a stalled one`() = runTest {
         givenReady(
             entry(sequenceNo = 1, entityLocalId = "T1", dependencyKey = "A1"),

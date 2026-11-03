@@ -27,7 +27,8 @@ import soft.divan.financemanager.core.database.util.Converters
     // Версия 6: в outbox добавлен targetServerId — адрес ресурса для PUT/DELETE.
     // Версия 7: в outbox добавлен dependencyKey — ссылка на обязательного предшественника.
     // Версия 8: барьер порядка ищет предшественников по entityLocalId — сменились индексы outbox.
-    version = 8,
+    // Версия 9: в outbox добавлен formerDependencyKey — старый счёт переносимой транзакции.
+    version = 9,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

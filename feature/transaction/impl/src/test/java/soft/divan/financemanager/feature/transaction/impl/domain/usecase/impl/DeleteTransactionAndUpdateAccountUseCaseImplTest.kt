@@ -26,6 +26,8 @@ class DeleteTransactionAndUpdateAccountUseCaseImplTest {
     fun `reverts the amount locally and deletes the transaction`() = runTest {
         // Удаляем расход 50 при балансе 100 → откат возвращает 150.
         val transaction = transaction(amount = "50", type = TransactionType.EXPENSE)
+        coEvery { transactionRepository.getById("transaction-1") } returns
+            DomainResult.Success(transaction)
         coEvery { accountRepository.getById("account-1") } returns
             DomainResult.Success(account(balance = "100"))
         coEvery { accountRepository.updateBalanceLocal(any(), any()) } returns
@@ -43,8 +45,50 @@ class DeleteTransactionAndUpdateAccountUseCaseImplTest {
     }
 
     @Test
+    fun `reverts the stored transaction, not the unsaved edit`() = runTest {
+        // Сохранён расход 50 на счёте 1; на экране выбрали счёт 2, доход 80, но не сохранили.
+        // Удаление возвращает 50 на счёт 1, счёт 2 не трогает.
+        val stored = transaction(amount = "50", type = TransactionType.EXPENSE)
+        val edited = transaction(
+            amount = "80",
+            type = TransactionType.INCOME,
+            accountLocalId = "account-2"
+        )
+        coEvery { transactionRepository.getById("transaction-1") } returns
+            DomainResult.Success(stored)
+        coEvery { accountRepository.getById("account-1") } returns
+            DomainResult.Success(account(balance = "100"))
+        coEvery { accountRepository.updateBalanceLocal(any(), any()) } returns
+            DomainResult.Success(Unit)
+        coEvery { transactionRepository.delete("transaction-1") } returns
+            DomainResult.Success(Unit)
+
+        val result = useCase(edited)
+
+        assertThat(result).isEqualTo(DomainResult.Success(Unit))
+        coVerify(exactly = 1) { accountRepository.updateBalanceLocal("account-1", BigDecimal("150")) }
+        coVerify(exactly = 0) { accountRepository.getById("account-2") }
+        coVerify { transactionRepository.delete("transaction-1") }
+    }
+
+    @Test
+    fun `rolls back when the stored transaction is not found`() = runTest {
+        val transaction = transaction(amount = "50", type = TransactionType.EXPENSE)
+        coEvery { transactionRepository.getById("transaction-1") } returns
+            DomainResult.Failure(unknownError)
+
+        val result = useCase(transaction)
+
+        assertThat(result).isEqualTo(DomainResult.Failure(unknownError))
+        coVerify(exactly = 0) { accountRepository.updateBalanceLocal(any(), any()) }
+        coVerify(exactly = 0) { transactionRepository.delete(any()) }
+    }
+
+    @Test
     fun `reverting an income decreases the balance`() = runTest {
         val transaction = transaction(amount = "40", type = TransactionType.INCOME)
+        coEvery { transactionRepository.getById("transaction-1") } returns
+            DomainResult.Success(transaction)
         coEvery { accountRepository.getById("account-1") } returns
             DomainResult.Success(account(balance = "100"))
         coEvery { accountRepository.updateBalanceLocal(any(), any()) } returns
@@ -60,6 +104,8 @@ class DeleteTransactionAndUpdateAccountUseCaseImplTest {
     @Test
     fun `rolls back when transaction deletion fails`() = runTest {
         val transaction = transaction(amount = "50", type = TransactionType.EXPENSE)
+        coEvery { transactionRepository.getById("transaction-1") } returns
+            DomainResult.Success(transaction)
         coEvery { accountRepository.getById("account-1") } returns
             DomainResult.Success(account(balance = "100"))
         coEvery { accountRepository.updateBalanceLocal(any(), any()) } returns

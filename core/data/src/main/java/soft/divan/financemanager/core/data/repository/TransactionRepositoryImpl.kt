@@ -177,32 +177,50 @@ class TransactionRepositoryImpl @Inject constructor(
         localDataSource.getByLocalId(localId)?.syncStatus == SyncStatus.SYNCED &&
             !outboxLocalDataSource.hasOpenOperationsAffecting(localId)
 
-    /** Вытаскиваем из бд транзакцию(так как только в БД храним serverId) обновляем локальныую трнакцию и
-     * запускаем синхронизацию если транзакция не синхронизирована с сервером то создаем на сервере и
-     * обновляем локально, иначе просто обновляем на сервере,
-     * сразу возвращаем результат локального обновления транзакции */
+    /**
+     * Сохраняет правку локально и ставит `PUT` в очередь исходящих операций.
+     *
+     * Строка берётся из БД — только там хранятся `serverId` и `accountServerId`. Если правка
+     * переносит операцию на другой счёт, вместе с ним меняются `accountServerId`, предшественник
+     * в очереди (`dependencyKey`) и `accountId` в теле запроса: правка уедет после создания
+     * нового счёта, и сервер переложит сумму со старого счёта на новый. Старый счёт уходит в
+     * `formerDependencyKey` — до отправки правки он считается затронутым ею.
+     */
     override suspend fun update(transaction: Transaction): DomainResult<Unit> {
         val resultDb = getLocalOrFail(transaction.id)
         if (resultDb is DomainResult.Failure) return resultDb
 
         val transactionEntity = (resultDb as DomainResult.Success).data
-        val updatedEntity = transactionEntity.copy(
-            categoryId = transaction.categoryId,
-            currencyId = transaction.currencyId,
-            amount = transaction.amount.toPlainString(),
-            transactionDate = TimeMapper.toApi(transaction.transactionDate),
-            comment = transaction.comment.orEmpty(),
-            createdAt = TimeMapper.toApi(transaction.createdAt),
-            updatedAt = TimeMapper.toApi(transaction.updatedAt),
-            syncStatus = if (transactionEntity.serverId == null) {
-                SyncStatus.PENDING_CREATE
-            } else {
-                SyncStatus.PENDING_UPDATE
-            }
-        )
+
+        val formerAccountLocalId = transactionEntity.accountLocalId
+            .takeIf { it != transaction.accountLocalId }
 
         return transactionRunner.runInTransaction {
+            val accountServerId = if (formerAccountLocalId == null) {
+                transactionEntity.accountServerId
+            } else {
+                getAccountServerIdOrFail(transaction.accountLocalId).rollbackOnError()
+            }
+
             safeDbCall(errorLogger) {
+                val updatedEntity = transactionEntity.copy(
+                    accountLocalId = transaction.accountLocalId,
+                    accountServerId = accountServerId,
+                    type = transaction.type.name,
+                    categoryId = transaction.categoryId,
+                    currencyId = transaction.currencyId,
+                    amount = transaction.amount.toPlainString(),
+                    transactionDate = TimeMapper.toApi(transaction.transactionDate),
+                    comment = transaction.comment.orEmpty(),
+                    createdAt = TimeMapper.toApi(transaction.createdAt),
+                    updatedAt = TimeMapper.toApi(transaction.updatedAt),
+                    syncStatus = if (transactionEntity.serverId == null) {
+                        SyncStatus.PENDING_CREATE
+                    } else {
+                        SyncStatus.PENDING_UPDATE
+                    }
+                )
+
                 localDataSource.update(updatedEntity)
                 outboxEnqueuer.enqueue(
                     entityType = OutboxEntityType.TRANSACTION,
@@ -210,11 +228,30 @@ class TransactionRepositoryImpl @Inject constructor(
                     dependencyKey = updatedEntity.accountLocalId,
                     operation = OutboxOperation.UPDATE,
                     targetServerId = updatedEntity.syncId(),
-                    body = updatedEntity.toUpdateDto(updatedEntity.accountSyncId())
+                    body = updatedEntity.toUpdateDto(updatedEntity.accountSyncId()),
+                    // Пока перенос не уехал, сервер держит операцию на старом счёте: его
+                    // удаление и серверная версия баланса должны дождаться этого PUT
+                    formerDependencyKey = formerAccountLocalId
                 )
             }.rollbackOnError()
             DomainResult.Success(Unit)
         }
+    }
+
+    /**
+     * `serverId` счёта, на который переносят операцию (`null`, пока счёт не синхронизирован).
+     * Счёта нет локально — `NoData`: иначе `PUT` ушёл бы с неизвестным серверу `accountId`.
+     */
+    private suspend fun getAccountServerIdOrFail(accountLocalId: String): DomainResult<String?> {
+        return safeDbCall(errorLogger) {
+            accountLocalDataSource.getByLocalId(accountLocalId)
+        }.fold(
+            onSuccess = { account ->
+                account?.let { DomainResult.Success(it.serverId) }
+                    ?: DomainResult.Failure(DataError.NotFound.toDomainError())
+            },
+            onFailure = { error -> DomainResult.Failure(error) }
+        )
     }
 
     override suspend fun delete(id: String): DomainResult<Unit> {

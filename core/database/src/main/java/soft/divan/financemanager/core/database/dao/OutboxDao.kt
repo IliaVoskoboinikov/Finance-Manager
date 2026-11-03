@@ -54,7 +54,9 @@ interface OutboxDao {
      *    приедут к удалённому счёту и получат `400`.
      *
      * Третье ребро — обратное второму, и без него связь односторонняя: «транзакция после счёта»
-     * соблюдалось, а «удаление счёта после его транзакций» — нет.
+     * соблюдалось, а «удаление счёта после его транзакций» — нет. Оно же смотрит на
+     * `formerDependencyKey`: перенос транзакции со счёта, пока не уехал, держит её на сервере на
+     * старом счёте, и удаление этого счёта обязано его дождаться.
      *
      * Важно, чего в подзапросе **нет**: сравнения `dependencyKey` между собой. Две транзакции
      * одного счёта — ровесники: обе ждут счёт, но не друг друга. Держать их по одной было бы
@@ -80,7 +82,8 @@ interface OutboxDao {
             "AND blocker.status IN ('PENDING', 'IN_PROGRESS') " +
             "AND (blocker.entityLocalId = o.entityLocalId " +
             "OR blocker.entityLocalId = o.dependencyKey " +
-            "OR blocker.dependencyKey = o.entityLocalId)" +
+            "OR blocker.dependencyKey = o.entityLocalId " +
+            "OR blocker.formerDependencyKey = o.entityLocalId)" +
             ") " +
             "ORDER BY o.sequenceNo ASC LIMIT :limit"
     )
@@ -200,11 +203,13 @@ interface OutboxDao {
      * над теми, кто назвал её предшественником.
      *
      * Второе нужно счёту: неотправленная транзакция уже учтена в его локальном балансе, но ещё
-     * не в серверном, хотя сам счёт при этом `SYNCED`.
+     * не в серверном, хотя сам счёт при этом `SYNCED`. То же для транзакции, которая уезжает со
+     * счёта (`formerDependencyKey`): локально её сумма ему уже возвращена, на сервере — ещё нет.
      */
     @Query(
         "SELECT EXISTS(SELECT 1 FROM outbox " +
-            "WHERE (entityLocalId = :localId OR dependencyKey = :localId) " +
+            "WHERE (entityLocalId = :localId OR dependencyKey = :localId " +
+            "OR formerDependencyKey = :localId) " +
             "AND status IN ('PENDING', 'IN_PROGRESS'))"
     )
     suspend fun hasOpenOperationsAffecting(localId: String): Boolean

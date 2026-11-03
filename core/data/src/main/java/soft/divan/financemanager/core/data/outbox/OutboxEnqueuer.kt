@@ -50,6 +50,8 @@ class OutboxEnqueuer @Inject constructor(
      * @param operation что делаем на сервере.
      * @param targetServerId адрес ресурса для `PUT`/`DELETE`; для `CREATE` не нужен.
      * @param body DTO тела запроса; `null` для операций без тела.
+     * @param formerDependencyKey прежний предшественник, если операция уводит сущность от него
+     *   (перенос транзакции на другой счёт — `localId` старого счёта), иначе `null`.
      */
     @Suppress("LongParameterList")
     suspend fun enqueue(
@@ -58,7 +60,8 @@ class OutboxEnqueuer @Inject constructor(
         dependencyKey: String,
         operation: OutboxOperation,
         targetServerId: String? = null,
-        body: Any? = null
+        body: Any? = null,
+        formerDependencyKey: String? = null
     ): Long {
         val now = clock.millis()
 
@@ -74,6 +77,7 @@ class OutboxEnqueuer @Inject constructor(
                 entityType = entityType,
                 entityLocalId = entityLocalId,
                 dependencyKey = dependencyKey,
+                formerDependencyKey = formerDependencyKey,
                 operation = operation,
                 targetServerId = targetServerId,
                 payload = body?.let { gson.toJson(it) } ?: EMPTY_PAYLOAD,
