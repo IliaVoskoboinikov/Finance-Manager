@@ -654,6 +654,35 @@ class OutboxDaoTest : RoomDaoTest() {
         assertThat(dao.countUnsent()).isEqualTo(2)
     }
 
+    @Test
+    fun `hasDeferredEntries sees an entry whose backoff has not elapsed`() = runTest {
+        dao.insert(entry("deferred", nextAttemptAt = now + 1))
+
+        assertThat(dao.hasDeferredEntries(now)).isTrue()
+    }
+
+    @Test
+    fun `hasDeferredEntries sees an entry another run holds`() = runTest {
+        // Держатель может не доложить: прогон в процессе приложения повтор не планирует, а
+        // убитый процесс не вернётся вовсе
+        dao.insert(entry("in-progress", status = OutboxStatus.IN_PROGRESS))
+
+        assertThat(dao.hasDeferredEntries(now)).isTrue()
+    }
+
+    @Test
+    fun `hasDeferredEntries ignores entries that a retry would not change`() = runTest {
+        assertThat(dao.hasDeferredEntries(now)).isFalse()
+
+        dao.insert(entry("elapsed", nextAttemptAt = now))
+        // Возвращена без попытки, когда сеть заблокирована состоянием клиента
+        dao.insert(entry("blocked", nextAttemptAt = 0))
+        dao.insert(entry("failed", status = OutboxStatus.FAILED, nextAttemptAt = now + 1))
+        dao.insert(entry("done", status = OutboxStatus.COMPLETED, nextAttemptAt = now + 1))
+
+        assertThat(dao.hasDeferredEntries(now)).isFalse()
+    }
+
     /* ---------- сохранность полей ---------- */
 
     @Test

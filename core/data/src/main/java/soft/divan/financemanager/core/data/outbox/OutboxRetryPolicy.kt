@@ -45,7 +45,11 @@ class OutboxRetryPolicy(private val random: Random) {
         /** После стольких неудачных попыток запись уходит в dead-letter. */
         const val MAX_ATTEMPTS = 8
 
-        private const val BASE_DELAY_MILLIS = 30_000L
+        /**
+         * Пауза перед второй попыткой; дальше она удваивается. От неё же растёт backoff
+         * WorkManager у синка — менять их можно только вместе (`docs/outbox.md`).
+         */
+        const val BASE_DELAY_MILLIS = 30_000L
         private const val MAX_DELAY_MILLIS = 3_600_000L
         private const val MAX_BACKOFF_SHIFT = 16
     }

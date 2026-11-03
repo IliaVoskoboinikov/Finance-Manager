@@ -2,6 +2,8 @@ package soft.divan.financemanager.core.data.outbox
 
 import androidx.room.Room
 import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
@@ -84,52 +86,82 @@ class OutboxStressTest {
     private class FlakyInterceptor(private val random: Random) : Interceptor {
         val sent = mutableListOf<SentRequest>()
 
-        /** Что «есть на сервере» — по клиентским id. Нужно для честного read-back. */
-        val serverState = mutableSetOf<String>()
+        /**
+         * Что «есть на сервере»: клиентский id → комментарий последней принятой версии. Нужно для
+         * честного read-back и для проверки, что правка доехала, а не только создание.
+         */
+        val serverState = mutableMapOf<String, String>()
 
         /** Выключает поломки — для замеров пропускной способности на исправной сети. */
         var alwaysSucceed: Boolean = false
 
+        /** Код, которым сервер отвечает на каждую мутацию, — для заданного, а не случайного сбоя. */
+        var forcedMutationCode: Int? = null
+
         override fun intercept(chain: Interceptor.Chain): Response {
             val request = chain.request()
-            val id = entityId(request)
+            val body = requestBody(request)
+            val id = entityId(request, body)
             sent += SentRequest(request.method, id, request.header(IDEMPOTENCY_KEY_HEADER))
 
-            if (alwaysSucceed) {
-                return response(request, id, applyMutation(request.method, id))
-            }
+            val forcedCode = forcedMutationCode?.takeIf { request.method != "GET" }
+            val breaksRandomly = forcedCode == null && !alwaysSucceed
 
-            if (request.method != "GET" && random.nextInt(100) < 25) {
+            if (breaksRandomly && request.method != "GET" && random.nextInt(100) < 25) {
                 throw IOException("оборвалась сеть")
             }
 
+            // Чтение проверяется раньше исправной сети: иначе GET ушёл бы в мутацию и удалил запись
             val code = when {
+                forcedCode != null -> forcedCode
                 request.method == "GET" -> if (id in serverState) 200 else 404
+                alwaysSucceed -> applyMutation(request.method, id, body)
                 random.nextInt(100) < 25 -> 500
-                else -> applyMutation(request.method, id)
+                else -> applyMutation(request.method, id, body)
             }
             return response(request, id, code)
         }
+
+        private fun requestBody(request: Request): JsonObject? =
+            request.body
+                ?.let { Buffer().also { buffer -> it.writeTo(buffer) }.readUtf8() }
+                ?.takeIf { it.isNotBlank() }
+                ?.let { JsonParser.parseString(it).asJsonObject }
 
         /**
          * Идентификатор сущности запроса. У `POST` его нет в пути — он в теле, поэтому тело
          * читается. Раньше этого не делалось, и все создания выглядели одной сущностью.
          */
-        private fun entityId(request: Request): String {
-            if (request.method != "POST") return request.url.encodedPath.substringAfterLast('/')
-
-            val body = request.body?.let { Buffer().also { buffer -> it.writeTo(buffer) }.readUtf8() }
-            return body?.substringAfter("\"id\":\"")?.substringBefore('"').orEmpty()
-        }
+        private fun entityId(request: Request, body: JsonObject?): String =
+            if (request.method == "POST") {
+                body?.get("id")?.asString.orEmpty()
+            } else {
+                request.url.encodedPath.substringAfterLast('/')
+            }
 
         /**
          * Успешная мутация меняет «состояние сервера» — чтобы read-back не врал.
          * Повтор создания сервер отвергает: дедупликацию делает первичный ключ.
          */
-        private fun applyMutation(method: String, id: String): Int = when (method) {
-            "POST" -> if (!serverState.add(id)) 500 else 200
-            "PUT" -> if (id in serverState) 200 else 404
-            else -> if (serverState.remove(id)) 200 else 404
+        private fun applyMutation(method: String, id: String, body: JsonObject?): Int {
+            val comment = body?.get("comment")?.takeUnless { it.isJsonNull }?.asString.orEmpty()
+            return when (method) {
+                "POST" -> if (id in serverState) {
+                    500
+                } else {
+                    serverState[id] = comment
+                    200
+                }
+
+                "PUT" -> if (id in serverState) {
+                    serverState[id] = comment
+                    200
+                } else {
+                    404
+                }
+
+                else -> if (serverState.remove(id) != null) 200 else 404
+            }
         }
 
         private fun response(request: Request, id: String, code: Int) = Response.Builder()
@@ -142,7 +174,11 @@ class OutboxStressTest {
 
         private fun bodyFor(request: Request, id: String, code: Int): String {
             val carriesEntity = request.method == "GET" || request.method == "POST"
-            return if (code == 200 && carriesEntity) transactionJson(id) else "{}"
+            return if (code == 200 && carriesEntity) {
+                transactionJson(id, serverState[id].orEmpty())
+            } else {
+                "{}"
+            }
         }
     }
 
@@ -233,12 +269,20 @@ class OutboxStressTest {
     /** Последняя поставленная операция каждой сущности — по ней проверяется итог доставки. */
     private val lastOperation = mutableMapOf<String, OutboxOperation>()
 
+    /**
+     * Комментарий последней поставленной версии сущности. У правки он свой: с одинаковым телом
+     * пропавшая правка выглядела бы на сервере ровно как доехавшая.
+     */
+    private val lastComment = mutableMapOf<String, String>()
+
     private suspend fun enqueue(
         localId: String,
         accountLocalId: String,
         operation: OutboxOperation
     ): Long {
         lastOperation[localId] = operation
+        val comment = if (operation == OutboxOperation.UPDATE) "edited" else "lunch"
+        if (operation != OutboxOperation.DELETE) lastComment[localId] = comment
         return enqueuer.enqueue(
             entityType = OutboxEntityType.TRANSACTION,
             entityLocalId = localId,
@@ -254,7 +298,7 @@ class OutboxStressTest {
                     categoryId = "cat-1",
                     amount = BigDecimal("42.42"),
                     dateTime = "2024-01-15T10:00:00Z",
-                    comment = "lunch"
+                    comment = comment
                 )
             }
         )
@@ -333,15 +377,20 @@ class OutboxStressTest {
         val delivered = lastOperation.filterKeys { it !in stillQueued }
 
         assertThat(delivered).isNotEmpty()
+        // Иначе проверка содержимого ниже ни разу не коснулась бы правки
+        assertThat(delivered.values).contains(OutboxOperation.UPDATE)
         delivered.forEach { (localId, operation) ->
             val local = db.transactionDao().getByLocalId(localId)
             if (operation == OutboxOperation.DELETE) {
                 assertThat(interceptor.serverState).`as`("%s удалена на сервере", localId)
-                    .doesNotContain(localId)
+                    .doesNotContainKey(localId)
                 assertThat(local).`as`("%s удалена локально", localId).isNull()
             } else {
-                assertThat(interceptor.serverState).`as`("%s есть на сервере", localId)
-                    .contains(localId)
+                // Сверяется содержимое, а не наличие: правка, пропавшая после создания, иначе
+                // оставила бы тест зелёным
+                assertThat(interceptor.serverState)
+                    .`as`("%s на сервере в версии последней операции", localId)
+                    .containsEntry(localId, lastComment.getValue(localId))
                 assertThat(local?.syncStatus).`as`("%s подтверждена локально", localId)
                     .isEqualTo(SyncStatus.SYNCED)
             }
@@ -421,6 +470,28 @@ class OutboxStressTest {
     }
 
     @Test
+    fun `a run inside the backoff window asks for a retry and the retry delivers`() = runTest {
+        // Вся цепочка настоящая: попытку записывает обработчик по политике повторов, а прогон
+        // решает по выборке и проверке отложенных. Сбой здесь заданный, не случайный
+        interceptor.forcedMutationCode = 500
+        insertTransaction("tx-0-0", "acc-0")
+        enqueue("tx-0-0", "acc-0", OutboxOperation.CREATE)
+
+        assertThat(processor.process()).`as`("временный сбой").isFalse()
+
+        // Часы не двигались: выборка пуста, но запись ждёт своего backoff. Успех здесь оборвал бы
+        // цепочку повторов WorkManager, и запись ждала бы периодического синка
+        interceptor.forcedMutationCode = null
+        interceptor.alwaysSucceed = true
+        assertThat(processor.process()).`as`("прогон в паузе backoff").isFalse()
+
+        clock.instant = clock.instant.plusMillis(OutboxRetryPolicy.BASE_DELAY_MILLIS)
+        assertThat(processor.process()).`as`("повтор после паузы").isTrue()
+        assertThat(totalQueued()).isZero()
+        assertThat(interceptor.serverState).containsKey("tx-0-0")
+    }
+
+    @Test
     fun `ordering holds on other random scenarios too`() = runTest {
         // Один сид мог случайно не задеть опасные комбинации — прогоняем ещё несколько
         listOf(777, 31337, 4242).forEach { seed ->
@@ -452,8 +523,8 @@ class OutboxStressTest {
     }
 }
 
-private fun transactionJson(id: String) = """
+private fun transactionJson(id: String, comment: String) = """
     {"id":"$id","createdAt":"2024-01-01T00:00:00Z","updatedAt":"2024-02-01T00:00:00Z",
      "accountId":"acc-0","categoryId":"cat-1","amount":"42.42",
-     "dateTime":"2024-01-15T10:00:00Z","comment":"lunch"}
+     "dateTime":"2024-01-15T10:00:00Z","comment":"$comment"}
 """.trimIndent()

@@ -87,6 +87,19 @@ class OutboxProcessor @Inject internal constructor(
      * разбор. Такой исход тоже возвращает `false` — иначе остаток ждал бы новой операции,
      * перезапуска приложения или периодического синка. Ложная тревога (последний проход забрал всё
      * подчистую) стоит одного пустого повтора — дешевле, чем отдельный запрос на проверку.
+     *
+     * ### Отложенные записи
+     * Выборка не выдаёт запись, чей backoff ещё не истёк, и запись, которую держит другой прогон.
+     * Поэтому пустая выборка не значит, что очередь разобрана. Если такая запись осталась,
+     * результат тоже `false`: иначе прогон, пришедший в паузу, ответил бы WorkManager успехом и
+     * оборвал бы цепочку повторов, а запись ждала бы периодического синка.
+     *
+     * Backoff WorkManager растёт от той же базы, что и у [OutboxRetryPolicy]: в цепочке, начатой
+     * сбоем записи, повтор не приходит раньше её срока. Если запись старше цепочки, бывают
+     * холостые повторы, но их немного — пауза WorkManager каждый раз удваивается.
+     *
+     * После заблокированной сети отложенные записи не проверяются: пока клиент не вошёл, повтор
+     * работы их всё равно не отправит.
      */
     suspend fun process(): Boolean {
         try {
@@ -94,18 +107,26 @@ class OutboxProcessor @Inject internal constructor(
             // проход видит свежую выборку и без этого мог бы отправить её второй раз.
             val handled = mutableSetOf<Long>()
             var allDrained = true
+            var runStalled = false
             var passes = 0
             var madeProgress = true
+            var lastSelectedAt = 0L
 
             while (madeProgress && passes < MAX_PASSES) {
                 val pass = drainOnce(handled)
                 allDrained = allDrained && pass.allDrained
+                runStalled = runStalled || pass.runStalled
                 madeProgress = pass.completed > 0 && !pass.runStalled
+                lastSelectedAt = pass.selectedAt
                 passes++
             }
             // Вышли по пределу, а не потому, что закрывать стало нечего: остаток — на повтор
             val cutOffByPassLimit = madeProgress
-            return allDrained && !cutOffByPassLimit
+            // Запрос делается, только когда всё остальное уже говорит «повтор не нужен». Момент —
+            // последней выборки, а не текущий: запись, чей backoff истёк уже после неё, иначе не
+            // попала бы ни в отправку, ни в отложенные
+            return allDrained && !cutOffByPassLimit &&
+                (runStalled || !localDataSource.hasDeferredEntries(lastSelectedAt))
         } finally {
             // Чистим и при досрочной остановке: иначе уже отправленные записи копились бы в
             // очереди до ближайшего полностью успешного прогона.
@@ -113,18 +134,23 @@ class OutboxProcessor @Inject internal constructor(
         }
     }
 
-    /** Итог одного прохода: сколько записей закрыто и можно ли продолжать. */
+    /**
+     * Итог одного прохода: сколько записей закрыто, можно ли продолжать и на какой момент
+     * сделана выборка ([selectedAt]).
+     */
     private data class PassResult(
         val completed: Int,
         val allDrained: Boolean,
-        val runStalled: Boolean
+        val runStalled: Boolean,
+        val selectedAt: Long
     )
 
     /** Один проход: берёт готовые записи и отправляет их, пропуская зависящие от застрявших. */
     private suspend fun drainOnce(handled: MutableSet<Long>): PassResult {
-        val staleBefore = clock.millis() - LEASE_MILLIS
+        val selectedAt = clock.millis()
+        val staleBefore = selectedAt - LEASE_MILLIS
         val ready = localDataSource.getReadyToSend(
-            now = clock.millis(),
+            now = selectedAt,
             staleBefore = staleBefore,
             limit = BATCH_LIMIT
         ).filterNot { it.sequenceNo in handled }
@@ -154,10 +180,10 @@ class OutboxProcessor @Inject internal constructor(
                 // Сеть заблокирована целиком — остальные упрутся в ту же стену. Повтор прогона
                 // этого не изменит, поэтому временным сбоем это не считается (см. [process])
                 OutboxEntryOutcome.RUN_STALLED ->
-                    return PassResult(completed, allDrained, runStalled = true)
+                    return PassResult(completed, allDrained, runStalled = true, selectedAt = selectedAt)
             }
         }
-        return PassResult(completed, allDrained, runStalled = false)
+        return PassResult(completed, allDrained, runStalled = false, selectedAt = selectedAt)
     }
 
     /**
