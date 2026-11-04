@@ -9,29 +9,7 @@ hooks:
     - matcher: "Bash"
       hooks:
         - type: command
-          command: |
-            python3 -c '
-            import json, re, sys
-            cmd = json.load(sys.stdin).get("tool_input", {}).get("command", "").replace("\\\n", " ")
-            def writes(part):
-                if re.search(r"\bgh\s+(pr|issue)\s+(comment|review|edit|close|reopen|merge|create|ready|lock|delete)\b", part):
-                    return True
-                # запрос в обход gh или с токеном gh — запись, которую остальные проверки не видят
-                if re.search(r"(^|\s)(curl|wget|http)\s|\bgh\s+auth\s+token\b", part):
-                    return True
-                if not re.search(r"\bgh\s+api\b", part):
-                    return False
-                if re.search(r"(-X|--method)[\s=]*(POST|PATCH|PUT|DELETE)", part, re.I):
-                    return True
-                if re.search(r"\bgh\s+api\s+graphql\b", part):
-                    # запрос из файла (--input, -F query=@file) не прочитать, а многострочный
-                    # запрос делится на части — поэтому mutation ищется во всей команде
-                    return bool(re.search(r"\bmutation\b|--input\b|=@", cmd))
-                return bool(re.search(r"\s(-f|-F|--field|--raw-field|--input)[\s=]", part))
-            if any(writes(p) for p in re.split(r"&&|\|\||[;|\n]|\$\(|`", cmd)):
-                print("fm-coderabbit-triager is read-only: nothing may be published to GitHub", file=sys.stderr)
-                sys.exit(2)
-            '
+          command: python3 "$(git rev-parse --show-toplevel)/.claude/hooks/triager-gh-readonly.py"
 ---
 
 You are a subagent of a Finance-Manager session. Your only job: gather CodeRabbit's review of

@@ -6,7 +6,8 @@ so the PR doesn't go red on something a local run would have caught. Hand the ru
 `fm-ci-runner` subagent (`subagents.md`): it runs this list and returns the pass/fail table,
 the first error of each failure, the log directory and the commands it ran — the Gradle log
 itself stays out of the session. Run
-the commands by hand when the subagent isn't available.
+the commands by hand when the subagent isn't available; the first one is a template — run
+`:<module>:check` for each module the change touches.
 ```bash
 # Run all checks for modified modules
 ./gradlew :feature:<name>:impl:check

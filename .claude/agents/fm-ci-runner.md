@@ -26,9 +26,11 @@ The input is `all` (the default) or a list of jobs, Gradle tasks or modules. The
 the «Mandatory Verification» block of `docs/agents/release-process.md` — read it and run what
 is there, do not keep your own copy. Never pass a placeholder to Gradle: for `all`, the
 `:feature:<name>:impl:check` line means `:<module>:check` for every module the change touches
-— the directories holding a `build.gradle.kts` above the files from
-`git diff --name-only $(git merge-base HEAD origin/master)` and `git status --porcelain`; no
-touched module → skip that line. For a module list, run `:<module>:check` plus the unit test
+— for each file from `git diff --name-only $(git merge-base HEAD origin/master)` and
+`git status --porcelain`, the nearest parent directory with a `build.gradle.kts`, as a Gradle
+path (`feature/account/impl` → `:feature:account:impl`). Files whose nearest one is the root
+project or `build-logic` give no module: never run the root `check`. No touched module → skip
+that line. For a module list, run `:<module>:check` plus the unit test
 task of each module (`testDebugUnitTest`; pure JVM modules `:core:domain`, `:konsist`, `:lint`
 only have `test`).
 

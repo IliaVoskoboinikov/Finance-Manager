@@ -33,11 +33,16 @@ a reject reason before it goes to a PR thread (that still needs the user's yes).
     `AskUserQuestion` is never available to a subagent. `Bash` stays where the job needs it,
     and frontmatter `PreToolUse` hooks narrow it:
     *   `fm-architecture-reviewer`, `fm-security-reviewer` — `.claude/hooks/review-bash-allowlist.py`:
-        only reading git (`diff`, `log`, `show`, …), `gh pr diff/view` and filters after a pipe;
-        no secret files, no redirects into files. Their input may be a public PR's diff.
-    *   `fm-coderabbit-triager` — an inline hook refuses `gh pr|issue comment/review/…`,
-        GraphQL `mutation` or a query from a file, `gh api` writes, `curl` / `wget` and
-        `gh auth token`: the repository is public.
+        only reading git (`diff`, `log`, `show`, …), `gh pr diff/view` and filters after a pipe
+        with no file operands; no secret files, no redirects into files. Their input may be a
+        public PR's diff.
+    *   `fm-coderabbit-triager` — `.claude/hooks/triager-gh-readonly.py` refuses
+        `gh pr|issue comment/review/…`, `gh api` writes, `curl` / `wget`, `gh auth token`,
+        `eval` / `sh -c`, and any GraphQL query that is not one single-quoted `query` literal
+        (no `mutation`, no substitution, no file): the repository is public.
+    *   Both scripts are called from the frontmatter as
+        `python3 "$(git rev-parse --show-toplevel)/.claude/hooks/<script>"`: without the script
+        the agent's Bash is refused entirely, the main session is not affected.
     *   `fm-ci-runner` has no hook of its own: it must run Gradle; the prompt and the common
         `deny-git.py` are its limits.
     These hooks read the command text, like `deny-git.py`: they stop injected and careless
