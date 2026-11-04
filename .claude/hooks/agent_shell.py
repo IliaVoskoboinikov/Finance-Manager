@@ -8,8 +8,8 @@ removed) and cuts the command into simple commands; a hook then allows each one 
 program and arguments, and refuses everything it does not know.
 
 What the shell would expand at run time and `shlex` can't show — backticks, `${…}`,
-`$'…'`, `$"…"`, `$(…)` inside quotes, `<(…)`, `{a,b}` outside quotes, an assignment of a
-literal — is refused here. `#` is not a comment for `shlex` (inside a word it isn't one for
+`$'…'`, `$"…"`, `$(…)` inside quotes, `<(…)`, `{a,b}` and globs (`*`, `?`, `[…]`)
+outside quotes, an assignment of a literal — is refused here. `#` is not a comment for `shlex` (inside a word it isn't one for
 the shell either), and `\⏎` joins words as the shell does.
 An unquoted `$(…)` is allowed: its inner command becomes a segment of its own and is
 checked like the rest. A separator inside quotes (`cut -d "|"`) still splits the command;
@@ -117,9 +117,14 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
     command = command.replace("\\\n", "").replace("\n", ";")
     if RAW_EXPANSIONS.search(command):
         return [], "uses an expansion only the shell can resolve (`…`, ${…}, $'…')"
+    unquoted = _unquoted(command)
     # `{a,b}` вне кавычек оболочка размножит в несколько слов, а после shlex этого не видно.
-    if BRACE_EXPANSION.search(_unquoted(command)):
+    if BRACE_EXPANSION.search(unquoted):
         return [], "uses a brace expansion"
+    # `*`, `?`, `[…]` вне кавычек оболочка заменит именами файлов — в том числе файла
+    # `--output=x`, который мог принести сам проверяемый PR.
+    if re.search(r"[*?\[]", unquoted):
+        return [], "uses an unquoted glob (quote the pattern)"
     try:
         tokens = _tokens(command)
     except ValueError:

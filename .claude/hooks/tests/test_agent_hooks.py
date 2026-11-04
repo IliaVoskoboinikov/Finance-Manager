@@ -88,13 +88,18 @@ class ReviewAllowlistTest(unittest.TestCase):
             "git diff {--output=/tmp/x,HEAD}",
             "git diff HEAD{,--output=/tmp/x}",
             "git blame --contents /etc/passwd -- README",
+            "git diff *",
+            "git diff HEAD -- core/?ata",
+            "git diff HEAD -- [-]-output=x",
         )
 
-    def test_quoted_braces_and_hashes_stay_allowed(self):
+    def test_quoted_braces_globs_and_hashes_stay_allowed(self):
         self.assert_allowed(
             "git log --format='{%h,%s}'",
             "git log --grep '#298'",
             "git diff HEAD -- \\\n  core/data",
+            "git diff HEAD -- '*.kt'",
+            "git diff HEAD -- \\*.kt",
         )
 
     def test_filters_read_only_the_piped_output(self):
@@ -170,6 +175,8 @@ class TriagerReadOnlyTest(unittest.TestCase):
             "gh api {-fbody=x,repos/O/R/issues/298/comments}",
             "gh api graphql -fquery={mut,}ation{x}",
             "git blame --contents /etc/passwd -- README",
+            "gh api repos/O/R/pulls/298 *",
+            "git diff *",
         )
 
     def test_graphql_mutations_are_refused_in_any_form(self):
