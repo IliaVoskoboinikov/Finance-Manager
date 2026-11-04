@@ -49,6 +49,12 @@ a reject reason before it goes to a PR thread (that still needs the user's yes).
         does; each must be a known read. Every bypass found so far is a case in
         `.claude/hooks/tests/test_agent_hooks.py` — run
         `python3 -m unittest discover -s .claude/hooks/tests` after changing a hook (CI doesn't).
+    *   A reported bypass of these hooks is fixed when the agent could produce it: a form it
+        may write itself or under text from the PR, including files the PR brings (a file
+        named `--output=x` meets an unquoted `*`). A bypass that needs what neither the agent
+        nor the PR controls — an alias, a shell function, `IFS`, a changed git config — is
+        rejected with the reason «the hook is a guard, not a sandbox». Every fixed one becomes
+        a test case.
     *   `fm-ci-runner` has no hook of its own: it must run Gradle; the prompt and the common
         `deny-git.py` are its limits.
     These hooks read the command text, like `deny-git.py`: they stop injected and careless

@@ -171,7 +171,10 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     *   valid → fix it in the working tree and rerun the affected checks;
     *   false, or it contradicts a deliberate decision (`docs/agents/*`, `.github/copilot-instructions.md`)
         → don't change the code, say why in the report;
-    *   valid but outside the task → a draft card (`task-board.md`), not a scope creep.
+    *   valid but outside the task → a draft card (`task-board.md`), not a scope creep;
+    *   a bypass of a subagent's allowlist hook → fixed only when the agent or the PR could
+        produce it, else rejected as «a guard, not a sandbox» (`subagents.md`, «Limits through
+        `tools` and hooks»).
 4.  **CI failure** → reproduce the failing job locally, fix, rerun it. **Merge conflict** → don't
     merge or sync the branch yourself (git stays with the user): name the conflicting files.
 5.  **Report each round:** fixed / rejected with the reason / moved to a card, plus a commit
