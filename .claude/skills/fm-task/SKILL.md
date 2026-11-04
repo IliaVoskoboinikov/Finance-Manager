@@ -50,17 +50,20 @@ design gets a doc in `docs/`.
 
 ## 6. Checks
 
-Run every blocking CI job from `docs/agents/release-process.md` («Mandatory Verification»).
-A docs-only change skips them.
+Run every blocking CI job from `docs/agents/release-process.md` («Mandatory Verification»)
+through the `fm-ci-runner` subagent. A docs-only change skips them.
 
 ## 7. Review loop
 
 `docs/agents/release-process.md` («Automatic Review Loop»): `code-review` at `high` until no
-valid finding or 3 rounds, then one final pass by the `pr-review-toolkit` agents.
+valid finding or 3 rounds — round 1 together with `fm-architecture-reviewer` and, for
+security paths, `fm-security-reviewer` — then one final pass by the `pr-review-toolkit`
+agents.
 
 ## 8. Report
 
 The completion report from `docs/agents/release-process.md`, then the ready git commands
 for the user: `git add`, `git commit -m "<type>(<scope>): … (FM-N)"` (subject ≤ 72
 characters), `git push -u origin feature/FM-N-…`, and the PR body line `Closes #N`. End by
-asking the user to say when the PR is open — then «After the PR is opened» starts.
+asking the user to say when the PR is open — then «After the PR is opened» starts, with
+`fm-coderabbit-triager` collecting each CodeRabbit review.
