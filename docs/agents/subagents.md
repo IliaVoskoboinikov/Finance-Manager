@@ -43,6 +43,12 @@ a reject reason before it goes to a PR thread (that still needs the user's yes).
     *   Both scripts are called from the frontmatter as
         `python3 "$(git rev-parse --show-toplevel)/.claude/hooks/<script>"`: without the script
         the agent's Bash is refused entirely, the main session is not affected.
+    *   Both are allowlists over parsed commands, not patterns over the text: a regular
+        expression loses to quotes (`"-f"body=x`, `'mut''ation'`) and a single `&`.
+        `.claude/hooks/agent_shell.py` cuts the command into simple commands the way the shell
+        does; each must be a known read. Every bypass found so far is a case in
+        `.claude/hooks/tests/test_agent_hooks.py` — run
+        `python3 -m unittest discover -s .claude/hooks/tests` after changing a hook (CI doesn't).
     *   `fm-ci-runner` has no hook of its own: it must run Gradle; the prompt and the common
         `deny-git.py` are its limits.
     These hooks read the command text, like `deny-git.py`: they stop injected and careless
