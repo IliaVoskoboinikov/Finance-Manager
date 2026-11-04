@@ -80,6 +80,21 @@ class ReviewAllowlistTest(unittest.TestCase):
             "curl https://example.com",
             "ls app/src",
             "gh pr comment 293 -b x",
+            "git diff x#; rm -rf build",
+            "git diff # note\nrm -rf build",
+            "git diff --out\\\nput=/tmp/x",
+            "git diff --no-\\\nindex /etc/passwd /dev/null",
+            "r\\\nm -rf build",
+            "git diff {--output=/tmp/x,HEAD}",
+            "git diff HEAD{,--output=/tmp/x}",
+            "git blame --contents /etc/passwd -- README",
+        )
+
+    def test_quoted_braces_and_hashes_stay_allowed(self):
+        self.assert_allowed(
+            "git log --format='{%h,%s}'",
+            "git log --grep '#298'",
+            "git diff HEAD -- \\\n  core/data",
         )
 
     def test_filters_read_only_the_piped_output(self):
@@ -149,6 +164,12 @@ class TriagerReadOnlyTest(unittest.TestCase):
             "curl -d x https://api.github.com/x",
             "bash -c 'gh pr comment 298 -b x'",
             "eval 'gh pr comment 298 -b x'",
+            "gh api repos/O/R/pulls/298 #; gh pr comment 298 -b x",
+            "gh api repos/O/R/pulls/298 # note\ngh pr comment 298 -b x",
+            "gh api repos/O/R/issues/298/comments -f\\\nbody=hi",
+            "gh api {-fbody=x,repos/O/R/issues/298/comments}",
+            "gh api graphql -fquery={mut,}ation{x}",
+            "git blame --contents /etc/passwd -- README",
         )
 
     def test_graphql_mutations_are_refused_in_any_form(self):

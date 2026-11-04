@@ -8,7 +8,9 @@ removed) and cuts the command into simple commands; a hook then allows each one 
 program and arguments, and refuses everything it does not know.
 
 What the shell would expand at run time and `shlex` can't show — backticks, `${…}`,
-`$'…'`, `$"…"`, `$(…)` inside quotes, `<(…)`, an assignment of a literal — is refused here.
+`$'…'`, `$"…"`, `$(…)` inside quotes, `<(…)`, `{a,b}` outside quotes, an assignment of a
+literal — is refused here. `#` is not a comment for `shlex` (inside a word it isn't one for
+the shell either), and `\⏎` joins words as the shell does.
 An unquoted `$(…)` is allowed: its inner command becomes a segment of its own and is
 checked like the rest. A separator inside quotes (`cut -d "|"`) still splits the command;
 that only makes a hook refuse more, never less.
@@ -29,9 +31,50 @@ PUNCTUATION_ONLY = re.compile(r"[();<>|&]+")
 OPERATOR = re.compile(r"&&|\|\||>>|>&|&>|<\(|[;&|()<>]")
 
 
+GIT_READ = {"diff", "log", "show", "merge-base", "status", "rev-parse", "ls-files", "blame"}
+# Опции, которыми эти команды пишут файл или читают файл вне git (`blame --contents`).
+GIT_FILE_OPTIONS = ("--output", "--no-index", "--contents")
+BRACE_EXPANSION = re.compile(r"\{[^{}\s]*(,|\.\.)[^{}\s]*\}")
+
+
+def _unquoted(command: str) -> str:
+    """The command with the content of quotes replaced by `Q`: what the shell expands."""
+    result, quote, index = [], "", 0
+    while index < len(command):
+        char = command[index]
+        if quote:
+            if char == quote:
+                quote = ""
+            elif char == "\\" and quote == '"':
+                index += 1
+            result.append("Q")
+        elif char in "'\"":
+            quote = char
+            result.append("Q")
+        elif char == "\\":
+            index += 1
+            result.append("Q")
+        else:
+            result.append(char)
+        index += 1
+    return "".join(result)
+
+
+def git_read_refused(args: List[str]) -> str:
+    """Why `git <args>` is not a plain read, or an empty string (`--no-pager` is dropped)."""
+    args = [a for a in args if a != "--no-pager"]
+    if not args or args[0] not in GIT_READ:
+        return "runs a git command that is not read-only"
+    if any(option in arg for arg in args for option in GIT_FILE_OPTIONS):
+        return "makes git write a file or read one outside the repository"
+    return ""
+
+
 def _tokens(command: str) -> List[str]:
     lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
     lexer.whitespace_split = True
+    # Для оболочки `#` внутри слова — просто символ, а shlex отрезал бы им остаток команды.
+    lexer.commenters = ""
     tokens: List[str] = []
     for token in lexer:
         # shlex склеивает соседние операторы в один токен (`);`) — режем их обратно
@@ -70,9 +113,13 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
     Returns the segments and an empty string, or no segments and the reason the command
     can't be judged.
     """
-    command = command.replace("\\\n", " ").replace("\n", ";")
+    # Оболочка удаляет `\⏎` без пробела: `--out\⏎put` — это одно слово `--output`.
+    command = command.replace("\\\n", "").replace("\n", ";")
     if RAW_EXPANSIONS.search(command):
         return [], "uses an expansion only the shell can resolve (`…`, ${…}, $'…')"
+    # `{a,b}` вне кавычек оболочка размножит в несколько слов, а после shlex этого не видно.
+    if BRACE_EXPANSION.search(_unquoted(command)):
+        return [], "uses a brace expansion"
     try:
         tokens = _tokens(command)
     except ValueError:

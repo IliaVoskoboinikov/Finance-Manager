@@ -7,8 +7,8 @@ needs. The command is cut into simple commands the way the shell runs them
 (`agent_shell.split_command`), and each one must be:
 
 - `git diff/log/show/merge-base/status/rev-parse/ls-files/blame` (`--no-pager` allowed),
-  without `--output` and `--no-index` (the only ways these commands write a file or read
-  one outside git);
+  without `--output`, `--no-index` and `--contents` (the ways these commands write a file or
+  read one outside git) — `agent_shell.git_read_refused`;
 - `gh pr diff` / `gh pr view`;
 - a filter after a pipe (`head`, `grep`, `sort`, …) with known options and no file operands.
 
@@ -21,9 +21,8 @@ import json
 import re
 import sys
 
-from agent_shell import filter_is_safe, split_command
+from agent_shell import GIT_READ, filter_is_safe, git_read_refused, split_command
 
-GIT_READ = {"diff", "log", "show", "merge-base", "status", "rev-parse", "ls-files", "blame"}
 GH_PR_READ = {"diff", "view"}
 # Фильтр → (флаги без значения, флаги со значением, сколько операндов можно). Файловых
 # операндов нет: фильтр читает только stdin и ничего не пишет (`sort -o`, `uniq in out`,
@@ -42,16 +41,14 @@ SECRETS = re.compile(r"local\.properties|google-services\.json|\.jks\b|\.keystor
 
 def segment_refused(separator: str, tokens: list) -> str:
     """Why one simple command is refused, or an empty string."""
-    program, args = tokens[0], [t for t in tokens[1:] if t != "--no-pager"]
+    program, args = tokens[0], tokens[1:]
     if program in FILTERS:
         # Первым в цепочке фильтр читал бы файлы (`grep -r TOKEN .` нашёл бы секреты).
         if separator == "|" and filter_is_safe(args, *FILTERS[program]):
             return ""
         return f"runs `{program}` on files instead of the piped output"
-    if program == "git" and args[:1] and args[0] in GIT_READ:
-        if any(a.startswith("--output") or a == "--no-index" for a in args):
-            return "makes git write a file or read one outside the repository"
-        return ""
+    if program == "git":
+        return git_read_refused(args)
     if program == "gh" and args[:1] == ["pr"] and args[1:2] and args[1] in GH_PR_READ:
         return ""
     return f"runs `{program}`, which is not on the read-only list"

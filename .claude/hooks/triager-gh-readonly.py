@@ -19,10 +19,9 @@ import json
 import re
 import sys
 
-from agent_shell import filter_is_safe, split_command
+from agent_shell import filter_is_safe, git_read_refused, split_command
 
 GH_READ = {"pr": {"view", "diff", "list", "checks"}, "issue": {"view", "list"}, "repo": {"view"}}
-GIT_READ = {"diff", "log", "show", "merge-base", "status", "rev-parse", "ls-files", "blame"}
 FILTERS = {
     "head": ("", "nc", 0),
     "tail": ("", "nc", 0),
@@ -121,12 +120,7 @@ def segment_refused(separator: str, tokens: list) -> str:
             return ""
         return f"runs `{program}` on files instead of the piped output"
     if program == "git":
-        args = [a for a in args if a != "--no-pager"]
-        if args[:1] and args[0] in GIT_READ and not any(
-            a.startswith("--output") or a == "--no-index" for a in args
-        ):
-            return ""
-        return "runs a git command that is not read-only"
+        return git_read_refused(args)
     if program == "gh" and args:
         if args[0] == "api":
             return api_refused(args[1:])
