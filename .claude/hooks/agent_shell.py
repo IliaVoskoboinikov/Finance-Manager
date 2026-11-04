@@ -9,10 +9,12 @@ program and arguments, and refuses everything it does not know.
 
 What the shell would expand at run time and `shlex` can't show — backticks, `${…}`,
 `$'…'`, `$"…"`, `$(…)` inside quotes, `<(…)`, `{a,b}` and globs (`*`, `?`, `[…]`)
-outside quotes, an assignment of a literal — is refused here. `#` is not a comment for `shlex` (inside a word it isn't one for
-the shell either), and `\⏎` joins words as the shell does.
+outside quotes, an assignment of a literal, `$name` outside quotes — is refused here. `#` is not a comment for `shlex` (inside
+a word it isn't one for the shell either), and `\⏎` joins words as the shell does.
 An unquoted `$(…)` is allowed: its inner command becomes a segment of its own and is
-checked like the rest. A separator inside quotes (`cut -d "|"`) still splits the command;
+checked like the rest. Used directly as arguments, its output would be split into words, so
+there it may only be `git merge-base` / `git rev-parse` (a hash); in `name=$(…)` it may be
+any allowed read. A separator inside quotes (`cut -d "|"`) still splits the command;
 that only makes a hook refuse more, never less.
 """
 import re
@@ -125,6 +127,9 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
     # `--output=x`, который мог принести сам проверяемый PR.
     if re.search(r"[*?\[]", unquoted):
         return [], "uses an unquoted glob (quote the pattern)"
+    # `$name` вне кавычек оболочка разобьёт на слова: значение из файла PR стало бы флагами.
+    if re.search(r"\$[^(\s]", unquoted):
+        return [], "expands a variable outside quotes (quote it)"
     try:
         tokens = _tokens(command)
     except ValueError:
@@ -133,25 +138,47 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
     if tokens is None:
         return [], "redirects input or output"
     segments: List[Segment] = []
+    # Внешние команды, прерванные подстановкой `$(…)`: после её `)` разбор продолжает их.
+    outer: List[Segment] = []
     separator, current = "", []
-    for index, token in enumerate(tokens):
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
         next_token = tokens[index + 1] if index + 1 < len(tokens) else ""
+        index += 1
+        # `$(` без кавычек приходит как слово, оканчивающееся на `$`, перед `(`. Подстановка
+        # станет отдельным сегментом; прямо в аргументах (не в `name=$(…)`) её вывод оболочка
+        # разобьёт на слова, поэтому такой сегмент помечается разделителем `$(`.
+        if next_token == "(" and token.endswith("$"):
+            assignment = re.fullmatch(r"[A-Za-z_]\w*=\$", token)
+            if not assignment:
+                current.append(token[:-1] + "SUBSTITUTION")
+            outer.append((separator, current))
+            separator, current = ("(" if assignment else "$("), []
+            index += 1  # пропускаем `(`
+            continue
+        if token == ")" and outer:
+            segments.append((separator, current))
+            separator, current = outer.pop()
+            continue
         if token in SEPARATORS:
             segments.append((separator, current))
             separator, current = token, []
             continue
-        # `$(` без кавычек приходит как `$` (или `name=$`) перед `(`: сама подстановка
-        # станет отдельным сегментом, а от слова ничего не остаётся.
-        if next_token == "(" and (token == "$" or re.fullmatch(r"[A-Za-z_]\w*=\$", token)):
-            continue
         if "$(" in token:
             return [], "uses a command substitution inside quotes"
         current.append(token)
+    if outer:
+        return [], "cannot be parsed"
     segments.append((separator, current))
     segments = [(sep, toks) for sep, toks in segments if toks]
-    for _, toks in segments:
+    for sep, toks in segments:
         if ASSIGNMENT.match(toks[0]):
             return [], "sets a shell variable"
+        # Подстановка в аргументах — только то, что выводит хеш: иначе её вывод (например,
+        # `git show HEAD:payload.txt` из PR) превратится в флаги внешней команды.
+        if sep == "$(" and not (toks[0] == "git" and toks[1:2] in (["merge-base"], ["rev-parse"])):
+            return [], "passes the output of a command other than git merge-base/rev-parse as arguments"
     return segments, ""
 
 

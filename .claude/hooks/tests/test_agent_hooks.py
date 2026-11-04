@@ -124,6 +124,9 @@ class ReviewAllowlistTest(unittest.TestCase):
             "git diff ${X:-HEAD}",
             "X=--output=f; git diff $X",
             "git log --format='%H' 'unbalanced",
+            "git diff $(git show HEAD:payload.txt)",
+            "git diff $(git log -1 --format=%B)",
+            "git diff $BASE",
         )
 
 
@@ -177,6 +180,16 @@ class TriagerReadOnlyTest(unittest.TestCase):
             "git blame --contents /etc/passwd -- README",
             "gh api repos/O/R/pulls/298 *",
             "git diff *",
+            "gh api repos/O/R/issues/298/comments $(git show HEAD:payload.txt)",
+            "gh api repos/O/R/issues/298/comments $(git log -1 --format=%B)",
+            "head=$(git show HEAD:payload.txt); gh api repos/O/R/issues/298/comments $head",
+        )
+
+    def test_substitution_results_are_not_split_into_arguments(self):
+        self.assert_allowed(
+            "gh api repos/O/R/commits/$(git rev-parse HEAD) --jq .sha",
+            'head=$(gh api repos/O/R/pulls/298 --jq .head.sha)\n'
+            'gh api repos/O/R/commits --jq ".[] | select(.sha == \\"$head\\")"',
         )
 
     def test_graphql_mutations_are_refused_in_any_form(self):
