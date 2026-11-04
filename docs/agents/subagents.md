@@ -27,13 +27,21 @@ a reject reason before it goes to a PR thread (that still needs the user's yes).
     doesn't reach every subagent's context.
 *   **The workflow in `CLAUDE.md` is not theirs.** They see the interview, review-loop and
     report rules too, so each prompt starts by saying those belong to the main session.
-*   **Read-only through `tools`.** `permissionMode` in the frontmatter is overridden by the main
-    session's mode (auto, acceptEdits), so the allowlist is the only real limit: no `Edit` /
-    `Write`, no `Agent` (subagents can nest up to three levels otherwise). `AskUserQuestion` is
-    never available to a subagent. An agent that needs `Bash` for `gh` gets a frontmatter
-    `PreToolUse` hook instead: `fm-coderabbit-triager` blocks `gh pr|issue comment/review/…`,
-    GraphQL `mutation` and `gh api` writes (`-X POST…`, `-f` outside `graphql`) — the
-    repository is public, so its read-only rule is enforced, not only asked for.
+*   **Limits through `tools` and hooks.** `permissionMode` in the frontmatter is overridden by
+    the main session's mode (auto, acceptEdits), so it limits nothing. The `tools` allowlist
+    removes `Edit` / `Write` and `Agent` (subagents can nest up to three levels otherwise);
+    `AskUserQuestion` is never available to a subagent. `Bash` stays where the job needs it,
+    and frontmatter `PreToolUse` hooks narrow it:
+    *   `fm-architecture-reviewer`, `fm-security-reviewer` — `.claude/hooks/review-bash-allowlist.py`:
+        only reading git (`diff`, `log`, `show`, …), `gh pr diff/view` and filters after a pipe;
+        no secret files, no redirects into files. Their input may be a public PR's diff.
+    *   `fm-coderabbit-triager` — an inline hook refuses `gh pr|issue comment/review/…`,
+        GraphQL `mutation` or a query from a file, `gh api` writes, `curl` / `wget` and
+        `gh auth token`: the repository is public.
+    *   `fm-ci-runner` has no hook of its own: it must run Gradle; the prompt and the common
+        `deny-git.py` are its limits.
+    These hooks read the command text, like `deny-git.py`: they stop injected and careless
+    commands, they are not a sandbox and give no read-only filesystem.
 *   **Hooks.** The `PreToolUse` hook from `.claude/settings.json` (`deny-git.py`) runs for
     subagents too. The `Stop` hook (`verify-changes.py`: ktlint and detekt) does not — a
     subagent ends with `SubagentStop`. An agent that writes Kotlin would have to run

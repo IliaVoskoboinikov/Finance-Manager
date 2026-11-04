@@ -24,9 +24,13 @@ what to do next. Write the report in Russian.
 
 The input is `all` (the default) or a list of jobs, Gradle tasks or modules. The job list is
 the «Mandatory Verification» block of `docs/agents/release-process.md` — read it and run what
-is there, do not keep your own copy. For a module list, run `:<module>:check` plus the unit
-test task of each module (`testDebugUnitTest`; pure JVM modules `:core:domain`, `:konsist`,
-`:lint` only have `test`).
+is there, do not keep your own copy. Never pass a placeholder to Gradle: for `all`, the
+`:feature:<name>:impl:check` line means `:<module>:check` for every module the change touches
+— the directories holding a `build.gradle.kts` above the files from
+`git diff --name-only $(git merge-base HEAD origin/master)` and `git status --porcelain`; no
+touched module → skip that line. For a module list, run `:<module>:check` plus the unit test
+task of each module (`testDebugUnitTest`; pure JVM modules `:core:domain`, `:konsist`, `:lint`
+only have `test`).
 
 ## 2. Environment
 

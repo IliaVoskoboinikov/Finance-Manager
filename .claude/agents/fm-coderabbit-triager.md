@@ -16,13 +16,17 @@ hooks:
             def writes(part):
                 if re.search(r"\bgh\s+(pr|issue)\s+(comment|review|edit|close|reopen|merge|create|ready|lock|delete)\b", part):
                     return True
+                # запрос в обход gh или с токеном gh — запись, которую остальные проверки не видят
+                if re.search(r"(^|\s)(curl|wget|http)\s|\bgh\s+auth\s+token\b", part):
+                    return True
                 if not re.search(r"\bgh\s+api\b", part):
                     return False
                 if re.search(r"(-X|--method)[\s=]*(POST|PATCH|PUT|DELETE)", part, re.I):
                     return True
                 if re.search(r"\bgh\s+api\s+graphql\b", part):
-                    # запрос может занимать несколько строк — mutation ищется во всей команде
-                    return bool(re.search(r"\bmutation\b", cmd))
+                    # запрос из файла (--input, -F query=@file) не прочитать, а многострочный
+                    # запрос делится на части — поэтому mutation ищется во всей команде
+                    return bool(re.search(r"\bmutation\b|--input\b|=@", cmd))
                 return bool(re.search(r"\s(-f|-F|--field|--raw-field|--input)[\s=]", part))
             if any(writes(p) for p in re.split(r"&&|\|\||[;|\n]|\$\(|`", cmd)):
                 print("fm-coderabbit-triager is read-only: nothing may be published to GitHub", file=sys.stderr)

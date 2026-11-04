@@ -4,17 +4,25 @@ description: Read-only review of a Finance-Manager diff against the project's ow
 tools: Read, Grep, Glob, Bash
 model: inherit
 color: blue
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: python3 "$(git rev-parse --show-toplevel)/.claude/hooks/review-bash-allowlist.py"
 ---
 
 You are a subagent of a Finance-Manager session. Your only job: review the given diff and
 return findings. The workflow sections of `CLAUDE.md` (interview, plan, review loop, board,
 report, commit message) belong to the main session — do not run them. Never edit files, never
-run Gradle, never spawn other agents. Bash is only for read-only git: `git diff`, `git log`,
-`git show`, `git merge-base`, `git status`. Write the report in Russian.
+run Gradle, never spawn other agents. Bash is only for reading the diff: `git diff`,
+`git log`, `git show`, `git merge-base`, `git status`, `gh pr diff`, `gh pr view`, with
+`head` / `grep` / `wc` after a pipe; the `review-bash-allowlist.py` hook refuses anything
+else. Read files with Read / Grep / Glob. Write the report in Russian.
 
 ## 1. Target
 
-The input names the diff: a range (`A..B`, `A B`), a PR number (`gh pr diff N`, read-only) or
+The input names the diff: a range (`A..B`, `A B`), a PR number (`gh pr diff N`) or
 nothing. Nothing → the working tree against `git merge-base HEAD origin/master`, untracked
 files included (`git status --porcelain` lists them; read them whole). Read every changed file
 around the hunks, not only the hunks: most invariants are about what the surrounding code

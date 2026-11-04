@@ -3,8 +3,9 @@
 ## Mandatory Verification
 Before marking a task as complete, run locally every blocking job of `.github/workflows/ci.yml`,
 so the PR doesn't go red on something a local run would have caught. Hand the run to the
-`fm-ci-runner` subagent (`subagents.md`): it runs this list and returns only the pass/fail
-table and the first error of each failure, so the Gradle log stays out of the session. Run
+`fm-ci-runner` subagent (`subagents.md`): it runs this list and returns the pass/fail table,
+the first error of each failure, the log directory and the commands it ran — the Gradle log
+itself stays out of the session. Run
 the commands by hand when the subagent isn't available.
 ```bash
 # Run all checks for modified modules
