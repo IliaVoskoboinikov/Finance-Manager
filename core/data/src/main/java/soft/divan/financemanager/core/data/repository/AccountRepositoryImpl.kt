@@ -109,25 +109,25 @@ class AccountRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Заменяет локальный счёт серверной версией, если её можно принять ([canTakeServerVersion]).
+     * Заменяет локальный счёт серверной версией, если её можно принять ([refreshableRow]).
      *
-     * Проверка делается дважды. До запроса — потому что `getById` зовут и use case'ы записи
-     * транзакции: обновление стартует после их commit, когда транзакция ещё в очереди, и ответ
-     * сервера заведомо не знает о ней. После ответа, в одной транзакции с записью, — потому что
-     * за время запроса пользователь мог изменить счёт.
+     * До запроса строка запоминается — потому что `getById` зовут и use case'ы записи транзакции:
+     * обновление стартует после их commit, когда транзакция ещё в очереди, и ответ сервера
+     * заведомо не знает о ней. Ответ пишется, только если в транзакции записи строка всё та же:
+     * за время запроса её могли изменить пользователь, pull или запись операции (баланс меняется
+     * без смены `syncStatus` и `updatedAt`, а операция успевает уехать до ответа). Ответ, ушедший
+     * с сервера раньше этих изменений, откатил бы их. `updatedAt` при этом не сравнивается: он
+     * бывает и по часам клиента, и по часам сервера.
      */
     private suspend fun refreshFromServer(localId: String, serverId: String) {
-        val canRefresh = safeDbCall(errorLogger) {
-            canTakeServerVersion(localId, serverUpdatedAt = null)
-        }.getOrNull()
-        if (canRefresh != true) return
+        val snapshot = safeDbCall(errorLogger) { refreshableRow(localId) }.getOrNull() ?: return
 
         safeApiCall(errorLogger) {
             remoteDataSource.getById(serverId)
         }.onSuccess { accountDto ->
             safeDbCall(errorLogger) {
                 transactionRunner.runInTransaction {
-                    if (canTakeServerVersion(localId, accountDto.updatedAt)) {
+                    if (refreshableRow(localId) == snapshot) {
                         localDataSource.update(
                             accountDto.toEntity(localId = localId, syncStatus = SyncStatus.SYNCED)
                         )
@@ -138,28 +138,18 @@ class AccountRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Можно ли заменить локальный счёт серверной версией: строка синхронизирована и в очереди нет
-     * операций ни над ней, ни над её транзакциями.
+     * Строка счёта, которую можно заменить серверной версией, или `null`: строка синхронизирована и
+     * в очереди нет операций ни над ней, ни над её транзакциями.
      *
      * Второе условие — ради баланса. Запись транзакции меняет баланс счёта только локально
      * ([updateBalanceLocal]), счёт при этом остаётся `SYNCED`; пока транзакция не уехала, серверный
      * баланс без неё затёр бы правильный локальный.
-     *
-     * Ответ с [serverUpdatedAt] старше строки тоже отвергается: пока шёл запрос, pull мог записать
-     * более новую серверную версию. Равный — принимается, в отличие от pull: неизвестно, сдвигает
-     * ли сервер `updatedAt` счёта, когда пересчитывает его баланс по операции. Нечитаемая дата
-     * не считается устаревшей: refresh ведёт себя как до сравнения дат.
      */
-    private suspend fun canTakeServerVersion(
-        localId: String,
-        serverUpdatedAt: String?
-    ): Boolean {
-        val local = localDataSource.getByLocalId(localId) ?: return false
-        val isStale = serverUpdatedAt != null && TimeMapper.isAfter(local.updatedAt, serverUpdatedAt)
-        return local.syncStatus == SyncStatus.SYNCED &&
-            !isStale &&
-            !outboxLocalDataSource.hasOpenOperationsAffecting(localId)
-    }
+    private suspend fun refreshableRow(localId: String): AccountEntity? =
+        localDataSource.getByLocalId(localId)?.takeIf {
+            it.syncStatus == SyncStatus.SYNCED &&
+                !outboxLocalDataSource.hasOpenOperationsAffecting(localId)
+        }
 
     /** Вытаскиваем из бд аккаунт(так как только в БД храним serverId) обновляем локальный аккаунт и
      * запускаем синхронизацию если аккаунт не синхронизирован с сервером то создаем на сервере и

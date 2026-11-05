@@ -245,7 +245,8 @@ class AccountRepositoryImplTest {
 
     @Test
     fun `getById refreshes synced account from server in background`() = runTest {
-        // updatedAt у строки и ответа равны намеренно: равная версия принимается, в отличие от pull
+        // updatedAt у строки и ответа равны: refresh даты не сравнивает, важно лишь, что строка
+        // не менялась за время запроса
         coEvery { localDataSource.getByLocalId("local-1") } returns entity(serverId = "server-1")
         coEvery { remoteDataSource.getById("server-1") } returns Response.success(
             AccountDto(
@@ -323,6 +324,25 @@ class AccountRepositoryImplTest {
             // Ответ новее строки на момент запроса, но старше версии, которую записал pull
             coEvery { remoteDataSource.getById("server-1") } returns
                 Response.success(freshServerAccount().copy(updatedAt = "2024-01-15T00:00:00Z"))
+
+            repository.getById("local-1")
+            appCoroutineContext.runAll()
+
+            coVerify(exactly = 0) { localDataSource.update(any()) }
+        }
+
+    @Test
+    fun `getById does not overwrite a balance changed while the refresh was in flight`() =
+        runTest {
+            // Пока шёл запрос, записали и уже отправили операцию: счёт остался SYNCED с тем же
+            // updatedAt, очередь пуста, но ответ сервера не знает об операции
+            coEvery { localDataSource.getByLocalId("local-1") } returnsMany listOf(
+                entity(serverId = "server-1"), // getById
+                entity(serverId = "server-1"), // проверка до запроса
+                entity(serverId = "server-1").copy(balance = "150.50") // после
+            )
+            coEvery { remoteDataSource.getById("server-1") } returns
+                Response.success(freshServerAccount())
 
             repository.getById("local-1")
             appCoroutineContext.runAll()

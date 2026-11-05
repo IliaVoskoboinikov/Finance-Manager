@@ -319,7 +319,8 @@ class TransactionRepositoryImplTest {
 
     @Test
     fun `getById refreshes synced transaction from server using category type`() = runTest {
-        // updatedAt у строки и ответа равны намеренно: равная версия принимается, в отличие от pull
+        // updatedAt у строки и ответа равны: refresh даты не сравнивает, важно лишь, что строка
+        // не менялась за время запроса
         coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
         coEvery { remoteDataSource.get("server-t1") } returns Response.success(
             TransactionDto(
