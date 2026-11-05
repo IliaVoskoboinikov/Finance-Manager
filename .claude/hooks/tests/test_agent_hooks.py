@@ -31,11 +31,12 @@ THREADS_QUERY = (
     "  --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved|not)"
     " | {path, line, isOutdated}'"
 )
+# Триажёр не заводит переменных: sha head берёт первой командой и пишет литералом.
+HEAD_SHA = "gh api repos/IliaVoskoboinikov/Finance-Manager/pulls/298 --jq .head.sha"
 HEAD_REVIEWS = (
-    "head=$(gh api repos/IliaVoskoboinikov/Finance-Manager/pulls/298 --jq .head.sha)\n"
     "gh api --paginate repos/IliaVoskoboinikov/Finance-Manager/pulls/298/reviews \\\n"
-    '  --jq ".[] | select(.user.login == \\"coderabbitai[bot]\\" and .commit_id == \\"$head\\")'
-    ' | .body"'
+    "  --jq '.[] | select(.user.login == \"coderabbitai[bot]\" and .commit_id == "
+    "\"fd1cfcb48e8b592ecb2c8e62ecd512fa9d1febb0\") | .body'"
 )
 
 
@@ -127,6 +128,11 @@ class ReviewAllowlistTest(unittest.TestCase):
             "git diff $(git show HEAD:payload.txt)",
             "git diff $(git log -1 --format=%B)",
             "git diff $BASE",
+            'flag=$(git show HEAD:payload.txt); git diff "$flag"',
+            'git diff "$BASE"',
+            'git diff "$(git show HEAD:payload.txt)"',
+            "git diff # '\nrm -rf build # '",
+            "git diff;# '\nrm -rf build # '",
         )
 
 
@@ -144,6 +150,7 @@ class TriagerReadOnlyTest(unittest.TestCase):
     def test_reading_the_review_is_allowed(self):
         self.assert_allowed(
             THREADS_QUERY,
+            HEAD_SHA,
             HEAD_REVIEWS,
             "gh api repos/O/R/pulls/298 --jq .head.sha",
             "gh api --paginate repos/O/R/issues/298/comments --jq '.[].body'",
@@ -186,10 +193,16 @@ class TriagerReadOnlyTest(unittest.TestCase):
         )
 
     def test_substitution_results_are_not_split_into_arguments(self):
-        self.assert_allowed(
-            "gh api repos/O/R/commits/$(git rev-parse HEAD) --jq .sha",
+        self.assert_allowed("gh api repos/O/R/commits/$(git rev-parse HEAD) --jq .sha")
+
+    def test_shell_variables_are_refused_even_in_double_quotes(self):
+        self.assert_refused(
             'head=$(gh api repos/O/R/pulls/298 --jq .head.sha)\n'
             'gh api repos/O/R/commits --jq ".[] | select(.sha == \\"$head\\")"',
+            'x=$(git show HEAD:payload.txt); gh api repos/O/R/pulls/298 "$x"',
+            'gh api repos/O/R/pulls/298 --jq "$Q"',
+            "gh api graphql -f query=\"query{x}$q\"",
+            "gh api repos/O/R/pulls/298 # note '\ngh pr comment 298 -b x # '",
         )
 
     def test_graphql_mutations_are_refused_in_any_form(self):

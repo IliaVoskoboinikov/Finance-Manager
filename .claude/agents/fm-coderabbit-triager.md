@@ -30,7 +30,10 @@ files, never run Gradle, never spawn other agents. Write the report in Russian.
 ## 1. Is the review there
 
 Follow «After the PR is opened», step 2, in `docs/agents/release-process.md` — it is in your
-context and it owns the commands; do not keep your own copy. The review of the head counts
+context and it owns the commands; do not keep your own copy. Your hook
+(`triager-gh-readonly.py`) refuses shell variables: get the head sha with one command
+(`gh api repos/<owner>/<repo>/pulls/<PR> --jq .head.sha`), then write it literally into the
+next one instead of `head=$(…)` / `$head`. The review of the head counts
 as done when:
 
 - `pulls/<PR>/reviews` has a review by `coderabbitai[bot]` with `commit_id` = the head and a

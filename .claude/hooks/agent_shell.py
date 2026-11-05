@@ -7,24 +7,25 @@ The hooks of the read-only subagents (`review-bash-allowlist.py`,
 removed) and cuts the command into simple commands; a hook then allows each one by its
 program and arguments, and refuses everything it does not know.
 
-What the shell would expand at run time and `shlex` can't show — backticks, `${…}`,
-`$'…'`, `$"…"`, `$(…)` inside quotes, `<(…)`, `{a,b}` and globs (`*`, `?`, `[…]`)
-outside quotes, an assignment of a literal, `$name` outside quotes — is refused here. `#` is not a comment for `shlex` (inside
-a word it isn't one for the shell either), and `\⏎` joins words as the shell does.
-An unquoted `$(…)` is allowed: its inner command becomes a segment of its own and is
-checked like the rest. Used directly as arguments, its output would be split into words, so
-there it may only be `git merge-base` / `git rev-parse` (a hash); in `name=$(…)` it may be
-any allowed read. A separator inside quotes (`cut -d "|"`) still splits the command;
-that only makes a hook refuse more, never less.
+What the shell would expand at run time and `shlex` can't show is refused here: any `$`
+the shell expands (outside quotes or inside double quotes — a variable, `${…}`, `$'…'`),
+backticks, shell variables set in the command, a comment (`#` starting a word outside
+quotes: the shell drops the rest of the line, `shlex` would not), `<(…)`, and `{a,b}` or
+globs (`*`, `?`, `[…]`) outside quotes. `$` inside single quotes is a literal (GraphQL
+variables). `\⏎` joins words as the shell does.
+
+The one expansion allowed is an unquoted `$(…)` whose command is `git merge-base` or
+`git rev-parse`: it prints a hash, and its inner command is checked as a segment of its own.
+A separator inside quotes (`cut -d "|"`) still splits the command; that only makes a hook
+refuse more, never less.
 """
 import re
 import shlex
 from typing import List, Optional, Tuple
 
 SEPARATORS = {"&&", "||", "|", ";", "&", "(", ")"}
-# Подстановки, которые shlex не раскрывает и не показывает: их значение известно только оболочке.
-RAW_EXPANSIONS = re.compile(r"`|\$\{|\$'|\$\"")
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
+WORD_START = set(" \t\n;&|()")
 
 Segment = Tuple[str, List[str]]  # (разделитель перед сегментом, токены сегмента)
 
@@ -60,6 +61,43 @@ def _unquoted(command: str) -> str:
             result.append(char)
         index += 1
     return "".join(result)
+
+
+def _expansion_refused(command: str) -> str:
+    """Why the raw command has an expansion or a comment the hooks can't judge, or ''.
+
+    Walks the text with the shell's quote rules: inside single quotes nothing is special;
+    outside quotes and inside double quotes `$` and backticks expand.
+    """
+    quote, index = "", 0
+    while index < len(command):
+        char = command[index]
+        previous = command[index - 1] if index else "\n"
+        following = command[index + 1:index + 2]
+        index += 1
+        if quote == "'":
+            if char == "'":
+                quote = ""
+            continue
+        if char == "\\":
+            index += 1  # экранированный символ — литерал
+            continue
+        if char == "`":
+            return "uses a backtick substitution"
+        if char == "$":
+            # единственная разрешённая подстановка — `$(` вне кавычек; что внутри, проверит разбор
+            if quote or following != "(":
+                return "expands a shell variable or substitution (write the value literally)"
+            continue
+        if quote == '"':
+            if char == '"':
+                quote = ""
+            continue
+        if char in "'\"":
+            quote = char
+        elif char == "#" and previous in WORD_START:
+            return "contains a shell comment"
+    return ""
 
 
 def git_read_refused(args: List[str]) -> str:
@@ -116,9 +154,12 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
     can't be judged.
     """
     # Оболочка удаляет `\⏎` без пробела: `--out\⏎put` — это одно слово `--output`.
-    command = command.replace("\\\n", "").replace("\n", ";")
-    if RAW_EXPANSIONS.search(command):
-        return [], "uses an expansion only the shell can resolve (`…`, ${…}, $'…')"
+    command = command.replace("\\\n", "")
+    # Комментарий кончается на переводе строки — проверяем до того, как строки станут `;`.
+    reason = _expansion_refused(command)
+    if reason:
+        return [], reason
+    command = command.replace("\n", ";")
     unquoted = _unquoted(command)
     # `{a,b}` вне кавычек оболочка размножит в несколько слов, а после shlex этого не видно.
     if BRACE_EXPANSION.search(unquoted):
@@ -127,9 +168,6 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
     # `--output=x`, который мог принести сам проверяемый PR.
     if re.search(r"[*?\[]", unquoted):
         return [], "uses an unquoted glob (quote the pattern)"
-    # `$name` вне кавычек оболочка разобьёт на слова: значение из файла PR стало бы флагами.
-    if re.search(r"\$[^(\s]", unquoted):
-        return [], "expands a variable outside quotes (quote it)"
     try:
         tokens = _tokens(command)
     except ValueError:
@@ -147,14 +185,14 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
         next_token = tokens[index + 1] if index + 1 < len(tokens) else ""
         index += 1
         # `$(` без кавычек приходит как слово, оканчивающееся на `$`, перед `(`. Подстановка
-        # станет отдельным сегментом; прямо в аргументах (не в `name=$(…)`) её вывод оболочка
-        # разобьёт на слова, поэтому такой сегмент помечается разделителем `$(`.
+        # станет отдельным сегментом с разделителем `$(`: её вывод оболочка разобьёт на слова.
         if next_token == "(" and token.endswith("$"):
-            assignment = re.fullmatch(r"[A-Za-z_]\w*=\$", token)
-            if not assignment:
-                current.append(token[:-1] + "SUBSTITUTION")
+            if ASSIGNMENT.match(token):
+                # значение переменной потом попало бы в аргументы, где хук его не видит
+                return [], "sets a shell variable"
+            current.append(token[:-1] + "SUBSTITUTION")
             outer.append((separator, current))
-            separator, current = ("(" if assignment else "$("), []
+            separator, current = "$(", []
             index += 1  # пропускаем `(`
             continue
         if token == ")" and outer:
@@ -165,8 +203,6 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
             segments.append((separator, current))
             separator, current = token, []
             continue
-        if "$(" in token:
-            return [], "uses a command substitution inside quotes"
         current.append(token)
     if outer:
         return [], "cannot be parsed"
