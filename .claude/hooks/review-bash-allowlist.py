@@ -17,25 +17,15 @@ file. The hook is wired in the agents' frontmatter, not in .claude/settings.json
 session's Bash stays as it is. It reads the command, like deny-git.py — a guard against
 injected or careless commands, not a sandbox.
 """
-import json
 import re
 import sys
 
-from agent_shell import GIT_READ, filter_is_safe, git_read_refused, split_command
+from agent_shell import (
+    GIT_READ, READ_FILTERS, filter_is_safe, git_read_refused, jq_refused, run_hook, split_command,
+)
 
 GH_PR_READ = {"diff", "view"}
-# Фильтр → (флаги без значения, флаги со значением, сколько операндов можно). Файловых
-# операндов нет: фильтр читает только stdin и ничего не пишет (`sort -o`, `uniq in out`,
-# `grep -r` отпадают); у grep единственный операнд — шаблон.
-FILTERS = {
-    "head": ("", "nc", 0),
-    "tail": ("", "nc", 0),
-    "wc": ("lwcm", "", 0),
-    "sort": ("nruf", "kt", 0),
-    "uniq": ("cdu", "", 0),
-    "cut": ("", "dfc", 0),
-    "grep": ("nivcEFwo", "emABC", 1),
-}
+FILTERS = {**READ_FILTERS, "cut": ("", "dfc", 0)}
 SECRETS = re.compile(r"local\.properties|google-services\.json|\.jks\b|\.keystore\b")
 
 
@@ -50,7 +40,7 @@ def segment_refused(separator: str, tokens: list) -> str:
     if program == "git":
         return git_read_refused(args)
     if program == "gh" and args[:1] == ["pr"] and args[1:2] and args[1] in GH_PR_READ:
-        return ""
+        return jq_refused(args)
     return f"runs `{program}`, which is not on the read-only list"
 
 
@@ -68,23 +58,10 @@ def refused(command: str) -> str:
     return ""
 
 
-def main() -> int:
-    try:
-        command = json.load(sys.stdin).get("tool_input", {}).get("command", "")
-    except Exception:
-        print("review-bash-allowlist: unreadable hook input", file=sys.stderr)
-        return 2
-    reason = refused(command)
-    if reason:
-        print(
-            f"Read-only reviewer: the command {reason}. Allowed: git "
-            f"{'/'.join(sorted(GIT_READ))}, gh pr diff/view, "
-            f"{', '.join(sorted(FILTERS))} after a pipe.",
-            file=sys.stderr,
-        )
-        return 2
-    return 0
-
-
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_hook(
+        "Read-only reviewer",
+        refused,
+        f"Allowed: git {'/'.join(sorted(GIT_READ))}, gh pr diff/view, "
+        f"{', '.join(sorted(FILTERS))} after a pipe.",
+    ))

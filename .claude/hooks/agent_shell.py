@@ -1,5 +1,8 @@
 """Shell command parsing shared by the subagents' allowlist hooks.
 
+A hook that fails with an exception must still refuse: Claude Code treats any exit code
+other than 2 as a non-blocking error and runs the command. `run_hook` does that for both.
+
 The hooks of the read-only subagents (`review-bash-allowlist.py`,
 `triager-gh-readonly.py`) must judge the command the shell will run, not its text: quotes
 (`"-f"body=x`, `'mut''ation'`) and a single `&` hide a command from a regular expression.
@@ -14,14 +17,16 @@ quotes: the shell drops the rest of the line, `shlex` would not), `<(…)`, and 
 globs (`*`, `?`, `[…]`) outside quotes. `$` inside single quotes is a literal (GraphQL
 variables). `\⏎` joins words as the shell does.
 
-The one expansion allowed is an unquoted `$(…)` whose command is `git merge-base` or
-`git rev-parse`: it prints a hash, and its inner command is checked as a segment of its own.
+The one expansion allowed is an unquoted `$(…)` holding a single command, `git merge-base`
+or `git rev-parse`: it prints a hash, and the command is checked as a segment of its own.
 A separator inside quotes (`cut -d "|"`) still splits the command; that only makes a hook
 refuse more, never less.
 """
+import json
 import re
 import shlex
-from typing import List, Optional, Tuple
+import sys
+from typing import Callable, List, Optional, Tuple
 
 SEPARATORS = {"&&", "||", "|", ";", "&", "(", ")"}
 ASSIGNMENT = re.compile(r"[A-Za-z_]\w*=")
@@ -105,9 +110,59 @@ def git_read_refused(args: List[str]) -> str:
     args = [a for a in args if a != "--no-pager"]
     if not args or args[0] not in GIT_READ:
         return "runs a git command that is not read-only"
-    if any(option in arg for arg in args for option in GIT_FILE_OPTIONS):
-        return "makes git write a file or read one outside the repository"
+    for arg in args:
+        name = arg.split("=", 1)[0]
+        # git принимает однозначное сокращение длинной опции (`blame --cont=файл`)
+        abbreviation = len(name) > 2 and any(o.startswith(name) for o in GIT_FILE_OPTIONS)
+        if abbreviation or any(option in arg for option in GIT_FILE_OPTIONS):
+            return "makes git write a file or read one outside the repository"
     return ""
+
+
+# Выражения jq, которые читают окружение (токены) или файлы, а не JSON из stdin.
+JQ_OUTSIDE_INPUT = re.compile(r"\$ENV|(?<![.\w$])env\b|\binput_filename\b|\$__loc__|\b(include|import)\b")
+
+
+def jq_expression_refused(expressions: List[str]) -> str:
+    """Why one of the jq expressions reads more than its input (env, files), or ''."""
+    if any(JQ_OUTSIDE_INPUT.search(expression) for expression in expressions):
+        return "reads the environment or files from a jq expression"
+    return ""
+
+
+def jq_refused(args: List[str], filter_operand: bool = False) -> str:
+    """Why a jq expression in the arguments reads more than its input, or ''.
+
+    Looks at `--jq` values and `-q` in any short-option cluster (`-q x`, `-qx`, `-cq x` —
+    gh lets boolean shorthands precede it), or at every operand when `filter_operand` (the
+    `jq` program, whose operand is the filter).
+    """
+    expressions = []
+    for index, arg in enumerate(args):
+        following = args[index + 1] if index + 1 < len(args) else ""
+        cluster = re.fullmatch(r"-([A-Za-z]*?)q(.*)", arg)
+        if arg == "--jq":
+            expressions.append(following)
+        elif arg.startswith("--jq="):
+            expressions.append(arg[len("--jq="):])
+        elif cluster:
+            expressions.append(cluster.group(2) or following)
+        elif filter_operand and not arg.startswith("-"):
+            expressions.append(arg)
+    return jq_expression_refused(expressions)
+
+
+# Фильтры после `|` → (флаги без значения, флаги со значением, сколько операндов можно).
+# Файловых операндов нет: фильтр читает только stdin и ничего не пишет (`sort -o`,
+# `uniq in out`, `grep -r` отпадают); у grep единственный операнд — шаблон.
+READ_FILTERS = {
+    "head": ("", "nc", 0),
+    "tail": ("", "nc", 0),
+    "wc": ("lwcm", "", 0),
+    "sort": ("nruf", "kt", 0),
+    "uniq": ("cdu", "", 0),
+    "grep": ("nivcEFwo", "emABC", 1),
+}
 
 
 def _tokens(command: str) -> List[str]:
@@ -155,6 +210,9 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
     """
     # Оболочка удаляет `\⏎` без пробела: `--out\⏎put` — это одно слово `--output`.
     command = command.replace("\\\n", "")
+    # `\r` и другие управляющие символы shlex считает пробелом, а bash — частью слова.
+    if re.search(r"[\x00-\x08\x0b-\x1f\x7f]", command):
+        return [], "contains a control character"
     # Комментарий кончается на переводе строки — проверяем до того, как строки станут `;`.
     reason = _expansion_refused(command)
     if reason:
@@ -200,6 +258,10 @@ def split_command(command: str) -> Tuple[List[Segment], str]:
             separator, current = outer.pop()
             continue
         if token in SEPARATORS:
+            # Вторая команда в `$(…)` прошла бы мимо правила «только merge-base / rev-parse»,
+            # а её вывод стал бы аргументами внешней команды.
+            if outer:
+                return [], "runs several commands inside a substitution"
             segments.append((separator, current))
             separator, current = token, []
             continue
@@ -245,3 +307,22 @@ def filter_is_safe(args: List[str], flags: str, with_value: str, operands_allowe
             return False
         operands += 1
     return operands <= operands_allowed
+
+
+def run_hook(name: str, refused: Callable[[str], str], hint: str) -> int:
+    """Read the PreToolUse input, judge the command, return the hook's exit code.
+
+    Exit code 2 refuses the command and shows stderr to the agent. Any failure of the hook
+    itself — unreadable input or a bug in `refused` — refuses too: with code 1 the command
+    would run.
+    """
+    try:
+        command = json.load(sys.stdin).get("tool_input", {}).get("command", "")
+        reason = refused(command)
+    except Exception as error:  # noqa: BLE001 — хук обязан закрыться при любой ошибке
+        print(f"{name}: the hook failed ({type(error).__name__}), the command is refused", file=sys.stderr)
+        return 2
+    if reason:
+        print(f"{name}: the command {reason}. {hint}", file=sys.stderr)
+        return 2
+    return 0

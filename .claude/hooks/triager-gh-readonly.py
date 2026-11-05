@@ -15,36 +15,34 @@ separates), and each one must be:
 Everything else (`curl`, `gh auth token`, `eval`, `sh -c`, files with `@`) is refused with
 exit code 2. Like deny-git.py it reads the command — a guard, not a sandbox.
 """
-import json
 import re
 import sys
 
-from agent_shell import filter_is_safe, git_read_refused, split_command
+from agent_shell import (
+    READ_FILTERS, filter_is_safe, git_read_refused, jq_expression_refused, jq_refused, run_hook,
+    split_command,
+)
 
 GH_READ = {"pr": {"view", "diff", "list", "checks"}, "issue": {"view", "list"}, "repo": {"view"}}
-FILTERS = {
-    "head": ("", "nc", 0),
-    "tail": ("", "nc", 0),
-    "wc": ("lwcm", "", 0),
-    "sort": ("nruf", "kt", 0),
-    "uniq": ("cdu", "", 0),
-    "grep": ("nivcEFwo", "emABC", 1),
-    "jq": ("rcsje", "", 1),
-}
+FILTERS = {**READ_FILTERS, "jq": ("rcsje", "", 1)}
 # Флаги gh api: булевы и те, что берут значение (короткие можно склеивать: `-ifbody=x`).
+# Заголовков (`-H`, `-p`) и чужого `--hostname` нет: чтению они не нужны, а заголовок
+# мог бы сменить смысл запроса.
 SHORT_BOOL = set("i")
-SHORT_VALUE = set("HXqtfFp")
+SHORT_VALUE = set("XqtfF")
 LONG_BOOL = {"--paginate", "--slurp", "--include", "--silent", "--verbose"}
-LONG_VALUE = {"--method", "--jq", "--template", "--header", "--hostname", "--cache",
-              "--preview", "--field", "--raw-field"}
+LONG_VALUE = {"--method", "--jq", "--template", "--cache", "--field", "--raw-field"}
 FIELD_FLAGS = {"f", "F", "--field", "--raw-field"}
 READ_QUERY = re.compile(r"\s*(query\b|\{)")
 VARIABLE = re.compile(r"[A-Za-z_]\w*=[\w.:/-]*")
 
 
 def parse_api(args: list):
-    """Split `gh api` arguments into (endpoint, method, fields) or raise ValueError."""
-    endpoint, method, fields, index = None, "GET", [], 0
+    """Split `gh api` arguments into (endpoint, method, fields, jq expressions).
+
+    Raises ValueError for anything it does not know.
+    """
+    endpoint, method, fields, expressions, index = None, "GET", [], [], 0
 
     def take(flag: str, value: str) -> None:
         nonlocal method
@@ -52,6 +50,8 @@ def parse_api(args: list):
             method = value.upper()
         elif flag in FIELD_FLAGS:
             fields.append((flag, value))
+        elif flag in ("q", "--jq"):
+            expressions.append(value)
 
     while index < len(args):
         arg = args[index]
@@ -86,14 +86,18 @@ def parse_api(args: list):
             endpoint = arg
         else:
             raise ValueError("passes an extra positional argument to `gh api`")
-    return endpoint, method, fields
+    return endpoint, method, fields, expressions
 
 
 def api_refused(args: list) -> str:
     try:
-        endpoint, method, fields = parse_api(args)
+        endpoint, method, fields, expressions = parse_api(args)
     except ValueError as error:
         return str(error)
+    # выражения jq берутся из того же разбора, что и поля: склейка `-iq…` их не спрячет
+    reason = jq_expression_refused(expressions)
+    if reason:
+        return reason
     if method != "GET":
         return f"calls `gh api` with {method}"
     if endpoint != "graphql":
@@ -117,7 +121,7 @@ def segment_refused(separator: str, tokens: list) -> str:
     program, args = tokens[0], tokens[1:]
     if program in FILTERS:
         if separator == "|" and filter_is_safe(args, *FILTERS[program]):
-            return ""
+            return jq_refused(args, filter_operand=True) if program == "jq" else ""
         return f"runs `{program}` on files instead of the piped output"
     if program == "git":
         return git_read_refused(args)
@@ -142,22 +146,9 @@ def refused(command: str) -> str:
     return ""
 
 
-def main() -> int:
-    try:
-        command = json.load(sys.stdin).get("tool_input", {}).get("command", "")
-    except Exception:
-        print("triager-gh-readonly: unreadable hook input", file=sys.stderr)
-        return 2
-    reason = refused(command)
-    if reason:
-        print(
-            f"fm-coderabbit-triager is read-only: the command {reason}. Read with GET "
-            "`gh api …`, `gh api graphql -f query='query …'`, `gh pr view`.",
-            file=sys.stderr,
-        )
-        return 2
-    return 0
-
-
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run_hook(
+        "fm-coderabbit-triager is read-only",
+        refused,
+        "Read with GET `gh api …`, `gh api graphql -f query='query …'`, `gh pr view`.",
+    ))
