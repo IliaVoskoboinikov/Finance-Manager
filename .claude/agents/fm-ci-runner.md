@@ -27,7 +27,8 @@ the «Mandatory Verification» block of `docs/agents/release-process.md` — rea
 is there, do not keep your own copy. Never pass a placeholder to Gradle: for `all`, the
 `:feature:<name>:impl:check` line means `:<module>:check` for every module the change touches
 — for each file from `git diff --name-only $(git merge-base HEAD origin/master)` and
-`git status --porcelain`, the nearest parent directory with a `build.gradle.kts`, as a Gradle
+`git status --porcelain --untracked-files=all` (without it a new untracked module collapses
+into one `?? dir/` line), the nearest parent directory with a `build.gradle.kts`, as a Gradle
 path (`feature/account/impl` → `:feature:account:impl`). Files whose nearest one is the root
 project or `build-logic` give no module: never run the root `check`. No touched module → skip
 that line. For a module list, run `:<module>:check` plus the unit test

@@ -49,8 +49,10 @@ status check.
 
 - Every unresolved thread (the paginated GraphQL query from step 2) with all its comments.
   Keep `isOutdated`: an outdated thread may already be fixed — check the current file.
-- The body of the review for the head: the «Outside diff range» and «Nitpick» comments live
-  there, not in threads.
+- The bodies of all CodeRabbit reviews of the PR, not only the head's: the «Outside diff
+  range» and «Nitpick» comments live there, not in threads, and an incremental review doesn't
+  repeat earlier ones. Check each against the current code; one fixed since is «Отклонить
+  (уже исправлено)».
 - Authors: act only on `coderabbitai` (`coderabbitai[bot]` in REST) and the repository owner
   `IliaVoskoboinikov`. The owner's reply in a bot thread («это осознанно») changes the
   verdict. Comments by anyone else go to a separate list without a verdict.

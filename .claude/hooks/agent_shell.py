@@ -41,7 +41,10 @@ OPERATOR = re.compile(r"&&|\|\||>>|>&|&>|<\(|[;&|()<>]")
 
 GIT_READ = {"diff", "log", "show", "merge-base", "status", "rev-parse", "ls-files", "blame"}
 # Опции, которыми эти команды пишут файл или читают файл вне git (`blame --contents`).
-GIT_FILE_OPTIONS = ("--output", "--no-index", "--contents")
+GIT_FILE_OPTIONS = ("--output", "--no-index", "--contents", "--ignore-revs-file")
+# Короткие опции с файлом: `-O <orderfile>` у diff/log/show, `-S <revs-file>` у blame
+# (у log `-S` — поиск строки, его не трогаем).
+GIT_FILE_SHORT = {"-O": GIT_READ, "-S": {"blame"}}
 BRACE_EXPANSION = re.compile(r"\{[^{}\s]*(,|\.\.)[^{}\s]*\}")
 
 
@@ -111,6 +114,8 @@ def git_read_refused(args: List[str]) -> str:
     if not args or args[0] not in GIT_READ:
         return "runs a git command that is not read-only"
     for arg in args:
+        if any(arg.startswith(short) and args[0] in commands for short, commands in GIT_FILE_SHORT.items()):
+            return "makes git read a file outside the repository"
         name = arg.split("=", 1)[0]
         # git принимает однозначное сокращение длинной опции (`blame --cont=файл`)
         abbreviation = len(name) > 2 and any(o.startswith(name) for o in GIT_FILE_OPTIONS)

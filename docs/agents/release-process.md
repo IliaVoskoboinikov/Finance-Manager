@@ -157,12 +157,16 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     ```
     `--paginate` walks every page of threads; `gh` can't page the nested `comments`, so if `total`
     is over 100, read that thread on its own. CodeRabbit resolves its own thread once a push fixes it.
-    Also read the body of the review for the current head: the «Outside diff range» and «Nitpick»
-    comments live there, not in threads. Empty output means the review isn't there yet:
+    The «Outside diff range» and «Nitpick» comments live in review bodies, not in threads. The
+    review for the current head tells whether the review is there (empty output — not yet); but
+    an incremental review doesn't repeat earlier ones, so read the bodies of all CodeRabbit
+    reviews and check each comment against the current code (fixed since → «already fixed»):
     ```bash
     head=$(gh api repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR> --jq .head.sha)
     gh api --paginate repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR>/reviews \
       --jq ".[] | select(.user.login == \"coderabbitai[bot]\" and .commit_id == \"$head\") | .body"
+    gh api --paginate repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR>/reviews \
+      --jq '.[] | select(.user.login == "coderabbitai[bot]" and (.body | length) > 0) | {commit_id, body}'
     ```
     Each comment starts with a severity, e.g. 🟠 Major, 🟡 Minor. An outside-diff comment has no
     thread to answer, so a rejected one tends to come back in the next review; if the reason

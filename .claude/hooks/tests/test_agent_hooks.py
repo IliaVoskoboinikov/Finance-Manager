@@ -151,6 +151,10 @@ class ReviewAllowlistTest(unittest.TestCase):
         self.assert_refused(
             "git blame --cont=/etc/hosts -- README.md",
             "git log --outp=x",
+            "git diff -O /etc/hosts",
+            "git log -O/etc/hosts -p",
+            "git blame -S /etc/hosts -- README.md",
+            "git blame --ignore-revs-file=/etc/hosts -- README.md",
             "git diff --out\rput=x",
             "gh pr view 298 --json body --jq '$ENV'",
             "gh pr view 298 --json body -q 'env.GH_TOKEN'",
@@ -160,6 +164,7 @@ class ReviewAllowlistTest(unittest.TestCase):
         self.assert_allowed(
             "git log --oneline -3",
             "git diff --color-words HEAD",
+            "git log -S rollbackOnError --oneline",
             "gh pr view 298 --json body --jq .body",
         )
 
