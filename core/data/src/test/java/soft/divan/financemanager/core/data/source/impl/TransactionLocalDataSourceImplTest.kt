@@ -26,7 +26,6 @@ class TransactionLocalDataSourceImplTest {
         accountLocalId = "local-a1",
         type = "EXPENSE",
         targetAccountLocalId = null,
-        accountServerId = "server-a1",
         categoryId = "cat-1",
         currencyId = "rub-id",
         amount = "42.42",

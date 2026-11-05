@@ -173,7 +173,6 @@ class SqlCipherDatabaseFactoryTest {
         accountLocalId = ACCOUNT,
         type = "EXPENSE",
         targetAccountLocalId = null,
-        accountServerId = null,
         categoryId = "c1",
         currencyId = "RUB",
         amount = "2",

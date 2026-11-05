@@ -70,7 +70,6 @@ class TransactionSyncManagerImplTest {
     private fun transactionEntity(
         localId: String = "local-t1",
         serverId: String? = "server-t1",
-        accountServerId: String? = "server-a1",
         updatedAt: String = "2024-01-15T00:00:00Z",
         syncStatus: SyncStatus = SyncStatus.SYNCED
     ) = TransactionEntity(
@@ -79,7 +78,6 @@ class TransactionSyncManagerImplTest {
         accountLocalId = "local-a1",
         type = TransactionType.EXPENSE.name,
         targetAccountLocalId = null,
-        accountServerId = accountServerId,
         categoryId = "cat-1",
         currencyId = "rub-id",
         amount = "42.42",

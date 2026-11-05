@@ -18,7 +18,6 @@ fun TransactionDto.toEntity(
     localId = localId,
     serverId = id,
     accountLocalId = accountLocalId,
-    accountServerId = accountId,
     categoryId = categoryId,
     currencyId = currencyId,
     amount = amount.toPlainString(),
@@ -31,9 +30,10 @@ fun TransactionDto.toEntity(
     targetAccountLocalId = null
 )
 
-fun TransactionEntity.toUpdateDto(accountServerId: String): UpdateTransactionRequestDto =
+/** Собирает запрос на правку; [accountId] — id, под которым сервер знает счёт сейчас. */
+fun TransactionEntity.toUpdateDto(accountId: String): UpdateTransactionRequestDto =
     UpdateTransactionRequestDto(
-        accountId = accountServerId,
+        accountId = accountId,
         categoryId = categoryId,
         amount = amount.toBigDecimal(),
         dateTime = transactionDate,
@@ -47,10 +47,13 @@ fun TransactionEntity.toUpdateDto(accountServerId: String): UpdateTransactionReq
  * принимает клиентский id (upsert-by-id) и на повторную отправку того же id отбивает дубль
  * по первичному ключу. Это защищает от двойного создания транзакции (и, как следствие,
  * двойного пересчёта баланса на бэке) при потере ACK и ретраях.
+ *
+ * [accountId] — id, под которым сервер знает счёт сейчас: в строке транзакции его нет, он
+ * берётся из строки счёта в момент постановки в очередь.
  */
-fun TransactionEntity.toDto(accountServerId: String): TransactionRequestDto = TransactionRequestDto(
+fun TransactionEntity.toDto(accountId: String): TransactionRequestDto = TransactionRequestDto(
     id = localId,
-    accountId = accountServerId,
+    accountId = accountId,
     categoryId = categoryId,
     amount = amount.toBigDecimal(),
     dateTime = transactionDate,
@@ -73,14 +76,12 @@ fun TransactionEntity.toDomain(): Transaction = Transaction(
 
 fun Transaction.toEntity(
     serverId: String?,
-    accountServerId: String?,
     syncStatus: SyncStatus
 ): TransactionEntity = TransactionEntity(
     localId = id,
     serverId = serverId,
     accountLocalId = accountLocalId,
     targetAccountLocalId = targetAccountLocalId,
-    accountServerId = accountServerId,
     type = type.name,
     categoryId = categoryId,
     currencyId = currencyId,

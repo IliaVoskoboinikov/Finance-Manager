@@ -33,7 +33,6 @@ class TransactionDataMapperTest {
         accountLocalId = "local-a1",
         type = TransactionType.EXPENSE.name,
         targetAccountLocalId = null,
-        accountServerId = "server-a1",
         categoryId = "cat-1",
         currencyId = "rub-id",
         amount = "42.42",
@@ -71,7 +70,6 @@ class TransactionDataMapperTest {
         assertThat(result.localId).isEqualTo("local-t1")
         assertThat(result.serverId).isEqualTo("server-t1")
         assertThat(result.accountLocalId).isEqualTo("local-a1")
-        assertThat(result.accountServerId).isEqualTo("server-a1")
         assertThat(result.categoryId).isEqualTo("cat-1")
         assertThat(result.currencyId).isEqualTo("rub-id")
         assertThat(result.amount).isEqualTo("42.42")
@@ -98,8 +96,8 @@ class TransactionDataMapperTest {
     }
 
     @Test
-    fun `TransactionEntity toUpdateDto maps fields with given server account id`() {
-        val result = entity.toUpdateDto(accountServerId = "server-a2")
+    fun `TransactionEntity toUpdateDto maps fields with the given account id`() {
+        val result = entity.toUpdateDto(accountId = "server-a2")
 
         assertThat(result.accountId).isEqualTo("server-a2")
         assertThat(result.categoryId).isEqualTo("cat-1")
@@ -110,7 +108,7 @@ class TransactionDataMapperTest {
 
     @Test
     fun `TransactionEntity toDto sends local id as idempotency key`() {
-        val result = entity.toDto(accountServerId = "server-a1")
+        val result = entity.toDto(accountId = "server-a1")
 
         assertThat(result.id).isEqualTo("local-t1")
         assertThat(result.accountId).isEqualTo("server-a1")
@@ -136,7 +134,6 @@ class TransactionDataMapperTest {
     fun `Transaction toEntity maps all fields and formats dates`() {
         val result = domain.toEntity(
             serverId = "server-t1",
-            accountServerId = "server-a1",
             syncStatus = SyncStatus.SYNCED
         )
 
@@ -147,13 +144,11 @@ class TransactionDataMapperTest {
     fun `Transaction toEntity replaces null comment with empty string`() {
         val result = domain.copy(comment = null).toEntity(
             serverId = null,
-            accountServerId = null,
             syncStatus = SyncStatus.PENDING_CREATE
         )
 
         assertThat(result.comment).isEmpty()
         assertThat(result.serverId).isNull()
-        assertThat(result.accountServerId).isNull()
     }
 
     @Test
@@ -165,7 +160,6 @@ class TransactionDataMapperTest {
 
         val result = transfer.toEntity(
             serverId = null,
-            accountServerId = null,
             syncStatus = SyncStatus.PENDING_CREATE
         )
 
@@ -177,7 +171,6 @@ class TransactionDataMapperTest {
     fun `entity to domain and back to entity preserves values`() {
         val roundTrip = entity.toDomain().toEntity(
             serverId = entity.serverId,
-            accountServerId = entity.accountServerId,
             syncStatus = entity.syncStatus
         )
 

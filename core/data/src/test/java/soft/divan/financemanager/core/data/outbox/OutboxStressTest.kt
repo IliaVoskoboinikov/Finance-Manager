@@ -253,7 +253,6 @@ class OutboxStressTest {
                 accountLocalId = accountLocalId,
                 type = TransactionType.EXPENSE.name,
                 targetAccountLocalId = null,
-                accountServerId = accountLocalId,
                 categoryId = "cat-1",
                 currencyId = "rub-id",
                 amount = "42.42",
