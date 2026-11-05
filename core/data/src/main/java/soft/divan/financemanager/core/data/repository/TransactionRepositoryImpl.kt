@@ -153,16 +153,17 @@ class TransactionRepositoryImpl @Inject constructor(
                 transactionDto.categoryId
             ) ?: return@onSuccess
             val type = if (category.isIncome) TransactionType.INCOME else TransactionType.EXPENSE
-            // Счёт берётся из серверной версии: другое устройство могло перенести операцию, и
-            // со старым счётом следующая правка вернула бы перенос на сервере. Валюта операции —
-            // валюта её счёта, как и при pull
-            val account = accountLocalDataSource.getByServerId(
-                transactionDto.accountId
-            ) ?: return@onSuccess
 
             safeDbCall(errorLogger) {
                 transactionRunner.runInTransaction {
-                    if (canTakeServerVersion(local.localId, transactionDto.updatedAt)) {
+                    // Счёт берётся из серверной версии: другое устройство могло перенести
+                    // операцию, и со старым счётом следующая правка вернула бы перенос на
+                    // сервере. Валюта операции — валюта её счёта, как и при pull; читается в
+                    // той же транзакции, что и запись, чтобы не взять валюту до правки счёта
+                    val account = accountLocalDataSource.getByServerId(transactionDto.accountId)
+                    if (account != null &&
+                        canTakeServerVersion(local.localId, transactionDto.updatedAt)
+                    ) {
                         localDataSource.update(
                             transactionDto.toEntity(
                                 localId = local.localId,
