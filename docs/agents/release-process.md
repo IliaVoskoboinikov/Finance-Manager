@@ -161,10 +161,12 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     review for the current head tells whether the review is there (empty output — not yet); but
     an incremental review doesn't repeat earlier ones, so read the bodies of all CodeRabbit
     reviews and check each comment against the current code (fixed since → «already fixed»):
+    The head sha goes into the second command as a literal, not a shell variable: the
+    `fm-coderabbit-triager` hook refuses variables.
     ```bash
-    head=$(gh api repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR> --jq .head.sha)
+    gh api repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR> --jq .head.sha
     gh api --paginate repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR>/reviews \
-      --jq ".[] | select(.user.login == \"coderabbitai[bot]\" and .commit_id == \"$head\") | .body"
+      --jq '.[] | select(.user.login == "coderabbitai[bot]" and .commit_id == "<head sha>") | .body'
     gh api --paginate repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR>/reviews \
       --jq '.[] | select(.user.login == "coderabbitai[bot]" and (.body | length) > 0) | {commit_id, body}'
     ```

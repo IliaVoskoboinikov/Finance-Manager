@@ -29,9 +29,10 @@ is there, do not keep your own copy. Never pass a placeholder to Gradle: for `al
 — for each file from `git diff --name-only $(git merge-base HEAD origin/master)` and
 `git status --porcelain --untracked-files=all` (without it a new untracked module collapses
 into one `?? dir/` line), the nearest parent directory with a `build.gradle.kts`, as a Gradle
-path (`feature/account/impl` → `:feature:account:impl`). Files whose nearest one is the root
-project or `build-logic` give no module: never run the root `check`. No touched module → skip
-that line. For a module list, run `:<module>:check` plus the unit test
+path (`feature/account/impl` → `:feature:account:impl`). `build-logic/convention` is an included
+build, and Gradle addresses its tasks the same way from the root: `:build-logic:convention:check`
+(`docs/testing.md`). A file whose nearest one is the root project gives no module: never run
+the root `check`. No touched module → skip that line. For a module list, run `:<module>:check` plus the unit test
 task of each module (`testDebugUnitTest`; pure JVM modules `:core:domain`, `:konsist`, `:lint`
 only have `test`).
 

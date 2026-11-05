@@ -43,8 +43,22 @@ GIT_READ = {"diff", "log", "show", "merge-base", "status", "rev-parse", "ls-file
 # Опции, которыми эти команды пишут файл или читают файл вне git (`blame --contents`).
 GIT_FILE_OPTIONS = ("--output", "--no-index", "--contents", "--ignore-revs-file")
 # Короткие опции с файлом: `-O <orderfile>` у diff/log/show, `-S <revs-file>` у blame
-# (у log `-S` — поиск строки, его не трогаем).
-GIT_FILE_SHORT = {"-O": GIT_READ, "-S": {"blame"}}
+# (у log `-S` — поиск строки, его не трогаем). git склеивает короткие опции (`-pO файл`),
+# поэтому кластер разбирается до первой опции со значением: остаток токена — её значение.
+GIT_FILE_SHORT = {"O": GIT_READ, "S": {"blame"}}
+GIT_SHORT_WITH_VALUE = set("UMCBlSGLnO")
+
+
+def _git_short_file_option(command: str, arg: str) -> bool:
+    """Whether a short-option cluster (`-pO/etc/hosts`) holds a file option of `command`."""
+    if not re.fullmatch(r"-[A-Za-z]\S*", arg):
+        return False
+    for char in arg[1:]:
+        if command in GIT_FILE_SHORT.get(char, ()):
+            return True
+        if char in GIT_SHORT_WITH_VALUE:
+            return False  # дальше — значение этой опции, а не другие опции
+    return False
 BRACE_EXPANSION = re.compile(r"\{[^{}\s]*(,|\.\.)[^{}\s]*\}")
 
 
@@ -114,7 +128,7 @@ def git_read_refused(args: List[str]) -> str:
     if not args or args[0] not in GIT_READ:
         return "runs a git command that is not read-only"
     for arg in args:
-        if any(arg.startswith(short) and args[0] in commands for short, commands in GIT_FILE_SHORT.items()):
+        if _git_short_file_option(args[0], arg):
             return "makes git read a file outside the repository"
         name = arg.split("=", 1)[0]
         # git принимает однозначное сокращение длинной опции (`blame --cont=файл`)
