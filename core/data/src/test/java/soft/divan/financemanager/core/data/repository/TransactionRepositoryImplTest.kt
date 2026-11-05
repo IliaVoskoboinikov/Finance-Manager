@@ -319,6 +319,8 @@ class TransactionRepositoryImplTest {
 
     @Test
     fun `getById refreshes synced transaction from server using category type`() = runTest {
+        // updatedAt у строки и ответа равны: refresh даты не сравнивает, важно лишь, что строка
+        // не менялась за время запроса
         coEvery { localDataSource.getByLocalId("local-t1") } returns entity(serverId = "server-t1")
         coEvery { remoteDataSource.get("server-t1") } returns Response.success(
             TransactionDto(
@@ -431,6 +433,47 @@ class TransactionRepositoryImplTest {
         emoji = "🍔",
         isIncome = false
     )
+
+    @Test
+    fun `getById does not take a server version older than the row written during the refresh`() =
+        runTest {
+            val beforeRequest = entity(serverId = "server-t1").copy(updatedAt = createdAt)
+            coEvery { localDataSource.getByLocalId("local-t1") } returnsMany listOf(
+                beforeRequest, // getById
+                beforeRequest, // проверка до запроса
+                entity(serverId = "server-t1") // pull успел записать версию от updatedAt
+            )
+            // Ответ новее строки на момент запроса, но старше версии, которую записал pull
+            coEvery { remoteDataSource.get("server-t1") } returns Response.success(
+                serverTransaction(accountId = "server-a1").copy(updatedAt = transactionDate)
+            )
+            coEvery { categoryLocalDataSource.getById("cat-1") } returns foodCategory()
+            coEvery { accountLocalDataSource.getByServerId("server-a1") } returns accountEntity()
+
+            repository.getById("local-t1")
+            appCoroutineContext.runAll()
+
+            coVerify(exactly = 0) { localDataSource.update(any()) }
+        }
+
+    @Test
+    fun `getById takes a server version newer than the local row`() = runTest {
+        coEvery { localDataSource.getByLocalId("local-t1") } returns
+            entity(serverId = "server-t1").copy(updatedAt = createdAt)
+        coEvery { remoteDataSource.get("server-t1") } returns Response.success(
+            serverTransaction(accountId = "server-a1")
+        )
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns foodCategory()
+        coEvery { accountLocalDataSource.getByServerId("server-a1") } returns accountEntity()
+        val updated = slot<TransactionEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        repository.getById("local-t1")
+        appCoroutineContext.runAll()
+
+        assertThat(updated.captured.amount).isEqualTo("99.00")
+        assertThat(updated.captured.updatedAt).isEqualTo(updatedAt)
+    }
 
     @Test
     fun `getById does not refresh a transaction with a pending operation`() = runTest {

@@ -245,6 +245,8 @@ class AccountRepositoryImplTest {
 
     @Test
     fun `getById refreshes synced account from server in background`() = runTest {
+        // updatedAt у строки и ответа равны: refresh даты не сравнивает, важно лишь, что строка
+        // не менялась за время запроса
         coEvery { localDataSource.getByLocalId("local-1") } returns entity(serverId = "server-1")
         coEvery { remoteDataSource.getById("server-1") } returns Response.success(
             AccountDto(
@@ -309,6 +311,73 @@ class AccountRepositoryImplTest {
             // Ответ сервера не знает о правке — перезапись откатила бы её
             coVerify(exactly = 0) { localDataSource.update(any()) }
         }
+
+    @Test
+    fun `getById does not take a server version older than the row written during the refresh`() =
+        runTest {
+            val beforeRequest = entity(serverId = "server-1").copy(updatedAt = createdAt)
+            coEvery { localDataSource.getByLocalId("local-1") } returnsMany listOf(
+                beforeRequest, // getById
+                beforeRequest, // проверка до запроса
+                entity(serverId = "server-1") // pull успел записать версию от updatedAt
+            )
+            // Ответ новее строки на момент запроса, но старше версии, которую записал pull
+            coEvery { remoteDataSource.getById("server-1") } returns
+                Response.success(freshServerAccount().copy(updatedAt = "2024-01-15T00:00:00Z"))
+
+            repository.getById("local-1")
+            appCoroutineContext.runAll()
+
+            coVerify(exactly = 0) { localDataSource.update(any()) }
+        }
+
+    @Test
+    fun `getById does not overwrite a balance changed while the refresh was in flight`() =
+        runTest {
+            // Пока шёл запрос, записали и уже отправили операцию: счёт остался SYNCED с тем же
+            // updatedAt, очередь пуста, но ответ сервера не знает об операции
+            coEvery { localDataSource.getByLocalId("local-1") } returnsMany listOf(
+                entity(serverId = "server-1"), // getById
+                entity(serverId = "server-1"), // проверка до запроса
+                entity(serverId = "server-1").copy(balance = "150.50") // после
+            )
+            coEvery { remoteDataSource.getById("server-1") } returns
+                Response.success(freshServerAccount())
+
+            repository.getById("local-1")
+            appCoroutineContext.runAll()
+
+            coVerify(exactly = 0) { localDataSource.update(any()) }
+        }
+
+    @Test
+    fun `getById takes a server version newer than the local row`() = runTest {
+        coEvery { localDataSource.getByLocalId("local-1") } returns
+            entity(serverId = "server-1").copy(updatedAt = createdAt)
+        coEvery { remoteDataSource.getById("server-1") } returns
+            Response.success(freshServerAccount())
+        val updated = slot<AccountEntity>()
+        coEvery { localDataSource.update(capture(updated)) } returns Unit
+
+        repository.getById("local-1")
+        appCoroutineContext.runAll()
+
+        assertThat(updated.captured.name).isEqualTo("Fresh")
+        assertThat(updated.captured.updatedAt).isEqualTo(updatedAt)
+    }
+
+    @Test
+    fun `getById does not refresh an account waiting for deletion`() = runTest {
+        // Ответ сервера сменил бы PENDING_DELETE на SYNCED и вернул счёт в списки
+        coEvery { localDataSource.getByLocalId("local-1") } returns
+            entity(serverId = "server-1", syncStatus = SyncStatus.PENDING_DELETE)
+
+        repository.getById("local-1")
+        appCoroutineContext.runAll()
+
+        coVerify(exactly = 0) { remoteDataSource.getById(any()) }
+        coVerify(exactly = 0) { localDataSource.update(any()) }
+    }
 
     @Test
     fun `getById does not touch local db when server refresh fails`() = runTest {
