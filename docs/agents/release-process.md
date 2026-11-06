@@ -2,7 +2,12 @@
 
 ## Mandatory Verification
 Before marking a task as complete, run locally every blocking job of `.github/workflows/ci.yml`,
-so the PR doesn't go red on something a local run would have caught:
+so the PR doesn't go red on something a local run would have caught. Hand the run to the
+`fm-ci-runner` subagent (`subagents.md`): it runs this list and returns the pass/fail table,
+the first error of each failure, the log directory and the commands it ran — the Gradle log
+itself stays out of the session. Run
+the commands by hand when the subagent isn't available; the first one is a template — run
+`:<module>:check` for each module the change touches.
 ```bash
 # Run all checks for modified modules
 ./gradlew :feature:<name>:impl:check
@@ -42,7 +47,11 @@ only writes into `docs/`, no check reads from it.
 Green checks don't end a task: once every job above passes, review the change yourself, without
 being asked, and loop until it is clean — before the report and before the user commits.
 
-1.  **Review round:** run the `code-review` skill at `high` on the working-tree diff.
+1.  **Review round:** run the `code-review` skill at `high` on the working-tree diff. In
+    round 1 only, run in parallel the project reviewers as subagents (`subagents.md`):
+    `fm-architecture-reviewer`, and `fm-security-reviewer` when the diff touches the paths in
+    its description. Their findings join the round's triage; later rounds are `code-review`
+    alone.
 2.  **Triage** every finding as for CodeRabbit (see «After the PR is opened», step 3): valid → fix;
     false or contradicting a deliberate decision → reject with the reason; valid but outside the
     task → a draft card.
@@ -54,7 +63,8 @@ being asked, and loop until it is clean — before the report and before the use
     in parallel. Triage as in step 2; after its fixes rerun only the checks they touch — no return
     to step 1, and the pass itself is not repeated.
 
-A change touching only `**/*.md` / `docs/**` gets the review rounds without the final pass. The
+A change touching only `**/*.md` / `docs/**` gets the `code-review` rounds without the
+project reviewers and the final pass. The
 report lists every round and the final pass: what was found, fixed, rejected (with the reason) or
 moved to a card, and the leftovers.
 
@@ -70,8 +80,9 @@ moved to a card, and the leftovers.
 - [ ] Dependencies changed → `./gradlew :app:dependencyGuardBaseline` re-recorded.
 - [ ] Navigation changed → `./gradlew navDump` re-recorded.
 - [ ] Every blocking CI job passed locally (list above).
-- [ ] Automatic review loop done: no valid finding left or 3 rounds, then the final pass — skipped
-      for a docs-only change (see above).
+- [ ] Automatic review loop done: round 1 with the project reviewers, no valid finding left or
+      3 rounds, then the final pass — the project reviewers and the final pass are skipped for a
+      docs-only change (see above).
 - [ ] After the user opens the PR: it is bound to the session, Auto-fix is on or the user was asked
       to say when the review arrives, CodeRabbit's comments are triaged (see below).
 
@@ -117,8 +128,11 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     desktop app (CLI). Never poll the status in a loop. The app's Auto-fix messages tell the agent to
     commit and push fixes without asking; in this project git stays with the user, so fixes stay
     uncommitted in the working tree, as everywhere else.
-2.  **Review comments.** The review of a push is done when `pulls/<PR>/reviews` has a review by
-    `coderabbitai[bot]` whose `commit_id` is the branch's head commit and whose body is not
+2.  **Review comments.** Collecting and pre-sorting them is the `fm-coderabbit-triager`
+    subagent's job (`subagents.md`): pass it the PR number, it follows this step read-only
+    and returns the review state for the head and a proposed verdict per comment. The verdicts
+    are proposals — step 3 stays with the main session. The review of a push is done when
+    `pulls/<PR>/reviews` has a review by `coderabbitai[bot]` whose `commit_id` is the branch's head commit and whose body is not
     empty — or, when the review found nothing, when the bot's summary PR comment says «No
     actionable comments were generated» and its «Commit» line is the head (with zero comments no
     review object is created). The bot's reply in a thread also creates a review object on the
@@ -143,12 +157,18 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     ```
     `--paginate` walks every page of threads; `gh` can't page the nested `comments`, so if `total`
     is over 100, read that thread on its own. CodeRabbit resolves its own thread once a push fixes it.
-    Also read the body of the review for the current head: the «Outside diff range» and «Nitpick»
-    comments live there, not in threads. Empty output means the review isn't there yet:
+    The «Outside diff range» and «Nitpick» comments live in review bodies, not in threads. The
+    review for the current head tells whether the review is there (empty output — not yet); but
+    an incremental review doesn't repeat earlier ones, so read the bodies of all CodeRabbit
+    reviews and check each comment against the current code (fixed since → «already fixed»):
+    The head sha goes into the second command as a literal, not a shell variable: the
+    `fm-coderabbit-triager` hook refuses variables.
     ```bash
-    head=$(gh api repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR> --jq .head.sha)
+    gh api repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR> --jq .head.sha
     gh api --paginate repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR>/reviews \
-      --jq ".[] | select(.user.login == \"coderabbitai[bot]\" and .commit_id == \"$head\") | .body"
+      --jq '.[] | select(.user.login == "coderabbitai[bot]" and .commit_id == "<head sha>") | .body'
+    gh api --paginate repos/IliaVoskoboinikov/Finance-Manager/pulls/<PR>/reviews \
+      --jq '.[] | select(.user.login == "coderabbitai[bot]" and (.body | length) > 0) | {commit_id, body}'
     ```
     Each comment starts with a severity, e.g. 🟠 Major, 🟡 Minor. An outside-diff comment has no
     thread to answer, so a rejected one tends to come back in the next review; if the reason
@@ -157,7 +177,10 @@ and opens the PR → you triage the review → the user pushes the fixes → Cod
     *   valid → fix it in the working tree and rerun the affected checks;
     *   false, or it contradicts a deliberate decision (`docs/agents/*`, `.github/copilot-instructions.md`)
         → don't change the code, say why in the report;
-    *   valid but outside the task → a draft card (`task-board.md`), not a scope creep.
+    *   valid but outside the task → a draft card (`task-board.md`), not a scope creep;
+    *   a bypass of a subagent's allowlist hook → fixed only when the agent or the PR could
+        produce it, else rejected as «a guard, not a sandbox» (`subagents.md`, «Limits through
+        `tools` and hooks»).
 4.  **CI failure** → reproduce the failing job locally, fix, rerun it. **Merge conflict** → don't
     merge or sync the branch yourself (git stays with the user): name the conflicting files.
 5.  **Report each round:** fixed / rejected with the reason / moved to a card, plus a commit

@@ -251,10 +251,14 @@ otherwise pick the sensible default and note it.
 - **A board task runs through the `fm-task` skill** (`/fm-task FM-N`): card → interview →
   branch → plan → implement → checks → review loop → report, in that order.
 - **Green checks start the review loop:** once every blocking CI job passes locally, review the
-  change unasked — `code-review` at `high`, triage, fix, recheck, repeat until no valid finding or
-  3 rounds, then (either way) one final pass by the `pr-review-toolkit` agents. Only then the
-  report. Details:
+  change unasked — `code-review` at `high` (round 1 together with the project reviewers), triage,
+  fix, recheck, repeat until no valid finding or 3 rounds, then (either way) one final pass by the
+  `pr-review-toolkit` agents. Only then the report. Details:
   `docs/agents/release-process.md` («Automatic Review Loop»).
+- **Project subagents** in `.claude/agents/` take the CI run (`fm-ci-runner`), the project and
+  security review (`fm-architecture-reviewer`, `fm-security-reviewer`) and the CodeRabbit
+  collection (`fm-coderabbit-triager`). They only report — triage, fixes, git and the board stay
+  with the main session. When each is called and how they are built: `docs/agents/subagents.md`.
 - **After the PR is opened, the task goes on:** before the report, run every blocking CI job
   locally and finish the review loop; once the user opens the PR, turn on Auto-fix and triage
   CodeRabbit's comments each time it wakes the session — fix the valid ones, reject the rest with

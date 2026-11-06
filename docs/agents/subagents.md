@@ -1,0 +1,93 @@
+# Project Subagents
+
+Claude Code subagents of this project live in `.claude/agents/`. They take the work that
+floods the main session's context (Gradle logs, CodeRabbit threads) or needs a narrow,
+project-specific reviewer. Every one of them only reports: the main session triages, fixes,
+talks to the user and runs git, the board and the report.
+
+## The agents
+
+| Agent | Called by the main session | Input | Returns |
+| :--- | :--- | :--- | :--- |
+| `fm-ci-runner` | «Mandatory Verification» in `release-process.md`: before the report and after a fix that touches code | `all` (default) or jobs / modules | pass/fail table, the first error of each failure with `file:line`, the log directory |
+| `fm-architecture-reviewer` | review loop, round 1, in parallel with `code-review` | the diff (default: working tree vs `origin/master`) | findings on project invariants CI can't check, 🔴/🟠/🟡 with the rule and a scenario |
+| `fm-security-reviewer` | review loop, round 1, only when the diff touches the paths in its description | same | security findings: keys, PIN, biometrics, secrets and PII in logs, backups |
+| `fm-coderabbit-triager` | «After the PR is opened»: each time CodeRabbit has reviewed a new head | PR number | the review state for the head and a verdict per comment: valid / reject with a reason / card |
+
+None of them edits files, rewrites baselines, publishes to GitHub, moves cards or spawns
+agents. Their verdicts are proposals: check a finding against the code before fixing it, and
+a reject reason before it goes to a PR thread (that still needs the user's yes).
+
+## How they are built
+
+*   **Rules are not copied into prompts.** A custom subagent loads `CLAUDE.md` with every
+    `@docs/agents/*.md` it imports, so prompts point at the rule (file and section) instead of
+    restating it. `fm-ci-runner` needs none of it and sets `omitClaudeMd: true`; it reads the
+    job list from `release-process.md` itself. This file is linked, not imported, so it
+    doesn't reach every subagent's context.
+*   **The workflow in `CLAUDE.md` is not theirs.** They see the interview, review-loop and
+    report rules too, so each prompt starts by saying those belong to the main session.
+*   **Limits through `tools` and hooks.** `permissionMode` in the frontmatter is overridden by
+    the main session's mode (auto, acceptEdits), so it limits nothing. The `tools` allowlist
+    removes `Edit` / `Write` and `Agent` (subagents can nest up to three levels otherwise);
+    `AskUserQuestion` is never available to a subagent. `Bash` stays where the job needs it,
+    and frontmatter `PreToolUse` hooks narrow it:
+    *   `fm-architecture-reviewer`, `fm-security-reviewer` — `.claude/hooks/review-bash-allowlist.py`:
+        only reading git (`diff`, `log`, `show`, …), `gh pr diff/view` and filters after a pipe
+        with no file operands; no secret files, no redirects into files. Their input may be a
+        public PR's diff.
+    *   `fm-coderabbit-triager` — `.claude/hooks/triager-gh-readonly.py` refuses
+        `gh pr|issue comment/review/…`, `gh api` writes, `curl` / `wget`, `gh auth token`,
+        `eval` / `sh -c`, and any GraphQL query that is not one single-quoted `query` literal
+        (no `mutation`, no substitution, no file): the repository is public.
+    *   Both scripts are called from the frontmatter as
+        `python3 "$(git rev-parse --show-toplevel)/.claude/hooks/<script>"`: without the script
+        the agent's Bash is refused entirely, the main session is not affected. A hook that
+        crashes refuses too (`agent_shell.run_hook`): Claude Code runs the command on any exit
+        code other than 2.
+    *   Both are allowlists over parsed commands, not patterns over the text: a regular
+        expression loses to quotes (`"-f"body=x`, `'mut''ation'`) and a single `&`.
+        `.claude/hooks/agent_shell.py` cuts the command into simple commands the way the shell
+        does; each must be a known read. Every bypass found so far is a case in
+        `.claude/hooks/tests/test_agent_hooks.py` — run
+        `python3 -m unittest discover -s .claude/hooks/tests` after changing a hook (CI doesn't).
+    *   A reported bypass of these hooks is fixed when the agent could produce it: a form it
+        may write itself or under text from the PR, including files the PR brings (a file
+        named `--output=x` meets an unquoted `*`). A bypass that needs what neither the agent
+        nor the PR controls — an alias, a shell function, `IFS`, a changed git config — is
+        rejected with the reason «the hook is a guard, not a sandbox». Every fixed one becomes
+        a test case.
+    *   `fm-ci-runner` has no hook of its own: it must run Gradle; the prompt and the common
+        `deny-git.py` are its limits.
+    These hooks read the command text, like `deny-git.py`: they stop injected and careless
+    commands, they are not a sandbox and give no read-only filesystem.
+*   **Hooks.** The `PreToolUse` hook from `.claude/settings.json` (`deny-git.py`) runs for
+    subagents too. The `Stop` hook (`verify-changes.py`: ktlint and detekt) does not — a
+    subagent ends with `SubagentStop`. An agent that writes Kotlin would have to run
+    `ktlintFormat` / `ktlintCheck` / `detekt` itself.
+*   **Report format** of the reviewers follows `.github/copilot-instructions.md` (severity, what
+    is wrong → scenario → fix) and takes its «already checked by CI» and «deliberate
+    decisions» lists as out of scope.
+
+## Gotchas
+
+*   Claude Code watches `.claude/agents/` only if the directory existed when the session
+    started: after the first agent file in a new directory, restart the session. Edits to an
+    existing agent are picked up within seconds.
+*   An agent file that exists only in a git worktree (not yet in the main checkout) was not
+    found even by a desktop-app session started later in that worktree (FM-297, «Agent type
+    not found»). Check a new or changed agent from a session that lists it — the Agent tool's
+    list of types shows what was loaded — before relying on it.
+*   A subagent spawned from the main session runs in the background by default; its result
+    arrives as a notification in a later turn. Don't end the turn on «waiting» when the next
+    step needs the result — do work that doesn't, or say what you are waiting for.
+*   A subagent starts in the main session's working directory, so in a git worktree it builds
+    and reviews the worktree.
+
+## Adding or changing an agent
+
+*   One job per agent, a description that says when to call it (the main session delegates by
+    it), the narrowest `tools`, a `model` that fits the job (`haiku` for mechanical runs).
+*   Prompts in English, reports in Russian, like the rest of the agent instructions.
+*   Update the table above and the place in the process that calls the agent
+    (`release-process.md`, the `fm-task` skill).
