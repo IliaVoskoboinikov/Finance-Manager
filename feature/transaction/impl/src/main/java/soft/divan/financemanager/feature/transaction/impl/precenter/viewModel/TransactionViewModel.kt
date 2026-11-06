@@ -324,12 +324,14 @@ class TransactionViewModel @AssistedInject constructor(
         publishSuccess()
     }
 
+    /**
+     * Удаляет открытую операцию по id из [mode]: правки формы в удаление не попадают, use case
+     * откатывает сохранённую версию.
+     */
     fun delete() {
+        val editMode = mode as? TransactionMode.Edit ?: return
         launchWrite {
-            val transaction = transactionUi ?: return@launchWrite
-            if (mode !is TransactionMode.Edit) return@launchWrite
-
-            deleteTransactionAndUpdateAccountUseCase(transaction.toDomain()).fold(
+            deleteTransactionAndUpdateAccountUseCase(editMode.id).fold(
                 onSuccess = {
                     isWriteCompleted = true
                     hapticsManager.perform(HapticType.SUCCESS)
