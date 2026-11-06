@@ -210,6 +210,46 @@ class AccountRepositoryImplTest {
         assertThat(result).isEqualTo(DomainResult.Failure(DomainError.Unknown(boom)))
     }
 
+    /* ---------- getAllIncludingArchived ---------- */
+
+    @Test
+    fun `getAllIncludingArchived keeps Deleted and PENDING_DELETE accounts`() = runTest {
+        every { localDataSource.getAll() } returns flowOf(
+            listOf(
+                entity(localId = "a1"),
+                entity(localId = "a2", status = "Deleted"),
+                entity(localId = "a3", status = "Deleted", syncStatus = SyncStatus.PENDING_DELETE),
+                entity(localId = "a4", syncStatus = SyncStatus.PENDING_DELETE)
+            )
+        )
+
+        val result = repository.getAllIncludingArchived().first()
+
+        val success = result as DomainResult.Success
+        assertThat(success.data.map { it.id }).containsExactly("a1", "a2", "a3", "a4")
+        assertThat(success.data.first { it.id == "a2" }.status).isEqualTo(AccountStatus.Deleted)
+    }
+
+    @Test
+    fun `getAllIncludingArchived launches background pull of server data`() = runTest {
+        every { localDataSource.getAll() } returns flowOf(emptyList())
+
+        repository.getAllIncludingArchived()
+        appCoroutineContext.runAll()
+
+        coVerify(exactly = 1) { syncManager.pullServerData() }
+    }
+
+    @Test
+    fun `getAllIncludingArchived emits Failure when local flow fails`() = runTest {
+        val boom = RuntimeException("query failed")
+        every { localDataSource.getAll() } returns flow { throw boom }
+
+        val result = repository.getAllIncludingArchived().first()
+
+        assertThat(result).isEqualTo(DomainResult.Failure(DomainError.Unknown(boom)))
+    }
+
     /* ---------- getById ---------- */
 
     @Test

@@ -10,6 +10,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.model.Account
+import soft.divan.financemanager.core.domain.model.AccountStatus
 import soft.divan.financemanager.core.domain.model.Category
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.Period
@@ -88,7 +89,8 @@ class GetTransactionsByPeriodUseCaseImplTest {
         cats: DomainResult<List<Category>> = DomainResult.Success(categories),
         currency: CurrencySymbol = CurrencySymbol.RUB
     ) {
-        every { accountRepository.getAll() } returns flowOf(accounts)
+        // getAll() не стабим: строгий mock уронит тест, если use case вернётся к нему
+        every { accountRepository.getAllIncludingArchived() } returns flowOf(accounts)
         every { categoryRepository.getAll() } returns flowOf(cats)
         every { currencyRepository.getSelectedCurrency() } returns flowOf(currency)
     }
@@ -229,6 +231,31 @@ class GetTransactionsByPeriodUseCaseImplTest {
 
         val success = result as DomainResult.Success
         assertThat(success.data.first).containsExactly(expense)
+    }
+
+    @Test
+    fun `includes transactions of archived accounts`() = runTest {
+        val active = account("1")
+        val archived = account("2").copy(status = AccountStatus.Deleted)
+        stubBase(accounts = DomainResult.Success(listOf(active, archived)))
+        // Как в реальном репозитории: список для экранов и пикера архивный счёт не содержит
+        every { accountRepository.getAll() } returns flowOf(DomainResult.Success(listOf(active)))
+
+        val activeTx =
+            transaction("t1", "1", expenseCategory.id, Instant.parse("2024-01-05T10:00:00Z"))
+        val archivedTx =
+            transaction("t2", "2", expenseCategory.id, Instant.parse("2024-01-25T10:00:00Z"))
+        every {
+            transactionRepository.getByAccountAndPeriod("1", period.startDate, period.endDate)
+        } returns flowOf(DomainResult.Success(listOf(activeTx)))
+        every {
+            transactionRepository.getByAccountAndPeriod("2", period.startDate, period.endDate)
+        } returns flowOf(DomainResult.Success(listOf(archivedTx)))
+
+        val result = useCase(isIncome = false, period = period).first()
+
+        val success = result as DomainResult.Success
+        assertThat(success.data.first).containsExactly(archivedTx, activeTx)
     }
 
     @Test

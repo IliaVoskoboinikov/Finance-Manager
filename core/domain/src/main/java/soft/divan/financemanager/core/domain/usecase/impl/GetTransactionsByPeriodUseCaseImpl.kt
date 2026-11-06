@@ -26,6 +26,8 @@ import javax.inject.Inject
  * 1. Single Source of Truth — данные только из локальной БД (Room)
  * 2. Offline-first — синхронизация с сервером внутри репозиториев
  * 3. Fully reactive — use case всегда возвращает "живой" Flow
+ * 4. Операции собираются по всем счетам, включая архивные: архивация скрывает счёт из списков,
+ *    но не из истории (см. `docs/account-archive.md`)
  */
 
 class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
@@ -66,7 +68,9 @@ class GetTransactionsByPeriodUseCaseImpl @Inject constructor(
         DomainResult<Triple<List<Account>, CurrencySymbol, List<Category>>>
         > =
         combine(
-            accountRepository.getAll(),
+            // Не getAll(): тот скрывает архивные счета, и их операции пропали бы из истории
+            // и аналитики, а суммы за прошлые периоды поменялись бы после архивации
+            accountRepository.getAllIncludingArchived(),
             categoryRepository.getAll(),
             currencyRepository.getSelectedCurrency()
         ) { accountsResult, categoriesResult, currency ->

@@ -7,7 +7,23 @@ import java.math.BigDecimal
 
 interface AccountRepository {
     suspend fun create(account: Account): DomainResult<Unit>
+
+    /**
+     * Счета для списков и пикера: без архивных (`Deleted`) и без ждущих удаления на сервере.
+     *
+     * Для выборок операций не подходит — операции архивного счёта из них пропали бы
+     * (см. [getAllIncludingArchived]).
+     */
     fun getAll(): Flow<DomainResult<List<Account>>>
+
+    /**
+     * Все локальные счета, включая архивные и ждущие удаления.
+     *
+     * Нужен выборкам истории и аналитики: архивный счёт скрыт из списков, но его операции
+     * остаются в истории, и суммы за прошлые периоды не должны меняться после архивации
+     * (см. `docs/account-archive.md`).
+     */
+    fun getAllIncludingArchived(): Flow<DomainResult<List<Account>>>
     suspend fun update(account: Account): DomainResult<Unit>
 
     /**

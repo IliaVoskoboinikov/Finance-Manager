@@ -87,6 +87,22 @@ class AccountRepositoryImpl @Inject constructor(
     }
 
     /**
+     * Все строки счетов без фильтра по статусу — для выборок истории и аналитики.
+     *
+     * Удаляемые (`PENDING_DELETE`) тоже не отбрасываются: у счёта без операций выборка просто
+     * пуста, а операции, если они у него всё же есть, лучше показать, чем молча скрыть.
+     * Pull запускается, как в [getAll]: use case'ы истории подписываются только на этот поток.
+     */
+    override fun getAllIncludingArchived(): Flow<DomainResult<List<Account>>> {
+        appCoroutineContext.launch {
+            syncManager.pullServerData()
+        }
+        return safeDbFlow(errorLogger) {
+            localDataSource.getAll().map { list -> list.map { it.toDomain() } }
+        }
+    }
+
+    /**
      * 1. Получаем аккаунт из локальной БД (источник истины)
      * 2. Возвращаем его сразу (offline-first)
      * 3. В фоне, если у счёта есть serverId, обновляем его с сервера (см. [refreshFromServer])
@@ -260,15 +276,6 @@ class AccountRepositoryImpl @Inject constructor(
         }
     }
 
-    /**
-     * Идентификатор, под которым счёт известен серверу.
-     *
-     * Пока создание не подтверждено, `serverId` ещё не проставлен — но сервер узнает счёт по
-     * клиентскому `localId`, с которым ушёл `POST`. Строгий порядок очереди гарантирует, что
-     * создание уедет раньше последующих правок, поэтому адресовать их можно уже сейчас.
-     */
-    private fun AccountEntity.syncId(): String = serverId ?: localId
-
     /**  Хелпер для получения локального аккаунта*/
     private suspend fun getLocalOrFail(id: String): DomainResult<AccountEntity> {
         return safeDbCall(errorLogger) {
@@ -284,3 +291,12 @@ class AccountRepositoryImpl @Inject constructor(
         )
     }
 }
+
+/**
+ * Идентификатор, под которым счёт известен серверу.
+ *
+ * Пока создание не подтверждено, `serverId` ещё не проставлен — но сервер узнает счёт по
+ * клиентскому `localId`, с которым ушёл `POST`. Строгий порядок очереди гарантирует, что
+ * создание уедет раньше последующих правок, поэтому адресовать их можно уже сейчас.
+ */
+private fun AccountEntity.syncId(): String = serverId ?: localId
