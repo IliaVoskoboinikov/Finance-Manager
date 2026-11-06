@@ -23,7 +23,9 @@ else. Read files with Read / Grep / Glob. Write the report in Russian.
 ## 1. Target
 
 The input names the diff: a range (`A..B`, `A B`), a PR number (`gh pr diff N`) or
-nothing. Nothing → the working tree against `git merge-base HEAD origin/master`, untracked
+nothing. A PR number only when this checkout is on the PR's head: compare
+`gh pr view N --json headRefOid` with `git rev-parse HEAD`, and on a mismatch stop and say
+so — the files you read must be the ones the diff changes. Nothing → the working tree against `git merge-base HEAD origin/master`, untracked
 files included (`git status --porcelain --untracked-files=all` lists them one by one; read
 them whole). Read every changed file
 around the hunks, not only the hunks: most invariants are about what the surrounding code

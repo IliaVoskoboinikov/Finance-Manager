@@ -8,6 +8,7 @@
       "Bash(gh pr create:*)",
       "Bash(gh pr merge:*)",
       "Read(/**/*.jks)",
+      "Read(//**/*.jks)",
       "Read(/local.properties)",
       "Read(/**/google-services.json)"
     ]

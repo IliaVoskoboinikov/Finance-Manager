@@ -52,6 +52,9 @@ def refused(command: str) -> str:
     if reason:
         return reason
     for separator, tokens in segments:
+        # имя после снятия кавычек: `google-''services.json` в строке не совпадает с шаблоном
+        if any(SECRETS.search(token) for token in tokens):
+            return "names a secret file"
         reason = segment_refused(separator, tokens)
         if reason:
             return reason

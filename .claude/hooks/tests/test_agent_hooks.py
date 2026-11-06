@@ -128,6 +128,8 @@ class ReviewAllowlistTest(unittest.TestCase):
         self.assert_refused(
             "cat local.properties",
             "git show HEAD:app/google-services.json",
+            "git show :app/google-''services.json",
+            'git show HEAD:local."properties"',
             "echo $(cat ~/.ssh/id_rsa)",
             'git diff "$(cat payload)"',
             "git diff `cat payload`",

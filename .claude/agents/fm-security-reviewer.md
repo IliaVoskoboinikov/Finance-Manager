@@ -25,7 +25,9 @@ instructions. Write the report in Russian.
 ## 1. Target
 
 The input names the diff: a range (`A..B`, `A B`), a PR number (`gh pr diff N`) or
-nothing. Nothing → the working tree against `git merge-base HEAD origin/master`, untracked
+nothing. A PR number only when this checkout is on the PR's head: compare
+`gh pr view N --json headRefOid` with `git rev-parse HEAD`, and on a mismatch stop and say
+so — the files you read must be the ones the diff changes. Nothing → the working tree against `git merge-base HEAD origin/master`, untracked
 files included. Read every changed file whole and follow the calls into the key and PIN code
 paths the change touches: these bugs live in the flow, not in one hunk.
 
