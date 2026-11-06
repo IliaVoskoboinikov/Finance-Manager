@@ -7,7 +7,7 @@
       "Bash(git rebase:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr merge:*)",
-      "Read(/release.jks)",
+      "Read(/**/*.jks)",
       "Read(/local.properties)",
       "Read(/**/google-services.json)"
     ]
