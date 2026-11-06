@@ -34,7 +34,7 @@ build, and Gradle addresses its tasks the same way from the root: `:build-logic:
 (`docs/testing.md`). A file whose nearest one is the root project gives no module: never run
 the root `check`. No touched module → skip that line. For a module list, run `:<module>:check` plus the unit test
 task of each module (`testDebugUnitTest`; pure JVM modules `:core:domain`, `:konsist`, `:lint`
-only have `test`).
+and the convention plugins `:build-logic:convention` only have `test`).
 
 ## 2. Environment
 
@@ -72,7 +72,8 @@ For every failed task find the first real error in the log:
 
 - Kotlin compile: lines starting with `e: file://…` → `path:line`.
 - Unit tests: the failing test class and method plus the first `Caused by` / assertion line;
-  the HTML report is `<module>/build/reports/tests/testDebugUnitTest/index.html`.
+  the HTML report is `<module>/build/reports/tests/testDebugUnitTest/index.html` (`…/tests/test/…`
+  for the modules that only have `test`).
 - detekt / ktlint / lint: rule id, `path:line`, message; the report path from the log.
 - Kover: the actual and the required coverage.
 - dependencyGuard / navCheck / aalekhCheck / assertModuleGraph: what differs, and the command
