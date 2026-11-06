@@ -550,7 +550,7 @@ class TransactionViewModelTest {
         val editJob = subscribe(editVm)
 
         editVm.delete()
-        coVerify(exactly = 1) { deleteUseCase(match { it.id == "t1" }) }
+        coVerify(exactly = 1) { deleteUseCase("t1") }
 
         val createVm = createModeViewModel()
         val createJob = subscribe(createVm)
@@ -560,6 +560,26 @@ class TransactionViewModelTest {
 
         editJob.cancel()
         createJob.cancel()
+    }
+
+    @Test
+    fun `delete success emits TransactionDeleted with success haptic`() = runTest {
+        coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(domainTransaction)
+        coEvery { deleteUseCase("t1") } returns DomainResult.Success(Unit)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+        val events = mutableListOf<TransactionEvent>()
+        val eventsJob = launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.eventFlow.collect { events += it }
+        }
+
+        vm.delete()
+
+        verify(exactly = 1) { hapticsManager.perform(HapticType.SUCCESS) }
+        assertThat(events).containsExactly(TransactionEvent.TransactionDeleted)
+
+        job.cancel()
+        eventsJob.cancel()
     }
 
     @Test
