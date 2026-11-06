@@ -92,6 +92,12 @@ flowchart TD
 - **Список/пикер**: [`AccountRepositoryImpl.getAll()`](../core/data/src/main/java/soft/divan/financemanager/core/data/repository/AccountRepositoryImpl.kt)
   отдаёт только `status != Deleted` (и без `PENDING_DELETE`). Архивный счёт исчезает из UI
   сразу — ещё до подтверждения сервером.
+- **История и аналитика**: операции архивного счёта остаются в «Сегодня», «Истории» и
+  «Анализе», суммы за прошлые периоды не меняются. Поэтому
+  [`GetTransactionsByPeriodUseCaseImpl`](../core/domain/src/main/java/soft/divan/financemanager/core/domain/usecase/impl/GetTransactionsByPeriodUseCaseImpl.kt)
+  собирает операции по `AccountRepository.getAllIncludingArchived()` — всем локальным счетам без
+  фильтра по статусу. `getAll()` для выборок операций не годится: с ним операции пропадали
+  из истории вместе со счётом.
 - **Синхронизация**: [`AccountOutboxSender`](../core/data/src/main/java/soft/divan/financemanager/core/data/outbox/impl/AccountOutboxSender.kt)
   после успешного серверного `DELETE` по статусу решает: `Deleted` → оставить запись и пометить
   `SYNCED`; иначе → удалить физически. `serverId == null` (счёт не был на сервере) — сетевого
@@ -102,7 +108,7 @@ flowchart TD
 ## Отображение призрачного счёта в операциях
 
 Пикер счёта для новой операции исключает архивные, но **старая** операция может ссылаться на
-уже архивный счёт. Чтобы показать его имя:
+уже архивный счёт: она видна в истории, и из неё открывается редактирование. Чтобы показать его имя:
 
 - `TransactionViewModel` в режиме редактирования, если счёт операции **отсутствует** в
   пикер-списке (он `Deleted` и отфильтрован `getAll`), подтягивает его по id через
@@ -137,9 +143,11 @@ flowchart TD
 | domain | `core/domain/.../model/Account.kt` | `status: AccountStatus` |
 | domain | `core/domain/.../repository/TransactionRepository.kt` | `hasTransactions` |
 | domain | `core/domain/.../usecase/GetAccountByIdUseCase.kt` | резолв счёта по id (не фильтрует) |
+| domain | `core/domain/.../repository/AccountRepository.kt` | `getAll` (без архивных) / `getAllIncludingArchived` |
+| domain | `core/domain/.../usecase/impl/GetTransactionsByPeriodUseCaseImpl.kt` | операции за период по всем счетам, включая архивные |
 | data | `core/data/.../dto/AccountDto.kt` | поле `status` на проводе |
 | data | `core/data/.../mapper/AccountDataMapper.kt` | конвертация строка↔enum |
-| data | `core/data/.../repository/AccountRepositoryImpl.kt` | `delete` / `getAll` фильтр |
+| data | `core/data/.../repository/AccountRepositoryImpl.kt` | `delete` / фильтр `getAll` / `getAllIncludingArchived` |
 | data | `core/data/.../outbox/AccountOutboxSender.kt` | удаление на сервере: оставить архивную запись или удалить |
 | database | `core/database/.../entity/AccountEntity.kt` | `status: String` |
 | feature | `feature/account/impl/.../HasAccountTransactionsUseCase.kt` | флаг для диалога |
