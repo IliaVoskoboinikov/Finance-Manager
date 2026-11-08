@@ -10,6 +10,7 @@ import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.CategoryUi
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionMode
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -83,14 +84,13 @@ class TransactionMappersTest {
     }
 
     @Test
-    fun `Transaction toUi splits date and time and sets edit mode`() {
+    fun `Transaction toUi maps fields and sets edit mode`() {
         val ui = transaction.toUi(categoryUi)
 
         assertThat(ui.id).isEqualTo("t1")
         assertThat(ui.accountId).isEqualTo("a1")
         assertThat(ui.amount).isEqualTo("100.5")
-        assertThat(ui.date).isEqualTo("07.03.2024")
-        assertThat(ui.time).isEqualTo("12:30")
+        assertThat(ui.transactionDate).isEqualTo(transaction.transactionDate)
         assertThat(ui.comment).isEqualTo("lunch")
         assertThat(ui.mode).isEqualTo(TransactionMode.Edit("t1"))
         assertThat(ui.type).isEqualTo(TransactionType.EXPENSE)
@@ -104,7 +104,22 @@ class TransactionMappersTest {
     }
 
     @Test
-    fun `ui to domain round-trip preserves values up to minutes precision`() {
+    fun `ui to domain round-trip preserves timestamps exactly`() {
+        val withSeconds = transaction.copy(
+            transactionDate = Instant.parse("2024-03-07T12:34:56.789Z"),
+            createdAt = Instant.parse("2024-01-01T10:00:15.123Z"),
+            updatedAt = Instant.parse("2024-02-01T11:00:42.456Z")
+        )
+
+        val roundTrip = withSeconds.toUi(categoryUi).toDomain()
+
+        assertThat(roundTrip.transactionDate).isEqualTo(withSeconds.transactionDate)
+        assertThat(roundTrip.createdAt).isEqualTo(withSeconds.createdAt)
+        assertThat(roundTrip.updatedAt).isEqualTo(withSeconds.updatedAt)
+    }
+
+    @Test
+    fun `ui to domain round-trip preserves values`() {
         val roundTrip = transaction.toUi(categoryUi).toDomain()
 
         assertThat(roundTrip.id).isEqualTo(transaction.id)

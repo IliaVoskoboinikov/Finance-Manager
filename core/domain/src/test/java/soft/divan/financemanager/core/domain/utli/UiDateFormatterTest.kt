@@ -19,20 +19,6 @@ class UiDateFormatterTest {
     }
 
     @Test
-    fun `formatDateTime formats LocalDateTime with date and time`() {
-        val dateTime = LocalDateTime.of(2024, 12, 31, 9, 5)
-
-        assertThat(UiDateFormatter.formatDateTime(dateTime)).isEqualTo("31.12.2024 09:05")
-    }
-
-    @Test
-    fun `formatTime formats LocalTime with HH_mm pattern`() {
-        val time = LocalTime.of(8, 4)
-
-        assertThat(UiDateFormatter.formatTime(time)).isEqualTo("08:04")
-    }
-
-    @Test
     fun `formatDate of Instant uses system zone`() {
         val instant = LocalDateTime.of(2024, 3, 7, 12, 30)
             .atZone(zone)
@@ -69,25 +55,31 @@ class UiDateFormatterTest {
     }
 
     @Test
-    fun `parse of date-time string round-trips with formatDateTime`() {
-        val instant = LocalDateTime.of(2024, 3, 7, 14, 15)
-            .atZone(zone)
-            .toInstant()
+    fun `toLocalDateTime converts instant in system zone`() {
+        val local = LocalDateTime.of(2024, 3, 7, 12, 34, 56)
 
-        val formatted = UiDateFormatter.formatDateTime(instant)
-        val parsed = UiDateFormatter.parse(formatted)
-
-        assertThat(parsed).isEqualTo(instant)
+        assertThat(UiDateFormatter.toLocalDateTime(local.atZone(zone).toInstant())).isEqualTo(local)
     }
 
     @Test
-    fun `parse of separate date and time strings produces expected instant`() {
-        val expected = LocalDateTime.of(2024, 3, 7, 14, 15)
+    fun `withDate changes the day and keeps time of day with seconds`() {
+        val instant = LocalDateTime.of(2024, 3, 7, 12, 34, 56, 789_000_000)
             .atZone(zone)
             .toInstant()
 
-        val parsed = UiDateFormatter.parse("07.03.2024", "14:15")
+        val moved = UiDateFormatter.withDate(instant, LocalDate.of(2024, 5, 1))
 
-        assertThat(parsed).isEqualTo(expected)
+        assertThat(moved).isEqualTo(
+            LocalDateTime.of(2024, 5, 1, 12, 34, 56, 789_000_000).atZone(zone).toInstant()
+        )
+    }
+
+    @Test
+    fun `withTime changes time of day and keeps the date`() {
+        val instant = LocalDateTime.of(2024, 3, 7, 12, 34, 56).atZone(zone).toInstant()
+
+        val moved = UiDateFormatter.withTime(instant, LocalTime.of(8, 15))
+
+        assertThat(moved).isEqualTo(LocalDateTime.of(2024, 3, 7, 8, 15).atZone(zone).toInstant())
     }
 }

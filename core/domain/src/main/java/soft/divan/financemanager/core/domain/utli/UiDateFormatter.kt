@@ -14,6 +14,13 @@ object UiDatePatterns {
     const val DISPLAY_DATE_TIME = "dd.MM.yyyy HH:mm"
 }
 
+/**
+ * Форматирование дат для показа в зоне и локали устройства.
+ *
+ * Работает только в одну сторону: обратного разбора строк нет намеренно. Строки обрезаны до
+ * минут, и момент, собранный из них, терял бы секунды (FM-146) — UI-модели хранят [Instant],
+ * а этот объект лишь отрисовывает его и меняет части момента ([withDate], [withTime]).
+ */
 object UiDateFormatter {
 
     private val zoneId: ZoneId = ZoneId.systemDefault()
@@ -44,27 +51,32 @@ object UiDateFormatter {
     fun formatDate(date: LocalDate): String =
         date.format(dateFormatter)
 
-    /* ---------- LocalDateTime ---------- */
-
-    fun formatDateTime(dateTime: LocalDateTime): String =
-        dateTime.format(dateTimeFormatter)
-
-    fun formatTime(dateTime: LocalTime): String =
-        dateTime.format(timeFormatter)
-
     fun formateOfDay(
         date: LocalDate
     ): Instant =
         date.atStartOfDay(zoneId).toInstant()
 
-    /* ---------- Parse ---------- */
+    /* ---------- Части момента ---------- */
 
-    fun parse(dateTime: String): Instant =
-        LocalDateTime
-            .parse(dateTime, dateTimeFormatter)
-            .atZone(zoneId)
-            .toInstant()
+    /** Момент [instant] в зоне устройства — начальные значения пикеров даты и времени. */
+    fun toLocalDateTime(instant: Instant): LocalDateTime =
+        instant.atZone(zoneId).toLocalDateTime()
 
-    fun parse(date: String, time: String): Instant =
-        parse("$date $time")
+    /**
+     * Переносит момент [instant] на дату [date], сохраняя время суток вместе с секундами.
+     *
+     * Пикер даты меняет только дату: если бы время собиралось из строки `HH:mm`, смена дня
+     * заодно обнуляла бы секунды операции.
+     */
+    fun withDate(instant: Instant, date: LocalDate): Instant =
+        instant.atZone(zoneId).with(date).toInstant()
+
+    /**
+     * Ставит моменту [instant] время суток [time], сохраняя дату в зоне устройства.
+     *
+     * Если время попадает в разрыв перехода на летнее время, оно сдвигается вперёд на длину
+     * разрыва (`ZonedDateTime.with`). То же происходит и в [withDate].
+     */
+    fun withTime(instant: Instant, time: LocalTime): Instant =
+        instant.atZone(zoneId).with(time).toInstant()
 }

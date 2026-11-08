@@ -4,6 +4,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -45,9 +46,13 @@ import soft.divan.financemanager.feature.transaction.impl.precenter.model.Transa
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionUiState
 import java.math.BigDecimal
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TransactionViewModelTest {
@@ -61,6 +66,9 @@ class TransactionViewModelTest {
     private val deleteUseCase = mockk<DeleteTransactionAndUpdateAccountUseCase>()
     private val hapticsManager = mockk<HapticsManager>(relaxUnitFun = true)
     private val soundPlayer = mockk<SoundPlayer>(relaxUnitFun = true)
+    private val now = Instant.parse("2024-06-01T08:15:30.250Z")
+    private val clock = Clock.fixed(now, ZoneOffset.UTC)
+    private val zone = ZoneId.systemDefault()
 
     private val account = Account(
         id = "a1",
@@ -117,6 +125,7 @@ class TransactionViewModelTest {
         deleteTransactionAndUpdateAccountUseCase = deleteUseCase,
         hapticsManager = hapticsManager,
         soundPlayer = soundPlayer,
+        clock = clock,
         isIncome = false,
         transactionId = null
     )
@@ -131,6 +140,7 @@ class TransactionViewModelTest {
         deleteTransactionAndUpdateAccountUseCase = deleteUseCase,
         hapticsManager = hapticsManager,
         soundPlayer = soundPlayer,
+        clock = clock,
         isIncome = false,
         transactionId = id
     )
@@ -339,14 +349,77 @@ class TransactionViewModelTest {
 
         vm.updateComment("dinner")
         vm.updateDate(LocalDate.of(2024, 3, 7))
-        vm.updateTime(LocalTime.of(12, 30))
+        vm.updateTime(LocalTime.of(12, 31))
         vm.onAmountInputChanged("55.5")
 
         val transaction = success(vm).transaction
+        val local = LocalDateTime.ofInstant(transaction.transactionDate, zone)
         assertThat(transaction.comment).isEqualTo("dinner")
-        assertThat(transaction.date).isEqualTo("07.03.2024")
-        assertThat(transaction.time).isEqualTo("12:30")
+        assertThat(local.toLocalDate()).isEqualTo(LocalDate.of(2024, 3, 7))
+        assertThat(local.toLocalTime()).isEqualTo(LocalTime.of(12, 31))
         assertThat(transaction.amount).isEqualTo("55.5")
+
+        job.cancel()
+    }
+
+    @Test
+    fun `create mode stamps date and timestamps from the clock`() = runTest {
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        val transaction = success(vm).transaction
+        assertThat(transaction.transactionDate).isEqualTo(now)
+        assertThat(transaction.createdAt).isEqualTo(now)
+        assertThat(transaction.updatedAt).isEqualTo(now)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `updateDate moves the day and keeps time of day with seconds`() = runTest {
+        val original = LocalDateTime.of(2024, 3, 7, 12, 34, 56).atZone(zone).toInstant()
+        coEvery { getTransactionUseCase("t1") } returns
+            DomainResult.Success(domainTransaction.copy(transactionDate = original))
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.updateDate(LocalDate.of(2024, 3, 9))
+
+        assertThat(success(vm).transaction.transactionDate).isEqualTo(
+            LocalDateTime.of(2024, 3, 9, 12, 34, 56).atZone(zone).toInstant()
+        )
+
+        job.cancel()
+    }
+
+    @Test
+    fun `updateTime with the same hours and minutes keeps seconds`() = runTest {
+        val original = LocalDateTime.of(2024, 3, 7, 12, 34, 56).atZone(zone).toInstant()
+        coEvery { getTransactionUseCase("t1") } returns
+            DomainResult.Success(domainTransaction.copy(transactionDate = original))
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.updateTime(LocalTime.of(12, 34))
+
+        assertThat(success(vm).transaction.transactionDate).isEqualTo(original)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `updateTime with another time replaces time of day and keeps the date`() = runTest {
+        val original = LocalDateTime.of(2024, 3, 7, 12, 34, 56).atZone(zone).toInstant()
+        coEvery { getTransactionUseCase("t1") } returns
+            DomainResult.Success(domainTransaction.copy(transactionDate = original))
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.updateTime(LocalTime.of(9, 5))
+
+        assertThat(success(vm).transaction.transactionDate).isEqualTo(
+            LocalDateTime.of(2024, 3, 7, 9, 5).atZone(zone).toInstant()
+        )
 
         job.cancel()
     }
@@ -431,6 +504,50 @@ class TransactionViewModelTest {
 
         job.cancel()
     }
+
+    @Test
+    fun `editing keeps seconds of transaction date and creation time`() = runTest {
+        val withSeconds = domainTransaction.copy(
+            transactionDate = Instant.parse("2024-03-07T12:34:56.789Z"),
+            createdAt = Instant.parse("2024-01-01T10:00:15.123Z")
+        )
+        coEvery { getTransactionUseCase("t1") } returns DomainResult.Success(withSeconds)
+        val saved = slot<Transaction>()
+        coEvery { updateUseCase(capture(saved)) } returns DomainResult.Success(Unit)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.updateComment("dinner")
+        vm.save()
+
+        assertThat(saved.captured.transactionDate).isEqualTo(withSeconds.transactionDate)
+        assertThat(saved.captured.createdAt).isEqualTo(withSeconds.createdAt)
+        assertThat(saved.captured.updatedAt).isEqualTo(now)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `new date and unchanged time from pickers keep the seconds in the saved transaction`() =
+        runTest {
+            val original = LocalDateTime.of(2024, 3, 7, 12, 34, 56).atZone(zone).toInstant()
+            coEvery { getTransactionUseCase("t1") } returns
+                DomainResult.Success(domainTransaction.copy(transactionDate = original))
+            val saved = slot<Transaction>()
+            coEvery { updateUseCase(capture(saved)) } returns DomainResult.Success(Unit)
+            val vm = editModeViewModel()
+            val job = subscribe(vm)
+
+            vm.updateDate(LocalDate.of(2024, 3, 9))
+            vm.updateTime(LocalTime.of(12, 34))
+            vm.save()
+
+            assertThat(saved.captured.transactionDate).isEqualTo(
+                LocalDateTime.of(2024, 3, 9, 12, 34, 56).atZone(zone).toInstant()
+            )
+
+            job.cancel()
+        }
 
     @Test
     fun `save failure emits ShowError with error haptic and no sound`() = runTest {

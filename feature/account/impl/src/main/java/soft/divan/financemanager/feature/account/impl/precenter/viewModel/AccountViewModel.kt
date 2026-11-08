@@ -21,7 +21,6 @@ import soft.divan.financemanager.core.domain.model.Const.DEFAULT_STOP_TIMEOUT_MS
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.getOrNull
-import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.account.impl.R
 import soft.divan.financemanager.feature.account.impl.domain.usecase.CreateAccountUseCase
 import soft.divan.financemanager.feature.account.impl.domain.usecase.DeleteAccountUseCase
@@ -36,7 +35,7 @@ import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUi
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUiState
 import soft.divan.financemanager.feature.haptics.api.domain.HapticType
 import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
-import java.time.LocalDateTime
+import java.time.Clock
 import java.util.UUID
 
 @HiltViewModel(assistedFactory = AccountViewModel.Factory::class)
@@ -48,6 +47,7 @@ class AccountViewModel @AssistedInject constructor(
     private val deleteAccountUseCase: DeleteAccountUseCase,
     private val hasAccountTransactionsUseCase: HasAccountTransactionsUseCase,
     private val hapticsManager: HapticsManager,
+    private val clock: Clock,
     @Assisted private val accountId: String?
 ) : ViewModel() {
 
@@ -108,14 +108,14 @@ class AccountViewModel @AssistedInject constructor(
     }
 
     private fun initForCreate() {
-        val now = LocalDateTime.now()
+        val now = clock.instant()
         account = AccountUi(
             id = UUID.randomUUID().toString(),
             name = "",
             balance = "0",
             currencyId = CurrencySymbol.RUB.id,
-            createdAt = UiDateFormatter.formatDateTime(now),
-            updatedAt = UiDateFormatter.formatDateTime(now)
+            createdAt = now,
+            updatedAt = now
         )
 
         publishSuccess()
@@ -175,9 +175,7 @@ class AccountViewModel @AssistedInject constructor(
 
             _uiState.update { AccountUiState.Loading }
 
-            val updated = current.copy(
-                updatedAt = UiDateFormatter.formatDateTime(LocalDateTime.now())
-            )
+            val updated = current.copy(updatedAt = clock.instant())
 
             val result = when (mode) {
                 is AccountMode.Create -> createAccountUseCase(updated.toDomain())

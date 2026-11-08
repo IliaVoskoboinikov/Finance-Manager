@@ -14,6 +14,10 @@ Use case-ы модуля: `CreateAccountUseCase`, `UpdateAccountUseCase`, `GetAc
 Сохранение и удаление выполняются по одному за раз, а после успеха экран больше не принимает
 действий: двойной тап по ✓ не отправит на сервер второй запрос.
 
+`AccountUi` хранит `createdAt` и `updatedAt` как `Instant`, без перевода в строку и обратно,
+поэтому секунды не теряются. `updatedAt` при сохранении берётся из внедрённого
+`java.time.Clock`.
+
 Модуль реализует `AccountFeatureApi` из `:feature:account:api` и регистрирует экран по
 ключу `AccountKey` в общем `entryProvider` приложения.
 

@@ -50,8 +50,8 @@ import soft.divan.financemanager.feature.transaction.impl.precenter.model.Transa
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionMode
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionUi
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionUiState
+import java.time.Clock
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 
 @HiltViewModel(assistedFactory = TransactionViewModel.Factory::class)
@@ -66,6 +66,7 @@ class TransactionViewModel @AssistedInject constructor(
     private val deleteTransactionAndUpdateAccountUseCase: DeleteTransactionAndUpdateAccountUseCase,
     private val hapticsManager: HapticsManager,
     private val soundPlayer: SoundPlayer,
+    private val clock: Clock,
     @Assisted private val isIncome: Boolean,
     @Assisted private val transactionId: String?
 ) : ViewModel() {
@@ -183,7 +184,7 @@ class TransactionViewModel @AssistedInject constructor(
     }
 
     private fun initForCreate() {
-        val now = LocalDateTime.now()
+        val now = clock.instant()
         val account = accounts.first()
         val category = categories.first()
 
@@ -192,10 +193,9 @@ class TransactionViewModel @AssistedInject constructor(
             accountId = account.id,
             category = category,
             amount = "0",
-            date = UiDateFormatter.formatDate(LocalDate.now()),
-            time = UiDateFormatter.formatTime(LocalTime.now()),
-            createdAt = UiDateFormatter.formatDateTime(now),
-            updatedAt = UiDateFormatter.formatDateTime(now),
+            transactionDate = now,
+            createdAt = now,
+            updatedAt = now,
             currencyId = account.currencyId,
             comment = "",
             mode = TransactionMode.Create,
@@ -256,9 +256,7 @@ class TransactionViewModel @AssistedInject constructor(
 
             _uiState.update { TransactionUiState.Loading }
 
-            val updated = current.copy(
-                updatedAt = UiDateFormatter.formatDateTime(LocalDateTime.now())
-            ).toDomain()
+            val updated = current.copy(updatedAt = clock.instant()).toDomain()
 
             val result = when (mode) {
                 is TransactionMode.Create -> createTransactionAndUpdateAccountUseCase(updated)
@@ -286,14 +284,29 @@ class TransactionViewModel @AssistedInject constructor(
         publishSuccess()
     }
 
+    /** Переносит операцию на дату [date]; время суток с секундами не меняется. */
     fun updateDate(date: LocalDate) {
-        transactionUi =
-            transactionUi?.copy(date = UiDateFormatter.formatDate(date))
+        val current = transactionUi ?: return
+        transactionUi = current.copy(
+            transactionDate = UiDateFormatter.withDate(current.transactionDate, date)
+        )
         publishSuccess()
     }
 
+    /**
+     * Ставит операции время суток [time] из пикера.
+     *
+     * Пикер отдаёт только часы и минуты. Если они не изменились (пользователь открыл пикер
+     * и нажал «OK»), момент операции остаётся прежним, иначе её секунды обнулились бы.
+     */
     fun updateTime(time: LocalTime) {
-        transactionUi = transactionUi?.copy(time = UiDateFormatter.formatTime(time))
+        val current = transactionUi ?: return
+        val currentTime = UiDateFormatter.toLocalDateTime(current.transactionDate)
+        if (time.hour == currentTime.hour && time.minute == currentTime.minute) return
+
+        transactionUi = current.copy(
+            transactionDate = UiDateFormatter.withTime(current.transactionDate, time)
+        )
         publishSuccess()
     }
 
