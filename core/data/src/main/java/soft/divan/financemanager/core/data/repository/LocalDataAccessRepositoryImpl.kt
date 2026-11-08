@@ -30,6 +30,8 @@ class LocalDataAccessRepositoryImpl @Inject constructor(
 
     override val state: StateFlow<LocalDataState> get() = vault.state
 
+    override val generation: StateFlow<Long> get() = core.generation
+
     override suspend fun initialize() = vault.initialize()
 
     override suspend fun unlockWithPin(pin: String): PinUnlockResult =

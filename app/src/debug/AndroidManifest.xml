@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application>
+        <!-- Пустая Activity из ui-test-manifest (debugImplementation) нужна только
+             Compose-тестам под Robolectric, которые запускают её в своём процессе. Библиотека
+             объявляет её exported — другим приложениям она не нужна. -->
+        <activity
+            android:name="androidx.activity.ComponentActivity"
+            android:exported="false"
+            tools:replace="android:exported" />
+    </application>
+
+</manifest>

@@ -15,7 +15,10 @@
   теме) и задаёт стиль system bars по теме приложения (`presenter/theme/ThemeModeExt.kt`).
 - Доступ к локальным данным: `App` читает ключи базы до всего остального
   (`InitializeLocalDataUseCase`), `MainActivity` строит главный экран только при открытых данных
-  (замок уровня PIN, экран потери ключа), ставит `FLAG_SECURE` до первого кадра;
+  (замок уровня PIN, экран потери ключа), ставит `FLAG_SECURE` до первого кадра. Замок заменяет
+  граф, но `presenter/LocalDataHost` хранит его состояние (`rememberSaveableStateHolder`) и
+  ViewModel (`MainGraphViewModel`) до разблокировки; стирание данных, пока граф скрыт (поколение
+  данных `ObserveLocalDataGenerationUseCase` сменилось), сбрасывает сессию графа целиком;
   `lifecycle/LocalDataAutoLock` закрывает базу уровня PIN через 5 минут в фоне. См.
   [docs/encryption.md](../docs/encryption.md).
 - Бэкапы: `res/xml/data_extraction_rules.xml` и `backup_rules.xml` исключают все данные из
