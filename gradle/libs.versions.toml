@@ -5,7 +5,7 @@
 [versions]
 
 # Build & Kotlin
-agp = "9.4.1"
+agp = "9.5.0"
 kotlin = "2.4.20"
 ksp = "2.3.9"
 coroutines = "1.11.0"
@@ -70,7 +70,7 @@ detekt = "1.23.8"
 # 0.4.x — последняя линейка compose-rules под detekt 1.23.x; с 0.5.0 правила собраны
 # под detekt 2.x и с 1.23.8 не загружаются (Renovate держит < 0.5.0, см. renovate.json5).
 detektCompose = "0.4.28"
-lint = "32.4.1"
+lint = "32.5.0"
 kover = "0.9.11"
 dependencyAnalysis = "3.19.2"
 dependencyGuard = "0.5.0"
