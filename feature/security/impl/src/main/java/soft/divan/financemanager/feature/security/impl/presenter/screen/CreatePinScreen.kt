@@ -6,11 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -24,7 +22,8 @@ import soft.divan.financemanager.feature.security.impl.R
 import soft.divan.financemanager.feature.security.impl.presenter.components.Keyboard
 import soft.divan.financemanager.feature.security.impl.presenter.components.PinCodeScreenHeader
 import soft.divan.financemanager.feature.security.impl.presenter.components.RoundedBoxesRow
-import soft.divan.financemanager.feature.security.impl.presenter.model.CreatePinScreenState
+import soft.divan.financemanager.feature.security.impl.presenter.model.CreatePinError
+import soft.divan.financemanager.feature.security.impl.presenter.model.CreatePinStep
 import soft.divan.financemanager.feature.security.impl.presenter.viewmodel.CreatePinViewModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
 
@@ -58,58 +57,34 @@ private fun CreatePinScreenPreview() {
     }
 }
 
+/**
+ * Экран создания PIN: только рисует [CreatePinViewModel.uiState] и передаёт ввод — сценарий и
+ * сохранение живут во ViewModel. [onNavigateBack] вызывается, когда PIN сохранён.
+ */
 @NavDestination(route = CreatePinKey::class)
 @Composable
 fun CreatePinScreen(
     viewModel: CreatePinViewModel = hiltViewModel(),
     onNavigateBack: () -> Unit
 ) {
-    var headerId by remember { mutableIntStateOf(R.string.сome_up_with_pin) }
-    var tempPin by remember { mutableStateOf<String?>(null) }
-    val notificationText = ""
-    var notification by remember { mutableStateOf(notificationText) }
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentOnNavigateBack by rememberUpdatedState(onNavigateBack)
 
-    when (val state = uiState) {
-        is CreatePinScreenState.InitialState -> {
-            headerId = R.string.сome_up_with_pin
-            tempPin = null
-        }
-
-        is CreatePinScreenState.EnteringPinState -> {
-            headerId = R.string.repeat_pin
-            tempPin = state.pin
-            notification = ""
-        }
-
-        is CreatePinScreenState.ConfirmingPinState -> {
-            if (tempPin == state.pin) {
-                viewModel.savePinCode(tempPin!!)
-                viewModel.changeState(CreatePinScreenState.PinCreatedState)
-            } else {
-                notification = stringResource(id = R.string.pin_codes_do_not_match)
-                viewModel.changeState(CreatePinScreenState.InitialState)
-            }
-        }
-
-        is CreatePinScreenState.PinCreatedState -> {
-            onNavigateBack()
-        }
-
-        is CreatePinScreenState.ErrorState -> {
-        }
+    LaunchedEffect(uiState.isCompleted) {
+        if (uiState.isCompleted) currentOnNavigateBack()
     }
 
     PinEntryCommonScreen(
-        titleId = headerId,
-        errorMessage = notification,
-        onPinEnter = { pinCode ->
-            if (tempPin == null) {
-                viewModel.changeState(CreatePinScreenState.EnteringPinState(pinCode))
-            } else {
-                viewModel.changeState(CreatePinScreenState.ConfirmingPinState(pinCode))
-            }
-        }
+        titleId = when (uiState.step) {
+            CreatePinStep.ENTER -> R.string.сome_up_with_pin
+            CreatePinStep.CONFIRM -> R.string.repeat_pin
+        },
+        errorMessage = when (uiState.error) {
+            CreatePinError.MISMATCH -> stringResource(R.string.pin_codes_do_not_match)
+            CreatePinError.SAVE_FAILED -> stringResource(R.string.pin_save_failed)
+            null -> ""
+        },
+        enabled = uiState.isInputEnabled,
+        onPinEnter = viewModel::onPinEntered
     )
 }
