@@ -21,9 +21,11 @@ import soft.divan.financemanager.core.domain.repository.DataProtectionRepository
 import soft.divan.financemanager.core.domain.repository.LocalDataAccessRepository
 import soft.divan.financemanager.core.domain.usecase.InitializeLocalDataUseCase
 import soft.divan.financemanager.core.domain.usecase.LockLocalDataUseCase
+import soft.divan.financemanager.core.domain.usecase.ObserveLocalDataGenerationUseCase
 import soft.divan.financemanager.core.domain.usecase.ObserveLocalDataStateUseCase
 import soft.divan.financemanager.core.domain.usecase.impl.InitializeLocalDataUseCaseImpl
 import soft.divan.financemanager.core.domain.usecase.impl.LockLocalDataUseCaseImpl
+import soft.divan.financemanager.core.domain.usecase.impl.ObserveLocalDataGenerationUseCaseImpl
 import soft.divan.financemanager.core.domain.usecase.impl.ObserveLocalDataStateUseCaseImpl
 import javax.inject.Singleton
 
@@ -52,6 +54,11 @@ interface LocalDataModule {
     fun bindObserveLocalDataStateUseCase(
         impl: ObserveLocalDataStateUseCaseImpl
     ): ObserveLocalDataStateUseCase
+
+    @Binds
+    fun bindObserveLocalDataGenerationUseCase(
+        impl: ObserveLocalDataGenerationUseCaseImpl
+    ): ObserveLocalDataGenerationUseCase
 
     @Binds
     fun bindInitializeLocalDataUseCase(impl: InitializeLocalDataUseCaseImpl): InitializeLocalDataUseCase

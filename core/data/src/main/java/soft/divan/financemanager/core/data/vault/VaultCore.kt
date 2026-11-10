@@ -6,12 +6,14 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import soft.divan.common.di.IoDispatcher
 import soft.divan.financemanager.core.database.holder.DatabaseHolder
 import soft.divan.financemanager.core.domain.model.LocalDataState
+import soft.divan.financemanager.core.domain.repository.INITIAL_DATA_GENERATION
 import soft.divan.financemanager.core.security.keyset.DekEnvelope
 import soft.divan.financemanager.core.security.keyset.KeyLevel
 import soft.divan.financemanager.core.security.keyset.Keyset
@@ -48,6 +50,23 @@ class VaultCore @Inject constructor(
 
     /** Доступны ли данные. */
     val state: StateFlow<LocalDataState> = _state.asStateFlow()
+
+    private val _generation = MutableStateFlow(INITIAL_DATA_GENERATION)
+
+    /**
+     * Поколение данных в этом процессе: растёт при каждом стирании. По [state] стирание не видно —
+     * открытая база остаётся `Open`, — а держателям состояния прежних данных (сохранённая под
+     * замком навигация) нужно знать, что данные уже другие.
+     */
+    val generation: StateFlow<Long> = _generation.asStateFlow()
+
+    /**
+     * Начинается стирание: прежние данные больше не актуальны, даже если стирание сорвётся, —
+     * лишний сброс сохранённого состояния безопаснее пропущенного.
+     */
+    fun startNewGeneration() {
+        _generation.update { it + 1 }
+    }
 
     /** Операции с ключами идут строго по одной и вне главного потока. */
     suspend fun <T> exclusive(block: suspend () -> T): T =

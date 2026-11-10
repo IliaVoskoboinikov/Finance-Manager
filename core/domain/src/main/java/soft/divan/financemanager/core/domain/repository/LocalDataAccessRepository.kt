@@ -18,6 +18,14 @@ interface LocalDataAccessRepository {
     val state: StateFlow<LocalDataState>
 
     /**
+     * Поколение данных в этом процессе: в начале процесса [INITIAL_DATA_GENERATION], растёт при
+     * каждом стирании, каким бы путём оно ни шло
+     * («забыл PIN», исчерпанные попытки, выход из аккаунта, восстановление после потери ключа).
+     * [state] стирания не показывает: открытая база так и остаётся [LocalDataState.Open].
+     */
+    val generation: StateFlow<Long>
+
+    /**
      * Читает ключи и открывает базу, если уровень позволяет сделать это без пользователя.
      * Вызывается при старте процесса; повторный вызов после [LocalDataState.KeyLost] — попытка
      * ещё раз.
@@ -52,3 +60,6 @@ interface LocalDataAccessRepository {
      */
     suspend fun recover(): Boolean
 }
+
+/** Поколение данных на старте процесса — см. [LocalDataAccessRepository.generation]. */
+const val INITIAL_DATA_GENERATION: Long = 0L

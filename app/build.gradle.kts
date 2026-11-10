@@ -113,6 +113,13 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
     testImplementation(libs.bundles.unit.test)
+    // Compose-тесты хоста под Robolectric (LocalDataHostTest)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.ui.test.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    // ComponentActivity в манифесте для createComposeRule; только debug, в release не попадает
+    debugImplementation(libs.androidx.ui.test.manifest)
 }
 
 tasks.register("printVersionName") {

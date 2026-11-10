@@ -8,9 +8,11 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
@@ -472,6 +474,54 @@ class LocalDataVaultTest {
 
         assertThat(vault.state.value).isEqualTo(LocalDataState.KeyLost)
         assertThat(harness.holder.state.value).isEqualTo(DatabaseState.CLOSED)
+    }
+
+    @Test
+    fun `every wipe starts a new data generation, other operations do not`() = vaultTest {
+        val initial = harness.core.generation.value
+        enablePinLevel()
+        vault.lock()
+        unlocker.unlockWithPin(PIN.toCharArray())
+        vault.lock()
+        assertThat(harness.core.generation.value).isEqualTo(initial)
+
+        vault.wipe()
+        val afterFirst = harness.core.generation.value
+        vault.wipe()
+
+        assertThat(afterFirst).isGreaterThan(initial)
+        assertThat(harness.core.generation.value).isGreaterThan(afterFirst)
+    }
+
+    @Test
+    fun `new generation is visible by the time the wiped data opens`() = vaultTest {
+        lockedAtPinLevel()
+        val initial = harness.core.generation.value
+        val generationsAtOpen = mutableListOf<Long>()
+        // Подписчик без диспетчера видит каждую публикацию в момент записи — как гейт, который
+        // открывается по Open: к этому моменту поколение уже должно смениться
+        val watcher = launch(UnconfinedTestDispatcher(testScheduler)) {
+            harness.core.state.collect {
+                if (it == LocalDataState.Open) generationsAtOpen += harness.core.generation.value
+            }
+        }
+
+        vault.wipe()
+        watcher.cancel()
+
+        assertThat(generationsAtOpen).isNotEmpty().allMatch { it > initial }
+    }
+
+    @Test
+    fun `failed wipe still starts a new data generation`() = vaultTest {
+        vault.initialize()
+        val initial = harness.core.generation.value
+        harness.failNextClose = IllegalStateException("close failed")
+
+        vault.wipe()
+
+        // Ключей уже нет — прежние данные нечитаемы, хоть файл и не удалился
+        assertThat(harness.core.generation.value).isGreaterThan(initial)
     }
 
     @Test

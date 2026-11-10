@@ -37,6 +37,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import soft.divan.financemanager.core.auth.domain.usecase.GetAuthStatusUseCase
 import soft.divan.financemanager.core.domain.model.LocalDataState
+import soft.divan.financemanager.core.domain.usecase.ObserveLocalDataGenerationUseCase
 import soft.divan.financemanager.core.domain.usecase.ObserveLocalDataStateUseCase
 import soft.divan.financemanager.core.featureapi.FeatureApi
 import soft.divan.financemanager.core.notifications.fcm.PushSubscriptionManager
@@ -91,6 +92,9 @@ class MainActivity : AppCompatActivity() {
     lateinit var observeLocalDataState: ObserveLocalDataStateUseCase
 
     @Inject
+    lateinit var observeLocalDataGeneration: ObserveLocalDataGenerationUseCase
+
+    @Inject
     lateinit var observeSecureScreen: ObserveSecureScreenUseCase
 
     @Inject
@@ -101,6 +105,9 @@ class MainActivity : AppCompatActivity() {
 
     /** Пройден ли замок приложения — см. [AppLockViewModel]. */
     private val appLock: AppLockViewModel by viewModels()
+
+    /** ViewModel корневого графа — см. [MainGraphViewModel], [LocalDataHost]. */
+    private val mainGraph: MainGraphViewModel by viewModels()
 
     // Сброс синхронный: состояние читается гейтом напрямую, без эффекта, который отработал бы
     // только на следующем кадре и дал бы главному экрану мелькнуть при возвращении.
@@ -221,30 +228,39 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Что показать, зависит прежде всего от того, доступны ли данные: главный экран строится только
-     * при открытой базе. Выбор — в [resolveLocalDataScreen], здесь только отрисовка.
+     * при открытой базе. Выбор — в [resolveLocalDataScreen], отрисовка и сохранение сессии графа
+     * под замком — в [LocalDataHost].
      */
     @Composable
     private fun LocalDataGate() {
         val dataState by observeLocalDataState().collectAsStateWithLifecycle()
+        // Без lifecycle: поколение должно смениться до первого кадра после возвращения из фона,
+        // где стирание (выход по истёкшей сессии) могло пройти, пока сбор был бы приостановлен
+        val dataGeneration by observeLocalDataGeneration().collectAsState()
         val onUnlocked = appLock::unlock
 
-        when (resolveLocalDataScreen(dataState, appLock.pinSet, appLock.unlocked)) {
-            LocalDataScreen.KEY_LOST -> KeyLostScreen()
-
-            LocalDataScreen.DATA_LOCK, LocalDataScreen.UI_LOCK -> PinLockScreen(onUnlock = onUnlocked)
-
-            // Пока ключи или PIN не прочитаны, главный экран не строится — виден только фон темы
-            LocalDataScreen.NOTHING -> Unit
-
-            LocalDataScreen.MAIN -> RootNavDisplay(
-                splashFeatureApi = splashFeatureApi,
-                authFeatureApi = authFeatureApi,
-                getAuthStatusUseCase = getAuthStatusUseCase,
-                mainScreen = {
-                    MainScreen(features = features)
+        LocalDataHost(
+            screen = resolveLocalDataScreen(dataState, appLock.pinSet, appLock.unlocked),
+            dataGeneration = dataGeneration,
+            mainGraph = mainGraph,
+            lockScreen = { screen ->
+                if (screen == LocalDataScreen.KEY_LOST) {
+                    KeyLostScreen()
+                } else {
+                    PinLockScreen(onUnlock = onUnlocked)
                 }
-            )
-        }
+            },
+            main = {
+                RootNavDisplay(
+                    splashFeatureApi = splashFeatureApi,
+                    authFeatureApi = authFeatureApi,
+                    getAuthStatusUseCase = getAuthStatusUseCase,
+                    mainScreen = {
+                        MainScreen(features = features)
+                    }
+                )
+            }
+        )
     }
 
     /**
