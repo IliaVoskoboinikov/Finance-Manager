@@ -1,6 +1,8 @@
 package soft.divan.financemanager.core.data.sync.impl
 
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import soft.divan.financemanager.core.data.dto.TransactionDto
 import soft.divan.financemanager.core.data.mapper.ApiDateMapper
 import soft.divan.financemanager.core.data.mapper.TimeMapper
@@ -25,6 +27,7 @@ import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Реализация [TransactionSyncManager].
@@ -38,7 +41,9 @@ import javax.inject.Inject
  * - Разрешение конфликтов по updatedAt (last-write-wins), но строку с неотправленной операцией
  *   серверная версия не перезаписывает — см. [canBeOverwritten]
  * - Все операции изолированы через safeApiCall / safeDbCall
+ * - Слияния сериализованы общим локом, чтобы параллельные pull не вставили дубли — см. [mergeMutex]
  */
+@Singleton
 class TransactionSyncManagerImpl @Inject constructor(
     private val remoteDataSource: TransactionRemoteDataSource,
     private val localDataSource: TransactionLocalDataSource,
@@ -46,6 +51,25 @@ class TransactionSyncManagerImpl @Inject constructor(
     private val categoryLocalDataSource: CategoryLocalDataSource,
     private val errorLogger: ErrorLogger
 ) : TransactionSyncManager {
+
+    /**
+     * Сериализует слияние серверных транзакций с локальными.
+     *
+     * Pull одного счёта запускают одновременно несколько экранов (каждый вызов
+     * `getByAccountAndPeriod`), `SyncWorker` и `flatMapLatest` на каждый эмит счетов, категорий
+     * и валюты — а слияние устроено как «прочитал локальные → вставил недостающие». Без лока два
+     * слияния читали бы таблицу до вставки друг друга, и одна серверная транзакция ложилась бы
+     * двумя строками с разными `localId` — дубль в списке и в суммах.
+     *
+     * Лок общий на все счета, а не по счёту: операцию, перенесённую на другом устройстве, могут
+     * вернуть pull'ы обоих счетов. Сетевой запрос идёт вне лока — ждут только локальные записи.
+     * Второй вызов, в отличие от pull счетов, не пропускается: у вызовов разные периоды, и
+     * пропуск потерял бы данные своего периода. Лок один на процесс, потому что класс — `@Singleton`.
+     *
+     * Pull нельзя вызывать изнутри `runInTransaction`: вызывающий держал бы соединение на запись
+     * и ждал лок, а владелец лока ждал бы это соединение для вставки — дедлок.
+     */
+    private val mergeMutex = Mutex()
 
     /**
      * Точка входа полной синхронизации.
@@ -118,17 +142,22 @@ class TransactionSyncManagerImpl @Inject constructor(
                 endDate
             )
         }.fold(
-            onSuccess = { transactionDtos -> mergeServerTransactions(account, transactionDtos) },
+            onSuccess = { transactionDtos ->
+                mergeMutex.withLock { mergeServerTransactions(account, transactionDtos) }
+            },
             onFailure = { error -> error.isPullSkipped() }
         )
     }
 
     /**
-     * Сливает серверные транзакции счёта с локальными; `false` — локальные не удалось прочитать.
+     * Сливает серверные транзакции счёта с локальными; `false` — не удалось прочитать локальные
+     * записи или категорию.
      *
      * Без прочитанных локальных записей слияние прерывается: иначе каждая серверная транзакция
      * выглядела бы новой и вставлялась бы дубликатом с новым `localId` — на каждом синке.
+     * Так же прерывается и на сбое чтения категории.
      */
+    @Suppress("ReturnCount")
     private suspend fun mergeServerTransactions(
         account: AccountEntity,
         transactionDtos: List<TransactionDto>
@@ -147,8 +176,11 @@ class TransactionSyncManagerImpl @Inject constructor(
         transactionDtos.forEach { transactionDto ->
             val localTransaction = localMap[transactionDto.id]
 
-            val category =
-                categoryLocalDataSource.getById(transactionDto.categoryId) ?: return@forEach
+            // Сбой чтения — сбой слияния, а не исключение: оно оборвало бы pull остальных счетов.
+            // Категории нет — пропуск строки, как и раньше
+            val category = safeDbCall(errorLogger) {
+                categoryLocalDataSource.getById(transactionDto.categoryId)
+            }.fold(onSuccess = { it }, onFailure = { return false }) ?: return@forEach
             val type = if (category.isIncome) TransactionType.INCOME else TransactionType.EXPENSE
 
             val entity = transactionDto.toEntity(

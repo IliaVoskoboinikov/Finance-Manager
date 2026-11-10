@@ -14,6 +14,10 @@ last-write-wins), очередь исходящих операций и тран
 dead-letter. Дизайн — [docs/outbox.md](../../docs/outbox.md), гарантии от дублей —
 [docs/idempotency.md](../../docs/idempotency.md).
 
+Pull счетов и транзакций сериализован: параллельные слияния «прочитал → вставил» кладут одну
+серверную запись дважды. Транзакции при этом не пропускают второй вызов (у вызовов разные
+периоды), а ждут общий лок слияния. Подробности — [docs/synchronization.md](../../docs/synchronization.md).
+
 ## Transactions & post-commit sync
 
 Составные локальные операции выполняются атомарно через `TransactionRunner`

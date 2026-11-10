@@ -4,7 +4,11 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
@@ -24,6 +28,7 @@ import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.math.BigDecimal
 import java.net.SocketTimeoutException
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
 
 class TransactionSyncManagerImplTest {
 
@@ -165,6 +170,23 @@ class TransactionSyncManagerImplTest {
 
         syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
 
+        coVerify(exactly = 0) { localDataSource.insert(any()) }
+    }
+
+    @Test
+    fun `pull reports failure instead of throwing when a category cannot be read`() = runTest {
+        // База закрылась посреди слияния (авто-блокировка): исключение оборвало бы pull
+        // остальных счетов в pullServerData, а сбой должен остаться сбоем этого счёта
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
+        } returns Response.success(listOf(transactionDto()))
+        coEvery { localDataSource.getBySyncIds(listOf("server-t1")) } returns emptyList()
+        coEvery { categoryLocalDataSource.getById("cat-1") } throws IllegalStateException("closed")
+
+        val result = syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
+
+        assertThat(result).isFalse()
         coVerify(exactly = 0) { localDataSource.insert(any()) }
     }
 
@@ -319,6 +341,121 @@ class TransactionSyncManagerImplTest {
         coVerify(exactly = 0) { localDataSource.update(any()) }
     }
 
+    /* ---------- параллельные pull ---------- */
+
+    /**
+     * Локальная таблица транзакций поверх моков: чтение и вставка с задержкой, чтобы
+     * параллельные pull успели переплестись между «прочитал» и «вставил». `safeDbCall` уводит
+     * чтение и вставку на IO-диспатчер: `delay` там идёт в реальном, а не виртуальном времени —
+     * на этом держится воспроизведение гонки, — а вставки приходят из разных потоков, отсюда
+     * потокобезопасный список.
+     */
+    private fun backLocalTableWithList(): MutableList<TransactionEntity> {
+        val table = CopyOnWriteArrayList<TransactionEntity>()
+        coEvery { localDataSource.getBySyncIds(any()) } coAnswers {
+            val ids = firstArg<List<String>>()
+            delay(DB_DELAY_MS)
+            table.filter { it.serverId in ids }
+        }
+        coEvery { localDataSource.insert(any()) } coAnswers {
+            delay(DB_DELAY_MS)
+            table += firstArg<TransactionEntity>()
+        }
+        return table
+    }
+
+    @Test
+    fun `parallel pulls of one account insert a server transaction once`() = runTest {
+        // Экраны «Сегодня», «История» и SyncWorker тянут один счёт одновременно
+        val table = backLocalTableWithList()
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", any(), any())
+        } returns Response.success(listOf(transactionDto()))
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
+
+        coroutineScope {
+            launch { syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31") }
+            launch { syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31") }
+        }
+
+        // Второй pull обязан увидеть строку, вставленную первым, а не вставить свою
+        assertThat(table.map { it.serverId }).containsExactly("server-t1")
+    }
+
+    @Test
+    fun `parallel pull for another period is not skipped`() = runTest {
+        // Периоды у вызовов разные: пропуск второго, как у pull счетов, потерял бы его данные
+        val table = backLocalTableWithList()
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", "2024-01-01", "2024-01-31")
+        } returns Response.success(listOf(transactionDto(id = "server-jan")))
+        coEvery {
+            remoteDataSource.getByAccountAndPeriod("server-a1", "2024-02-01", "2024-02-29")
+        } returns Response.success(listOf(transactionDto(id = "server-feb")))
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
+
+        coroutineScope {
+            launch { syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31") }
+            launch { syncManager.pullFromRemoteForAccount("local-a1", "2024-02-01", "2024-02-29") }
+        }
+
+        assertThat(table.map { it.serverId }).containsExactlyInAnyOrder("server-jan", "server-feb")
+    }
+
+    @Test
+    fun `parallel pulls of two accounts insert a moved transaction once`() = runTest {
+        // Операцию перенесли на другой счёт на другом устройстве: её возвращают pull'ы обоих
+        // счетов, поэтому лок общий — с локом на счёт она легла бы двумя строками
+        val table = backLocalTableWithList()
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery { accountLocalDataSource.getByLocalId("local-a2") } returns
+            accountEntity().copy(localId = "local-a2", serverId = "server-a2")
+        coEvery { remoteDataSource.getByAccountAndPeriod(any(), any(), any()) } returns
+            Response.success(listOf(transactionDto(id = "server-moved")))
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
+
+        coroutineScope {
+            launch { syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31") }
+            launch { syncManager.pullFromRemoteForAccount("local-a2", "2024-01-01", "2024-01-31") }
+        }
+
+        assertThat(table.map { it.serverId }).containsExactly("server-moved")
+    }
+
+    @Test
+    fun `slow server response of one account does not hold merges of others`() = runTest {
+        // Лок общий на все счета, поэтому сеть обязана идти вне его: иначе зависший запрос
+        // одного счёта (SyncWorker) держал бы свежие данные всех остальных экранов
+        val table = backLocalTableWithList()
+        val slowRequestStarted = CompletableDeferred<Unit>()
+        val releaseSlowResponse = CompletableDeferred<Unit>()
+        coEvery { accountLocalDataSource.getByLocalId("local-a1") } returns accountEntity()
+        coEvery { accountLocalDataSource.getByLocalId("local-a2") } returns
+            accountEntity().copy(localId = "local-a2", serverId = "server-a2")
+        coEvery { remoteDataSource.getByAccountAndPeriod("server-a1", any(), any()) } coAnswers {
+            slowRequestStarted.complete(Unit)
+            releaseSlowResponse.await()
+            Response.success(listOf(transactionDto(id = "server-slow")))
+        }
+        coEvery { remoteDataSource.getByAccountAndPeriod("server-a2", any(), any()) } returns
+            Response.success(listOf(transactionDto(id = "server-fast")))
+        coEvery { categoryLocalDataSource.getById("cat-1") } returns categoryEntity()
+
+        val slowPull = launch {
+            syncManager.pullFromRemoteForAccount("local-a1", "2024-01-01", "2024-01-31")
+        }
+        slowRequestStarted.await()
+        // С локом вокруг сети этот вызов повис бы до таймаута runTest
+        syncManager.pullFromRemoteForAccount("local-a2", "2024-01-01", "2024-01-31")
+
+        assertThat(table.map { it.serverId }).containsExactly("server-fast")
+        releaseSlowResponse.complete(Unit)
+        slowPull.join()
+        assertThat(table.map { it.serverId }).containsExactly("server-fast", "server-slow")
+    }
+
     /* ---------- syncWith ---------- */
 
     @Test
@@ -332,5 +469,9 @@ class TransactionSyncManagerImplTest {
         coVerify(exactly = 0) { remoteDataSource.create(any(), any()) }
         coVerify(exactly = 0) { remoteDataSource.update(any(), any(), any()) }
         coVerify(exactly = 0) { remoteDataSource.delete(any(), any()) }
+    }
+
+    private companion object {
+        const val DB_DELAY_MS = 50L
     }
 }
