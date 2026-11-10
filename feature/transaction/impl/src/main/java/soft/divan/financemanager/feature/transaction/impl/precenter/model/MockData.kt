@@ -3,6 +3,7 @@ package soft.divan.financemanager.feature.transaction.impl.precenter.model
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
 import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.feature.transaction.impl.R
+import java.time.Instant
 
 // --- MOCK DATA ---
 
@@ -34,6 +35,9 @@ val mockCategories = listOf(
     )
 )
 
+/** Фиксированный момент для превью: от `Instant.now()` миниатюры графа менялись бы при каждой сборке. */
+private val mockInstant: Instant = Instant.parse("2024-03-07T09:30:00Z")
+
 val mockAccounts = listOf(AccountUi("1", "Основной счёт", "1000", CurrencySymbol.RUB.id))
 
 val mockTransaction = TransactionUi(
@@ -42,12 +46,11 @@ val mockTransaction = TransactionUi(
     category = mockCategories[0], // "Еда"
     amount = "450.75",
     comment = "Обед в кафе с коллегами",
-    createdAt = "dd.MM.yyyy HH:mm ",
-    updatedAt = "dd.MM.yyyy HH:mm ",
+    createdAt = mockInstant,
+    updatedAt = mockInstant,
     currencyId = CurrencySymbol.RUB.id,
     mode = TransactionMode.Create,
-    date = "dd.MM.yyyy",
-    time = " HH:mm ",
+    transactionDate = mockInstant,
     targetAccountLocalId = null,
     type = TransactionType.EXPENSE
 )

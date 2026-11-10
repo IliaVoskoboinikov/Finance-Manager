@@ -9,6 +9,10 @@ PIN-кодом, ключ утерян), `DataProtectionLevel`, результа�
 репозитории `LocalDataAccessRepository` и `DataProtectionRepository`. Реализации — в
 `:core:data`, дизайн — [docs/encryption.md](../../docs/encryption.md).
 
+`utli/UiDateFormatter` переводит `Instant` в строки для экрана в зоне и локали устройства.
+Отдельно он умеет менять у момента дату или время суток (`withDate`, `withTime`). Обратного
+разбора строк в нём нет намеренно: строки обрезаны до минут.
+
 ## Module dependency graph
 
 <!--region graph-->

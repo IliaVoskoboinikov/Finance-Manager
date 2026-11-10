@@ -56,6 +56,7 @@ import com.github.skydoves.navgraph.annotations.NavDestination
 import com.github.skydoves.navgraph.annotations.NavEdge
 import com.github.skydoves.navgraph.annotations.NavPreview
 import soft.divan.financemanager.core.domain.model.CurrencySymbol
+import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.account.api.AccountKey
 import soft.divan.financemanager.feature.transaction.api.TransactionKey
 import soft.divan.financemanager.feature.transaction.impl.R
@@ -68,6 +69,7 @@ import soft.divan.financemanager.feature.transaction.impl.precenter.model.Transa
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.TransactionUiState
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.mockAccounts
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.mockCategories
+import soft.divan.financemanager.feature.transaction.impl.precenter.model.mockTransaction
 import soft.divan.financemanager.feature.transaction.impl.precenter.model.mockTransactionUiStateSuccess
 import soft.divan.financemanager.feature.transaction.impl.precenter.viewModel.TransactionViewModel
 import soft.divan.financemanager.uikit.components.ContentTextListItem
@@ -85,6 +87,7 @@ import soft.divan.financemanager.uikit.icons.ArrowConfirm
 import soft.divan.financemanager.uikit.icons.Cross
 import soft.divan.financemanager.uikit.model.TopBarModel
 import soft.divan.financemanager.uikit.theme.FinanceManagerTheme
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -150,6 +153,24 @@ private fun EmptyNoCategoriesPreview() {
 private fun CategoryPreview() {
     FinanceManagerTheme {
         CategorySheetContent(mockCategories, {}, {})
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFF000000,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    fontScale = 1.5f
+)
+@Composable
+private fun TransactionDateTimePreview() {
+    FinanceManagerTheme {
+        TransactionDateTime(
+            transactionDate = mockTransaction.transactionDate,
+            onDateChange = {},
+            onTimeChange = {}
+        )
     }
 }
 
@@ -337,13 +358,9 @@ fun TransactionForm(
     modifier: Modifier = Modifier
 ) {
     var isShowAccountsSheet by remember { mutableStateOf(false) }
-    var isShowDatePicker by remember { mutableStateOf(false) }
-    var isShowTimePicker by remember { mutableStateOf(false) }
     var isShowCategorySheet by remember { mutableStateOf(false) }
     var isShowDeleteDialog by remember { mutableStateOf(false) }
 
-    ShowDataPickerDialog(isShowDatePicker, { isShowDatePicker = false }, actions.onDateChange)
-    ShowTimePickerDialog(isShowTimePicker, { isShowTimePicker = false }, actions.onTimeChange)
     ShowCategoryBottomSheet(
         isVisible = isShowCategorySheet,
         onDismiss = { isShowCategorySheet = false },
@@ -373,14 +390,10 @@ fun TransactionForm(
         FMDriver()
         Amount(amount = uiState.transaction.amount, onAmountChange = actions.onAmountChange)
         FMDriver()
-        Data(
-            transactionDate = uiState.transaction.date,
-            onClick = { isShowDatePicker = true }
-        )
-        FMDriver()
-        Time(
-            transactionDate = uiState.transaction.time,
-            onClick = { isShowTimePicker = true }
+        TransactionDateTime(
+            transactionDate = uiState.transaction.transactionDate,
+            onDateChange = actions.onDateChange,
+            onTimeChange = actions.onTimeChange
         )
         FMDriver()
         CommentInputField(
@@ -397,15 +410,59 @@ fun TransactionForm(
     }
 }
 
+/**
+ * Строки «Дата» и «Время» операции вместе с их пикерами.
+ *
+ * Пикеры открываются на дате и времени самой операции, а не на текущих: иначе «OK» без
+ * изменений переносил бы операцию на сегодня или на сейчас.
+ */
+@Composable
+private fun TransactionDateTime(
+    transactionDate: Instant,
+    onDateChange: (LocalDate) -> Unit,
+    onTimeChange: (LocalTime) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isShowDatePicker by remember { mutableStateOf(false) }
+    var isShowTimePicker by remember { mutableStateOf(false) }
+    val local = UiDateFormatter.toLocalDateTime(transactionDate)
+
+    ShowDataPickerDialog(
+        isVisible = isShowDatePicker,
+        initialDate = local.toLocalDate(),
+        onDismiss = { isShowDatePicker = false },
+        onDateChange = onDateChange
+    )
+    ShowTimePickerDialog(
+        isVisible = isShowTimePicker,
+        initialTime = local.toLocalTime(),
+        onDismiss = { isShowTimePicker = false },
+        onTimeChange = onTimeChange
+    )
+
+    Column(modifier = modifier) {
+        Data(
+            transactionDate = UiDateFormatter.formatDate(transactionDate),
+            onClick = { isShowDatePicker = true }
+        )
+        FMDriver()
+        Time(
+            transactionDate = UiDateFormatter.formatTime(transactionDate),
+            onClick = { isShowTimePicker = true }
+        )
+    }
+}
+
 @Composable
 private fun ShowDataPickerDialog(
     isVisible: Boolean,
+    initialDate: LocalDate,
     onDismiss: () -> Unit,
     onDateChange: (LocalDate) -> Unit
 ) {
     if (isVisible) {
         FMDatePickerDialog(
-            initialDate = LocalDate.now(),
+            initialDate = initialDate,
             onDateSelect = onDateChange,
             onDismissRequest = onDismiss
         )
@@ -415,12 +472,13 @@ private fun ShowDataPickerDialog(
 @Composable
 private fun ShowTimePickerDialog(
     isVisible: Boolean,
+    initialTime: LocalTime,
     onDismiss: () -> Unit,
     onTimeChange: (LocalTime) -> Unit
 ) {
     if (isVisible) {
         FMTimePickerDialog(
-            initialTime = LocalTime.now(),
+            initialTime = initialTime,
             onTimeSelect = onTimeChange,
             onDismissRequest = onDismiss
         )

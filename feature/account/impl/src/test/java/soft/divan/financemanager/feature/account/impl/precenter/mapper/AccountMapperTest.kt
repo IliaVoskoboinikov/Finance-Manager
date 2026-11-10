@@ -3,9 +3,9 @@ package soft.divan.financemanager.feature.account.impl.precenter.mapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import soft.divan.financemanager.core.domain.model.Account
-import soft.divan.financemanager.core.domain.utli.UiDateFormatter
 import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUi
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -25,15 +25,15 @@ class AccountMapperTest {
     )
 
     @Test
-    fun `toUi maps fields and formats dates`() {
+    fun `toUi maps fields`() {
         val ui = account.toUi()
 
         assertThat(ui.id).isEqualTo("local-1")
         assertThat(ui.name).isEqualTo("Cash")
         assertThat(ui.balance).isEqualTo("100.5")
         assertThat(ui.currencyId).isEqualTo("rub-id")
-        assertThat(ui.createdAt).isEqualTo(UiDateFormatter.formatDateTime(createdAt))
-        assertThat(ui.updatedAt).isEqualTo(UiDateFormatter.formatDateTime(updatedAt))
+        assertThat(ui.createdAt).isEqualTo(account.createdAt)
+        assertThat(ui.updatedAt).isEqualTo(account.updatedAt)
     }
 
     @Test
@@ -43,14 +43,14 @@ class AccountMapperTest {
     }
 
     @Test
-    fun `toDomain maps fields and parses dates`() {
+    fun `toDomain maps fields`() {
         val ui = AccountUi(
             id = "local-1",
             name = "Cash",
             balance = "100.50",
             currencyId = "rub-id",
-            createdAt = "07.03.2024 12:30",
-            updatedAt = "01.04.2024 09:05"
+            createdAt = createdAt.atZone(zone).toInstant(),
+            updatedAt = updatedAt.atZone(zone).toInstant()
         )
 
         val domain = ui.toDomain()
@@ -62,7 +62,20 @@ class AccountMapperTest {
     }
 
     @Test
-    fun `domain to ui and back preserves values up to seconds precision`() {
+    fun `domain to ui and back preserves timestamps exactly`() {
+        val withSeconds = account.copy(
+            createdAt = Instant.parse("2024-03-07T12:30:15.123Z"),
+            updatedAt = Instant.parse("2024-04-01T09:05:42.456Z")
+        )
+
+        val roundTrip = withSeconds.toUi().toDomain()
+
+        assertThat(roundTrip.createdAt).isEqualTo(withSeconds.createdAt)
+        assertThat(roundTrip.updatedAt).isEqualTo(withSeconds.updatedAt)
+    }
+
+    @Test
+    fun `domain to ui and back preserves values`() {
         val roundTrip = account.toUi().toDomain()
 
         assertThat(roundTrip.id).isEqualTo(account.id)

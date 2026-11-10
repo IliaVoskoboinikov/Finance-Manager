@@ -4,6 +4,12 @@
 *   **Stateless Composables:** Hoist state to the caller. Prefer passing values and lambdas.
 *   **State Hoisting:** ViewModel should hold the `UiState`. Composables consume the state and emit events.
 *   **Material 3:** Use Material 3 components and the theme from `core:uikit`.
+*   **Timestamps in UI models:** keep `Instant` (never a formatted string) and format only when
+    rendering (`UiDateFormatter`). A string cuts seconds, so a model rebuilt from it truncates
+    `createdAt`/`updatedAt` on every save and loses last-write-wins to the server's version of
+    the same minute (FM-146). Take "now" for a write from an injected `java.time.Clock`, not
+    from `LocalDateTime.now()`. A picker that returns only part of a moment changes only that
+    part (`UiDateFormatter.withDate` / `withTime`).
 
 ## Reuse
 *   Check `core:uikit` for existing components before creating new ones.

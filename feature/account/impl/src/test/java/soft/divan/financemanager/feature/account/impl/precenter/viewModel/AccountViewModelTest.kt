@@ -3,6 +3,7 @@ package soft.divan.financemanager.feature.account.impl.precenter.viewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -33,7 +34,9 @@ import soft.divan.financemanager.feature.account.impl.precenter.model.AccountUiS
 import soft.divan.financemanager.feature.haptics.api.domain.HapticType
 import soft.divan.financemanager.feature.haptics.api.domain.HapticsManager
 import java.math.BigDecimal
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.UUID
 
 /**
@@ -53,6 +56,8 @@ class AccountViewModelTest {
     private val deleteAccountUseCase = mockk<DeleteAccountUseCase>()
     private val hasAccountTransactionsUseCase = mockk<HasAccountTransactionsUseCase>()
     private val hapticsManager = mockk<HapticsManager>(relaxUnitFun = true)
+    private val now = Instant.parse("2024-06-01T08:15:30.250Z")
+    private val clock = Clock.fixed(now, ZoneOffset.UTC)
 
     private val domainAccount = Account(
         id = "local-1",
@@ -81,6 +86,7 @@ class AccountViewModelTest {
         deleteAccountUseCase = deleteAccountUseCase,
         hasAccountTransactionsUseCase = hasAccountTransactionsUseCase,
         hapticsManager = hapticsManager,
+        clock = clock,
         accountId = null
     )
 
@@ -91,6 +97,7 @@ class AccountViewModelTest {
         deleteAccountUseCase = deleteAccountUseCase,
         hasAccountTransactionsUseCase = hasAccountTransactionsUseCase,
         hapticsManager = hapticsManager,
+        clock = clock,
         accountId = id
     )
 
@@ -221,6 +228,39 @@ class AccountViewModelTest {
 
         coVerify(exactly = 1) { updateAccountUseCase(match { it.id == "local-1" }) }
         coVerify(exactly = 0) { createAccountUseCase(any()) }
+
+        job.cancel()
+    }
+
+    @Test
+    fun `editing keeps seconds of creation time`() = runTest {
+        val withSeconds = domainAccount.copy(createdAt = Instant.parse("2024-01-01T10:20:30.456Z"))
+        coEvery { getAccountByIdUseCase("local-1") } returns DomainResult.Success(withSeconds)
+        val saved = slot<Account>()
+        coEvery { updateAccountUseCase(capture(saved)) } returns DomainResult.Success(Unit)
+        val vm = editModeViewModel()
+        val job = subscribe(vm)
+
+        vm.updateName("Card")
+        vm.createAccount()
+
+        assertThat(saved.captured.createdAt).isEqualTo(withSeconds.createdAt)
+        assertThat(saved.captured.updatedAt).isEqualTo(now)
+
+        job.cancel()
+    }
+
+    @Test
+    fun `create mode stamps both timestamps from the clock`() = runTest {
+        val saved = slot<Account>()
+        coEvery { createAccountUseCase(capture(saved)) } returns DomainResult.Success(Unit)
+        val vm = createModeViewModel()
+        val job = subscribe(vm)
+
+        vm.createAccount()
+
+        assertThat(saved.captured.createdAt).isEqualTo(now)
+        assertThat(saved.captured.updatedAt).isEqualTo(now)
 
         job.cancel()
     }
