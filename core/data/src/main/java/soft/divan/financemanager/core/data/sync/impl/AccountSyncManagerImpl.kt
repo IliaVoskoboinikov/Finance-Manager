@@ -14,6 +14,7 @@ import soft.divan.financemanager.core.data.util.generateUUID
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.AccountEntity
+import soft.divan.financemanager.core.database.holder.DataGenerationGuard
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.domain.result.getOrNull
@@ -36,6 +37,7 @@ import javax.inject.Inject
 class AccountSyncManagerImpl @Inject constructor(
     private val remoteDataSource: AccountRemoteDataSource,
     private val localDataSource: AccountLocalDataSource,
+    private val dataGuard: DataGenerationGuard,
     private val errorLogger: ErrorLogger
 ) : AccountSyncManager {
 
@@ -90,7 +92,8 @@ class AccountSyncManagerImpl @Inject constructor(
             } else {
                 isPulling = true
                 try {
-                    performPull()
+                    // Ответ, пришедший после выхода с очисткой, не должен попасть в новую базу
+                    dataGuard.bindToCurrentData { performPull() }
                 } finally {
                     isPulling = false
                 }

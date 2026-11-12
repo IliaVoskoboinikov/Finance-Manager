@@ -163,6 +163,7 @@ class UnsyncedAccountOutboxEndToEndTest {
                 errorLogger = errorLogger,
                 transactionRunner = transactionRunner
             ),
+            dataGuard = holder,
             clock = clock
         )
 

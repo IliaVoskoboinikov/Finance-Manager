@@ -13,8 +13,11 @@ import soft.divan.financemanager.core.database.db.FinanceManagerDatabase
  *
  * Холдер ничего не знает о ключах — принимает готовые байты. Благодаря этому `:core:database` не
  * зависит от `:core:security`; ключами занимается хранилище в `:core:data`.
+ *
+ * Каждое [wipe] начинает новое поколение данных: работа, привязанная к прежнему
+ * ([DataGenerationGuard.bindToCurrentData]), в новую базу уже не попадёт.
  */
-interface DatabaseHolder {
+interface DatabaseHolder : DataGenerationGuard {
 
     /** Текущее состояние: открыта, закрывается или закрыта. */
     val state: StateFlow<DatabaseState>
@@ -39,7 +42,10 @@ interface DatabaseHolder {
      */
     suspend fun close()
 
-    /** Закрывает базу как [close] и удаляет её файлы с диска. */
+    /**
+     * Закрывает базу как [close] и удаляет её файлы с диска. Начинает новое поколение данных — даже
+     * если база уже была закрыта (стирание запертой базы уровня PIN).
+     */
     suspend fun wipe()
 
     /**
@@ -48,6 +54,8 @@ interface DatabaseHolder {
      * Вложенные вызовы (например, изнутри транзакции) используют ту же базу без новой аренды.
      *
      * @throws DatabaseLockedException база закрыта.
+     * @throws StaleDataException вызов привязан ([bindToCurrentData]) к данным, которые с тех пор
+     *   стёрли.
      */
     suspend fun <T> withDatabase(block: suspend (FinanceManagerDatabase) -> T): T
 

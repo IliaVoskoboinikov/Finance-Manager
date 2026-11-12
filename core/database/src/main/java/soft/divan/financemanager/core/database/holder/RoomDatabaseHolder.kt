@@ -33,6 +33,13 @@ import kotlin.coroutines.CoroutineContext
  * её и работает с той же базой без новой аренды: иначе закрытие, ждущее внешнюю аренду,
  * отказало бы внутренней, и транзакция упала бы посередине.
  *
+ * ### Поколение данных
+ * [wipe] увеличивает счётчик поколения, [bindToCurrentData] кладёт в контекст корутины текущее
+ * значение. Аренда для привязанной работы проверяет его в той же атомарной секции, что и «база
+ * открыта», — поэтому ответ сервера, пришедший после стирания, не запишется в новую базу. Вложенный
+ * вызов при живой аренде поколение не проверяет: аренда держит старую базу, а [wipe] ждёт её конца,
+ * прежде чем базу закрыть и удалить, — запись уйдёт в стираемый файл.
+ *
  * @param dispatcher где открывать и закрывать базу — это дисковые операции.
  */
 class RoomDatabaseHolder(
@@ -44,8 +51,11 @@ class RoomDatabaseHolder(
     /** Открытие, закрытие и стирание идут строго по очереди. */
     private val lifecycle = Mutex()
 
-    /** Защищает связку «база доступна + счётчик аренд». */
+    /** Защищает связку «база доступна + счётчик аренд + поколение». */
     private val leaseLock = Any()
+
+    /** Поколение данных; меняется только в [wipe] под [leaseLock]. */
+    private var generation = 0L
 
     private val _state = MutableStateFlow(DatabaseState.CLOSED)
     override val state: StateFlow<DatabaseState> = _state.asStateFlow()
@@ -83,6 +93,9 @@ class RoomDatabaseHolder(
     override suspend fun wipe() {
         requireOutsideLease()
         lifecycle.withLock {
+            // До закрытия: привязанная работа не должна получить аренду ни у старой базы, пока та
+            // закрывается, ни у новой. Идущие аренды доработают на старой — её файл удаляется
+            synchronized(leaseLock) { generation++ }
             try {
                 closeLocked()
             } finally {
@@ -104,6 +117,13 @@ class RoomDatabaseHolder(
         } finally {
             release(lease)
         }
+    }
+
+    override suspend fun <T> bindToCurrentData(block: suspend () -> T): T {
+        val outer = currentCoroutineContext()[DataGeneration]
+        if (outer != null && outer.holder === this) return block()
+        val current = synchronized(leaseLock) { generation }
+        return withContext(DataGeneration(this, current)) { block() }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -130,10 +150,14 @@ class RoomDatabaseHolder(
         Log.i(TAG, "Database closed")
     }
 
-    private fun acquire(): DatabaseLease = synchronized(leaseLock) {
-        val database = available.value ?: throw DatabaseLockedException()
-        activeLeases.update { it + 1 }
-        DatabaseLease(this, database)
+    private suspend fun acquire(): DatabaseLease {
+        val bound = currentCoroutineContext()[DataGeneration]?.takeIf { it.holder === this }
+        return synchronized(leaseLock) {
+            if (bound != null && bound.value != generation) throw StaleDataException()
+            val database = available.value ?: throw DatabaseLockedException()
+            activeLeases.update { it + 1 }
+            DatabaseLease(this, database)
+        }
     }
 
     private fun release(lease: DatabaseLease) {
@@ -163,6 +187,15 @@ class RoomDatabaseHolder(
         var active: Boolean = true
 
         companion object Key : CoroutineContext.Key<DatabaseLease>
+    }
+
+    /** Поколение данных, к которому привязана работа ([bindToCurrentData]). */
+    private class DataGeneration(
+        val holder: RoomDatabaseHolder,
+        val value: Long
+    ) : AbstractCoroutineContextElement(DataGeneration) {
+
+        companion object Key : CoroutineContext.Key<DataGeneration>
     }
 
     private companion object {

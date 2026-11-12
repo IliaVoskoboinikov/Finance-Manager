@@ -15,6 +15,7 @@ import soft.divan.financemanager.core.data.dto.CategoryDto
 import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.CategoryRemoteDataSource
 import soft.divan.financemanager.core.data.sync.CategorySyncManager
+import soft.divan.financemanager.core.data.testing.PassThroughDataGuard
 import soft.divan.financemanager.core.database.entity.CategoryEntity
 import soft.divan.financemanager.core.domain.error.DomainError
 import soft.divan.financemanager.core.domain.result.DomainResult
@@ -33,6 +34,7 @@ class CategoryRepositoryImplTest {
         localDataSource = localDataSource,
         syncManager = syncManager,
         appCoroutineContext = appCoroutineContext,
+        dataGuard = PassThroughDataGuard,
         errorLogger = errorLogger
     )
 

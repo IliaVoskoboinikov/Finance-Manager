@@ -264,6 +264,138 @@ class RoomDatabaseHolderTest {
     }
 
     @Test
+    fun `work bound before a wipe is refused by the fresh database`() = holderTest {
+        holder.open(key())
+        val answered = CompletableDeferred<Unit>()
+        val bound = async {
+            runCatching {
+                holder.bindToCurrentData {
+                    // Как синк: запрос в сеть без аренды, запись — после ответа
+                    answered.await()
+                    holder.withDatabase { it.currencyDao().insertCurrencies(listOf(RUB)) }
+                }
+            }
+        }
+        runCurrent()
+
+        holder.wipe()
+        holder.open(key())
+        answered.complete(Unit)
+
+        assertThat(bound.await().exceptionOrNull()).isInstanceOf(StaleDataException::class.java)
+        assertThat(holder.withDatabase { it.currencyDao().getCurrencyById("rub") }).isNull()
+    }
+
+    @Test
+    fun `work bound before a wipe is refused as stale while no database is open`() = holderTest {
+        holder.open(key())
+        val answered = CompletableDeferred<Unit>()
+        val bound = async {
+            runCatching {
+                holder.bindToCurrentData {
+                    answered.await()
+                    holder.withDatabase { }
+                }
+            }
+        }
+        runCurrent()
+
+        // Стёрли и ещё не открыли новую (или стёрли запертую): стёртые данные, а не «заперто» —
+        // по этому типу обработчик очереди отличает стирание от сбоя записи
+        holder.wipe()
+        answered.complete(Unit)
+
+        assertThat(bound.await().exceptionOrNull()).isInstanceOf(StaleDataException::class.java)
+    }
+
+    @Test
+    fun `work bound after the wipe uses the fresh database`() = holderTest {
+        holder.open(key())
+        holder.wipe()
+        holder.open(key())
+
+        holder.bindToCurrentData {
+            holder.withDatabase { it.currencyDao().insertCurrencies(listOf(RUB)) }
+        }
+
+        assertThat(holder.withDatabase { it.currencyDao().getCurrencyById("rub") }).isNotNull()
+    }
+
+    @Test
+    fun `locking and unlocking keep the binding`() = holderTest {
+        holder.open(key())
+
+        val currency = holder.bindToCurrentData {
+            // Замок PIN и разблокировка: файл и данные те же
+            holder.close()
+            holder.open(key())
+            holder.withDatabase { it.currencyDao().insertCurrencies(listOf(RUB)) }
+            holder.withDatabase { it.currencyDao().getCurrencyById("rub") }
+        }
+
+        assertThat(currency).isNotNull()
+    }
+
+    @Test
+    fun `wipe of a locked database still starts a new generation`() = holderTest {
+        holder.open(key())
+        holder.close()
+
+        val error = runCatching {
+            holder.bindToCurrentData {
+                holder.wipe()
+                holder.open(key())
+                holder.withDatabase { }
+            }
+        }.exceptionOrNull()
+
+        assertThat(error).isInstanceOf(StaleDataException::class.java)
+    }
+
+    @Test
+    fun `nested binding keeps the outer generation`() = holderTest {
+        holder.open(key())
+
+        val error = runCatching {
+            holder.bindToCurrentData {
+                holder.wipe()
+                holder.open(key())
+                // Внутренняя привязка не «переезжает» на новые данные
+                holder.bindToCurrentData { holder.withDatabase { } }
+            }
+        }.exceptionOrNull()
+
+        assertThat(error).isInstanceOf(StaleDataException::class.java)
+    }
+
+    @Test
+    fun `bound lease taken before the wipe finishes on the old database`() = holderTest {
+        holder.open(key())
+        val release = CompletableDeferred<Unit>()
+        val bound = async {
+            holder.bindToCurrentData {
+                holder.withDatabase { db ->
+                    release.await()
+                    db.currencyDao().insertCurrencies(listOf(RUB))
+                    db.currencyDao().getCurrencyById("rub")
+                }
+            }
+        }
+        runCurrent()
+
+        val wiping = launch { holder.wipe() }
+        runCurrent()
+        assertThat(wiping.isCompleted).isFalse()
+
+        release.complete(Unit)
+
+        // Запись дошла до старой базы, и стирание её уничтожило
+        assertThat(bound.await()).isNotNull()
+        wiping.join()
+        assertThat(files.exists()).isFalse()
+    }
+
+    @Test
     fun `close of a closed database does nothing`() = holderTest {
         holder.close()
         holder.wipe()
@@ -285,5 +417,6 @@ class RoomDatabaseHolderTest {
 
     private companion object {
         const val SILENCE_TIMEOUT_MS = 1_000L
+        val RUB = CurrencyEntity("rub", "Рубль")
     }
 }

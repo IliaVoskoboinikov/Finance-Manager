@@ -238,6 +238,7 @@ class OutboxStressTest {
                 errorLogger = mockk<ErrorLogger>(relaxed = true),
                 transactionRunner = RoomTransactionRunner(holder, noopContext)
             ),
+            dataGuard = holder,
             clock = clock
         )
     }

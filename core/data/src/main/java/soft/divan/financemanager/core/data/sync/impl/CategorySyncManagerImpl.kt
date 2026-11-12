@@ -8,6 +8,7 @@ import soft.divan.financemanager.core.data.sync.Synchronizer
 import soft.divan.financemanager.core.data.sync.isPullSkipped
 import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
+import soft.divan.financemanager.core.database.holder.DataGenerationGuard
 import soft.divan.financemanager.core.domain.result.DomainResult
 import soft.divan.financemanager.core.domain.result.fold
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
@@ -27,6 +28,7 @@ import javax.inject.Inject
 class CategorySyncManagerImpl @Inject constructor(
     private val remoteDataSource: CategoryRemoteDataSource,
     private val localDataSource: CategoryLocalDataSource,
+    private val dataGuard: DataGenerationGuard,
     private val errorLogger: ErrorLogger
 ) : CategorySyncManager {
 
@@ -51,8 +53,10 @@ class CategorySyncManagerImpl @Inject constructor(
      * Особенности:
      * - Используется last-write-wins (сервер перезаписывает локальные данные)
      * - Все операции обёрнуты в safeApiCall / safeDbCall
+     * - Pull привязан к нынешним данным ([DataGenerationGuard]): ответ, пришедший после выхода с
+     *   очисткой, в новую базу не пишется
      */
-    override suspend fun pullServerData(): Boolean =
+    override suspend fun pullServerData(): Boolean = dataGuard.bindToCurrentData {
         safeApiCall(errorLogger) {
             remoteDataSource.getAll()
         }.fold(
@@ -63,4 +67,5 @@ class CategorySyncManagerImpl @Inject constructor(
             },
             onFailure = { error -> error.isPullSkipped() }
         )
+    }
 }

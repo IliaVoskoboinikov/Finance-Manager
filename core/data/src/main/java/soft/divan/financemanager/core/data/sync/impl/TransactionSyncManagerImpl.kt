@@ -17,6 +17,7 @@ import soft.divan.financemanager.core.data.util.safeCall.safeApiCall
 import soft.divan.financemanager.core.data.util.safeCall.safeDbCall
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.entity.TransactionEntity
+import soft.divan.financemanager.core.database.holder.DataGenerationGuard
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.domain.model.TransactionType
 import soft.divan.financemanager.core.domain.result.fold
@@ -44,6 +45,7 @@ class TransactionSyncManagerImpl @Inject constructor(
     private val localDataSource: TransactionLocalDataSource,
     private val accountLocalDataSource: AccountLocalDataSource,
     private val categoryLocalDataSource: CategoryLocalDataSource,
+    private val dataGuard: DataGenerationGuard,
     private val errorLogger: ErrorLogger
 ) : TransactionSyncManager {
 
@@ -69,8 +71,11 @@ class TransactionSyncManagerImpl @Inject constructor(
      * Защита от пограничных кейсов по времени и рассинхронизации часов.
      *
      * Сбой одного счёта не останавливает остальные: результат — успех всех счетов.
+     *
+     * Весь pull привязан к нынешним данным ([DataGenerationGuard]): ответ, пришедший после выхода
+     * с очисткой, не попадёт в новую базу.
      */
-    override suspend fun pullServerData(): Boolean =
+    override suspend fun pullServerData(): Boolean = dataGuard.bindToCurrentData {
         accountLocalDataSource.getAll().first()
             .map { account ->
                 pullFromRemoteForAccount(
@@ -83,6 +88,7 @@ class TransactionSyncManagerImpl @Inject constructor(
             }
             // map, а не all: all остановился бы на первом сбое и не дотянул бы остальные счета
             .all { it }
+    }
 
     /**
      * Загружает транзакции конкретного аккаунта за указанный период.
@@ -98,9 +104,19 @@ class TransactionSyncManagerImpl @Inject constructor(
      * Стратегия разрешения конфликтов: last-write-wins.
      *
      * Счёт без `serverId` — не сбой: тянуть нечего, его создание ещё в очереди.
+     *
+     * Привязан к нынешним данным, как и [pullServerData]: его зовёт и репозиторий напрямую.
      */
-    @Suppress("ReturnCount")
     override suspend fun pullFromRemoteForAccount(
+        accountLocalId: String,
+        startDate: String,
+        endDate: String
+    ): Boolean = dataGuard.bindToCurrentData {
+        pullAccount(accountLocalId, startDate, endDate)
+    }
+
+    @Suppress("ReturnCount")
+    private suspend fun pullAccount(
         accountLocalId: String,
         startDate: String,
         endDate: String

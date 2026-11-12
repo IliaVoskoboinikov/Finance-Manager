@@ -13,6 +13,7 @@ import soft.divan.financemanager.core.data.dto.AccountDto
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.sync.Synchronizer
+import soft.divan.financemanager.core.data.testing.PassThroughDataGuard
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.model.SyncStatus
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
@@ -36,6 +37,7 @@ class AccountSyncManagerImplTest {
     private val syncManager = AccountSyncManagerImpl(
         remoteDataSource = remoteDataSource,
         localDataSource = localDataSource,
+        dataGuard = PassThroughDataGuard,
         errorLogger = errorLogger
     )
 

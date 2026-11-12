@@ -16,6 +16,7 @@ import java.math.BigDecimal
 import soft.divan.financemanager.core.data.source.AccountLocalDataSource
 import soft.divan.financemanager.core.data.source.AccountRemoteDataSource
 import soft.divan.financemanager.core.data.sync.impl.AccountSyncManagerImpl
+import soft.divan.financemanager.core.data.testing.PassThroughDataGuard
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -32,6 +33,7 @@ class AccountSyncManagerRaceTest {
         syncManager = AccountSyncManagerImpl(
             remoteDataSource = remoteDataSource,
             localDataSource = localDataSource,
+            dataGuard = PassThroughDataGuard,
             errorLogger = errorLogger
         )
     }

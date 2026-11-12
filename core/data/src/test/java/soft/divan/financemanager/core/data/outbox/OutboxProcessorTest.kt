@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
+import soft.divan.financemanager.core.data.testing.PassThroughDataGuard
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
 import soft.divan.financemanager.core.database.model.OutboxEntityType
 import soft.divan.financemanager.core.database.model.OutboxOperation
@@ -35,6 +36,7 @@ class OutboxProcessorTest {
     private val processor = OutboxProcessor(
         localDataSource = localDataSource,
         entryHandler = entryHandler,
+        dataGuard = PassThroughDataGuard,
         clock = Clock.fixed(now, ZoneOffset.UTC)
     )
 
@@ -341,7 +343,7 @@ class OutboxProcessorTest {
             localDataSource.getReadyToSend(capture(selectedAt), any(), any())
         } returns emptyList()
 
-        OutboxProcessor(localDataSource, entryHandler, tickingClock).process()
+        OutboxProcessor(localDataSource, entryHandler, PassThroughDataGuard, tickingClock).process()
 
         coVerify(exactly = 1) { localDataSource.hasDeferredEntries(selectedAt.captured) }
     }
