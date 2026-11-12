@@ -144,6 +144,7 @@ class OutboxIdempotencyKeyEndToEndTest {
                 // Настоящий runner: обратный путь закрывается одной транзакцией на живом Room
                 transactionRunner = RoomTransactionRunner(holder, noopContext)
             ),
+            dataGuard = holder,
             clock = clock
         )
     }

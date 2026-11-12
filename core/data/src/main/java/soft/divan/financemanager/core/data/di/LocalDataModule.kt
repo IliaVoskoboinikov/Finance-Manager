@@ -12,6 +12,7 @@ import soft.divan.financemanager.core.data.repository.LocalDataAccessRepositoryI
 import soft.divan.financemanager.core.data.vault.BiometricVault
 import soft.divan.financemanager.core.data.vault.CryptoShredCleanupManager
 import soft.divan.financemanager.core.data.vault.LocalDataBiometrics
+import soft.divan.financemanager.core.database.holder.DataGenerationGuard
 import soft.divan.financemanager.core.database.holder.DatabaseFactory
 import soft.divan.financemanager.core.database.holder.DatabaseFiles
 import soft.divan.financemanager.core.database.holder.DatabaseHolder
@@ -49,6 +50,10 @@ interface LocalDataModule {
     @Binds
     @Singleton
     fun bindDatabaseCleanupManager(impl: CryptoShredCleanupManager): DatabaseCleanupManager
+
+    /** Тот же холдер-синглтон: поколение данных живёт в нём. */
+    @Binds
+    fun bindDataGenerationGuard(holder: DatabaseHolder): DataGenerationGuard
 
     @Binds
     fun bindObserveLocalDataStateUseCase(

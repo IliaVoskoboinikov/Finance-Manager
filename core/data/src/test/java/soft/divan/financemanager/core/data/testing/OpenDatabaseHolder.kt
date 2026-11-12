@@ -32,6 +32,8 @@ class OpenDatabaseHolder(private val database: FinanceManagerDatabase) : Databas
         block(database)
 
     override fun <T> observe(block: (FinanceManagerDatabase) -> Flow<T>): Flow<T> = block(database)
+
+    override suspend fun <T> bindToCurrentData(block: suspend () -> T): T = block()
 }
 
 /** База-заглушка, отдающая переданные DAO, — для тестов источников данных с моками DAO. */

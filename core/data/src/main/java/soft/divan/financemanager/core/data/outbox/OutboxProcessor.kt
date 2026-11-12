@@ -2,6 +2,7 @@ package soft.divan.financemanager.core.data.outbox
 
 import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
+import soft.divan.financemanager.core.database.holder.DataGenerationGuard
 import java.time.Clock
 import javax.inject.Inject
 
@@ -58,6 +59,7 @@ private const val LEASE_MILLIS = 5 * 60 * 1000L
 class OutboxProcessor @Inject internal constructor(
     private val localDataSource: OutboxLocalDataSource,
     private val entryHandler: OutboxEntryHandler,
+    private val dataGuard: DataGenerationGuard,
     private val clock: Clock
 ) {
 
@@ -100,8 +102,17 @@ class OutboxProcessor @Inject internal constructor(
      *
      * После заблокированной сети отложенные записи не проверяются: пока клиент не вошёл, повтор
      * работы их всё равно не отправит.
+     *
+     * ### Выход с очисткой посреди разбора
+     * Разбор привязан к нынешним данным ([DataGenerationGuard]). `sequenceNo` — autoincrement, и
+     * в новой базе номера начинаются заново: без привязки доклад об отправке записи прошлого
+     * пользователя пометил бы отправленной чужую запись с тем же номером, и та пропала бы из
+     * очереди. После стирания обращение к базе бросает `StaleDataException` — разбор прерывается
+     * так же, как на закрытой базе.
      */
-    suspend fun process(): Boolean {
+    suspend fun process(): Boolean = dataGuard.bindToCurrentData { processQueue() }
+
+    private suspend fun processQueue(): Boolean {
         try {
             // Запись, о судьбе которой в этом прогоне уже решили, повторно не берётся: следующий
             // проход видит свежую выборку и без этого мог бы отправить её второй раз.

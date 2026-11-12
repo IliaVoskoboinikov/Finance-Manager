@@ -19,6 +19,7 @@ import soft.divan.financemanager.core.data.source.CategoryLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionLocalDataSource
 import soft.divan.financemanager.core.data.source.TransactionRemoteDataSource
 import soft.divan.financemanager.core.data.sync.Synchronizer
+import soft.divan.financemanager.core.data.testing.PassThroughDataGuard
 import soft.divan.financemanager.core.database.entity.AccountEntity
 import soft.divan.financemanager.core.database.entity.CategoryEntity
 import soft.divan.financemanager.core.database.entity.TransactionEntity
@@ -43,6 +44,7 @@ class TransactionSyncManagerImplTest {
         localDataSource = localDataSource,
         accountLocalDataSource = accountLocalDataSource,
         categoryLocalDataSource = categoryLocalDataSource,
+        dataGuard = PassThroughDataGuard,
         errorLogger = errorLogger
     )
 

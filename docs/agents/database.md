@@ -16,6 +16,12 @@
     that was current at the call; use `observe`.
 *   Do not open/close/wipe the database from inside `withDatabase` (it would wait for itself).
     Design: [docs/encryption.md](../encryption.md).
+*   Work that calls the network and writes the answer later (a pull, the outbox run, a new sender)
+    runs inside `DataGenerationGuard.bindToCurrentData`: sign-out wipes the database mid-request,
+    and an unbound write lands in the next user's fresh database (outbox `sequenceNo` restarts
+    there too). After a wipe the bound `withDatabase` calls get `StaleDataException`; `observe` is
+    not checked and serves the new data, so never write based on it without `withDatabase`. A
+    write guarded by a snapshot of the same row (`refreshFromServer`) is safe without it.
 
 ## Relations & Indices
 *   Entity relations are **logical**, not enforced: transactions reference a account/category

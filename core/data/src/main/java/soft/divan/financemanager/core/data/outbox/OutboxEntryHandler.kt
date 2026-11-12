@@ -3,6 +3,7 @@ package soft.divan.financemanager.core.data.outbox
 import soft.divan.financemanager.core.data.source.OutboxLocalDataSource
 import soft.divan.financemanager.core.data.transaction.TransactionRunner
 import soft.divan.financemanager.core.database.entity.OutboxEntryEntity
+import soft.divan.financemanager.core.database.holder.StaleDataException
 import soft.divan.financemanager.core.loggingerror.ErrorLogger
 import java.time.Clock
 import java.util.concurrent.CancellationException
@@ -34,11 +35,16 @@ internal class OutboxEntryHandler @Inject constructor(
      * попытки, после аренды снова пришла бы первой и снова оборвала бы прогон: «отравленная»
      * запись держала бы очередь вечно и не попала бы в dead-letter. Поэтому сбой считается
      * временным: попытка тратится, и после исчерпания запись уходит в dead-letter.
+     *
+     * Стёртые данные (`StaleDataException`: выход с очисткой посреди отправки) — тоже не сбой
+     * записи: её больше нет, и списывать ей попытку или слать в отчёт ложный dead-letter незачем.
      */
     suspend fun handle(entry: OutboxEntryEntity): OutboxEntryOutcome =
         runCatching { send(entry) }.getOrElse { throwable ->
             // Отмена — не сбой обработки: превращать её в повтор нельзя
-            if (throwable is CancellationException) throw throwable
+            if (throwable is CancellationException || throwable is StaleDataException) {
+                throw throwable
+            }
             // В отчёт — только тип исключения: в его тексте может оказаться кусок снимка с суммами
             errorLogger.recordError(
                 "Outbox: сбой обработки ${entry.operation} ${entry.entityType} " +
@@ -124,17 +130,19 @@ internal class OutboxEntryHandler @Inject constructor(
      * операции выполнимы, а отменять их значило бы терять их из-за чужой ошибки.
      */
     private suspend fun giveUp(entry: OutboxEntryEntity, reason: String) {
-        // В сообщение идёт только идентификатор — в содержимом операции лежат суммы
-        errorLogger.recordError(
-            "Outbox: ${entry.operation} ${entry.entityType} ${entry.entityLocalId} " +
-                "отклонена — $reason"
-        )
+        // Сначала запись, потом отчёт: после выхода с очисткой запись бросит StaleDataException,
+        // и ложного dead-letter о стёртой операции в отчётах не будет
         localDataSource.markFailed(
             sequenceNo = entry.sequenceNo,
             entityLocalId = entry.entityLocalId,
             attemptCount = entry.attemptCount + 1,
             lastError = reason,
             updatedAt = clock.millis()
+        )
+        // В сообщение идёт только идентификатор — в содержимом операции лежат суммы
+        errorLogger.recordError(
+            "Outbox: ${entry.operation} ${entry.entityType} ${entry.entityLocalId} " +
+                "отклонена — $reason"
         )
     }
 }

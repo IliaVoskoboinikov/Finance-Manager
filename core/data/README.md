@@ -42,7 +42,10 @@ Pull счетов и транзакций сериализован: паралл
   `DataProtectionRepositoryImpl` (досылка outbox перед уровнем PIN).
 
 Источники данных и `RoomTransactionRunner` берут базу через `DatabaseHolder` на каждый вызов;
-холдер предоставляет `LocalDataModule`. Дизайн — [docs/encryption.md](../../docs/encryption.md).
+холдер предоставляет `LocalDataModule`. Pull-менеджеры, `CategoryRepositoryImpl.getByType` и
+`OutboxProcessor` привязаны к нынешним данным (`DataGenerationGuard`): ответ, пришедший после
+выхода с очисткой, в новую базу не пишется.
+Дизайн — [docs/encryption.md](../../docs/encryption.md).
 
 ## Module dependency graph
 
