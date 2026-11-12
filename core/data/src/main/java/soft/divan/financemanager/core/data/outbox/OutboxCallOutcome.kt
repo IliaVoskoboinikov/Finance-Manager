@@ -52,12 +52,16 @@ internal suspend fun <T : Any> outboxCall(
  *
  * Сбой сети (равно как и непредвиденный) считается временным: состояние сервера неизвестно,
  * поэтому операцию нужно повторить, а не выбрасывать.
+ *
+ * В причину идёт только тип исключения, не его текст: после исчерпания попыток причина уходит
+ * в [soft.divan.financemanager.core.loggingerror.ErrorLogger] строкой, без очистки, а текст
+ * исключения пишет библиотека и может вставить в него разбираемое значение из ответа.
  */
 private fun Throwable.classify(): OutboxSendResult = when (this) {
-    is GuestModeNetworkBlockedException -> OutboxSendResult.Blocked("гостевой режим: $message")
-    is UnauthorizedNetworkBlockedException -> OutboxSendResult.Blocked("нет сессии: $message")
-    is IOException -> OutboxSendResult.Transient("сбой сети: $message")
-    else -> OutboxSendResult.Transient("непредвиденный сбой: $message")
+    is GuestModeNetworkBlockedException -> OutboxSendResult.Blocked("гостевой режим")
+    is UnauthorizedNetworkBlockedException -> OutboxSendResult.Blocked("нет сессии")
+    is IOException -> OutboxSendResult.Transient("сбой сети: ${javaClass.simpleName}")
+    else -> OutboxSendResult.Transient("непредвиденный сбой: ${javaClass.simpleName}")
 }
 
 /**

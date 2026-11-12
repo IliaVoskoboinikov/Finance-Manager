@@ -74,12 +74,13 @@ internal suspend fun safeApiCallInternal(
 
 /** Маппит неуспешный HTTP-ответ в доменную ошибку. */
 private fun Response<*>.toFailure(errorLogger: ErrorLogger): DomainResult.Failure {
-    errorLogger.recordError("HTTP ${code()} ${message().orEmpty()}")
+    // Только код: reason phrase пишет сервер, а строки уходят в Crashlytics без очистки
+    errorLogger.recordError("HTTP ${code()}")
     val dataError = when {
         code() == HTTP_NOT_FOUND -> DataError.NotFound
         code() == HTTP_UNAUTHORIZED -> DataError.Unauthorized
         code() in HTTP_SERVER_ERROR_MIN..HTTP_SERVER_ERROR_MAX -> DataError.Server
-        else -> DataError.Unknown(Throwable(message()))
+        else -> DataError.Unknown(Throwable("HTTP ${code()}"))
     }
     return DomainResult.Failure(dataError.toDomainError())
 }

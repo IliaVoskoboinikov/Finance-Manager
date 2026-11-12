@@ -1,6 +1,7 @@
 package soft.divan.financemanager.core.data.outbox.impl
 
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -224,6 +225,29 @@ class TransactionOutboxSenderTest {
         val result = sender.send(entry())
 
         assertThat(result).isInstanceOf(OutboxSendResult.Transient::class.java)
+    }
+
+    @Test
+    fun `failure reason carries the exception type, not its text`() = runTest {
+        // Причина уходит в ErrorLogger после исчерпания попыток, а в тексте может быть значение
+        val parseError = JsonSyntaxException("Failed parsing '1234.56' as BigDecimal; at path $.amount")
+        coEvery { remoteDataSource.create(any(), any()) } throws parseError
+        coEvery { remoteDataSource.get(any()) } throws parseError
+
+        val result = sender.send(entry())
+
+        assertThat(result)
+            .isEqualTo(OutboxSendResult.Transient("непредвиденный сбой: JsonSyntaxException"))
+    }
+
+    @Test
+    fun `network failure reason carries the exception type, not its text`() = runTest {
+        coEvery { remoteDataSource.create(any(), any()) } throws SocketTimeoutException("timeout")
+        coEvery { remoteDataSource.get(any()) } throws SocketTimeoutException("timeout")
+
+        val result = sender.send(entry())
+
+        assertThat(result).isEqualTo(OutboxSendResult.Transient("сбой сети: SocketTimeoutException"))
     }
 
     /* ---------- ключ идемпотентности на проводе ---------- */

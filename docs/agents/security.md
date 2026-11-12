@@ -66,3 +66,17 @@
     request/response bodies or `Authorization` headers end up in release logs.
 *   **No PII, credentials, or tokens in logs** — including messages passed to `ErrorLogger`
     (Crashlytics).
+*   **Exception text is data, not ours.** Libraries put the values they parse into it
+    (`DateTimeParseException: Text '<value>' could not be parsed`, Gson `JsonReader`:
+    `Expected a long but was <value>`). `CrashlyticsLogger` therefore sends only the type and
+    stack of every `cause` (`redacted()`), and the same copy goes to release logcat; the full text
+    is logcat-only in debug. Strings handed to `ErrorLogger` go out as is, so never build them from
+    `throwable.message` or server text (e.g. the HTTP reason phrase) — use the type
+    (`javaClass.simpleName`), ids and codes. This covers strings that reach it indirectly too,
+    e.g. the outbox `reason` (`OutboxCallOutcome`). Fatal crashes bypass `ErrorLogger`: the
+    Crashlytics handler sends them with their text.
+*   Money parsing goes through `BigDecimalTypeAdapter` (`core:network`): a malformed amount
+    becomes `JsonSyntaxException("Malformed decimal at <json path>")`, without the value and
+    without the `NumberFormatException` cause. On Android 8–11 (Harmony `java.math`)
+    `BigDecimal(String)` puts the whole number into its error (`For input string: "…"`), and Gson's
+    built-in adapter writes `Failed parsing '<amount>'` — don't switch to either.
