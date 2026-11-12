@@ -1,5 +1,6 @@
 package soft.divan.financemanager.core.network.serialization
 
+import com.google.gson.JsonSyntaxException
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
@@ -13,6 +14,8 @@ import java.math.BigDecimal
  * суммы. Адаптер обходит `Double`: при чтении строит [BigDecimal] прямо из текста
  * числового токена, при записи выводит «плоское» десятичное число (без экспоненты и
  * кавычек), которое серверный `decimal` принимает как обычное JSON-число.
+ *
+ * Неразборчивое значение — [JsonSyntaxException] с JSON-путём поля, без самого значения.
  */
 class BigDecimalTypeAdapter : TypeAdapter<BigDecimal>() {
 
@@ -31,6 +34,13 @@ class BigDecimalTypeAdapter : TypeAdapter<BigDecimal>() {
             return null
         }
         // nextString на числовом токене отдаёт исходный текст числа → точный BigDecimal.
-        return BigDecimal(reader.nextString())
+        val raw = reader.nextString()
+        return try {
+            BigDecimal(raw)
+        } catch (@Suppress("SwallowedException") e: NumberFormatException) {
+            // Текст и cause отбрасываются: это сумма. На Android 8–11 (Harmony) BigDecimal пишет
+            // в ошибку всё число («For input string: "…"»), а ошибка разбора доходит до логов.
+            throw JsonSyntaxException("Malformed decimal at ${reader.previousPath}")
+        }
     }
 }

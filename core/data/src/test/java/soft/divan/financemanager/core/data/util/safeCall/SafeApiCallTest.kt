@@ -85,10 +85,11 @@ class SafeApiCallTest {
     }
 
     @Test
-    fun `http failures are logged`() = runTest {
+    fun `http failures are logged by code, without the server reason phrase`() = runTest {
+        // Reason phrase пишет сервер, а строка уходит в Crashlytics без очистки
         call<String> { Response.error(500, "".toResponseBody()) }
 
-        verify { errorLogger.recordError(match<String> { it.contains("HTTP 500") }) }
+        verify { errorLogger.recordError("HTTP 500") }
     }
 
     @Test

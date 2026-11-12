@@ -8,6 +8,10 @@ HTTP-кеш OkHttp для API **выключен**: ответы с суммам
 а данные и так живут в зашифрованной базе. Каталог кеша прежних версий удаляет при старте
 `LegacyHttpCache`.
 
+Суммы (`BigDecimal`) разбирает `BigDecimalTypeAdapter`: без `Double`, а неразборчивое значение
+даёт `JsonSyntaxException` с путём поля, без самого значения. На Android 8–11 текст ошибки
+`BigDecimal(String)` содержит всё число, а ошибки разбора доходят до логов.
+
 ## Module dependency graph
 
 <!--region graph-->

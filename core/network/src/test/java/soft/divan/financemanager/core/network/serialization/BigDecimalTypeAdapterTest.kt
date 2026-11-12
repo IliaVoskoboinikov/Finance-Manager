@@ -2,6 +2,7 @@ package soft.divan.financemanager.core.network.serialization
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonSyntaxException
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonWriter
 import org.assertj.core.api.Assertions.assertThat
@@ -94,5 +95,17 @@ class BigDecimalTypeAdapterTest {
         adapter.write(JsonWriter(sw), BigDecimal("100.50"))
 
         assertThat(sw.toString()).isEqualTo("100.50")
+    }
+
+    @Test
+    fun `malformed amount does not end up in the error`() {
+        // Ошибка уходит в логи. Текст BigDecimal зависит от рантайма: на Android 8–11 в нём всё
+        // число, поэтому адаптер заменяет ошибку своей — с путём поля, без значения и без cause
+        val error = runCatching { gson.fromJson("""{"amount":"12345x67.89"}""", Money::class.java) }
+            .exceptionOrNull()
+
+        assertThat(error).isInstanceOf(JsonSyntaxException::class.java)
+        assertThat(error?.message).isEqualTo("Malformed decimal at $.amount")
+        assertThat(error?.cause).isNull()
     }
 }
